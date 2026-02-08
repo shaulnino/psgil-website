@@ -33,7 +33,7 @@ export default function Header() {
 
         <nav className="hidden items-center gap-8 md:flex">
           {siteConfig.navigation.map((link) => {
-            const isComingSoon = link.label === "Drivers" || link.label === "Articles";
+            const isComingSoon = link.label === "Articles";
             return (
               <div key={link.href} className="relative">
                 <Link
@@ -77,7 +77,7 @@ export default function Header() {
         <div className="border-t border-white/10 bg-[#0B0B0E] md:hidden">
           <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 py-4">
             {siteConfig.navigation.map((link) => {
-              const isComingSoon = link.label === "Drivers" || link.label === "Articles";
+              const isComingSoon = link.label === "Articles";
               return (
                 <div key={link.href} className="flex items-center gap-2">
                   <Link

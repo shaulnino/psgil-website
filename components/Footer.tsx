@@ -19,8 +19,11 @@ export default function Footer() {
             <Link href="/drivers" className="transition hover:text-white/80">
               Drivers
             </Link>
+            <Link href="/schedule" className="transition hover:text-white/80">
+              Schedule
+            </Link>
             <Link href="/statistics" className="transition hover:text-white/80">
-              Statistics
+              Tables
             </Link>
             <Link href="/articles" className="transition hover:text-white/80">
               Articles

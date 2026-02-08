@@ -10,7 +10,7 @@ export default function SnapshotStrip({ stats }: { stats: SnapshotStat[] }) {
         {stats.map((stat) => (
           <div key={stat.label} className="flex flex-col gap-1">
             <span className="text-sm uppercase tracking-[0.2em] text-white/50">{stat.label}</span>
-            <span className="font-display text-2xl font-semibold text-white md:text-3xl">
+            <span className="font-display text-2xl font-bold text-[#D4AF37] md:text-3xl">
               {stat.value}
             </span>
           </div>
