@@ -50,6 +50,7 @@ export function parseCsv<T extends Record<string, string>>(csv: string): T[] {
   const headers = parseLine(lines[0]).map((header) => header.trim());
   return lines.slice(1).map((line) => {
     const values = parseLine(line);
+
     
     const obj = headers.reduce<Record<string, string>>((acc, header, index) => {
       acc[header] = values[index]?.trim() ?? "";
