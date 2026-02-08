@@ -54,7 +54,8 @@ export const siteConfig: SiteConfig = {
   },
   navigation: [
     { label: "Drivers", href: "/drivers" },
-    { label: "Statistics", href: "/statistics" },
+    { label: "Schedule", href: "/schedule" },
+    { label: "Tables", href: "/statistics" },
     { label: "Articles", href: "/articles" },
   ],
   hero: {

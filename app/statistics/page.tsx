@@ -3,42 +3,54 @@
 import Section from "@/components/Section";
 import ZoomableImage from "@/components/ZoomableImage";
 
-const statsSections = [
+/* ------------------------------------------------------------------ */
+/*  Table sections – swap image paths here (or read from a sheet)      */
+/* ------------------------------------------------------------------ */
+
+const tableSections = [
   {
-    title: "Last Race Results",
-    subtitle: "Latest race standings and outcomes.",
-    image: {
-      src: "/statistics/last-race.png",
-      alt: "Last race results screenshot",
-    },
-  },
-  {
-    title: "Drivers Championship",
+    title: "Drivers Main Championship standings",
     subtitle: "Current points table after the latest round.",
     image: {
-      src: "/statistics/drivers-champ.png",
-      alt: "Drivers championship screenshot",
+      src: "/statistics/drivers-main-champ.png",
+      alt: "Drivers Main Championship standings table",
     },
   },
   {
-    title: "Constructors Championship",
-    subtitle: "Team standings and season momentum.",
+    title: "Constructors Main Championship standings",
+    subtitle: "Team standings in the Main Championship.",
     image: {
-      src: "/statistics/constructors-champ.png",
-      alt: "Constructors championship screenshot",
+      src: "/statistics/constructors-main-champ.png",
+      alt: "Constructors Main Championship standings table",
+    },
+  },
+  {
+    title: "Drivers Wild Championship standings",
+    subtitle: "Points table for the Wild Championship.",
+    image: {
+      src: "/statistics/drivers-wild-champ.png",
+      alt: "Drivers Wild Championship standings table",
+    },
+  },
+  {
+    title: "Constructors Wild Championship standings",
+    subtitle: "Team standings in the Wild Championship.",
+    image: {
+      src: "/statistics/constructors-wild-champ.png",
+      alt: "Constructors Wild Championship standings table",
     },
   },
 ];
 
-export default function StatisticsPage() {
+export default function TablesPage() {
   return (
     <main className="bg-[#0B0B0E] text-white">
       <Section
-        title="Statistics"
-        description="Full stats dashboard is coming soon. For now, here are the latest official tables."
+        title="Tables"
+        description="Official championship standings, updated after each round."
       >
         <div className="flex flex-col gap-12">
-          {statsSections.map((section) => (
+          {tableSections.map((section) => (
             <div key={section.title}>
               <div className="mb-4">
                 <h2 className="font-display text-xl font-semibold text-white md:text-2xl">
@@ -60,24 +72,8 @@ export default function StatisticsPage() {
               </div>
             </div>
           ))}
-
-          <div>
-            <div className="mb-4">
-              <h2 className="font-display text-xl font-semibold text-white md:text-2xl">
-                All-Time Statistics
-              </h2>
-              <p className="mt-2 text-sm text-white/60">Historic records will arrive here.</p>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-white/70">
-              <p className="font-medium text-white">All-Time Statistics</p>
-              <p className="mt-2 text-white/60">
-                Coming soon. Historic stats and records will live here.
-              </p>
-            </div>
-          </div>
         </div>
       </Section>
-
     </main>
   );
 }

@@ -2,20 +2,67 @@ import Image from "next/image";
 import path from "node:path";
 import { existsSync } from "node:fs";
 import Button from "@/components/Button";
-import RaceCard from "@/components/RaceCard";
+import HomeRaceCards from "@/components/HomeRaceCards";
+import WatchLastRaceButton from "@/components/WatchLastRaceButton";
 import Section from "@/components/Section";
 import SnapshotStrip from "@/components/SnapshotStrip";
 import SocialLinks from "@/components/SocialLinks";
 import { siteConfig } from "@/lib/siteConfig";
+import { fetchCsv, parseCsv } from "@/lib/csv";
+import {
+  mapRaceEvents,
+  getLastRaceGroup,
+  getNextRaceGroup,
+} from "@/lib/scheduleData";
+import type { RaceGroup } from "@/lib/scheduleData";
 
 const heroImagePath = "/hero.jpg";
 const resolvePublic = (filePath: string) =>
   path.join(process.cwd(), "public", filePath.replace(/^\/+/, ""));
 
-export default function Home() {
+const SCHEDULE_CSV_URL =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=2105913561&single=true&output=csv";
+
+export default async function Home() {
   const heroImageExists = existsSync(resolvePublic(heroImagePath));
-  const lastPosterExists = existsSync(resolvePublic(siteConfig.races.last.posterImagePath));
-  const nextPosterExists = existsSync(resolvePublic(siteConfig.races.next.posterImagePath));
+
+  /* Fetch schedule data for Races section */
+  let lastGroup: RaceGroup | null = null;
+  let nextGroup: RaceGroup | null = null;
+  try {
+    const csv = await fetchCsv(SCHEDULE_CSV_URL);
+    const raw = parseCsv<Record<string, string>>(csv);
+    const events = mapRaceEvents(raw);
+    lastGroup = getLastRaceGroup(events);
+    nextGroup = getNextRaceGroup(events);
+  } catch {
+    // CSV not available — cards will show fallback
+  }
+
+  // Strip non-serialisable _dateObj before sending to client component
+  const stripDate = (g: RaceGroup | null) =>
+    g ? { events: g.events, date: g.date, league: g.league, season: g.season } : null;
+  const lastGroupSafe = stripDate(lastGroup);
+  const nextGroupSafe = stripDate(nextGroup);
+
+  // Compute unique YouTube links for the "Watch Last Race" hero button
+  const lastRaceYoutubeLinks: { label: string; url: string }[] = [];
+  if (lastGroup) {
+    const seen = new Set<string>();
+    for (const e of lastGroup.events) {
+      if (e.youtube_url && !seen.has(e.youtube_url)) {
+        seen.add(e.youtube_url);
+        lastRaceYoutubeLinks.push({
+          label: `Watch Race #${e.race_number} – ${e.race_name}`,
+          url: e.youtube_url,
+        });
+      }
+    }
+    // If all races share the same URL, simplify the label
+    if (lastRaceYoutubeLinks.length === 1) {
+      lastRaceYoutubeLinks[0].label = siteConfig.hero.secondaryCtaLabel;
+    }
+  }
 
   return (
     <main className="bg-[#0B0B0E] text-white">
@@ -41,7 +88,7 @@ export default function Home() {
         </div>
 
         <div className="relative mx-auto w-full max-w-6xl px-6">
-          <div className="mx-auto w-full max-w-4xl">
+          <div className="w-full max-w-4xl">
             <Image
               src="/psgil-banner.png"
               alt="PSGiL Season 6 banner"
@@ -67,19 +114,16 @@ export default function Home() {
               <Button href={siteConfig.discordUrl} external>
                 {siteConfig.hero.primaryCtaLabel}
               </Button>
-              <Button
-                href={siteConfig.races.last.youtubeUrl ?? siteConfig.discordUrl}
-                variant="secondary"
-                external
-              >
-                {siteConfig.hero.secondaryCtaLabel}
-              </Button>
+              <WatchLastRaceButton
+                links={lastRaceYoutubeLinks}
+                label={siteConfig.hero.secondaryCtaLabel}
+              />
             </div>
-            <div className="mt-6 flex flex-wrap gap-3 text-xs text-white/60">
+            <div className="mt-6 flex flex-wrap gap-3 text-xs">
               {siteConfig.trustChips.map((chip) => (
                 <span
                   key={chip}
-                  className="rounded-full border border-white/10 bg-white/5 px-4 py-2"
+                  className="rounded-full border border-[#7020B0]/60 bg-white/5 px-4 py-2 text-white"
                 >
                   {chip}
                 </span>
@@ -102,57 +146,23 @@ export default function Home() {
               key={item.title}
               className="rounded-2xl border border-white/10 bg-white/5 p-5 text-sm text-white/70"
             >
-              <h3 className="font-display text-base font-semibold text-white">{item.title}</h3>
+              <h3 className="font-display text-base font-semibold text-[#D4AF37]">{item.title}</h3>
               <p className="mt-2 text-white/60">{item.description}</p>
             </div>
           ))}
         </div>
       </Section>
 
-      <Section title="Races" description="Latest action and what is coming up next.">
-        <div className="grid gap-6 lg:grid-cols-2">
-          <RaceCard
-            heading="Last Race"
-            race={siteConfig.races.last}
-            posterAvailable={lastPosterExists}
-            actions={[
-              {
-                label: "Watch on YouTube",
-                href: siteConfig.races.last.youtubeUrl ?? siteConfig.discordUrl,
-                variant: "primary",
-                external: true,
-              },
-              {
-                label: "Read Article",
-                href: siteConfig.races.last.articleUrl ?? "/articles",
-                variant: "secondary",
-                badge: "Coming Soon",
-              },
-              {
-                label: "Race Results",
-                href: siteConfig.races.last.resultsUrl ?? "/statistics",
-                variant: "secondary",
-              },
-            ]}
-          />
-          <RaceCard
-            heading="Next Race"
-            race={siteConfig.races.next}
-            posterAvailable={nextPosterExists}
-            actions={[
-              ...(siteConfig.races.next.calendarUrl
-                ? [
-                    {
-                      label: "Add to Calendar",
-                      href: siteConfig.races.next.calendarUrl,
-                      variant: "secondary" as const,
-                      external: true,
-                    },
-                  ]
-                : []),
-            ]}
-          />
-        </div>
+      <Section
+        title="Races"
+        description="Latest action and what is coming up next."
+        headerRight={
+          <Button href="/schedule" size="sm">
+            Full Schedule
+          </Button>
+        }
+      >
+        <HomeRaceCards lastGroup={lastGroupSafe} nextGroup={nextGroupSafe} />
       </Section>
 
       <Section title="About Us">
