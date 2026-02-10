@@ -1,10 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Button from "@/components/Button";
 import ZoomableImage from "@/components/ZoomableImage";
 import type { RaceGroup, RaceEvent } from "@/lib/scheduleData";
+import type { RaceResultRow } from "@/lib/resultsData";
+import type { Driver, Team } from "@/lib/driversData";
+import RaceResultsTable from "@/components/RaceResultsTable";
+import DriverLookupProvider from "@/components/DriverLookupProvider";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -13,6 +17,9 @@ import type { RaceGroup, RaceEvent } from "@/lib/scheduleData";
 type HomeRaceCardsProps = {
   lastGroup: RaceGroup | null;
   nextGroup: RaceGroup | null;
+  raceResultsByEvent?: Record<string, RaceResultRow[]>;
+  allDrivers?: Driver[];
+  allTeams?: Team[];
 };
 
 /* ------------------------------------------------------------------ */
@@ -173,25 +180,54 @@ function RaceGroupCard({
 }
 
 /* ------------------------------------------------------------------ */
-/*  Multi-race results modal with tab selector + zoom                  */
+/*  Multi-race results modal with tab selector + table/image toggle    */
 /* ------------------------------------------------------------------ */
 
 function GroupResultsModal({
   group,
+  raceResultsByEvent = {},
   onClose,
 }: {
   group: RaceGroup;
+  raceResultsByEvent?: Record<string, RaceResultRow[]>;
   onClose: () => void;
 }) {
-  // Only include events that actually have a results image
-  const withResults = group.events.filter((e) => !!e.results_image);
-  const isSingle = withResults.length === 1;
+  // Events that have either a results image or CSV table data
+  const withResults = group.events.filter(
+    (e) => !!e.results_image || (raceResultsByEvent[e.event_id]?.length ?? 0) > 0,
+  );
+  const isSingle = withResults.length <= 1;
   const [activeIdx, setActiveIdx] = useState(0);
+  const current = withResults[activeIdx] ?? withResults[0];
+
+  const tableData = current ? (raceResultsByEvent[current.event_id] ?? []) : [];
+  const hasTable = tableData.length > 0;
+  const hasImage = !!current?.results_image;
+  const [showImage, setShowImage] = useState(!hasTable && hasImage);
+
+  // Image zoom state
   const [zoom, setZoom] = useState(1);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStart = useRef({ x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
+  const scrollRef = useRef<HTMLDivElement>(null);
   const clamp = (v: number) => Math.min(3, Math.max(1, v));
 
-  const current = withResults[activeIdx] ?? withResults[0];
-  if (!current?.results_image) return null;
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  // When switching tabs, reset to table view if available
+  useEffect(() => {
+    const td = current ? (raceResultsByEvent[current.event_id] ?? []) : [];
+    setShowImage(td.length === 0 && !!current?.results_image);
+    setZoom(1);
+  }, [activeIdx, current, raceResultsByEvent]);
+
+  if (!current || (!hasImage && !hasTable)) return null;
 
   return (
     <div
@@ -199,34 +235,37 @@ function GroupResultsModal({
       onClick={onClose}
     >
       <div className="relative mx-4 w-full max-w-5xl" onClick={(e) => e.stopPropagation()}>
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className="absolute -top-10 right-0 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/80 transition hover:text-white"
-        >
-          ×
-        </button>
-
-        {/* Zoom controls */}
-        <div className="absolute -top-10 left-0 z-10 flex items-center gap-2">
+        {/* Top bar */}
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <h3 className="font-display text-sm font-semibold text-white/80 md:text-base">
+              {current.race_name}
+            </h3>
+            {hasTable && hasImage && (
+              <button
+                onClick={() => {
+                  setShowImage((v) => !v);
+                  setZoom(1);
+                }}
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-medium uppercase tracking-wider text-white/50 transition hover:border-[#7020B0]/40 hover:text-white/80"
+              >
+                {showImage ? (
+                  <>
+                    <span>📊</span> Show table
+                  </>
+                ) : (
+                  <>
+                    <span>🖼️</span> Show image
+                  </>
+                )}
+              </button>
+            )}
+          </div>
           <button
-            onClick={() => setZoom((z) => clamp(z - 0.25))}
+            onClick={onClose}
             className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/80 transition hover:text-white"
           >
-            −
-          </button>
-          <span className="text-xs text-white/60">{Math.round(zoom * 100)}%</span>
-          <button
-            onClick={() => setZoom((z) => clamp(z + 0.25))}
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/80 transition hover:text-white"
-          >
-            +
-          </button>
-          <button
-            onClick={() => setZoom(1)}
-            className="flex h-8 items-center justify-center rounded-full border border-white/20 bg-black/60 px-3 text-xs text-white/80 transition hover:text-white"
-          >
-            Reset
+            ×
           </button>
         </div>
 
@@ -236,10 +275,7 @@ function GroupResultsModal({
             {withResults.map((e, idx) => (
               <button
                 key={e.race_number}
-                onClick={() => {
-                  setActiveIdx(idx);
-                  setZoom(1);
-                }}
+                onClick={() => setActiveIdx(idx)}
                 className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
                   idx === activeIdx
                     ? "bg-[#7020B0]/80 text-white shadow-[0_0_12px_rgba(112,32,176,0.3)]"
@@ -252,27 +288,89 @@ function GroupResultsModal({
           </div>
         )}
 
-        {/* Results image with zoom */}
-        <div
-          className="max-h-[85vh] overflow-auto rounded-2xl border border-white/10 bg-[#0B0B0E] p-3 shadow-[0_0_30px_rgba(0,0,0,0.4)]"
-          onWheel={(e) => {
-            e.stopPropagation();
-            setZoom((z) => clamp(z - e.deltaY * 0.002));
-          }}
-        >
-          <Image
-            key={current.race_number}
-            src={current.results_image!}
-            alt={`${current.race_name} results`}
-            width={2000}
-            height={1200}
-            sizes="100vw"
-            quality={100}
-            unoptimized
-            className="h-auto w-full object-contain transition-transform"
-            style={{ width: `${zoom * 100}%` }}
-          />
-        </div>
+        {/* Zoom controls (image mode only) */}
+        {showImage && hasImage && (
+          <div className="mb-3 flex items-center gap-2">
+            <button
+              onClick={() => setZoom((z) => clamp(z - 0.25))}
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/80 transition hover:text-white"
+            >
+              −
+            </button>
+            <span className="text-xs text-white/60">{Math.round(zoom * 100)}%</span>
+            <button
+              onClick={() => setZoom((z) => clamp(z + 0.25))}
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/80 transition hover:text-white"
+            >
+              +
+            </button>
+            <button
+              onClick={() => setZoom(1)}
+              className="flex h-8 items-center justify-center rounded-full border border-white/20 bg-black/60 px-3 text-xs text-white/80 transition hover:text-white"
+            >
+              Reset
+            </button>
+          </div>
+        )}
+
+        {/* Content: table or image */}
+        {showImage && hasImage ? (
+          <div
+            ref={scrollRef}
+            className={`max-h-[85vh] overflow-auto rounded-2xl border border-white/10 bg-[#0B0B0E] p-3 shadow-[0_0_30px_rgba(0,0,0,0.4)] ${
+              zoom > 1
+                ? isDragging
+                  ? "cursor-grabbing"
+                  : "cursor-grab"
+                : "cursor-default"
+            }`}
+            onWheel={(e) => {
+              e.stopPropagation();
+              setZoom((z) => clamp(z - e.deltaY * 0.002));
+            }}
+            onPointerDown={(e) => {
+              if (zoom <= 1 || !scrollRef.current) return;
+              scrollRef.current.setPointerCapture(e.pointerId);
+              setIsDragging(true);
+              dragStart.current = {
+                x: e.clientX,
+                y: e.clientY,
+                scrollLeft: scrollRef.current.scrollLeft,
+                scrollTop: scrollRef.current.scrollTop,
+              };
+            }}
+            onPointerMove={(e) => {
+              if (!isDragging || !scrollRef.current) return;
+              scrollRef.current.scrollLeft =
+                dragStart.current.scrollLeft - (e.clientX - dragStart.current.x);
+              scrollRef.current.scrollTop =
+                dragStart.current.scrollTop - (e.clientY - dragStart.current.y);
+            }}
+            onPointerUp={() => setIsDragging(false)}
+            onPointerLeave={() => setIsDragging(false)}
+            style={{ touchAction: zoom > 1 ? "none" : "auto" }}
+          >
+            <Image
+              key={current.race_number}
+              src={current.results_image!}
+              alt={`${current.race_name} results`}
+              width={2000}
+              height={1200}
+              sizes="100vw"
+              quality={100}
+              unoptimized
+              className="h-auto w-full object-contain transition-transform"
+              style={{ width: `${zoom * 100}%` }}
+            />
+          </div>
+        ) : hasTable ? (
+          <div className="max-h-[85vh] overflow-auto rounded-2xl border border-white/10 bg-[#0B0B0E] p-3 shadow-[0_0_30px_rgba(0,0,0,0.4)]">
+            <RaceResultsTable
+              results={tableData}
+              caption={`${current.race_name} — Race Results`}
+            />
+          </div>
+        ) : null}
       </div>
     </div>
   );
@@ -282,8 +380,20 @@ function GroupResultsModal({
 /*  Main export                                                        */
 /* ------------------------------------------------------------------ */
 
-export default function HomeRaceCards({ lastGroup, nextGroup }: HomeRaceCardsProps) {
+export default function HomeRaceCards({
+  lastGroup,
+  nextGroup,
+  raceResultsByEvent = {},
+  allDrivers = [],
+  allTeams = [],
+}: HomeRaceCardsProps) {
   const [showResultsGroup, setShowResultsGroup] = useState<RaceGroup | null>(null);
+
+  /** Check if a group has any results (image or CSV table data). */
+  const groupHasResults = (group: RaceGroup) =>
+    group.events.some(
+      (e) => !!e.results_image || (raceResultsByEvent[e.event_id]?.length ?? 0) > 0,
+    );
 
   // Nothing to show at all
   if (!lastGroup && !nextGroup) {
@@ -302,7 +412,7 @@ export default function HomeRaceCards({ lastGroup, nextGroup }: HomeRaceCardsPro
             heading="Last Race"
             group={lastGroup}
             onShowResults={
-              hasAnyResults(lastGroup)
+              groupHasResults(lastGroup)
                 ? () => setShowResultsGroup(lastGroup)
                 : undefined
             }
@@ -321,12 +431,19 @@ export default function HomeRaceCards({ lastGroup, nextGroup }: HomeRaceCardsPro
         )}
       </div>
 
-      {/* Results zoom modal (single or multi-race) */}
-      {showResultsGroup && hasAnyResults(showResultsGroup) && (
-        <GroupResultsModal
-          group={showResultsGroup}
-          onClose={() => setShowResultsGroup(null)}
-        />
+      {/* Results modal (table + image toggle) */}
+      {showResultsGroup && groupHasResults(showResultsGroup) && (
+        <DriverLookupProvider
+          drivers={allDrivers}
+          teams={allTeams}
+          placeholderSrc="/placeholders/driver.png"
+        >
+          <GroupResultsModal
+            group={showResultsGroup}
+            raceResultsByEvent={raceResultsByEvent}
+            onClose={() => setShowResultsGroup(null)}
+          />
+        </DriverLookupProvider>
       )}
     </>
   );

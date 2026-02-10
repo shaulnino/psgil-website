@@ -5,11 +5,13 @@ import type { Driver, Team, TeamWithDrivers } from "@/lib/driversData";
 import { getTeamColor } from "@/lib/driversData";
 import DriverCard from "@/components/DriverCard";
 import DriverModal from "@/components/DriverModal";
+import { AchievementBadgeList } from "@/components/AchievementBadges";
 import Image from "next/image";
 
 type DriversGridProps = {
   teams: TeamWithDrivers[];
   reserves: Driver[];
+  historicDrivers: Driver[];
   placeholderSrc: string;
 };
 
@@ -17,7 +19,7 @@ function isRemote(src?: string) {
   return !!src && src.startsWith("http");
 }
 
-export default function DriversGrid({ teams, reserves, placeholderSrc }: DriversGridProps) {
+export default function DriversGrid({ teams, reserves, historicDrivers, placeholderSrc }: DriversGridProps) {
   const [selected, setSelected] = useState<{ driver: Driver; team: Team } | null>(null);
   const lastFocused = useRef<HTMLElement | null>(null);
 
@@ -115,6 +117,49 @@ export default function DriversGrid({ teams, reserves, placeholderSrc }: Drivers
           )}
         </div>
       </section>
+
+      {/* ---- Historical Drivers (name list) ---- */}
+      {historicDrivers.length > 0 && (
+        <section className="mt-12 space-y-4">
+          <div>
+            <h2 className="font-display text-2xl font-semibold text-white">Historical Drivers</h2>
+            <p className="text-sm text-white/50">
+              Drivers who competed in previous PSGiL seasons.
+            </p>
+          </div>
+
+          <div className="overflow-hidden rounded-2xl border border-white/10">
+            {historicDrivers.map((driver, idx) => {
+              const team = teams.find((t) => t.team_key === driver.team_key) ?? {
+                team_key: driver.team_key,
+                team_name: "Independent",
+                logo_url: "/psgil-logo.png",
+              };
+              return (
+                <button
+                  key={driver.driver_id || driver.name}
+                  type="button"
+                  onClick={() => setSelected({ driver, team })}
+                  className={`group flex w-full items-center gap-2 px-5 py-3 text-left transition-colors hover:bg-white/5 ${
+                    idx !== 0 ? "border-t border-white/5" : ""
+                  }`}
+                >
+                  <span className="font-display text-base font-semibold text-white/90 transition-colors group-hover:text-[#D4AF37]">
+                    {driver.name}
+                  </span>
+                  <AchievementBadgeList driver={driver} iconSize={14} />
+                  <span className="flex-1" />
+                  {driver.number && (
+                    <span className="inline-flex shrink-0 items-center rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-2.5 py-0.5 text-xs font-semibold text-[#D4AF37]">
+                      #{driver.number}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {selected && (
         <DriverModal

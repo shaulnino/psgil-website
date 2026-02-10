@@ -1,4 +1,4 @@
-export type DriverRole = "main" | "reserve";
+export type DriverRole = "main" | "reserve" | "historic";
 
 export type DriverStats = {
   points?: string;
@@ -18,6 +18,7 @@ export type Driver = {
   role: DriverRole;
   number?: string;
   photo_url?: string;
+  photo_position?: string; // CSS object-position value, e.g. "center", "bottom", "50% 70%"
   about?: string;
   // All-time stats
   points?: string;
@@ -147,7 +148,10 @@ export type Team = {
 export type TeamWithDrivers = Team & { drivers: Driver[] };
 
 export function normalizeRole(role: string): DriverRole {
-  return role.toLowerCase() === "reserve" ? "reserve" : "main";
+  const r = role.toLowerCase().trim();
+  if (r === "reserve") return "reserve";
+  if (r === "historic") return "historic";
+  return "main";
 }
 
 export function mapDrivers(raw: Record<string, string>[]): Driver[] {
@@ -158,6 +162,7 @@ export function mapDrivers(raw: Record<string, string>[]): Driver[] {
     role: normalizeRole(row.role ?? "main"),
     number: row.number || undefined,
     photo_url: row.photo_url || undefined,
+    photo_position: row.photo_position || undefined,
     about: row.about || undefined,
     // All-time stats
     points: row.points || undefined,
@@ -252,6 +257,12 @@ export function groupDriversByTeam(teams: Team[], drivers: Driver[]): TeamWithDr
 
 export function getReserveDrivers(drivers: Driver[]): Driver[] {
   return drivers.filter((driver) => driver.role === "reserve");
+}
+
+export function getHistoricDrivers(drivers: Driver[]): Driver[] {
+  return drivers
+    .filter((driver) => driver.role === "historic")
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 /* ------------------------------------------------------------------ */

@@ -1,79 +1,106 @@
-"use client";
-
-import Section from "@/components/Section";
-import ZoomableImage from "@/components/ZoomableImage";
+import TablesPageContent from "@/components/TablesPageContent";
+import {
+  fetchStandings,
+  getLatestSeason,
+  CSV_URLS,
+} from "@/lib/resultsData";
+import { fetchCsv, parseCsv } from "@/lib/csv";
+import {
+  mapDrivers,
+  mapTeams,
+  mapLeagueStandings,
+  applyLeagueStandings,
+} from "@/lib/driversData";
 
 /* ------------------------------------------------------------------ */
-/*  Table sections – swap image paths here (or read from a sheet)      */
+/*  CSV sources for drivers & teams (same as /drivers page)            */
 /* ------------------------------------------------------------------ */
 
-const tableSections = [
-  {
-    title: "Drivers Main Championship standings",
-    subtitle: "Current points table after the latest round.",
-    image: {
-      src: "/statistics/drivers-main-champ.png",
-      alt: "Drivers Main Championship standings table",
-    },
-  },
-  {
-    title: "Constructors Main Championship standings",
-    subtitle: "Team standings in the Main Championship.",
-    image: {
-      src: "/statistics/constructors-main-champ.png",
-      alt: "Constructors Main Championship standings table",
-    },
-  },
-  {
-    title: "Drivers Wild Championship standings",
-    subtitle: "Points table for the Wild Championship.",
-    image: {
-      src: "/statistics/drivers-wild-champ.png",
-      alt: "Drivers Wild Championship standings table",
-    },
-  },
-  {
-    title: "Constructors Wild Championship standings",
-    subtitle: "Team standings in the Wild Championship.",
-    image: {
-      src: "/statistics/constructors-wild-champ.png",
-      alt: "Constructors Wild Championship standings table",
-    },
-  },
-];
+const DRIVERS_CSV_URL =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=353282807&single=true&output=csv";
+const TEAMS_CSV_URL =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=1933328661&single=true&output=csv";
+const LEAGUE_STANDINGS_CSV_URL =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=1982499543&single=true&output=csv";
 
-export default function TablesPage() {
+/* ------------------------------------------------------------------ */
+/*  Static fallback images (used when CSV rows have no table_image)    */
+/* ------------------------------------------------------------------ */
+
+const FALLBACK_IMAGES = {
+  driversMain: "/statistics/drivers-main-champ.png",
+  constructorsMain: "/statistics/constructors-main-champ.png",
+  driversWild: "/statistics/drivers-wild-champ.png",
+  constructorsWild: "/statistics/constructors-wild-champ.png",
+};
+
+const PLACEHOLDER_PHOTO = "/placeholders/driver.png";
+
+/* ------------------------------------------------------------------ */
+/*  Tables page – Server Component                                     */
+/* ------------------------------------------------------------------ */
+
+export default async function TablesPage() {
+  // Fetch standings + driver/team data in parallel
+  const [
+    driversMain,
+    constructorsMain,
+    driversWild,
+    constructorsWild,
+    driversCsv,
+    teamsCsv,
+    standingsCsv,
+  ] = await Promise.all([
+    fetchStandings(CSV_URLS.drivers_standings_main),
+    fetchStandings(CSV_URLS.constructors_standings_main),
+    fetchStandings(CSV_URLS.drivers_standings_wild),
+    fetchStandings(CSV_URLS.constructors_standings_wild),
+    fetchCsv(DRIVERS_CSV_URL).catch(() => ""),
+    fetchCsv(TEAMS_CSV_URL).catch(() => ""),
+    fetchCsv(LEAGUE_STANDINGS_CSV_URL).catch(() => ""),
+  ]);
+
+  // Parse drivers & teams
+  let drivers = driversCsv
+    ? mapDrivers(parseCsv<Record<string, string>>(driversCsv))
+    : [];
+  const teams = teamsCsv
+    ? mapTeams(parseCsv<Record<string, string>>(teamsCsv))
+    : [];
+
+  // Merge league standings if available
+  if (standingsCsv) {
+    const standings = mapLeagueStandings(
+      parseCsv<Record<string, string>>(standingsCsv),
+    );
+    drivers = applyLeagueStandings(drivers, standings);
+  }
+
+  // Determine latest season in data (defaults to S6)
+  const defaultSeason = getLatestSeason(
+    driversMain,
+    constructorsMain,
+    driversWild,
+    constructorsWild,
+  );
+
   return (
     <main className="bg-[#0B0B0E] text-white">
-      <Section
-        title="Tables"
-        description="Official championship standings, updated after each round."
-      >
-        <div className="flex flex-col gap-12">
-          {tableSections.map((section) => (
-            <div key={section.title}>
-              <div className="mb-4">
-                <h2 className="font-display text-xl font-semibold text-white md:text-2xl">
-                  {section.title}
-                </h2>
-                <p className="mt-2 text-sm text-white/60">{section.subtitle}</p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-[linear-gradient(140deg,_rgba(255,255,255,0.06),_rgba(255,255,255,0.02))] p-4 transition hover:border-[#7020B0]/40">
-                <ZoomableImage
-                  src={section.image.src}
-                  alt={section.image.alt}
-                  width={1600}
-                  height={900}
-                  sizes="100vw"
-                  quality={100}
-                  triggerClassName="group relative overflow-hidden rounded-xl border border-white/10 bg-[#0B0B0E] transition hover:border-[#7020B0]/40 cursor-pointer"
-                  imageClassName="h-auto w-full object-contain transition duration-200 group-hover:scale-[1.01]"
-                />
-              </div>
-            </div>
-          ))}
+      <section className="py-12 md:py-16">
+        <div className="mx-auto w-full max-w-6xl px-6">
+          <TablesPageContent
+            defaultSeason={defaultSeason}
+            driversMain={driversMain}
+            constructorsMain={constructorsMain}
+            driversWild={driversWild}
+            constructorsWild={constructorsWild}
+            fallbackImages={FALLBACK_IMAGES}
+            drivers={drivers}
+            teams={teams}
+            placeholderSrc={PLACEHOLDER_PHOTO}
+          />
         </div>
-      </Section>
+      </section>
     </main>
   );
 }
