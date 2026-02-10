@@ -3,6 +3,8 @@
 /* ------------------------------------------------------------------ */
 
 export type RaceEvent = {
+  /** Unique ID matching the race_results CSV, e.g. "s6_r01_main". */
+  event_id: string;
   season: string;
   race_number: string;
   race_name: string;
@@ -28,20 +30,39 @@ function sanitizeImagePath(value: string | undefined): string | undefined {
   return `/${v}`;
 }
 
+/**
+ * Build event_id from schedule fields (matches race_results CSV convention).
+ * e.g. season="6", race_number="1", league="Main" → "s6_r01_main"
+ */
+function buildEventId(season: string, raceNumber: string, league: string): string {
+  const s = (season ?? "").trim();
+  const r = (raceNumber ?? "").trim().padStart(2, "0");
+  const l = (league ?? "main").trim().toLowerCase();
+  return `s${s}_r${r}_${l}`;
+}
+
 /** Map raw CSV rows to typed RaceEvent objects. */
 export function mapRaceEvents(raw: Record<string, string>[]): RaceEvent[] {
-  return raw.map((row) => ({
-    season: row.season ?? "",
-    race_number: row.race_number ?? "",
-    race_name: row.race_name ?? "",
-    date: row.date ?? "",
-    league: row.league ?? "Main",
-    status: row.status ?? "Scheduled",
-    country_code: row.country_code ?? "",
-    poster_image: sanitizeImagePath(row.poster_image),
-    results_image: sanitizeImagePath(row.results_image),
-    youtube_url: row.youtube_url?.trim() || undefined,
-  }));
+  return raw.map((row) => {
+    const season = row.season ?? "";
+    const raceNumber = row.race_number ?? "";
+    const league = row.league ?? "Main";
+    // Use explicit event_id from CSV if present, otherwise construct it
+    const eventId = (row.event_id ?? "").trim() || buildEventId(season, raceNumber, league);
+    return {
+      event_id: eventId,
+      season,
+      race_number: raceNumber,
+      race_name: row.race_name ?? "",
+      date: row.date ?? "",
+      league,
+      status: row.status ?? "Scheduled",
+      country_code: row.country_code ?? "",
+      poster_image: sanitizeImagePath(row.poster_image),
+      results_image: sanitizeImagePath(row.results_image),
+      youtube_url: row.youtube_url?.trim() || undefined,
+    };
+  });
 }
 
 /** Sort: latest season first, then race_number ascending within each season. */

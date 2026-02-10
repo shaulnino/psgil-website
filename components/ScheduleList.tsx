@@ -4,6 +4,10 @@ import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import type { RaceEvent } from "@/lib/scheduleData";
 import { groupBySeason } from "@/lib/scheduleData";
+import type { RaceResultRow } from "@/lib/resultsData";
+import type { Driver, Team } from "@/lib/driversData";
+import RaceResultsTable from "@/components/RaceResultsTable";
+import DriverLookupProvider from "@/components/DriverLookupProvider";
 
 /* ------------------------------------------------------------------ */
 /*  Country flag image (works on Windows, macOS, all browsers)         */
@@ -49,18 +53,23 @@ function CountryFlag({
 }
 
 /* ------------------------------------------------------------------ */
-/*  Zoom modal for results images                                      */
+/*  Results modal – shows table (primary) with image toggle             */
 /* ------------------------------------------------------------------ */
 
-function ZoomModal({
-  src,
-  alt,
+function ResultsModal({
+  event,
+  tableData,
   onClose,
 }: {
-  src: string;
-  alt: string;
+  event: RaceEvent;
+  tableData: RaceResultRow[];
   onClose: () => void;
 }) {
+  const hasTable = tableData.length > 0;
+  const hasImage = !!event.results_image;
+  const [showImage, setShowImage] = useState(!hasTable && hasImage);
+
+  // Image zoom state (only used when showing image)
   const [zoom, setZoom] = useState(1);
   const [isDragging, setIsDragging] = useState(false);
   const dragStart = useRef({ x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
@@ -76,31 +85,6 @@ function ZoomModal({
 
   const clamp = (v: number) => Math.min(3, Math.max(1, v));
 
-  const handleWheel = (e: React.WheelEvent) => {
-    e.stopPropagation();
-    setZoom((z) => clamp(z - e.deltaY * 0.002));
-  };
-
-  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (zoom <= 1 || !scrollRef.current) return;
-    scrollRef.current.setPointerCapture(e.pointerId);
-    setIsDragging(true);
-    dragStart.current = {
-      x: e.clientX,
-      y: e.clientY,
-      scrollLeft: scrollRef.current.scrollLeft,
-      scrollTop: scrollRef.current.scrollTop,
-    };
-  };
-
-  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDragging || !scrollRef.current) return;
-    scrollRef.current.scrollLeft = dragStart.current.scrollLeft - (e.clientX - dragStart.current.x);
-    scrollRef.current.scrollTop = dragStart.current.scrollTop - (e.clientY - dragStart.current.y);
-  };
-
-  const handlePointerUp = () => setIsDragging(false);
-
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
@@ -110,61 +94,131 @@ function ZoomModal({
         className="relative mx-4 w-full max-w-5xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close */}
-        <button
-          onClick={onClose}
-          className="absolute -top-10 right-0 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/80 transition hover:text-white"
-        >
-          ×
-        </button>
-
-        {/* Zoom controls */}
-        <div className="absolute -top-10 left-0 z-10 flex items-center gap-2">
+        {/* Top bar: close + toggle */}
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <h3 className="font-display text-sm font-semibold text-white/80 md:text-base">
+              {event.race_name}
+            </h3>
+            {/* Toggle between table and image when both exist */}
+            {hasTable && hasImage && (
+              <button
+                onClick={() => {
+                  setShowImage((v) => !v);
+                  setZoom(1);
+                }}
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-medium uppercase tracking-wider text-white/50 transition hover:border-[#7020B0]/40 hover:text-white/80"
+              >
+                {showImage ? (
+                  <>
+                    <span>📊</span> Show table
+                  </>
+                ) : (
+                  <>
+                    <span>🖼️</span> Show image
+                  </>
+                )}
+              </button>
+            )}
+          </div>
           <button
-            onClick={() => setZoom((z) => clamp(z - 0.25))}
+            onClick={onClose}
             className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/80 transition hover:text-white"
           >
-            −
-          </button>
-          <span className="text-xs text-white/60">{Math.round(zoom * 100)}%</span>
-          <button
-            onClick={() => setZoom((z) => clamp(z + 0.25))}
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/80 transition hover:text-white"
-          >
-            +
-          </button>
-          <button
-            onClick={() => setZoom(1)}
-            className="flex h-8 items-center justify-center rounded-full border border-white/20 bg-black/60 px-3 text-xs text-white/80 transition hover:text-white"
-          >
-            Reset
+            ×
           </button>
         </div>
 
-        <div
-          ref={scrollRef}
-          className={`max-h-[85vh] overflow-auto rounded-2xl border border-white/10 bg-[#0B0B0E] p-3 shadow-[0_0_30px_rgba(0,0,0,0.4)] ${
-            zoom > 1 ? (isDragging ? "cursor-grabbing" : "cursor-grab") : "cursor-default"
-          }`}
-          onWheel={handleWheel}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerLeave={() => setIsDragging(false)}
-          style={{ touchAction: zoom > 1 ? "none" : "auto" }}
-        >
-          <Image
-            src={src}
-            alt={alt}
-            width={2000}
-            height={1200}
-            sizes="100vw"
-            quality={100}
-            priority
-            className="h-auto w-full object-contain transition-transform"
-            style={{ width: `${zoom * 100}%` }}
-          />
-        </div>
+        {/* Image zoom controls (only when showing image) */}
+        {showImage && hasImage && (
+          <div className="mb-3 flex items-center gap-2">
+            <button
+              onClick={() => setZoom((z) => clamp(z - 0.25))}
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/80 transition hover:text-white"
+            >
+              −
+            </button>
+            <span className="text-xs text-white/60">
+              {Math.round(zoom * 100)}%
+            </span>
+            <button
+              onClick={() => setZoom((z) => clamp(z + 0.25))}
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/80 transition hover:text-white"
+            >
+              +
+            </button>
+            <button
+              onClick={() => setZoom(1)}
+              className="flex h-8 items-center justify-center rounded-full border border-white/20 bg-black/60 px-3 text-xs text-white/80 transition hover:text-white"
+            >
+              Reset
+            </button>
+          </div>
+        )}
+
+        {/* Content */}
+        {showImage && hasImage ? (
+          <div
+            ref={scrollRef}
+            className={`max-h-[85vh] overflow-auto rounded-2xl border border-white/10 bg-[#0B0B0E] p-3 shadow-[0_0_30px_rgba(0,0,0,0.4)] ${
+              zoom > 1
+                ? isDragging
+                  ? "cursor-grabbing"
+                  : "cursor-grab"
+                : "cursor-default"
+            }`}
+            onWheel={(e) => {
+              e.stopPropagation();
+              setZoom((z) => clamp(z - e.deltaY * 0.002));
+            }}
+            onPointerDown={(e) => {
+              if (zoom <= 1 || !scrollRef.current) return;
+              scrollRef.current.setPointerCapture(e.pointerId);
+              setIsDragging(true);
+              dragStart.current = {
+                x: e.clientX,
+                y: e.clientY,
+                scrollLeft: scrollRef.current.scrollLeft,
+                scrollTop: scrollRef.current.scrollTop,
+              };
+            }}
+            onPointerMove={(e) => {
+              if (!isDragging || !scrollRef.current) return;
+              scrollRef.current.scrollLeft =
+                dragStart.current.scrollLeft - (e.clientX - dragStart.current.x);
+              scrollRef.current.scrollTop =
+                dragStart.current.scrollTop - (e.clientY - dragStart.current.y);
+            }}
+            onPointerUp={() => setIsDragging(false)}
+            onPointerLeave={() => setIsDragging(false)}
+            style={{ touchAction: zoom > 1 ? "none" : "auto" }}
+          >
+            <Image
+              src={event.results_image!}
+              alt={`${event.race_name} results`}
+              width={2000}
+              height={1200}
+              sizes="100vw"
+              quality={100}
+              priority
+              className="h-auto w-full object-contain transition-transform"
+              style={{ width: `${zoom * 100}%` }}
+            />
+          </div>
+        ) : hasTable ? (
+          <div className="max-h-[85vh] overflow-auto rounded-2xl border border-white/10 bg-[#0B0B0E] p-3 shadow-[0_0_30px_rgba(0,0,0,0.4)]">
+            <RaceResultsTable
+              results={tableData}
+              caption={`${event.race_name} — Race Results`}
+            />
+          </div>
+        ) : (
+          <div className="flex items-center justify-center rounded-2xl border border-white/10 bg-[#0B0B0E] py-16">
+            <p className="text-sm text-white/50">
+              Results not available yet.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -176,10 +230,13 @@ function ZoomModal({
 
 function PosterModal({
   event,
+  hasTableData,
   onClose,
   onShowResults,
 }: {
   event: RaceEvent;
+  /** Whether CSV table data exists for this event. */
+  hasTableData: boolean;
   onClose: () => void;
   onShowResults: () => void;
 }) {
@@ -193,7 +250,7 @@ function PosterModal({
 
   const isCompleted = event.status.toLowerCase() === "completed";
   const hasPoster = !!event.poster_image;
-  const hasResults = !!event.results_image;
+  const hasResults = !!event.results_image || hasTableData;
   const hasYoutube = !!event.youtube_url;
 
   return (
@@ -333,9 +390,20 @@ function LeagueBadge({ league }: { league: string }) {
 
 type ScheduleListProps = {
   events: RaceEvent[];
+  /** Race results grouped by event_id (from CSV). */
+  raceResultsByEvent?: Record<string, RaceResultRow[]>;
+  /** All drivers for driver card lookup. */
+  allDrivers?: Driver[];
+  /** All teams for driver card lookup. */
+  allTeams?: Team[];
 };
 
-export default function ScheduleList({ events }: ScheduleListProps) {
+export default function ScheduleList({
+  events,
+  raceResultsByEvent = {},
+  allDrivers = [],
+  allTeams = [],
+}: ScheduleListProps) {
   const [posterEvent, setPosterEvent] = useState<RaceEvent | null>(null);
   const [resultsEvent, setResultsEvent] = useState<RaceEvent | null>(null);
 
@@ -414,6 +482,9 @@ export default function ScheduleList({ events }: ScheduleListProps) {
       {posterEvent && (
         <PosterModal
           event={posterEvent}
+          hasTableData={
+            (raceResultsByEvent[posterEvent.event_id]?.length ?? 0) > 0
+          }
           onClose={() => setPosterEvent(null)}
           onShowResults={() => {
             const ev = posterEvent;
@@ -423,13 +494,19 @@ export default function ScheduleList({ events }: ScheduleListProps) {
         />
       )}
 
-      {/* Results zoom modal */}
-      {resultsEvent && resultsEvent.results_image && (
-        <ZoomModal
-          src={resultsEvent.results_image}
-          alt={`${resultsEvent.race_name} results`}
-          onClose={() => setResultsEvent(null)}
-        />
+      {/* Results modal (table + image toggle) */}
+      {resultsEvent && (
+        <DriverLookupProvider
+          drivers={allDrivers}
+          teams={allTeams}
+          placeholderSrc="/placeholders/driver.png"
+        >
+          <ResultsModal
+            event={resultsEvent}
+            tableData={raceResultsByEvent[resultsEvent.event_id] ?? []}
+            onClose={() => setResultsEvent(null)}
+          />
+        </DriverLookupProvider>
       )}
     </>
   );

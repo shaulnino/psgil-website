@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect, createContext, useContext } f
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import type { Driver, Team } from "@/lib/driversData";
+import { buildAchievements } from "@/components/AchievementBadges";
 
 type DriverModalProps = {
   driver: Driver;
@@ -36,7 +37,12 @@ function isRemote(src?: string) {
   return !!src && src.startsWith("http");
 }
 
-const rankExplanation = "Gold number indicates the driver\u2019s rank in this stat among active drivers in the current season.";
+function getRankExplanation(mode: StatMode): string {
+  return mode === "season"
+    ? "Gold number indicates the driver\u2019s rank in this stat among active drivers in the current season."
+    : "Gold number indicates the driver\u2019s rank in this stat among all-time drivers.";
+}
+
 
 const statItems = [
   { key: "points", label: "Points", isDecimal: false, tooltipDesc: "Total championship points earned across all races in this scope." },
@@ -222,185 +228,6 @@ function Tooltip({ text, children, triggerClassName, wide }: { text: React.React
       {tooltipNode}
     </>
   );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Achievement icons (inline SVGs)                                    */
-/* ------------------------------------------------------------------ */
-
-const MEDAL_COLORS = {
-  gold: "#D4AF37",
-  silver: "#C0C0C0",
-  bronze: "#CD7F32",
-} as const;
-
-type MedalTier = keyof typeof MEDAL_COLORS;
-
-/** Classic trophy silhouette */
-function TrophyIcon({ tier, size = 18 }: { tier: MedalTier; size?: number }) {
-  const c = MEDAL_COLORS[tier];
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-    >
-      <path
-        d="M7 4h10v6a5 5 0 0 1-10 0V4Z"
-        fill={c}
-        fillOpacity={0.25}
-        stroke={c}
-        strokeWidth={1.5}
-        strokeLinejoin="round"
-      />
-      <path
-        d="M7 6H4a1 1 0 0 0-1 1v1a3 3 0 0 0 3 3h1"
-        stroke={c}
-        strokeWidth={1.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M17 6h3a1 1 0 0 1 1 1v1a3 3 0 0 1-3 3h-1"
-        stroke={c}
-        strokeWidth={1.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path d="M12 15v3" stroke={c} strokeWidth={1.5} strokeLinecap="round" />
-      <path
-        d="M8 21h8M9 18h6"
-        stroke={c}
-        strokeWidth={1.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-/** Shield / plate icon */
-function PlateIcon({ tier, size = 18 }: { tier: MedalTier; size?: number }) {
-  const c = MEDAL_COLORS[tier];
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-    >
-      <path
-        d="M12 3 4 7v4c0 5.25 3.4 10.2 8 11.5 4.6-1.3 8-6.25 8-11.5V7l-8-4Z"
-        fill={c}
-        fillOpacity={0.25}
-        stroke={c}
-        strokeWidth={1.5}
-        strokeLinejoin="round"
-      />
-      <path
-        d="m9 12 2 2 4-4"
-        stroke={c}
-        strokeWidth={1.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-/** Lion head silhouette */
-function LionIcon({ tier, size = 18 }: { tier: MedalTier; size?: number }) {
-  const c = MEDAL_COLORS[tier];
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-    >
-      {/* Mane */}
-      <ellipse
-        cx="12"
-        cy="11"
-        rx="9"
-        ry="9.5"
-        fill={c}
-        fillOpacity={0.15}
-        stroke={c}
-        strokeWidth={1.2}
-      />
-      {/* Face */}
-      <ellipse cx="12" cy="12" rx="5.5" ry="6" fill={c} fillOpacity={0.25} />
-      {/* Eyes */}
-      <circle cx="10" cy="10.5" r="0.9" fill={c} />
-      <circle cx="14" cy="10.5" r="0.9" fill={c} />
-      {/* Nose + mouth */}
-      <path
-        d="M11 13.5h2l-1 1-1-1Z"
-        fill={c}
-      />
-      <path
-        d="M12 14.5v1"
-        stroke={c}
-        strokeWidth={0.8}
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-type AchievementDef = {
-  icon: React.ReactNode;
-  tooltip: string;
-  ariaLabel: string;
-};
-
-function buildAchievements(driver: Driver): AchievementDef[] {
-  const achievements: AchievementDef[] = [];
-
-  const defs: {
-    field: keyof Driver;
-    tier: MedalTier;
-    Icon: typeof TrophyIcon;
-    label: string;
-    tooltip: string;
-  }[] = [
-    // League Championship
-    { field: "titles_league_1st", tier: "gold", Icon: TrophyIcon, label: "League champion", tooltip: "League champion – Gold trophy" },
-    { field: "titles_league_2nd", tier: "silver", Icon: TrophyIcon, label: "2nd place in league championship", tooltip: "2nd place in league championship – Silver trophy" },
-    { field: "titles_league_3rd", tier: "bronze", Icon: TrophyIcon, label: "3rd place in league championship", tooltip: "3rd place in league championship – Bronze trophy" },
-    // Lower Bracket Championship
-    { field: "titles_lower_1st", tier: "gold", Icon: PlateIcon, label: "Lower Bracket champion", tooltip: "Lower Bracket champion – Gold plate" },
-    { field: "titles_lower_2nd", tier: "silver", Icon: PlateIcon, label: "2nd place in lower bracket championship", tooltip: "2nd place in lower bracket championship – Silver plate" },
-    { field: "titles_lower_3rd", tier: "bronze", Icon: PlateIcon, label: "3rd place in lower bracket championship", tooltip: "3rd place in lower bracket championship – Bronze plate" },
-    // Wild League Championship
-    { field: "titles_wild_1st", tier: "gold", Icon: LionIcon, label: "Wild League champion", tooltip: "Wild League champion – Gold lion" },
-    { field: "titles_wild_2nd", tier: "silver", Icon: LionIcon, label: "2nd place in Wild League championship", tooltip: "2nd place in Wild League championship – Silver lion" },
-    { field: "titles_wild_3rd", tier: "bronze", Icon: LionIcon, label: "3rd place in Wild League championship", tooltip: "3rd place in Wild League championship – Bronze lion" },
-  ];
-
-  for (const def of defs) {
-    const raw = driver[def.field];
-    const count = raw ? parseInt(raw, 10) : 0;
-    if (!count || count <= 0) continue;
-    // Repeat icon for each occurrence (e.g. 3× champion = 3 gold trophies)
-    for (let i = 0; i < count; i++) {
-      achievements.push({
-        icon: <def.Icon tier={def.tier} size={18} />,
-        tooltip: def.tooltip,
-        ariaLabel: def.label,
-      });
-    }
-  }
-
-  return achievements;
 }
 
 /* ------------------------------------------------------------------ */
@@ -591,7 +418,7 @@ export default function DriverModal({ driver, team, placeholderSrc, onClose }: D
                       const value = getStatValue(driver, stat.key, statMode);
                       const rank = getStatRank(driver, stat.key, statMode);
                       return (
-                        <Tooltip key={stat.key} text={<><p>{stat.tooltipDesc}</p><p className="mt-1.5 text-white/50">{rankExplanation}</p></>} triggerClassName="block" wide>
+                        <Tooltip key={stat.key} text={<><p>{stat.tooltipDesc}</p><p className="mt-1.5 text-white/50">{getRankExplanation(statMode)}</p></>} triggerClassName="block" wide>
                           <div
                             className="relative cursor-help rounded-xl border border-white/10 bg-white/5 px-4 py-3"
                           >

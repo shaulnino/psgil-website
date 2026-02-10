@@ -15,6 +15,8 @@ import {
   getNextRaceGroup,
 } from "@/lib/scheduleData";
 import type { RaceGroup } from "@/lib/scheduleData";
+import { fetchAllRaceResults } from "@/lib/resultsData";
+import { mapDrivers, mapTeams, mapLeagueStandings, applyLeagueStandings } from "@/lib/driversData";
 
 const heroImagePath = "/hero.jpg";
 const resolvePublic = (filePath: string) =>
@@ -22,22 +24,52 @@ const resolvePublic = (filePath: string) =>
 
 const SCHEDULE_CSV_URL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=2105913561&single=true&output=csv";
+const DRIVERS_CSV_URL =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=353282807&single=true&output=csv";
+const TEAMS_CSV_URL =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=1933328661&single=true&output=csv";
+const LEAGUE_STANDINGS_CSV_URL =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=1982499543&single=true&output=csv";
 
 export default async function Home() {
   const heroImageExists = existsSync(resolvePublic(heroImagePath));
 
-  /* Fetch schedule data for Races section */
+  /* Fetch schedule + race results + drivers/teams + league standings in parallel */
+  const [scheduleCsv, raceResultsByEvent, driversCsv, teamsCsv, standingsCsv] =
+    await Promise.all([
+      fetchCsv(SCHEDULE_CSV_URL).catch(() => ""),
+      fetchAllRaceResults(),
+      fetchCsv(DRIVERS_CSV_URL).catch(() => ""),
+      fetchCsv(TEAMS_CSV_URL).catch(() => ""),
+      fetchCsv(LEAGUE_STANDINGS_CSV_URL).catch(() => ""),
+    ]);
+
   let lastGroup: RaceGroup | null = null;
   let nextGroup: RaceGroup | null = null;
   try {
-    const csv = await fetchCsv(SCHEDULE_CSV_URL);
-    const raw = parseCsv<Record<string, string>>(csv);
-    const events = mapRaceEvents(raw);
-    lastGroup = getLastRaceGroup(events);
-    nextGroup = getNextRaceGroup(events);
+    if (scheduleCsv) {
+      const raw = parseCsv<Record<string, string>>(scheduleCsv);
+      const events = mapRaceEvents(raw);
+      lastGroup = getLastRaceGroup(events);
+      nextGroup = getNextRaceGroup(events);
+    }
   } catch {
     // CSV not available — cards will show fallback
   }
+
+  let allDrivers = driversCsv
+    ? mapDrivers(parseCsv<Record<string, string>>(driversCsv))
+    : [];
+
+  // Merge league standings into driver data
+  if (standingsCsv) {
+    const standings = mapLeagueStandings(parseCsv<Record<string, string>>(standingsCsv));
+    allDrivers = applyLeagueStandings(allDrivers, standings);
+  }
+
+  const allTeams = teamsCsv
+    ? mapTeams(parseCsv<Record<string, string>>(teamsCsv))
+    : [];
 
   // Strip non-serialisable _dateObj before sending to client component
   const stripDate = (g: RaceGroup | null) =>
@@ -162,7 +194,13 @@ export default async function Home() {
           </Button>
         }
       >
-        <HomeRaceCards lastGroup={lastGroupSafe} nextGroup={nextGroupSafe} />
+        <HomeRaceCards
+          lastGroup={lastGroupSafe}
+          nextGroup={nextGroupSafe}
+          raceResultsByEvent={raceResultsByEvent}
+          allDrivers={allDrivers}
+          allTeams={allTeams}
+        />
       </Section>
 
       <Section title="About Us">

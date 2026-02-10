@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import type { Driver, Team } from "@/lib/driversData";
 import { getTeamColor } from "@/lib/driversData";
+import { AchievementBadgeList } from "@/components/AchievementBadges";
 
 type DriverCardProps = {
   driver: Driver;
@@ -32,25 +33,30 @@ export default function DriverCard({ driver, team, placeholderSrc, onSelect }: D
       style={{ borderColor: hovered ? GOLD_ACCENT : teamColor }}
       className="group flex w-full flex-col overflow-hidden rounded-2xl border-2 bg-white/5 text-left transition-colors duration-200 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7020B0]/60"
     >
-      <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#0B0B0E]">
+      {/* Image area — shorter aspect ratio so the card is more compact */}
+      <div className="relative aspect-[5/5] w-full overflow-hidden bg-[#0B0B0E]">
         <Image
           src={photoSrc}
           alt={driver.name || "Driver"}
           fill
           sizes="(max-width: 768px) 100vw, 240px"
           className="object-cover transition duration-200 group-hover:scale-[1.02]"
+          style={{ objectPosition: driver.photo_position || "top" }}
           unoptimized={isRemote(photoSrc)}
         />
       </div>
-      <div className="flex flex-1 flex-col gap-2 px-4 py-4">
-        <div className="flex items-center justify-between gap-3">
-          <p className="font-display text-base font-semibold text-white">{driver.name}</p>
-          {driver.number && (
-            <span className="inline-flex items-center rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-2.5 py-0.5 text-xs font-semibold text-[#D4AF37]">
-              #{driver.number}
-            </span>
-          )}
-        </div>
+      {/* Name bar — more prominent */}
+      <div className="flex items-center gap-2 px-4 py-3">
+        <p className="font-display text-lg font-bold leading-tight text-white truncate">
+          {driver.name}
+        </p>
+        <AchievementBadgeList driver={driver} iconSize={14} />
+        <span className="flex-1" />
+        {driver.number && (
+          <span className="inline-flex shrink-0 items-center rounded-full border border-[#D4AF37]/40 bg-[#D4AF37]/15 px-3 py-1 text-sm font-bold text-[#D4AF37]">
+            #{driver.number}
+          </span>
+        )}
       </div>
     </button>
   );

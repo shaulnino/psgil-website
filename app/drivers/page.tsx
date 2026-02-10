@@ -6,6 +6,7 @@ import {
   mapDrivers,
   mapTeams,
   getReserveDrivers,
+  getHistoricDrivers,
   applyLeagueStandings,
   mapLeagueStandings,
 } from "@/lib/driversData";
@@ -13,7 +14,7 @@ import {
 const DRIVERS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=353282807&single=true&output=csv";
 const TEAMS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=1933328661&single=true&output=csv";
 // League standings (S6 Tables) – separate sheet, joined by driver_id
-const LEAGUE_STANDINGS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSgfFX2VNHFDTHnY5eWJ-sajbgy3_bthj5OGJ_YlN_8uXthIc1xo5GsQUs8WvxN5dqawS9_hxnbN5A3/pub?gid=830802505&single=true&output=csv";
+const LEAGUE_STANDINGS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=1982499543&single=true&output=csv";
 
 const PLACEHOLDER_PHOTO = "/placeholders/driver.png";
 
@@ -107,6 +108,7 @@ const DEMO_DRIVER = {
 export default async function DriversPage() {
   let teams: { team_key: string; team_name: string; logo_url: string; drivers: ReturnType<typeof mapDrivers> }[] = [];
   let reserves: ReturnType<typeof mapDrivers> = [];
+  let historic: ReturnType<typeof mapDrivers> = [];
 
   try {
     const csvPromises: [Promise<string>, Promise<string>, Promise<string | null>] = [
@@ -130,9 +132,11 @@ export default async function DriversPage() {
     const teamsData = mapTeams(parseCsv<Record<string, string>>(teamsCsv));
     teams = groupDriversByTeam(teamsData, drivers);
     reserves = getReserveDrivers(drivers);
+    historic = getHistoricDrivers(drivers);
   } catch (error) {
     teams = [];
     reserves = [];
+    historic = [];
   }
 
   if (teams.length === 0) {
@@ -146,7 +150,7 @@ export default async function DriversPage() {
         title="Drivers"
         description="Official PSGiL roster: teams, drivers, and profiles — updated as the season progresses."
       >
-        <DriversGrid teams={teams} reserves={reserves} placeholderSrc={PLACEHOLDER_PHOTO} />
+        <DriversGrid teams={teams} reserves={reserves} historicDrivers={historic} placeholderSrc={PLACEHOLDER_PHOTO} />
       </Section>
     </main>
   );
