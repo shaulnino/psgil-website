@@ -37,14 +37,21 @@ export type SeasonConfig = {
 };
 
 /* ------------------------------------------------------------------ */
-/*  CSV Source URL                                                     */
+/*  CSV Source URLs                                                    */
 /*  ----------------------------------------------------------------  */
-/*  This is the ONLY hardcoded config URL in the entire site.          */
-/*  Publish the "csv_seasons_config" tab as CSV and paste its URL.     */
+/*  The Google Sheets base URL is loaded from the SHEETS_BASE_URL      */
+/*  environment variable to avoid triggering secrets scanning.         */
+/*  Set it in Netlify to:                                              */
+/*    https://docs.google.com/spreadsheets/d/e/<PACX-ID>/pub          */
 /* ------------------------------------------------------------------ */
 
-export const SEASONS_CONFIG_CSV_URL =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=819205893&single=true&output=csv";
+const SHEETS_BASE = process.env.SHEETS_BASE_URL ?? "";
+
+function sheetUrl(gid: string): string {
+  return `${SHEETS_BASE}?gid=${gid}&single=true&output=csv`;
+}
+
+export const SEASONS_CONFIG_CSV_URL = sheetUrl("819205893");
 
 /* ------------------------------------------------------------------ */
 /*  Global CSV URLs                                                    */
@@ -54,28 +61,19 @@ export const SEASONS_CONFIG_CSV_URL =
 
 export const GLOBAL_CSV_URLS = {
   /* Driver roster & team data */
-  drivers:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=353282807&single=true&output=csv",
-  teams:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=1933328661&single=true&output=csv",
-  leagueStandings:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=1982499543&single=true&output=csv",
+  drivers: sheetUrl("353282807"),
+  teams: sheetUrl("1933328661"),
+  leagueStandings: sheetUrl("1982499543"),
 
   /* Championship standings (all seasons, filtered by "season" column) */
-  driversStandingsMain:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=174729634&single=true&output=csv",
-  driversStandingsWild:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=1010201825&single=true&output=csv",
-  constructorsStandingsMain:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=1965693345&single=true&output=csv",
-  constructorsStandingsWild:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=769074374&single=true&output=csv",
+  driversStandingsMain: sheetUrl("174729634"),
+  driversStandingsWild: sheetUrl("1010201825"),
+  constructorsStandingsMain: sheetUrl("1965693345"),
+  constructorsStandingsWild: sheetUrl("769074374"),
 
   /* Schedule & race results (all seasons, filtered by "season" column) */
-  schedule:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=2105913561&single=true&output=csv",
-  raceResults:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=1960669750&single=true&output=csv",
+  schedule: sheetUrl("2105913561"),
+  raceResults: sheetUrl("1960669750"),
 };
 
 /* ------------------------------------------------------------------ */
