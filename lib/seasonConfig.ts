@@ -37,45 +37,54 @@ export type SeasonConfig = {
 };
 
 /* ------------------------------------------------------------------ */
-/*  CSV Source URL                                                     */
+/*  CSV Source URLs                                                    */
 /*  ----------------------------------------------------------------  */
-/*  This is the ONLY hardcoded config URL in the entire site.          */
-/*  Publish the "csv_seasons_config" tab as CSV and paste its URL.     */
+/*  All CSVs come from the same Google Sheet.  We store the sheet ID   */
+/*  and each tab's gid separately, then build full URLs at runtime.    */
+/*  This avoids Netlify's bundler truncating long string constants.    */
 /* ------------------------------------------------------------------ */
 
-export const SEASONS_CONFIG_CSV_URL =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=819205893&single=true&output=csv";
+const SHEET_ID = [
+  "2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0",
+  "-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA",
+  "2HkvoNEpZg9Zf_Ps",
+].join("");
 
-/* ------------------------------------------------------------------ */
-/*  Global CSV URLs                                                    */
-/*  ----------------------------------------------------------------  */
-/*  Each CSV contains ALL seasons.  Pages filter by season_key.        */
-/* ------------------------------------------------------------------ */
+function sheetUrl(gid: string): string {
+  return `https://docs.google.com/spreadsheets/d/e/${SHEET_ID}/pub?gid=${gid}&single=true&output=csv`;
+}
+
+/* Tab gid values */
+const GID = {
+  seasonsConfig: "819205893",
+  drivers: "353282807",
+  teams: "1933328661",
+  leagueStandings: "1982499543",
+  driversStandingsMain: "174729634",
+  driversStandingsWild: "1010201825",
+  constructorsStandingsMain: "1965693345",
+  constructorsStandingsWild: "769074374",
+  schedule: "2105913561",
+  raceResults: "1960669750",
+} as const;
+
+export const SEASONS_CONFIG_CSV_URL = sheetUrl(GID.seasonsConfig);
 
 export const GLOBAL_CSV_URLS = {
   /* Driver roster & team data */
-  drivers:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=353282807&single=true&output=csv",
-  teams:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=1933328661&single=true&output=csv",
-  leagueStandings:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=1982499543&single=true&output=csv",
+  drivers: sheetUrl(GID.drivers),
+  teams: sheetUrl(GID.teams),
+  leagueStandings: sheetUrl(GID.leagueStandings),
 
   /* Championship standings (all seasons, filtered by "season" column) */
-  driversStandingsMain:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=174729634&single=true&output=csv",
-  driversStandingsWild:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=1010201825&single=true&output=csv",
-  constructorsStandingsMain:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=1965693345&single=true&output=csv",
-  constructorsStandingsWild:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=769074374&single=true&output=csv",
+  driversStandingsMain: sheetUrl(GID.driversStandingsMain),
+  driversStandingsWild: sheetUrl(GID.driversStandingsWild),
+  constructorsStandingsMain: sheetUrl(GID.constructorsStandingsMain),
+  constructorsStandingsWild: sheetUrl(GID.constructorsStandingsWild),
 
   /* Schedule & race results (all seasons, filtered by "season" column) */
-  schedule:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=2105913561&single=true&output=csv",
-  raceResults:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=1960669750&single=true&output=csv",
+  schedule: sheetUrl(GID.schedule),
+  raceResults: sheetUrl(GID.raceResults),
 };
 
 /* ------------------------------------------------------------------ */
