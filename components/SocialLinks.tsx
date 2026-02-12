@@ -9,6 +9,13 @@ type SocialLinksProps = {
   variant?: "full" | "compact";
 };
 
+const brandColors: Record<string, string> = {
+  facebook: "#1877F2",
+  discord: "#5865F2",
+  youtube: "#FF0000",
+  instagram: "#E4405F",
+};
+
 const icons = {
   facebook: (
     <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
@@ -48,26 +55,29 @@ export default function SocialLinks({ items, variant = "full" }: SocialLinksProp
   const isCompact = variant === "compact";
 
   return (
-    <div className={`flex flex-wrap items-center ${isCompact ? "gap-2" : "gap-4"}`}>
-      {items.map((item) => (
-        <a
-          key={item.label}
-          href={item.href}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label={`PSGiL on ${item.label}`}
-          className={
-            isCompact
-              ? "flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/70 transition hover:border-[#7020B0]/60 hover:text-white"
-              : "flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/70 transition hover:border-[#7020B0]/60 hover:text-white"
-          }
-        >
-          <span className="text-[#7020B0]">
-            <span className={isCompact ? "block scale-90" : ""}>{icons[item.icon]}</span>
-          </span>
-          {!isCompact && item.label}
-        </a>
-      ))}
+    <div className={`flex flex-wrap items-center ${isCompact ? "gap-3" : "gap-4"}`}>
+      {items.map((item) => {
+        const color = brandColors[item.icon] ?? "#a855f7";
+        return (
+          <a
+            key={item.label}
+            href={item.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`PSGiL on ${item.label}`}
+            className={
+              isCompact
+                ? "flex items-center gap-2 rounded-full border border-transparent bg-white/5 px-3 py-1.5 text-xs text-white/70 transition hover:bg-white/10 hover:text-white"
+                : "flex items-center gap-2 rounded-full border border-transparent bg-white/5 px-4 py-2 text-sm text-white/70 transition hover:bg-white/10 hover:text-white"
+            }
+          >
+            <span style={{ color }}>
+              <span className={isCompact ? "block scale-90" : ""}>{icons[item.icon]}</span>
+            </span>
+            <span className="text-white/60">{item.label}</span>
+          </a>
+        );
+      })}
     </div>
   );
 }

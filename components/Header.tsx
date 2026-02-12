@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import Button from "@/components/Button";
+import LoadingLink from "@/components/LoadingLink";
 import { siteConfig } from "@/lib/siteConfig";
 
 export default function Header() {
@@ -36,14 +37,14 @@ export default function Header() {
             const isComingSoon = link.label === "Articles";
             return (
               <div key={link.href} className="relative">
-                <Link
+                <LoadingLink
                   href={link.href}
                   className={`text-sm font-medium transition ${
                     pathname === link.href ? "text-white" : "text-white/60 hover:text-white"
                   }`}
                 >
                   {link.label}
-                </Link>
+                </LoadingLink>
                 {isComingSoon && (
                   <span className="ml-2 rounded-[4px] bg-red-700/90 px-1.5 py-0.5 text-[9px] font-medium leading-none text-white">
                     Coming soon
@@ -80,7 +81,7 @@ export default function Header() {
               const isComingSoon = link.label === "Articles";
               return (
                 <div key={link.href} className="flex items-center gap-2">
-                  <Link
+                  <LoadingLink
                     href={link.href}
                     onClick={() => setIsOpen(false)}
                     className={`text-sm font-medium transition ${
@@ -88,7 +89,7 @@ export default function Header() {
                     }`}
                   >
                     {link.label}
-                  </Link>
+                  </LoadingLink>
                   {isComingSoon && (
                     <span className="rounded-[4px] bg-red-700/90 px-1.5 py-0.5 text-[9px] font-medium leading-none text-white">
                       Coming soon

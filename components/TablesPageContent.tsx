@@ -1,47 +1,36 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import SeasonSelector from "@/components/SeasonSelector";
 import StandingsSection from "@/components/StandingsSection";
 import DriverLookupProvider from "@/components/DriverLookupProvider";
 import type { Driver, Team } from "@/lib/driversData";
 import {
-  ALL_SEASONS,
   filterBySeason,
+  groupByBracket,
   getTableImage,
   type StandingsRow,
 } from "@/lib/resultsData";
-
-/* ------------------------------------------------------------------ */
-/*  Translation keys (future i18n ready)                               */
-/* ------------------------------------------------------------------ */
-
-const TRANSLATIONS: Record<string, string> = {
-  "tables.season1Notice":
-    "This season came to an early end on October 7th, after only three races had been completed.\nIn remembrance of Itay Saadon, who lost his life while fighting for our country at the outbreak of the war, the championship title was awarded in his honor.",
-};
+import type { SeasonConfig } from "@/lib/seasonConfig";
+import { getSeasonsForDropdown } from "@/lib/seasonConfig";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
-/** Static fallback images keyed by section (used when table_image is empty). */
-type FallbackImages = {
-  driversMain: string;
-  constructorsMain: string;
-  driversWild: string;
-  constructorsWild: string;
-};
-
-export type TablesPageContentProps = {
-  /** Default season to select (typically the latest found in data). */
-  defaultSeason: string;
+type AllStandings = {
   driversMain: StandingsRow[];
   constructorsMain: StandingsRow[];
   driversWild: StandingsRow[];
   constructorsWild: StandingsRow[];
-  fallbackImages: FallbackImages;
+};
+
+export type TablesPageContentProps = {
+  seasonsConfig: SeasonConfig[];
+  defaultSeasonKey: string;
+  /** ALL standings (every season) – filtered on the client by season key. */
+  allStandings: AllStandings;
   /** Driver card data for clickable driver names */
   drivers: Driver[];
   teams: Team[];
@@ -49,57 +38,72 @@ export type TablesPageContentProps = {
 };
 
 /* ------------------------------------------------------------------ */
+/*  Bracket label helper                                               */
+/* ------------------------------------------------------------------ */
+
+function bracketTitle(bracket: string): string {
+  switch (bracket) {
+    case "upper":
+      return "Upper Bracket";
+    case "lower":
+      return "Lower Bracket";
+    default:
+      return "Overall";
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /*  Inner component (reads ?season= via useSearchParams)               */
 /* ------------------------------------------------------------------ */
 
 function TablesInner({
-  defaultSeason,
-  driversMain,
-  constructorsMain,
-  driversWild,
-  constructorsWild,
-  fallbackImages,
+  seasonsConfig,
+  defaultSeasonKey,
+  allStandings,
   drivers,
   teams,
   placeholderSrc,
 }: TablesPageContentProps) {
   const searchParams = useSearchParams();
-  const selectedSeason = searchParams.get("season") || defaultSeason;
+  const selectedSeasonKey =
+    searchParams.get("season") || defaultSeasonKey;
 
-  /* ---------- filter by season ---------- */
-  const dMain = filterBySeason(driversMain, selectedSeason);
-  const cMain = filterBySeason(constructorsMain, selectedSeason);
-  const dWild = filterBySeason(driversWild, selectedSeason);
-  const cWild = filterBySeason(constructorsWild, selectedSeason);
+  const seasonConfig = seasonsConfig.find(
+    (s) => s.season_key === selectedSeasonKey,
+  );
+  const seasonsList = getSeasonsForDropdown(seasonsConfig);
 
-  /* ---------- resolve fallback images ---------- */
-  // Only use the static fallback images for the default (latest) season.
-  // For all other seasons, rely solely on the CSV table_image field;
-  // if it's empty the section shows "Results not uploaded yet."
-  const isDefault = selectedSeason === defaultSeason;
+  /* ---------- Filter standings by selected season ---------- */
+  const data = useMemo(() => {
+    return {
+      driversMain: filterBySeason(allStandings.driversMain, selectedSeasonKey),
+      constructorsMain: filterBySeason(allStandings.constructorsMain, selectedSeasonKey),
+      driversWild: filterBySeason(allStandings.driversWild, selectedSeasonKey),
+      constructorsWild: filterBySeason(allStandings.constructorsWild, selectedSeasonKey),
+    };
+  }, [allStandings, selectedSeasonKey]);
+
+  /* ---------- Config flags ---------- */
+  const showWild = seasonConfig?.has_wild ?? false;
+  const showConstructors = seasonConfig?.has_constructors ?? true;
+  const hasPlayoffs =
+    seasonConfig?.has_playoffs &&
+    seasonConfig?.playoffs_mode === "upper_lower";
+  const notes = seasonConfig?.notes ?? "";
+
+  /* ---------- Fallback images from config ---------- */
   const dMainImg =
-    getTableImage(driversMain, selectedSeason) ||
-    (isDefault ? fallbackImages.driversMain : "");
+    getTableImage(data.driversMain) ||
+    (seasonConfig?.fallback_image_drivers_main ?? "");
   const cMainImg =
-    getTableImage(constructorsMain, selectedSeason) ||
-    (isDefault ? fallbackImages.constructorsMain : "");
+    getTableImage(data.constructorsMain) ||
+    (seasonConfig?.fallback_image_constructors_main ?? "");
   const dWildImg =
-    getTableImage(driversWild, selectedSeason) ||
-    (isDefault ? fallbackImages.driversWild : "");
+    getTableImage(data.driversWild) ||
+    (seasonConfig?.fallback_image_drivers_wild ?? "");
   const cWildImg =
-    getTableImage(constructorsWild, selectedSeason) ||
-    (isDefault ? fallbackImages.constructorsWild : "");
-
-  const seasonNum = parseInt(selectedSeason.replace(/\D/g, ""), 10) || 0;
-
-  /* ---------- wild visibility ---------- */
-  // S1–S3: never show wild. S4–S5: only if rows exist. S6+: always show.
-  const showWild =
-    seasonNum >= 6
-      ? true
-      : seasonNum >= 4
-        ? dWild.length > 0 || cWild.length > 0
-        : false;
+    getTableImage(data.constructorsWild) ||
+    (seasonConfig?.fallback_image_constructors_wild ?? "");
 
   return (
     <DriverLookupProvider
@@ -117,14 +121,17 @@ function TablesInner({
             Official championship standings, updated after each round.
           </p>
         </div>
-        <SeasonSelector seasons={ALL_SEASONS} selected={selectedSeason} />
+        <SeasonSelector
+          seasons={seasonsList}
+          selected={selectedSeasonKey}
+        />
       </div>
 
       <div className="flex flex-col gap-12">
-        {/* ============ SEASON 1 NOTICE ============ */}
-        {selectedSeason === "S1" && (
+        {/* ============ SEASON NOTES BANNER ============ */}
+        {notes && (
           <div className="rounded-xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 px-5 py-4">
-            {TRANSLATIONS["tables.season1Notice"].split("\n").map((line, i) => (
+            {notes.split("\n").map((line, i) => (
               <p
                 key={i}
                 className="text-sm font-medium leading-relaxed text-[#D4AF37]/90"
@@ -136,30 +143,61 @@ function TablesInner({
         )}
 
         {/* ============ DRIVERS MAIN ============ */}
-        <StandingsSection
-          title="Drivers Main Championship standings"
-          subtitle="Current points table after the latest round."
-          image={{
-            src: dMainImg,
-            alt: "Drivers Main Championship standings table",
-          }}
-          standingsData={dMain}
-          type="drivers"
-        />
+        {hasPlayoffs ? (
+          /* Playoff bracket groups (e.g. S2/S3 upper / lower) */
+          groupByBracket(data.driversMain).map(({ bracket, rows }) => (
+            <StandingsSection
+              key={bracket}
+              title={`Drivers Main Championship – ${bracketTitle(bracket)}`}
+              subtitle={
+                bracket === "upper"
+                  ? "Top half of the grid."
+                  : bracket === "lower"
+                    ? "Bottom half of the grid."
+                    : "Current points table after the latest round."
+              }
+              image={{
+                src:
+                  getTableImage(
+                    data.driversMain,
+                    undefined,
+                    bracket,
+                  ) ||
+                  (seasonConfig?.fallback_image_drivers_main ?? ""),
+                alt: `Drivers Main Championship – ${bracketTitle(bracket)}`,
+              }}
+              standingsData={rows}
+              type="drivers"
+            />
+          ))
+        ) : (
+          <StandingsSection
+            title="Drivers Main Championship standings"
+            subtitle="Current points table after the latest round."
+            image={{
+              src: dMainImg,
+              alt: "Drivers Main Championship standings table",
+            }}
+            standingsData={data.driversMain}
+            type="drivers"
+          />
+        )}
 
         {/* ============ CONSTRUCTORS MAIN ============ */}
-        <StandingsSection
-          title="Constructors Main Championship standings"
-          subtitle="Team standings in the Main Championship."
-          image={{
-            src: cMainImg,
-            alt: "Constructors Main Championship standings table",
-          }}
-          standingsData={cMain}
-          type="constructors"
-        />
+        {showConstructors && (
+          <StandingsSection
+            title="Constructors Main Championship standings"
+            subtitle="Team standings in the Main Championship."
+            image={{
+              src: cMainImg,
+              alt: "Constructors Main Championship standings table",
+            }}
+            standingsData={data.constructorsMain}
+            type="constructors"
+          />
+        )}
 
-        {/* ============ WILD (hidden for S1–S3, conditional for S4–S5) ============ */}
+        {/* ============ WILD ============ */}
         {showWild && (
           <>
             <StandingsSection
@@ -169,21 +207,36 @@ function TablesInner({
                 src: dWildImg,
                 alt: "Drivers Wild Championship standings table",
               }}
-              standingsData={dWild}
+              standingsData={data.driversWild}
               type="drivers"
             />
-            <StandingsSection
-              title="Constructors Wild Championship standings"
-              subtitle="Team standings in the Wild Championship."
-              image={{
-                src: cWildImg,
-                alt: "Constructors Wild Championship standings table",
-              }}
-              standingsData={cWild}
-              type="constructors"
-            />
+            {showConstructors && (
+              <StandingsSection
+                title="Constructors Wild Championship standings"
+                subtitle="Team standings in the Wild Championship."
+                image={{
+                  src: cWildImg,
+                  alt: "Constructors Wild Championship standings table",
+                }}
+                standingsData={data.constructorsWild}
+                type="constructors"
+              />
+            )}
           </>
         )}
+
+        {/* No data at all for this season */}
+        {data.driversMain.length === 0 &&
+          data.constructorsMain.length === 0 &&
+          data.driversWild.length === 0 &&
+          data.constructorsWild.length === 0 &&
+          !notes && (
+            <div className="flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 py-16">
+              <p className="text-sm text-white/50">
+                No standings data available for this season yet.
+              </p>
+            </div>
+          )}
       </div>
     </DriverLookupProvider>
   );

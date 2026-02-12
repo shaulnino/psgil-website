@@ -129,13 +129,6 @@ const raceResultsColumns: ColumnDef<RaceResultRow>[] = [
     hideMobile: true,
   },
   {
-    label: "Laps",
-    accessor: "laps",
-    align: "center",
-    minWidth: 48,
-    hideMobile: true,
-  },
-  {
     label: "Grid",
     accessor: "grid",
     align: "center",

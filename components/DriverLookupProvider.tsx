@@ -41,6 +41,7 @@ type DriverLookupProviderProps = {
   drivers: Driver[];
   teams: Team[];
   placeholderSrc: string;
+  currentSeasonLabel?: string;
   children: React.ReactNode;
 };
 
@@ -50,6 +51,7 @@ export default function DriverLookupProvider({
   drivers,
   teams,
   placeholderSrc = PLACEHOLDER_PHOTO,
+  currentSeasonLabel,
   children,
 }: DriverLookupProviderProps) {
   const [selected, setSelected] = useState<{
@@ -125,6 +127,7 @@ export default function DriverLookupProvider({
           team={selected.team}
           placeholderSrc={placeholderSrc}
           onClose={() => setSelected(null)}
+          currentSeasonLabel={currentSeasonLabel}
         />
       )}
     </DriverLookupContext.Provider>

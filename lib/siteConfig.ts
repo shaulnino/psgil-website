@@ -1,17 +1,12 @@
-export type RaceInfo = {
-  title: string;
-  date: string;
-  posterImagePath: string;
-  youtubeUrl?: string;
-  articleUrl?: string;
-  detailsUrl?: string;
-  calendarUrl?: string;
-  resultsUrl?: string;
-};
+/* ------------------------------------------------------------------ */
+/*  Site-wide static configuration                                     */
+/*  ----------------------------------------------------------------  */
+/*  Season-specific labels use {currentSeason} and {seasonCount}       */
+/*  tokens which are resolved at render time from the seasons config.  */
+/* ------------------------------------------------------------------ */
 
 export type SiteConfig = {
   leagueName: string;
-  seasonLabel: string;
   discordUrl: string;
   seo: {
     title: string;
@@ -29,10 +24,6 @@ export type SiteConfig = {
   aboutBullets: string[];
   whatYouGet: { title: string; description: string; icon: "shield" | "users" | "chart" }[];
   leagueFormat: { title: string; description: string }[];
-  races: {
-    last: RaceInfo;
-    next: RaceInfo;
-  };
   joinCta: {
     title: string;
     description: string;
@@ -45,29 +36,28 @@ export type SiteConfig = {
 
 export const siteConfig: SiteConfig = {
   leagueName: "PSGiL",
-  seasonLabel: "Season 6",
   discordUrl: "https://discord.gg/v6zF6QME7J",
   seo: {
     title: "PSGiL – F1 Sim Racing League (Israel)",
     description:
-      "PSGiL is Israel’s premium F1 sim racing league. Competitive clean racing, full season stats, and a community-first Formula 1 league experience.",
+      "PSGiL is Israel's premium F1 sim racing league. Competitive clean racing, full season stats, and a community-first Formula 1 league experience.",
   },
   navigation: [
     { label: "Drivers", href: "/drivers" },
-    { label: "Schedule", href: "/schedule" },
+    { label: "Schedule & Results", href: "/schedule" },
     { label: "Tables", href: "/statistics" },
     { label: "Articles", href: "/articles" },
   ],
   hero: {
     title: "PSGiL – F1 Sim Racing League",
     subtitle:
-      "Israel’s largest F1 sim racing league, competing primarily on the EA Sports F1 series. Built on competition, respect, and an outstanding community.",
+      "Israel's largest F1 sim racing league, competing primarily on the EA Sports F1 series. Built on competition, respect, and an outstanding community.",
     primaryCtaLabel: "Join Now",
     secondaryCtaLabel: "Watch Last Race",
   },
   trustChips: [
     "3+ years running",
-    "Season 6 live",
+    "{currentSeason} live",
     "No assists • 50% races",
     "Fair & stewarded racing",
     "Two seasons per year",
@@ -76,14 +66,14 @@ export const siteConfig: SiteConfig = {
     "EA Sports F1 series",
   ],
   snapshotStats: [
-    { label: "Seasons", value: "6" },
+    { label: "Seasons", value: "{seasonCount}" },
     { label: "Races", value: "60+" },
     { label: "Total Drivers", value: "50+" },
     { label: "Winners", value: "12" },
   ],
   aboutBullets: [
     "3+ years active",
-    "In the middle of Season 6",
+    "Currently in {currentSeason}",
     "Community-first & respectful racing",
     "Full stats kept from the beginning",
   ],
@@ -133,45 +123,6 @@ export const siteConfig: SiteConfig = {
       description: "Clear rules and active stewarding to keep racing fair, respectful, and clean.",
     },
   ],
-  /*
-    RACE UPDATE CHECKLIST (update after each event)
-
-    Update Last Race
-    Date
-    Track / event name (if shown)
-    Poster image path
-    YouTube link (VOD)
-    Article link (recap)
-
-    Update Next Race
-    Date
-    Track / event name (if shown)
-    Poster image path
-    Event details link (preview/article placeholder)
-    (Optional) Add-to-calendar link (if implemented later)
-
-    Optional content (if present on page)
-    Hero secondary CTA “Watch Last Race” URL
-    Any “Latest Article” link
-    Any “Next Race” banner/CTA
-  */
-  races: {
-    last: {
-      title: "Season 6, Race 2, Saudi Arabian GP",
-      date: "Jan 17, 2025",
-      posterImagePath: "/posters/psgil-s6r2-jeddah.png",
-      youtubeUrl: "https://www.youtube.com/live/YZYX4H2n_bs?si=gCA-2_PgGwl7z3WZ",
-      articleUrl: "/articles",
-      resultsUrl: "/statistics",
-    },
-    next: {
-      title: "Season 6, Wild Event #1, Austrian & Singapore GP",
-      date: "Jan 31, 2026",
-      posterImagePath: "/posters/psgil-s6w1-austria-singapore.png",
-      detailsUrl: "/articles",
-      calendarUrl: "",
-    },
-  },
   joinCta: {
     title: "Ready to race with us?",
     description: "Join the community, get onboarded, and compete in organized events.",
