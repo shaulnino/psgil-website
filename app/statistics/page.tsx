@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import TablesPageContent from "@/components/TablesPageContent";
 import { fetchStandings } from "@/lib/resultsData";
 import { fetchCsv, parseCsv } from "@/lib/csv";

@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import Image from "next/image";
 import path from "node:path";
 import { existsSync } from "node:fs";

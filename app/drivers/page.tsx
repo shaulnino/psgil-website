@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import Section from "@/components/Section";
 import DriversGrid from "@/components/DriversGrid";
 import { fetchCsv, parseCsv } from "@/lib/csv";

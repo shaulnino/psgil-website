@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import Section from "@/components/Section";
 import ScheduleList from "@/components/ScheduleList";
 import { fetchCsv, parseCsv } from "@/lib/csv";
