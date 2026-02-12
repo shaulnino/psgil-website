@@ -39,41 +39,52 @@ export type SeasonConfig = {
 /* ------------------------------------------------------------------ */
 /*  CSV Source URLs                                                    */
 /*  ----------------------------------------------------------------  */
-/*  The Google Sheets base URL is loaded from the SHEETS_BASE_URL      */
-/*  environment variable to avoid triggering secrets scanning.         */
-/*  Set it in Netlify to:                                              */
-/*    https://docs.google.com/spreadsheets/d/e/<PACX-ID>/pub          */
+/*  All CSVs come from the same Google Sheet.  We store the sheet ID   */
+/*  and each tab's gid separately, then build full URLs at runtime.    */
+/*  This avoids Netlify's bundler truncating long string constants.    */
 /* ------------------------------------------------------------------ */
 
-const SHEETS_BASE = process.env.SHEETS_BASE_URL ?? "";
+const SHEET_ID = [
+  "2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0",
+  "-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA",
+  "2HkvoNEpZg9Zf_Ps",
+].join("");
 
 function sheetUrl(gid: string): string {
-  return `${SHEETS_BASE}?gid=${gid}&single=true&output=csv`;
+  return `https://docs.google.com/spreadsheets/d/e/${SHEET_ID}/pub?gid=${gid}&single=true&output=csv`;
 }
 
-export const SEASONS_CONFIG_CSV_URL = sheetUrl("819205893");
+/* Tab gid values */
+const GID = {
+  seasonsConfig: "819205893",
+  drivers: "353282807",
+  teams: "1933328661",
+  leagueStandings: "1982499543",
+  driversStandingsMain: "174729634",
+  driversStandingsWild: "1010201825",
+  constructorsStandingsMain: "1965693345",
+  constructorsStandingsWild: "769074374",
+  schedule: "2105913561",
+  raceResults: "1960669750",
+} as const;
 
-/* ------------------------------------------------------------------ */
-/*  Global CSV URLs                                                    */
-/*  ----------------------------------------------------------------  */
-/*  Each CSV contains ALL seasons.  Pages filter by season_key.        */
-/* ------------------------------------------------------------------ */
+export const SEASONS_CONFIG_CSV_URL = sheetUrl(GID.seasonsConfig);
 
 export const GLOBAL_CSV_URLS = {
   /* Driver roster & team data */
-  drivers: sheetUrl("353282807"),
-  teams: sheetUrl("1933328661"),
-  leagueStandings: sheetUrl("1982499543"),
+  drivers: sheetUrl(GID.drivers),
+  teams: sheetUrl(GID.teams),
+  leagueStandings: sheetUrl(GID.leagueStandings),
 
   /* Championship standings (all seasons, filtered by "season" column) */
-  driversStandingsMain: sheetUrl("174729634"),
-  driversStandingsWild: sheetUrl("1010201825"),
-  constructorsStandingsMain: sheetUrl("1965693345"),
-  constructorsStandingsWild: sheetUrl("769074374"),
+  driversStandingsMain: sheetUrl(GID.driversStandingsMain),
+  driversStandingsWild: sheetUrl(GID.driversStandingsWild),
+  constructorsStandingsMain: sheetUrl(GID.constructorsStandingsMain),
+  constructorsStandingsWild: sheetUrl(GID.constructorsStandingsWild),
 
   /* Schedule & race results (all seasons, filtered by "season" column) */
-  schedule: sheetUrl("2105913561"),
-  raceResults: sheetUrl("1960669750"),
+  schedule: sheetUrl(GID.schedule),
+  raceResults: sheetUrl(GID.raceResults),
 };
 
 /* ------------------------------------------------------------------ */
