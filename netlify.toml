@@ -1,0 +1,5 @@
+[build.environment]
+  # Allow Google Sheets public "Publish to web" URLs (2PACX-…) through
+  # secrets scanning.  These are intentionally public, read-only endpoints
+  # and are not credentials.
+  SECRETS_SCAN_SMART_DETECTION_OMIT_VALUES = "2PACX-.*"
