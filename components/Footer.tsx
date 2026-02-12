@@ -1,5 +1,15 @@
+"use client";
+
 import { siteConfig } from "@/lib/siteConfig";
-import Link from "next/link";
+import LoadingLink from "@/components/LoadingLink";
+
+const footerLinks = [
+  { label: "Home", href: "/" },
+  { label: "Drivers", href: "/drivers" },
+  { label: "Schedule & Results", href: "/schedule" },
+  { label: "Tables", href: "/statistics" },
+  { label: "Articles", href: "/articles" },
+];
 
 export default function Footer() {
   return (
@@ -13,21 +23,15 @@ export default function Footer() {
             <p className="mt-2 text-xs text-white/50">{siteConfig.footerNote}</p>
           </div>
           <div className="flex flex-wrap items-center gap-4 text-xs text-white/50">
-            <Link href="/" className="transition hover:text-white/80">
-              Home
-            </Link>
-            <Link href="/drivers" className="transition hover:text-white/80">
-              Drivers
-            </Link>
-            <Link href="/schedule" className="transition hover:text-white/80">
-              Schedule
-            </Link>
-            <Link href="/statistics" className="transition hover:text-white/80">
-              Tables
-            </Link>
-            <Link href="/articles" className="transition hover:text-white/80">
-              Articles
-            </Link>
+            {footerLinks.map((link) => (
+              <LoadingLink
+                key={link.href}
+                href={link.href}
+                className="transition hover:text-white/80"
+              >
+                {link.label}
+              </LoadingLink>
+            ))}
           </div>
         </div>
       </div>

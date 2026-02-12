@@ -16,32 +16,45 @@ import {
 } from "@/lib/scheduleData";
 import type { RaceGroup } from "@/lib/scheduleData";
 import { fetchAllRaceResults } from "@/lib/resultsData";
-import { mapDrivers, mapTeams, mapLeagueStandings, applyLeagueStandings } from "@/lib/driversData";
+import {
+  mapDrivers,
+  mapTeams,
+  mapLeagueStandings,
+  applyLeagueStandings,
+} from "@/lib/driversData";
+import {
+  fetchSeasonsConfig,
+  resolveCurrentSeason,
+  resolveTemplate,
+  matchesSeason,
+  GLOBAL_CSV_URLS,
+} from "@/lib/seasonConfig";
 
 const heroImagePath = "/hero.jpg";
 const resolvePublic = (filePath: string) =>
   path.join(process.cwd(), "public", filePath.replace(/^\/+/, ""));
 
-const SCHEDULE_CSV_URL =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=2105913561&single=true&output=csv";
-const DRIVERS_CSV_URL =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=353282807&single=true&output=csv";
-const TEAMS_CSV_URL =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=1933328661&single=true&output=csv";
-const LEAGUE_STANDINGS_CSV_URL =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=1982499543&single=true&output=csv";
-
 export default async function Home() {
   const heroImageExists = existsSync(resolvePublic(heroImagePath));
 
-  /* Fetch schedule + race results + drivers/teams + league standings in parallel */
+  /* ---- Seasons config ---- */
+  const seasonsConfig = await fetchSeasonsConfig();
+  const currentSeason = resolveCurrentSeason(seasonsConfig);
+  const currentSeasonLabel = currentSeason.season_label;
+  const seasonCount = seasonsConfig.length;
+
+  /* ---- Template resolver ---- */
+  const t = (text: string) =>
+    resolveTemplate(text, currentSeasonLabel, seasonCount);
+
+  /* ---- Fetch schedule + race results + drivers/teams + standings in parallel ---- */
   const [scheduleCsv, raceResultsByEvent, driversCsv, teamsCsv, standingsCsv] =
     await Promise.all([
-      fetchCsv(SCHEDULE_CSV_URL).catch(() => ""),
-      fetchAllRaceResults(),
-      fetchCsv(DRIVERS_CSV_URL).catch(() => ""),
-      fetchCsv(TEAMS_CSV_URL).catch(() => ""),
-      fetchCsv(LEAGUE_STANDINGS_CSV_URL).catch(() => ""),
+      fetchCsv(GLOBAL_CSV_URLS.schedule).catch(() => ""),
+      fetchAllRaceResults(GLOBAL_CSV_URLS.raceResults),
+      fetchCsv(GLOBAL_CSV_URLS.drivers).catch(() => ""),
+      fetchCsv(GLOBAL_CSV_URLS.teams).catch(() => ""),
+      fetchCsv(GLOBAL_CSV_URLS.leagueStandings).catch(() => ""),
     ]);
 
   let lastGroup: RaceGroup | null = null;
@@ -49,7 +62,11 @@ export default async function Home() {
   try {
     if (scheduleCsv) {
       const raw = parseCsv<Record<string, string>>(scheduleCsv);
-      const events = mapRaceEvents(raw);
+      const allEvents = mapRaceEvents(raw);
+      // Filter to current season only
+      const events = allEvents.filter((e) =>
+        matchesSeason(e.season, currentSeason.season_key),
+      );
       lastGroup = getLastRaceGroup(events);
       nextGroup = getNextRaceGroup(events);
     }
@@ -63,7 +80,9 @@ export default async function Home() {
 
   // Merge league standings into driver data
   if (standingsCsv) {
-    const standings = mapLeagueStandings(parseCsv<Record<string, string>>(standingsCsv));
+    const standings = mapLeagueStandings(
+      parseCsv<Record<string, string>>(standingsCsv),
+    );
     allDrivers = applyLeagueStandings(allDrivers, standings);
   }
 
@@ -73,7 +92,14 @@ export default async function Home() {
 
   // Strip non-serialisable _dateObj before sending to client component
   const stripDate = (g: RaceGroup | null) =>
-    g ? { events: g.events, date: g.date, league: g.league, season: g.season } : null;
+    g
+      ? {
+          events: g.events,
+          date: g.date,
+          league: g.league,
+          season: g.season,
+        }
+      : null;
   const lastGroupSafe = stripDate(lastGroup);
   const nextGroupSafe = stripDate(nextGroup);
 
@@ -95,6 +121,14 @@ export default async function Home() {
       lastRaceYoutubeLinks[0].label = siteConfig.hero.secondaryCtaLabel;
     }
   }
+
+  /* ---- Resolve template tokens in siteConfig values ---- */
+  const trustChips = siteConfig.trustChips.map(t);
+  const snapshotStats = siteConfig.snapshotStats.map((stat) => ({
+    ...stat,
+    value: t(stat.value),
+  }));
+  const aboutBullets = siteConfig.aboutBullets.map(t);
 
   return (
     <main className="bg-[#0B0B0E] text-white">
@@ -123,7 +157,7 @@ export default async function Home() {
           <div className="w-full max-w-4xl">
             <Image
               src="/psgil-banner.png"
-              alt="PSGiL Season 6 banner"
+              alt={`PSGiL ${currentSeasonLabel} banner`}
               width={2000}
               height={600}
               priority
@@ -134,7 +168,7 @@ export default async function Home() {
 
           <div className="mt-8 max-w-3xl">
             <p className="text-sm uppercase tracking-[0.3em] text-white/60">
-              {siteConfig.seasonLabel}
+              {currentSeasonLabel}
             </p>
             <h1 className="mt-4 font-display text-4xl font-semibold tracking-tight md:text-5xl lg:text-6xl">
               {siteConfig.hero.title}
@@ -151,13 +185,15 @@ export default async function Home() {
                 label={siteConfig.hero.secondaryCtaLabel}
               />
             </div>
-            <div className="mt-6 flex flex-wrap gap-3 text-xs">
-              {siteConfig.trustChips.map((chip) => (
+            <div className="mt-6 flex flex-wrap gap-2.5 text-xs">
+              {trustChips.map((chip) => (
                 <span
                   key={chip}
-                  className="rounded-full border border-[#7020B0]/60 bg-white/5 px-4 py-2 text-white"
+                  className="inline-flex items-center gap-1.5 rounded-sm bg-white/[0.03] px-3 py-1.5 font-medium tracking-wide text-white/80 select-none cursor-default"
                 >
+                  <span className="h-1 w-1 shrink-0 rounded-full bg-[#D4AF37]/60" />
                   {chip}
+                  <span className="h-1 w-1 shrink-0 rounded-full bg-[#D4AF37]/60" />
                 </span>
               ))}
             </div>
@@ -169,16 +205,21 @@ export default async function Home() {
         <SocialLinks items={siteConfig.socials} variant="compact" />
       </div>
 
-      <SnapshotStrip stats={siteConfig.snapshotStats} />
+      <SnapshotStrip stats={snapshotStats} />
 
-      <Section title="League Format" description="Structured racing built for consistency and clean results.">
+      <Section
+        title="League Format"
+        description="Structured racing built for consistency and clean results."
+      >
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {siteConfig.leagueFormat.map((item) => (
             <div
               key={item.title}
               className="rounded-2xl border border-white/10 bg-white/5 p-5 text-sm text-white/70"
             >
-              <h3 className="font-display text-base font-semibold text-[#D4AF37]">{item.title}</h3>
+              <h3 className="font-display text-base font-semibold text-[#D4AF37]">
+                {item.title}
+              </h3>
               <p className="mt-2 text-white/60">{item.description}</p>
             </div>
           ))}
@@ -206,13 +247,17 @@ export default async function Home() {
       <Section title="About Us">
         <div className="rounded-2xl border border-white/10 bg-white/5 p-6 md:p-8">
           <p className="text-sm text-white/70 md:text-base">
-            PSGiL is Israel’s largest F1 sim racing league, competing primarily on the EA Sports F1
-            series, running continuously for over three years and currently in its sixth season.
-            Built by drivers, for drivers, the league is centered around a strong and supportive
-            community, highly competitive grids, and a deep commitment to clean, respectful
-            racing—both on and off the track. With structured seasons, consistent stewarding, and a
-            culture that values fairness and sportsmanship, PSGiL has grown into a home for drivers
-            who are looking for serious competition without losing the human side of racing.
+            PSGiL is Israel&apos;s largest F1 sim racing league, competing
+            primarily on the EA Sports F1 series, running continuously for
+            over three years and currently in its{" "}
+            {currentSeasonLabel.toLowerCase()}. Built by drivers, for
+            drivers, the league is centered around a strong and supportive
+            community, highly competitive grids, and a deep commitment to
+            clean, respectful racing—both on and off the track. With
+            structured seasons, consistent stewarding, and a culture that
+            values fairness and sportsmanship, PSGiL has grown into a home
+            for drivers who are looking for serious competition without
+            losing the human side of racing.
           </p>
         </div>
       </Section>
@@ -238,7 +283,10 @@ export default async function Home() {
         </div>
       </Section>
 
-      <Section title="Follow PSGiL" description="Stay connected for announcements and race highlights.">
+      <Section
+        title="Follow PSGiL"
+        description="Stay connected for announcements and race highlights."
+      >
         <SocialLinks items={siteConfig.socials} />
       </Section>
     </main>

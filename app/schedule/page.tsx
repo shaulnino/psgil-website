@@ -3,44 +3,56 @@ import ScheduleList from "@/components/ScheduleList";
 import { fetchCsv, parseCsv } from "@/lib/csv";
 import { mapRaceEvents, sortRaceEvents } from "@/lib/scheduleData";
 import { fetchAllRaceResults } from "@/lib/resultsData";
-import { mapDrivers, mapTeams, mapLeagueStandings, applyLeagueStandings } from "@/lib/driversData";
+import {
+  mapDrivers,
+  mapTeams,
+  mapLeagueStandings,
+  applyLeagueStandings,
+} from "@/lib/driversData";
+import {
+  fetchSeasonsConfig,
+  resolveCurrentSeason,
+  GLOBAL_CSV_URLS,
+} from "@/lib/seasonConfig";
 
 /* ------------------------------------------------------------------ */
-/*  CSV sources                                                        */
+/*  Schedule page – Server Component                                   */
+/*  ----------------------------------------------------------------  */
+/*  Fetches ALL schedule events & race results (every season) from     */
+/*  global CSVs.  The client component filters by selected season.     */
 /* ------------------------------------------------------------------ */
-const SCHEDULE_CSV_URL =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=2105913561&single=true&output=csv";
-const DRIVERS_CSV_URL =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=353282807&single=true&output=csv";
-const TEAMS_CSV_URL =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=1933328661&single=true&output=csv";
-const LEAGUE_STANDINGS_CSV_URL =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA2HkvoNEpZg9Zf_Ps/pub?gid=1982499543&single=true&output=csv";
 
 export default async function SchedulePage() {
-  // Fetch schedule + race results + drivers/teams + league standings in parallel
+  // 1. Fetch seasons config
+  const seasonsConfig = await fetchSeasonsConfig();
+  const currentSeason = resolveCurrentSeason(seasonsConfig);
+
+  // 2. Fetch ALL schedule + race results + drivers/teams in parallel
   const [scheduleCsv, raceResultsByEvent, driversCsv, teamsCsv, standingsCsv] =
     await Promise.all([
-      fetchCsv(SCHEDULE_CSV_URL).catch(() => ""),
-      fetchAllRaceResults(),
-      fetchCsv(DRIVERS_CSV_URL).catch(() => ""),
-      fetchCsv(TEAMS_CSV_URL).catch(() => ""),
-      fetchCsv(LEAGUE_STANDINGS_CSV_URL).catch(() => ""),
+      fetchCsv(GLOBAL_CSV_URLS.schedule).catch(() => ""),
+      fetchAllRaceResults(GLOBAL_CSV_URLS.raceResults),
+      fetchCsv(GLOBAL_CSV_URLS.drivers).catch(() => ""),
+      fetchCsv(GLOBAL_CSV_URLS.teams).catch(() => ""),
+      fetchCsv(GLOBAL_CSV_URLS.leagueStandings).catch(() => ""),
     ]);
 
-  const events = scheduleCsv
+  // 3. Parse ALL events (every season)
+  const allEvents = scheduleCsv
     ? sortRaceEvents(
         mapRaceEvents(parseCsv<Record<string, string>>(scheduleCsv)),
       )
     : [];
 
+  // 4. Parse drivers & teams
   let allDrivers = driversCsv
     ? mapDrivers(parseCsv<Record<string, string>>(driversCsv))
     : [];
 
-  // Merge league standings into driver data
   if (standingsCsv) {
-    const standings = mapLeagueStandings(parseCsv<Record<string, string>>(standingsCsv));
+    const standings = mapLeagueStandings(
+      parseCsv<Record<string, string>>(standingsCsv),
+    );
     allDrivers = applyLeagueStandings(allDrivers, standings);
   }
 
@@ -55,8 +67,10 @@ export default async function SchedulePage() {
         description="Full race calendar and results for every PSGiL season."
       >
         <ScheduleList
-          events={events}
-          raceResultsByEvent={raceResultsByEvent}
+          seasonsConfig={seasonsConfig}
+          defaultSeasonKey={currentSeason.season_key}
+          allEvents={allEvents}
+          allRaceResults={raceResultsByEvent}
           allDrivers={allDrivers}
           allTeams={allTeams}
         />

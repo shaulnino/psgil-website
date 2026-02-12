@@ -11,6 +11,7 @@ type DriverModalProps = {
   team: Team;
   placeholderSrc: string;
   onClose: () => void;
+  currentSeasonLabel?: string;
 };
 
 type StatMode = "alltime" | "season";
@@ -239,7 +240,7 @@ function Tooltip({ text, children, triggerClassName, wide }: { text: React.React
 /*  DriverModal                                                        */
 /* ------------------------------------------------------------------ */
 
-export default function DriverModal({ driver, team, placeholderSrc, onClose }: DriverModalProps) {
+export default function DriverModal({ driver, team, placeholderSrc, onClose, currentSeasonLabel }: DriverModalProps) {
   const [statMode, setStatMode] = useState<StatMode>("alltime");
   const [portalEl, setPortalEl] = useState<HTMLDivElement | null>(null);
   const [scrollEl, setScrollEl] = useState<HTMLDivElement | null>(null);
@@ -407,7 +408,7 @@ export default function DriverModal({ driver, team, placeholderSrc, onClose }: D
                           : "text-white/60 hover:text-white"
                       }`}
                     >
-                      Season
+                      {currentSeasonLabel || "Season"}
                     </button>
                   </div>
                 </div>

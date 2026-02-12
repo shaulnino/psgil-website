@@ -13,13 +13,14 @@ type DriversGridProps = {
   reserves: Driver[];
   historicDrivers: Driver[];
   placeholderSrc: string;
+  currentSeasonLabel?: string;
 };
 
 function isRemote(src?: string) {
   return !!src && src.startsWith("http");
 }
 
-export default function DriversGrid({ teams, reserves, historicDrivers, placeholderSrc }: DriversGridProps) {
+export default function DriversGrid({ teams, reserves, historicDrivers, placeholderSrc, currentSeasonLabel }: DriversGridProps) {
   const [selected, setSelected] = useState<{ driver: Driver; team: Team } | null>(null);
   const lastFocused = useRef<HTMLElement | null>(null);
 
@@ -167,6 +168,7 @@ export default function DriversGrid({ teams, reserves, historicDrivers, placehol
           team={selected.team}
           placeholderSrc={placeholderSrc}
           onClose={() => setSelected(null)}
+          currentSeasonLabel={currentSeasonLabel}
         />
       )}
     </>

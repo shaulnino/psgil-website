@@ -1,4 +1,6 @@
-import Link from "next/link";
+"use client";
+
+import { LoadingButton } from "@/components/LoadingLink";
 
 type ButtonVariant = "primary" | "secondary" | "ghost";
 type ButtonSize = "sm" | "md";
@@ -37,19 +39,10 @@ export default function Button({
   external,
 }: ButtonProps) {
   const styles = `${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${className}`;
-  const isExternal = external ?? href.startsWith("http");
-
-  if (isExternal) {
-    return (
-      <a href={href} className={styles} target="_blank" rel="noopener noreferrer">
-        {children}
-      </a>
-    );
-  }
 
   return (
-    <Link href={href} className={styles}>
+    <LoadingButton href={href} className={styles} external={external}>
       {children}
-    </Link>
+    </LoadingButton>
   );
 }

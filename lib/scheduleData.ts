@@ -15,6 +15,16 @@ export type RaceEvent = {
   poster_image?: string;
   results_image?: string;
   youtube_url?: string;
+  /** Track / circuit name */
+  track?: string;
+  /** Start time in HH:MM format (Israel local time, e.g. "21:30") */
+  start_time?: string;
+  /** "dry" | "wet" | "mixed" or empty */
+  weather?: string;
+  /** Number of safety cars (0 or empty = none) */
+  safety_cars?: number;
+  /** "yes" | "no" or empty (treated as "no") */
+  reverse_grid?: string;
 };
 
 /**
@@ -49,6 +59,9 @@ export function mapRaceEvents(raw: Record<string, string>[]): RaceEvent[] {
     const league = row.league ?? "Main";
     // Use explicit event_id from CSV if present, otherwise construct it
     const eventId = (row.event_id ?? "").trim() || buildEventId(season, raceNumber, league);
+    const scRaw = (row.safety_cars ?? "").trim();
+    const scNum = scRaw ? parseInt(scRaw, 10) : 0;
+
     return {
       event_id: eventId,
       season,
@@ -61,6 +74,11 @@ export function mapRaceEvents(raw: Record<string, string>[]): RaceEvent[] {
       poster_image: sanitizeImagePath(row.poster_image),
       results_image: sanitizeImagePath(row.results_image),
       youtube_url: row.youtube_url?.trim() || undefined,
+      track: (row.track ?? "").trim() || undefined,
+      start_time: (row.start_time ?? "").trim() || undefined,
+      weather: (row.weather ?? "").trim().toLowerCase() || undefined,
+      safety_cars: isNaN(scNum) ? 0 : scNum,
+      reverse_grid: (row.reverse_grid ?? "").trim().toLowerCase() || undefined,
     };
   });
 }
@@ -124,6 +142,33 @@ export function parseDateDDMMYYYY(value: string): Date | null {
   if (d.getUTCFullYear() !== year || d.getUTCMonth() !== month || d.getUTCDate() !== day)
     return null;
   return d;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Israel timezone helpers                                             */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Convert a DD.MM.YYYY date + HH:MM time (Israel local) to a UTC timestamp (ms).
+ * Returns null if parsing fails.
+ */
+export function toIsraelTimestamp(dateStr: string, timeStr?: string): number | null {
+  const m = (dateStr ?? "").trim().match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+  if (!m) return null;
+  const day = parseInt(m[1], 10);
+  const month = parseInt(m[2], 10);
+  const year = parseInt(m[3], 10);
+  const [h, min] = (timeStr || "21:00").split(":").map(Number);
+
+  // Determine Israel UTC offset for this date (handles DST automatically)
+  const refUTC = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+  const israelStr = refUTC.toLocaleString("en-US", { timeZone: "Asia/Jerusalem" });
+  const israelRef = new Date(israelStr);
+  const offsetMs = israelRef.getTime() - refUTC.getTime();
+  const offsetHours = Math.round(offsetMs / (3_600_000));
+
+  // "h:min Israel time" → UTC = h - offset
+  return Date.UTC(year, month - 1, day, h - offsetHours, min, 0);
 }
 
 /* ------------------------------------------------------------------ */
