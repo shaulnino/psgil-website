@@ -21,11 +21,12 @@ import type {
   LeagueStatRow,
   CircuitStatRow,
   MetricInfo,
+  MetricCategory,
 } from "@/lib/statsData";
 import {
   detectMetrics,
   detectCircuitMetrics,
-  DRIVER_HIGHLIGHT_METRICS,
+  categoriseMetrics,
   DRIVER_CHART_METRICS,
   DRIVER_RATING_METRICS,
   DRIVER_SEASON_KEYS,
@@ -73,13 +74,10 @@ function fmtVal(v: number | string | undefined, pct = false): string {
  */
 function findMetricKey(wanted: string, availableKeys: Set<string>): string | null {
   if (availableKeys.has(wanted)) return wanted;
-  // Try without "Event " prefix
   const stripped = wanted.replace(/^Event\s+/i, "");
   if (availableKeys.has(stripped)) return stripped;
-  // Try with "Event " prefix
   const prefixed = `Event ${wanted}`;
   if (availableKeys.has(prefixed)) return prefixed;
-  // Try matching by end of string (e.g. "Participation %" matches "Event Participation %")
   for (const k of availableKeys) {
     if (k.endsWith(wanted) || wanted.endsWith(k)) return k;
   }
@@ -88,7 +86,6 @@ function findMetricKey(wanted: string, availableKeys: Set<string>): string | nul
 
 /**
  * Resolve a list of curated metric names against available keys.
- * Returns pairs of [display label, actual key].
  */
 function resolveMetrics(
   curated: string[],
@@ -144,16 +141,6 @@ function Toggle({ options, value, onChange }: { options: string[]; value: string
           {o}
         </button>
       ))}
-    </div>
-  );
-}
-
-function StatCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
-  return (
-    <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-white/40">{label}</p>
-      <p className="mt-1 font-display text-2xl font-bold text-white">{value}</p>
-      {sub && <p className="mt-0.5 text-[11px] text-white/40">{sub}</p>}
     </div>
   );
 }
@@ -277,10 +264,65 @@ function EmptyState({ message }: { message: string }) {
   );
 }
 
-function ErrorState({ message }: { message: string }) {
+/* ------------------------------------------------------------------ */
+/*  Collapsible category group                                         */
+/* ------------------------------------------------------------------ */
+
+function CategoryGroup({
+  category,
+  defaultOpen = false,
+  children,
+}: {
+  category: MetricCategory;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+
   return (
-    <div className="flex items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/5 py-10">
-      <p className="text-sm text-red-400">{message}</p>
+    <div className="rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left transition hover:bg-white/[0.03]"
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-semibold text-white">{category.label}</span>
+          <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-medium text-white/40">
+            {category.metrics.length}
+          </span>
+        </div>
+        <svg
+          className={`h-4 w-4 shrink-0 text-white/40 transition-transform ${open ? "rotate-180" : ""}`}
+          fill="none" stroke="currentColor" viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {open && <div className="border-t border-white/5 px-4 py-3">{children}</div>}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Stat display row for a single metric (compact)                     */
+/* ------------------------------------------------------------------ */
+
+function StatRow({
+  label,
+  value,
+  isPct,
+}: {
+  label: string;
+  value: number | undefined;
+  isPct: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-2 rounded-lg px-3 py-1.5 transition hover:bg-white/[0.03]">
+      <span className="text-xs text-white/60 truncate">{label}</span>
+      <span className="text-sm font-semibold text-white tabular-nums shrink-0">
+        {fmtVal(value, isPct)}
+      </span>
     </div>
   );
 }
@@ -411,6 +453,9 @@ function StatsRadarChart({
 /*  Section: DRIVERS                                                   */
 /* ------------------------------------------------------------------ */
 
+/** Number of categories to open by default */
+const DEFAULT_OPEN_CATEGORIES = 3;
+
 function DriversSection({
   allTime,
   bySeason,
@@ -435,6 +480,7 @@ function DriversSection({
   );
 
   const metrics = useMemo(() => detectMetrics(dataset.rows), [dataset.rows]);
+  const categories = useMemo(() => categoriseMetrics(metrics), [metrics]);
 
   // Ensure selected drivers exist in the current dataset
   const validDrivers = useMemo(
@@ -457,19 +503,13 @@ function DriversSection({
     [validDrivers, dataset.rows],
   );
 
-  // Resolve curated metric names against available columns (handles "Event Podiums" vs "Podiums" etc.)
+  // Chart metrics resolution
   const availableKeys = useMemo(() => new Set(metrics.map((m) => m.key)), [metrics]);
-
-  const highlightMetrics = useMemo(
-    () => resolveMetrics(DRIVER_HIGHLIGHT_METRICS, availableKeys),
-    [availableKeys],
-  );
 
   const chartMetrics = useMemo(
     () => resolveMetrics(DRIVER_CHART_METRICS, availableKeys),
     [availableKeys],
   );
-
   const ratingMetrics = useMemo(
     () => resolveMetrics(DRIVER_RATING_METRICS, availableKeys),
     [availableKeys],
@@ -485,10 +525,9 @@ function DriversSection({
     return <EmptyState message={`No driver stats available${mode === "Season" ? ` for ${season}` : ""}.`} />;
   }
 
-  /* ---------- Single driver view ---------- */
   const singleDriver = !compare && selectedRows.length === 1 ? selectedRows[0] : null;
 
-  /* ---------- Compare data for charts ---------- */
+  /* ---------- Chart data ---------- */
   const barData = useMemo(() => {
     if (selectedRows.length === 0) return [];
     return chartMetrics.map(({ label, key }) => {
@@ -559,53 +598,79 @@ function DriversSection({
         />
       </div>
 
-      {/* Single driver quick stats */}
+      {/* ---- SINGLE DRIVER: All stats in categorised groups ---- */}
       {singleDriver && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
-          {highlightMetrics.map(({ label, key }) => (
-            <StatCard
-              key={key}
-              label={label}
-              value={fmtVal(singleDriver.metrics[key], key.includes("%"))}
-            />
+        <div className="space-y-3">
+          {categories.map((cat, catIdx) => (
+            <CategoryGroup
+              key={cat.id}
+              category={cat}
+              defaultOpen={catIdx < DEFAULT_OPEN_CATEGORIES}
+            >
+              <div className="grid grid-cols-1 gap-x-6 sm:grid-cols-2 lg:grid-cols-3">
+                {cat.metrics.map((m) => (
+                  <StatRow
+                    key={m.key}
+                    label={m.label}
+                    value={singleDriver.metrics[m.key]}
+                    isPct={m.isPercentage}
+                  />
+                ))}
+              </div>
+            </CategoryGroup>
           ))}
         </div>
       )}
 
-      {/* Compare quick stats */}
+      {/* ---- COMPARE MODE: Full table with all metrics ---- */}
       {compare && selectedRows.length > 1 && (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-white/10">
-                <th className="px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-white/40">Metric</th>
-                {selectedRows.map((dr, i) => (
-                  <th key={dr.driver_name} className="px-3 py-2 text-right text-[10px] font-semibold uppercase tracking-wider" style={{ color: COMPARE_COLORS[i] }}>
-                    {dr.driver_name}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {highlightMetrics.map(({ label, key }) => (
-                <tr key={key} className="border-b border-white/5">
-                  <td className="px-3 py-2 text-white/60">{label}</td>
-                  {selectedRows.map((dr) => (
-                    <td key={dr.driver_name} className="px-3 py-2 text-right font-semibold text-white">
-                      {fmtVal(dr.metrics[key], key.includes("%"))}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="space-y-3">
+          {categories.map((cat, catIdx) => (
+            <CategoryGroup
+              key={cat.id}
+              category={cat}
+              defaultOpen={catIdx < DEFAULT_OPEN_CATEGORIES}
+            >
+              <div className="overflow-x-auto -mx-4">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-white/10">
+                      <th className="px-4 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-white/40">
+                        Metric
+                      </th>
+                      {selectedRows.map((dr, i) => (
+                        <th
+                          key={dr.driver_name}
+                          className="px-4 py-2 text-right text-[10px] font-semibold uppercase tracking-wider"
+                          style={{ color: COMPARE_COLORS[i] }}
+                        >
+                          {dr.driver_name}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {cat.metrics.map((m) => (
+                      <tr key={m.key} className="border-b border-white/5">
+                        <td className="px-4 py-1.5 text-xs text-white/60">{m.label}</td>
+                        {selectedRows.map((dr) => (
+                          <td key={dr.driver_name} className="px-4 py-1.5 text-right text-sm font-semibold text-white tabular-nums">
+                            {fmtVal(dr.metrics[m.key], m.isPercentage)}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CategoryGroup>
+          ))}
         </div>
       )}
 
       {/* Charts */}
       {selectedRows.length > 0 && (
         <div className="grid gap-6 lg:grid-cols-2">
-          {/* Bar chart */}
           {barData.length > 0 && (
             <div>
               <h3 className="mb-2 text-sm font-semibold text-white/60">Key Metrics</h3>
@@ -620,8 +685,6 @@ function DriversSection({
               />
             </div>
           )}
-
-          {/* Radar chart (ratings) */}
           {radarData.length > 0 && (
             <div>
               <h3 className="mb-2 text-sm font-semibold text-white/60">Driver Ratings</h3>
@@ -661,29 +724,10 @@ function LeagueSection({ league }: { league: LeagueStatRow[] }) {
     return <EmptyState message="No league statistics available." />;
   }
 
-  // Curated highlight metrics for league
-  const highlights = [
-    "Total Events",
-    "Amount of Races",
-    "Spots Occupied",
-    "Participation %",
-    "Avg. Participation",
-    "# Drivers Participating*",
-    "Dry Events",
-    "Rainy Events",
-    "Safety Cars",
-    "Broadcasted Events",
-  ];
-
-  const displayMetrics = league.filter((r) =>
-    highlights.some((h) => r.metric.toLowerCase().includes(h.toLowerCase())) || highlights.length === 0,
-  );
-  const displayList = displayMetrics.length > 0 ? displayMetrics : league;
-
   // Season compare bar chart data
   const barData = useMemo(() => {
     const cols = compare ? selectedSeasons : ["Total"];
-    return displayList.map((r) => {
+    return league.map((r) => {
       const row: Record<string, string | number> = { metric: r.metric };
       for (const c of cols) {
         const val = c === "Total" ? r.total : r.seasons[c] ?? "";
@@ -692,7 +736,7 @@ function LeagueSection({ league }: { league: LeagueStatRow[] }) {
       }
       return row;
     }).filter((r) => Object.keys(r).length > 1);
-  }, [displayList, compare, selectedSeasons]);
+  }, [league, compare, selectedSeasons]);
 
   return (
     <div className="space-y-6">
@@ -751,7 +795,7 @@ function LeagueSection({ league }: { league: LeagueStatRow[] }) {
             </tr>
           </thead>
           <tbody>
-            {(mode === "All-time" ? league : displayList).map((r) => (
+            {league.map((r) => (
               <tr key={r.metric} className="border-b border-white/5 hover:bg-white/[0.02] transition">
                 <td className="px-4 py-2 text-white/70 font-medium">{r.metric}</td>
                 {mode === "All-time" ? (
@@ -814,6 +858,7 @@ function CircuitsSection({
   );
 
   const metrics = useMemo(() => detectCircuitMetrics(circuits.rows), [circuits.rows]);
+  const categories = useMemo(() => categoriseMetrics(metrics), [metrics]);
 
   // Auto-select first circuit
   useEffect(() => {
@@ -838,22 +883,6 @@ function CircuitsSection({
   if (circuits.rows.length === 0) {
     return <EmptyState message="No circuit statistics available." />;
   }
-
-  // Curated highlight metrics
-  const circuitHighlights = [
-    "Event held",
-    "Races Held",
-    "Sprints Held",
-    "Spots Occupied",
-    "Participation %",
-    "Dry Events",
-    "Rainy Events",
-    "Changing Weather Events",
-  ];
-
-  const availableHighlights = circuitHighlights.filter((m) =>
-    metrics.some((met) => met.key === m),
-  );
 
   // Non-season numeric columns for chart
   const chartCols = useMemo(() => {
@@ -927,26 +956,35 @@ function CircuitsSection({
         />
       </div>
 
-      {/* Single circuit quick stats */}
+      {/* ---- SINGLE CIRCUIT: All stats in categorised groups ---- */}
       {singleCircuit && (
-        <>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-            {availableHighlights.map((m) => (
-              <StatCard
-                key={m}
-                label={m}
-                value={fmtVal(singleCircuit.metrics[m], m.includes("%"))}
-              />
-            ))}
-          </div>
-
-          {/* Winners */}
+        <div className="space-y-3">
+          {/* Winners text (special non-metric field) */}
           {singleCircuit.raw["Winners"] && (
             <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-white/40">Winners</p>
               <p className="mt-1 text-sm text-white/80">{singleCircuit.raw["Winners"]}</p>
             </div>
           )}
+
+          {categories.map((cat, catIdx) => (
+            <CategoryGroup
+              key={cat.id}
+              category={cat}
+              defaultOpen={catIdx < DEFAULT_OPEN_CATEGORIES}
+            >
+              <div className="grid grid-cols-1 gap-x-6 sm:grid-cols-2 lg:grid-cols-3">
+                {cat.metrics.map((m) => (
+                  <StatRow
+                    key={m.key}
+                    label={m.label}
+                    value={singleCircuit.metrics[m.key]}
+                    isPct={m.isPercentage}
+                  />
+                ))}
+              </div>
+            </CategoryGroup>
+          ))}
 
           {/* Season breakdown chart */}
           {seasonData.length > 0 && (
@@ -960,39 +998,52 @@ function CircuitsSection({
               />
             </div>
           )}
-        </>
+        </div>
       )}
 
-      {/* Compare view */}
+      {/* ---- COMPARE MODE ---- */}
       {compare && selectedRows.length > 1 && (
-        <>
-          {/* Compare table */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-white/10">
-                  <th className="px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-white/40">Metric</th>
-                  {selectedRows.map((cr, i) => (
-                    <th key={cr.circuit} className="px-3 py-2 text-right text-[10px] font-semibold uppercase tracking-wider" style={{ color: COMPARE_COLORS[i] }}>
-                      {cr.circuit}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {availableHighlights.map((m) => (
-                  <tr key={m} className="border-b border-white/5">
-                    <td className="px-3 py-2 text-white/60">{m}</td>
-                    {selectedRows.map((cr) => (
-                      <td key={cr.circuit} className="px-3 py-2 text-right font-semibold text-white">
-                        {fmtVal(cr.metrics[m], m.includes("%"))}
-                      </td>
+        <div className="space-y-3">
+          {categories.map((cat, catIdx) => (
+            <CategoryGroup
+              key={cat.id}
+              category={cat}
+              defaultOpen={catIdx < DEFAULT_OPEN_CATEGORIES}
+            >
+              <div className="overflow-x-auto -mx-4">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-white/10">
+                      <th className="px-4 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-white/40">
+                        Metric
+                      </th>
+                      {selectedRows.map((cr, i) => (
+                        <th
+                          key={cr.circuit}
+                          className="px-4 py-2 text-right text-[10px] font-semibold uppercase tracking-wider"
+                          style={{ color: COMPARE_COLORS[i] }}
+                        >
+                          {cr.circuit}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {cat.metrics.map((m) => (
+                      <tr key={m.key} className="border-b border-white/5">
+                        <td className="px-4 py-1.5 text-xs text-white/60">{m.label}</td>
+                        {selectedRows.map((cr) => (
+                          <td key={cr.circuit} className="px-4 py-1.5 text-right text-sm font-semibold text-white tabular-nums">
+                            {fmtVal(cr.metrics[m.key], m.isPercentage)}
+                          </td>
+                        ))}
+                      </tr>
                     ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                  </tbody>
+                </table>
+              </div>
+            </CategoryGroup>
+          ))}
 
           {/* Compare bar chart */}
           {barData.length > 0 && (
@@ -1009,7 +1060,7 @@ function CircuitsSection({
               />
             </div>
           )}
-        </>
+        </div>
       )}
     </div>
   );

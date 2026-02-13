@@ -231,10 +231,10 @@ export function detectCircuitMetrics(rows: CircuitStatRow[]): MetricInfo[] {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Curated "highlight" metrics                                        */
+/*  Curated "highlight" metrics (top cards row)                        */
 /* ------------------------------------------------------------------ */
 
-/** Default metrics to show in the quick-stats row for drivers */
+/** Metrics for the top "quick stats" cards (best 8 at a glance) */
 export const DRIVER_HIGHLIGHT_METRICS = [
   "Events Participation",
   "Event Wins",
@@ -242,8 +242,6 @@ export const DRIVER_HIGHLIGHT_METRICS = [
   "Total Points",
   "Pole Positions",
   "Fastest Laps",
-  "DNF",
-  "Driver of the Day",
   "Championships",
   "Driver Rating",
 ];
@@ -266,6 +264,68 @@ export const DRIVER_RATING_METRICS = [
   "Agility",
   "Driver Rating",
 ];
+
+/* ------------------------------------------------------------------ */
+/*  Auto-categorization                                                */
+/* ------------------------------------------------------------------ */
+
+export type MetricCategory = {
+  id: string;
+  label: string;
+  metrics: MetricInfo[];
+};
+
+/**
+ * Category rules: each rule is [category-id, display-label, keyword-patterns].
+ * A metric is placed in the first category whose pattern matches.
+ * Order matters — more specific patterns first.
+ */
+const CATEGORY_RULES: [string, string, RegExp][] = [
+  ["ratings",       "Driver Ratings",     /^(speed|consistency|performance|agility|driver rating)$/i],
+  ["participation", "Participation",      /particip|events?\s+(on|held)|races?\s+particip|sprints?\s+particip|25%\s+races/i],
+  ["results",       "Race Results",       /wins?|podiums?|top\s+\d|place|finishes|finishing|winning/i],
+  ["points",        "Points",             /points/i],
+  ["positions",     "Positions & Grid",   /position|grid|position changes/i],
+  ["records",       "Records & Awards",   /fastest|pole|driver of the day|championships?|dnf|dns|dsq/i],
+  ["weather",       "Weather",            /dry|rain|changing weather|wet/i],
+];
+
+/**
+ * Auto-categorise a flat list of MetricInfo into labelled groups.
+ * Preserves the original column order within each group.
+ * Any metric that doesn't match a rule goes to "Other".
+ */
+export function categoriseMetrics(metrics: MetricInfo[]): MetricCategory[] {
+  const buckets = new Map<string, { label: string; items: MetricInfo[] }>();
+  // Initialize buckets in display order
+  for (const [id, label] of CATEGORY_RULES) {
+    buckets.set(id, { label, items: [] });
+  }
+  buckets.set("other", { label: "Other", items: [] });
+
+  for (const m of metrics) {
+    let placed = false;
+    for (const [id, , pattern] of CATEGORY_RULES) {
+      if (pattern.test(m.key) || pattern.test(m.label)) {
+        buckets.get(id)!.items.push(m);
+        placed = true;
+        break;
+      }
+    }
+    if (!placed) {
+      buckets.get("other")!.items.push(m);
+    }
+  }
+
+  // Return only non-empty categories
+  const result: MetricCategory[] = [];
+  for (const [id, { label, items }] of buckets) {
+    if (items.length > 0) {
+      result.push({ id, label, metrics: items });
+    }
+  }
+  return result;
+}
 
 /* ------------------------------------------------------------------ */
 /*  Fetchers                                                           */
