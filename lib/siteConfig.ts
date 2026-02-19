@@ -46,6 +46,7 @@ export const siteConfig: SiteConfig = {
     { label: "Drivers", href: "/drivers" },
     { label: "Schedule & Results", href: "/schedule" },
     { label: "Tables", href: "/statistics" },
+    { label: "Stats", href: "/stats" },
     { label: "Articles", href: "/articles" },
   ],
   hero: {

@@ -12,6 +12,7 @@ type ButtonProps = {
   size?: ButtonSize;
   className?: string;
   external?: boolean;
+  onClick?: () => void;
 };
 
 const baseStyles =
@@ -26,8 +27,8 @@ const variantStyles: Record<ButtonVariant, string> = {
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
-  sm: "h-9 px-4 text-sm",
-  md: "h-11 px-6 text-sm md:text-base",
+  sm: "h-10 px-5 text-base",
+  md: "h-12 px-7 text-base md:text-lg",
 };
 
 export default function Button({
@@ -37,11 +38,12 @@ export default function Button({
   size = "md",
   className = "",
   external,
+  onClick,
 }: ButtonProps) {
   const styles = `${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${className}`;
 
   return (
-    <LoadingButton href={href} className={styles} external={external}>
+    <LoadingButton href={href} className={styles} external={external} onClick={onClick}>
       {children}
     </LoadingButton>
   );
