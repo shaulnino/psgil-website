@@ -68,9 +68,9 @@ export const siteConfig: SiteConfig = {
   ],
   snapshotStats: [
     { label: "Seasons", value: "{seasonCount}" },
-    { label: "Races", value: "60+" },
-    { label: "Total Drivers", value: "50+" },
-    { label: "Winners", value: "12" },
+    { label: "Races", value: "{totalRaces}" },
+    { label: "Total Drivers", value: "{totalDrivers}" },
+    { label: "Winners", value: "{uniqueWinners}" },
   ],
   aboutBullets: [
     "3+ years active",

@@ -24,7 +24,7 @@ function FastestLapBadge() {
   return (
     <span
       title="Fastest Lap"
-      className="ml-1 inline-flex cursor-default items-center rounded-full bg-purple-500/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-purple-300"
+      className="ml-1 inline-flex cursor-default items-center rounded-full bg-purple-500/20 px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-purple-300"
     >
       FL
     </span>
@@ -35,7 +35,7 @@ function DotdBadge() {
   return (
     <span
       title="Driver of the Day"
-      className="ml-1 inline-flex cursor-default items-center rounded-full bg-[#D4AF37]/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#D4AF37]"
+      className="ml-1 inline-flex cursor-default items-center rounded-full bg-[#D4AF37]/20 px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-[#D4AF37]"
     >
       DOTD
     </span>

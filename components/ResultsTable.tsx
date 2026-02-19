@@ -116,7 +116,7 @@ export default function ResultsTable<T extends Record<string, unknown>>({
     >
       {caption && (
         <div className="border-b border-white/5 px-4 py-2">
-          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-white/40">
+          <span className="text-sm font-semibold uppercase tracking-[0.2em] text-white/40">
             {caption}
           </span>
         </div>
@@ -124,14 +124,14 @@ export default function ResultsTable<T extends Record<string, unknown>>({
 
       {/* Scrollable wrapper */}
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[640px] border-collapse text-sm">
+        <table className="w-full min-w-[640px] border-collapse text-base">
           {/* Sticky header */}
           <thead className="sticky top-0 z-10 bg-[#111118]">
             <tr>
               {columns.map((col, ci) => (
                 <th
                   key={ci}
-                  className={`border-b border-white/10 px-3 py-3 text-[10px] font-semibold uppercase leading-tight tracking-[0.12em] text-white/90 ${
+                  className={`border-b border-white/10 px-3 py-3 text-sm font-semibold uppercase leading-tight tracking-[0.12em] text-white/90 ${
                     col.align === "center"
                       ? "text-center"
                       : col.align === "right"

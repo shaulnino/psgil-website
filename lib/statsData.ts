@@ -12,60 +12,24 @@
 /* ------------------------------------------------------------------ */
 
 import { fetchCsv, parseCsv } from "@/lib/csv";
+import { sheetUrl } from "@/lib/seasonConfig";
+import type { SeasonConfig } from "@/lib/seasonConfig";
 
 /* ------------------------------------------------------------------ */
-/*  URL construction (same pattern as seasonConfig.ts)                 */
-/* ------------------------------------------------------------------ */
-
-const SHEET_ID = [
-  "2PACX-1vQSNGhBKLMDdmeIOy9wn3ZBS3Kk0",
-  "-oBmWCMs0ANbg3qDrSsp9PbIXm8qLtTUQKA",
-  "2HkvoNEpZg9Zf_Ps",
-].join("");
-
-function sheetUrl(gid: string): string {
-  return `https://docs.google.com/spreadsheets/d/e/${SHEET_ID}/pub?gid=${gid}&single=true&output=csv`;
-}
-
-/* ------------------------------------------------------------------ */
-/*  Tab gids                                                           */
+/*  Tab gids (only non-season-specific tabs)                           */
+/*  Per-season driver stats GIDs now come from csv_seasons_config.     */
 /* ------------------------------------------------------------------ */
 
 const STATS_GID = {
   driversAllTime: "1700425494",
-  driversS6: "1613919890",
-  driversS5: "959151792",
-  driversS4: "1381179695",
-  driversS3: "2036731585",
-  driversS2: "1743525015",
-  driversS1: "1460630212",
   league: "2021794230",
   circuits: "1199694775",
 } as const;
 
 export const STATS_CSV_URLS = {
   driversAllTime: sheetUrl(STATS_GID.driversAllTime),
-  driversS6: sheetUrl(STATS_GID.driversS6),
-  driversS5: sheetUrl(STATS_GID.driversS5),
-  driversS4: sheetUrl(STATS_GID.driversS4),
-  driversS3: sheetUrl(STATS_GID.driversS3),
-  driversS2: sheetUrl(STATS_GID.driversS2),
-  driversS1: sheetUrl(STATS_GID.driversS1),
   league: sheetUrl(STATS_GID.league),
   circuits: sheetUrl(STATS_GID.circuits),
-};
-
-/** Available season keys for per-season driver stats */
-export const DRIVER_SEASON_KEYS = ["S6", "S5", "S4", "S3", "S2", "S1"] as const;
-export type DriverSeasonKey = (typeof DRIVER_SEASON_KEYS)[number];
-
-const SEASON_URL_MAP: Record<DriverSeasonKey, string> = {
-  S6: STATS_CSV_URLS.driversS6,
-  S5: STATS_CSV_URLS.driversS5,
-  S4: STATS_CSV_URLS.driversS4,
-  S3: STATS_CSV_URLS.driversS3,
-  S2: STATS_CSV_URLS.driversS2,
-  S1: STATS_CSV_URLS.driversS1,
 };
 
 /* ------------------------------------------------------------------ */
@@ -91,7 +55,144 @@ export type MetricInfo = {
   label: string;      // cleaned display label
   isPercentage: boolean;
   isRating: boolean;  // Speed, Consistency, Performance, Agility, Driver Rating
+  tooltip: string;    // hover description
 };
+
+/* ------------------------------------------------------------------ */
+/*  Tooltip descriptions                                               */
+/*  Key = lowercased + trimmed column header (or cleaned label).       */
+/*  If a column doesn't match, a sensible auto-generated tip is used. */
+/* ------------------------------------------------------------------ */
+
+const METRIC_TOOLTIPS: Record<string, string> = {
+  // ── Driver: Participation ──────────────────────────────────────
+  "events participation":                    "Total events (races + sprints) the driver entered",
+  "races participation":                     "Number of 50% races the driver entered",
+  "sprints participation":                   "Number of sprint races the driver entered",
+  "25% races participation":                 "Number of 25% races the driver entered",
+  "dry events participation":                "Events entered that were held in dry conditions",
+  "rainy events participation":              "Events entered that were held in wet conditions",
+  "changing weather events participation":   "Events entered with dynamic weather changes during the race",
+  "event participation %":                   "Percentage of all available events the driver entered",
+
+  // ── Driver: Race Results ───────────────────────────────────────
+  "event top 10 finishes":                   "Number of events finishing in the top 10",
+  "event top 10 finishes %":                 "Percentage of entered events finishing in the top 10",
+  "event top 5 finishes":                    "Number of events finishing in the top 5",
+  "event top 5 finishes %":                  "Percentage of entered events finishing in the top 5",
+  "event podiums":                           "Total podium finishes (top 3) across all events",
+  "podiums":                                 "Total podium finishes (top 3) across all events",
+  "event top 3 finishes %":                  "Percentage of entered events finishing on the podium",
+  "top 3 finishes %":                        "Percentage of entered events finishing on the podium",
+  "event 3rd place":                         "Number of times finished 3rd",
+  "3rd place":                               "Number of times finished 3rd",
+  "event 2nd place":                         "Number of times finished 2nd",
+  "2nd place":                               "Number of times finished 2nd",
+  "event wins":                              "Total event victories (races + sprints)",
+  "wins":                                    "Total event victories",
+  "race wins":                               "Victories in 50% races only",
+  "sprint wins":                             "Victories in sprint races only",
+  "race 25% wins":                           "Victories in 25% races",
+  "event winning %":                         "Percentage of entered events won",
+  "winning %":                               "Percentage of entered events won",
+
+  // ── Driver: Points ─────────────────────────────────────────────
+  "total points":                            "Total championship points accumulated",
+  "points per events":                       "Average points earned per event entered",
+  "points in dry":                           "Total points scored in dry conditions",
+  "points in rain":                          "Total points scored in wet conditions",
+  "points in changing weather":              "Total points scored in changing weather conditions",
+  "avg. points per event*":                  "Average points per event (may exclude outliers)",
+  "avg. points per event":                   "Average points per event entered",
+
+  // ── Driver: Positions & Grid ───────────────────────────────────
+  "position changes*":                       "Total grid positions gained or lost across all races",
+  "position changes":                        "Total grid positions gained or lost across all races",
+  "avg. position changes per race":          "Average positions gained/lost per race",
+  "avg. grid position*":                     "Average qualifying/grid position",
+  "avg. grid position":                      "Average qualifying/grid position",
+  "best final position":                     "Best finishing position ever achieved",
+  "best grid position":                      "Best qualifying/grid position ever achieved",
+  "lowest final position":                   "Worst finishing position recorded",
+  "lowest grid position":                    "Worst qualifying/grid position recorded",
+  "avg. final position":                     "Average finishing position across all events",
+  "avg. final positions - dry*":             "Average finishing position in dry conditions",
+  "avg. final positions - dry":              "Average finishing position in dry conditions",
+  "avg. final positions - rain*":            "Average finishing position in wet conditions",
+  "avg. final positions - rain":             "Average finishing position in wet conditions",
+  "avg. final positions - changing weather":  "Average finishing position in changing weather",
+  "pole positions":                          "Number of times started from pole position (P1 on the grid)",
+
+  // ── Driver: Records & Awards ───────────────────────────────────
+  "fastest laps":                            "Number of fastest laps set during races",
+  "driver of the day":                       "Times voted Driver of the Day",
+  "championships":                           "Championship titles won",
+  "dnf":                                     "Did Not Finish — retired from the race",
+  "dns":                                     "Did Not Start — entered but didn't take the start",
+  "dsq":                                     "Disqualified from the event",
+
+  // ── Driver: Ratings ────────────────────────────────────────────
+  "speed":                                   "Raw pace rating based on qualifying and race performance",
+  "consistency":                             "How consistently the driver finishes near their average",
+  "performance":                             "Overall performance rating combining multiple factors",
+  "agility":                                 "Ability to gain positions and adapt during races",
+  "driver rating":                           "Composite overall driver skill rating",
+
+  // ── Circuit stats ──────────────────────────────────────────────
+  "event held":                              "Total events hosted at this circuit",
+  "races held":                              "Number of 50% races held at this circuit",
+  "sprints held":                            "Number of sprint races held at this circuit",
+  "spots occupied":                          "Total driver entries across all events at this circuit",
+  "participation %":                         "Average fill rate of available spots",
+  "dry events":                              "Number of events held in dry conditions",
+  "de spots occupied":                       "Driver entries in dry events",
+  "de participation %":                      "Fill rate for dry events",
+  "rainy events":                            "Number of events held in wet conditions",
+  "re spots occupied":                       "Driver entries in rainy events",
+  "re participation %":                      "Fill rate for rainy events",
+  "changing weather events":                 "Events with dynamic weather changes",
+  "cwe spots occupied":                      "Driver entries in changing weather events",
+  "cwe participation %":                     "Fill rate for changing weather events",
+
+  // ── League stats ───────────────────────────────────────────────
+  "amount of races 50%":                     "Number of 50% distance races held",
+  "amount of sprints":                       "Number of sprint races held",
+  "amount of races 25%":                     "Number of 25% distance races held",
+  "playoff events":                          "Number of playoff-format events",
+  "total events":                            "Total events held across all formats",
+  "# spots in event":                        "Number of available driver slots per event",
+  "max spots":                               "Maximum number of driver slots available",
+  "avg. participation":                      "Average number of drivers per event",
+  "broadcasted events":                      "Events that were live-streamed",
+  "events on f123":                          "Events held using F1 23 game",
+  "events on f124":                          "Events held using F1 24 game",
+  "events on f125":                          "Events held using F1 25 game",
+  "safety cars":                             "Total safety car deployments",
+  "# safety cars per event":                 "Average safety cars per event",
+  "# drivers participating*":               "Unique drivers who participated",
+};
+
+/**
+ * Look up a tooltip for a metric key/label.
+ * Falls back to a generated description if no explicit entry exists.
+ */
+export function getMetricTooltip(key: string, label: string): string {
+  const lk = key.toLowerCase().trim();
+  const ll = label.toLowerCase().trim();
+  // Try exact key match, then label match
+  if (METRIC_TOOLTIPS[lk]) return METRIC_TOOLTIPS[lk];
+  if (METRIC_TOOLTIPS[ll]) return METRIC_TOOLTIPS[ll];
+  // Try without trailing asterisk
+  const stripped = lk.replace(/\*$/, "").trim();
+  if (METRIC_TOOLTIPS[stripped]) return METRIC_TOOLTIPS[stripped];
+  // Try stripping "event " prefix
+  const noPrefix = lk.replace(/^event\s+/, "").trim();
+  if (METRIC_TOOLTIPS[noPrefix]) return METRIC_TOOLTIPS[noPrefix];
+  // Season columns (Season 1, Season 2, etc.)
+  if (/^season\s+\d+$/i.test(key)) return `Number of events at this circuit in ${key}`;
+  // Fallback: humanise the key
+  return key;
+}
 
 /** League stat row (transposed from pivot CSV) */
 export type LeagueStatRow = {
@@ -142,7 +243,11 @@ function parseNumeric(val: string): number | null {
 }
 
 function isPercentageCol(header: string): boolean {
-  return header.includes("%");
+  // Only treat as percentage if "%" appears at the END of the header
+  // (e.g. "Event Participation %", "Top 10 Finishes %").
+  // Headers like "25% Races Participation" have "%" in the middle
+  // and are absolute counts, not percentages.
+  return /\b%\s*$/.test(header.trim());
 }
 
 function cleanLabel(header: string): string {
@@ -205,12 +310,16 @@ export function detectMetrics(rows: DriverStatRow[]): MetricInfo[] {
   for (const r of rows) {
     for (const k of Object.keys(r.metrics)) allKeys.add(k);
   }
-  return Array.from(allKeys).map((key) => ({
-    key,
-    label: cleanLabel(key),
-    isPercentage: isPercentageCol(key),
-    isRating: RATING_COLS.has(key.toLowerCase().trim()),
-  }));
+  return Array.from(allKeys).map((key) => {
+    const label = cleanLabel(key);
+    return {
+      key,
+      label,
+      isPercentage: isPercentageCol(key),
+      isRating: RATING_COLS.has(key.toLowerCase().trim()),
+      tooltip: getMetricTooltip(key, label),
+    };
+  });
 }
 
 /**
@@ -222,12 +331,16 @@ export function detectCircuitMetrics(rows: CircuitStatRow[]): MetricInfo[] {
   for (const r of rows) {
     for (const k of Object.keys(r.metrics)) allKeys.add(k);
   }
-  return Array.from(allKeys).map((key) => ({
-    key,
-    label: cleanLabel(key),
-    isPercentage: isPercentageCol(key),
-    isRating: false,
-  }));
+  return Array.from(allKeys).map((key) => {
+    const label = cleanLabel(key);
+    return {
+      key,
+      label,
+      isPercentage: isPercentageCol(key),
+      isRating: false,
+      tooltip: getMetricTooltip(key, label),
+    };
+  });
 }
 
 /* ------------------------------------------------------------------ */
@@ -364,17 +477,6 @@ export async function fetchDriverStats(url: string): Promise<{
 }
 
 /**
- * Fetch driver stats for a specific season.
- */
-export async function fetchSeasonDriverStats(
-  seasonKey: DriverSeasonKey,
-): Promise<{ rows: DriverStatRow[]; headers: string[] }> {
-  const url = SEASON_URL_MAP[seasonKey];
-  if (!url) return { rows: [], headers: [] };
-  return fetchDriverStats(url);
-}
-
-/**
  * Fetch all-time driver stats.
  */
 export async function fetchAllTimeDriverStats(): Promise<{
@@ -452,39 +554,107 @@ export async function fetchCircuitStats(): Promise<{
 }
 
 /**
- * Fetch ALL stats data in parallel (for server component).
+ * Fetch key league totals from the League Statistics CSV.
+ * Returns the "Total" column values for "Total Events" and "# Drivers Participating*".
  */
-export async function fetchAllStatsData() {
-  const [
-    driversAllTime,
-    driversS6,
-    driversS5,
-    driversS4,
-    driversS3,
-    driversS2,
-    driversS1,
-    league,
-    circuits,
-  ] = await Promise.all([
+export async function fetchLeagueTotals(): Promise<{
+  totalRaces: string;
+  totalDrivers: string;
+}> {
+  try {
+    const csv = await fetchCsv(STATS_CSV_URLS.league);
+    const raw = parseCsv<Record<string, string>>(csv);
+    if (raw.length === 0) return { totalRaces: "0", totalDrivers: "0" };
+
+    const headers = Object.keys(raw[0]);
+    const metricCol = headers[0];
+    const totalCol = headers.find((h) => h.toLowerCase() === "total") || headers[1];
+
+    let totalRaces = "0";
+    let totalDrivers = "0";
+
+    for (const row of raw) {
+      const metric = (row[metricCol] ?? "").trim().toLowerCase();
+      const value = (row[totalCol] ?? "").trim();
+      if (metric === "total events") totalRaces = value;
+      if (metric.includes("drivers participating")) totalDrivers = value;
+    }
+
+    return { totalRaces, totalDrivers };
+  } catch {
+    return { totalRaces: "0", totalDrivers: "0" };
+  }
+}
+
+/**
+ * Count unique winners from the Circuits Statistics CSV.
+ * Parses the "Winners" column (comma-separated names per circuit)
+ * and returns the count of distinct winner names.
+ */
+export async function fetchUniqueWinnersCount(): Promise<number> {
+  try {
+    const csv = await fetchCsv(STATS_CSV_URLS.circuits);
+    const raw = parseCsv<Record<string, string>>(csv);
+    if (raw.length === 0) return 0;
+
+    const headers = Object.keys(raw[0]);
+    // Find the "Winners" column (case-insensitive)
+    const winnersCol = headers.find(
+      (h) => h.toLowerCase().trim() === "winners",
+    );
+    if (!winnersCol) return 0;
+
+    const uniqueNames = new Set<string>();
+    for (const row of raw) {
+      const val = (row[winnersCol] ?? "").trim();
+      if (!val) continue;
+      // Split comma-separated names and normalise
+      for (const name of val.split(",")) {
+        const trimmed = name.trim();
+        if (trimmed) uniqueNames.add(trimmed.toLowerCase());
+      }
+    }
+    return uniqueNames.size;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * Fetch ALL stats data in parallel (for server component).
+ *
+ * Per-season driver stats are now driven entirely by the
+ * `driver_stats_gid` column in csv_seasons_config.
+ * Adding a new "SX Driver Stats" tab only requires:
+ *   1) creating the tab in Google Sheets
+ *   2) adding the gid to the season's row in csv_seasons_config
+ *
+ * @param seasons – the resolved season configs (from fetchSeasonsConfig)
+ */
+export async function fetchAllStatsData(seasons: SeasonConfig[]) {
+  // Build per-season fetch list from config (only seasons that have a gid)
+  const seasonEntries = seasons
+    .filter((s) => !!s.driver_stats_gid)
+    .map((s) => ({
+      key: s.season_key,
+      url: sheetUrl(s.driver_stats_gid),
+    }));
+
+  // Fetch all-time + league + circuits + all per-season tabs in parallel
+  const [driversAllTime, league, circuits, ...seasonResults] = await Promise.all([
     fetchAllTimeDriverStats().catch(() => ({ rows: [], headers: [] as string[] })),
-    fetchSeasonDriverStats("S6").catch(() => ({ rows: [], headers: [] as string[] })),
-    fetchSeasonDriverStats("S5").catch(() => ({ rows: [], headers: [] as string[] })),
-    fetchSeasonDriverStats("S4").catch(() => ({ rows: [], headers: [] as string[] })),
-    fetchSeasonDriverStats("S3").catch(() => ({ rows: [], headers: [] as string[] })),
-    fetchSeasonDriverStats("S2").catch(() => ({ rows: [], headers: [] as string[] })),
-    fetchSeasonDriverStats("S1").catch(() => ({ rows: [], headers: [] as string[] })),
     fetchLeagueStats().catch(() => [] as LeagueStatRow[]),
     fetchCircuitStats().catch(() => ({ rows: [], headers: [] as string[] })),
+    ...seasonEntries.map((e) =>
+      fetchDriverStats(e.url).catch(() => ({ rows: [], headers: [] as string[] })),
+    ),
   ]);
 
-  const driversBySeason: Record<string, { rows: DriverStatRow[]; headers: string[] }> = {
-    S6: driversS6,
-    S5: driversS5,
-    S4: driversS4,
-    S3: driversS3,
-    S2: driversS2,
-    S1: driversS1,
-  };
+  // Map results back to season keys
+  const driversBySeason: Record<string, { rows: DriverStatRow[]; headers: string[] }> = {};
+  for (let i = 0; i < seasonEntries.length; i++) {
+    driversBySeason[seasonEntries[i].key] = seasonResults[i];
+  }
 
   return {
     driversAllTime,

@@ -16,6 +16,7 @@
 
 html {
   scroll-behavior: smooth;
+  font-size: 17px; /* bump from default 16 px → scales all rem-based text */
 }
 
 body {
@@ -73,5 +74,29 @@ body {
   }
   50% {
     opacity: 0.4;
+  }
+}
+
+@keyframes live-gold-flash {
+  0%,
+  100% {
+    border-color: rgba(212, 175, 55, 0.3);
+    box-shadow: 0 0 8px rgba(212, 175, 55, 0.1);
+  }
+  50% {
+    border-color: rgba(212, 175, 55, 0.9);
+    box-shadow: 0 0 24px rgba(212, 175, 55, 0.3), 0 0 48px rgba(212, 175, 55, 0.1);
+  }
+}
+
+@keyframes live-dot-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.3);
   }
 }

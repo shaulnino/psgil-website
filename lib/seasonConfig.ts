@@ -34,6 +34,10 @@ export type SeasonConfig = {
   fallback_image_constructors_main: string;
   fallback_image_constructors_wild: string;
   notes: string;
+  /** GID of the per-season driver stats tab (e.g. "S6 Driver Stats").
+   *  Leave empty in the sheet if no tab exists yet for that season.
+   *  When present, the Stats page will auto-detect and fetch it. */
+  driver_stats_gid: string;
 };
 
 /* ------------------------------------------------------------------ */
@@ -50,7 +54,7 @@ const SHEET_ID = [
   "2HkvoNEpZg9Zf_Ps",
 ].join("");
 
-function sheetUrl(gid: string): string {
+export function sheetUrl(gid: string): string {
   return `https://docs.google.com/spreadsheets/d/e/${SHEET_ID}/pub?gid=${gid}&single=true&output=csv`;
 }
 
@@ -159,6 +163,7 @@ export function mapSeasonsConfig(
         row.fallback_image_constructors_wild,
       ),
       notes: s(row.notes),
+      driver_stats_gid: s(row.driver_stats_gid),
     }))
     .filter((c) => !!c.season_key); // skip empty rows
 }
@@ -219,15 +224,23 @@ export function getSeasonsForDropdown(
  * Replace template tokens in a string with resolved values.
  *   {currentSeason}  → current season label
  *   {seasonCount}    → total number of seasons
+ *   {uniqueWinners}  → unique winner count from circuits CSV
  */
 export function resolveTemplate(
   text: string,
   currentSeasonLabel: string,
   seasonCount: number,
+  extras?: Record<string, string | number>,
 ): string {
-  return text
+  let result = text
     .replace(/\{currentSeason\}/g, currentSeasonLabel)
     .replace(/\{seasonCount\}/g, String(seasonCount));
+  if (extras) {
+    for (const [key, val] of Object.entries(extras)) {
+      result = result.replace(new RegExp(`\\{${key}\\}`, "g"), String(val));
+    }
+  }
+  return result;
 }
 
 /* ------------------------------------------------------------------ */
@@ -273,5 +286,6 @@ function createFallbackSeason(): SeasonConfig {
     fallback_image_constructors_wild:
       "/statistics/constructors-wild-champ.png",
     notes: "",
+    driver_stats_gid: "1613919890", // S6 Driver Stats
   };
 }

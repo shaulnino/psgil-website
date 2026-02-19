@@ -425,7 +425,7 @@ export default function DriverModal({ driver, team, placeholderSrc, onClose, cur
                             className="relative cursor-help rounded-xl border border-white/10 bg-white/5 px-4 py-3"
                           >
                             {rank && (
-                              <span className="absolute right-2 top-2 text-[10px] font-medium text-[#D4AF37]/80">
+                              <span className="absolute right-2 top-2 text-xs font-medium text-[#D4AF37]/80">
                                 #{rank}
                               </span>
                             )}
@@ -469,7 +469,7 @@ export default function DriverModal({ driver, team, placeholderSrc, onClose, cur
                               </span>
                             </Tooltip>
                             {rank && (
-                              <span className="text-[10px] font-medium text-[#D4AF37]/80">
+                              <span className="text-xs font-medium text-[#D4AF37]/80">
                                 #{rank}
                               </span>
                             )}

@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ */
-/*  Server component: fetches schedule → finds next race → renders     */
+/*  Server component: fetches schedule → finds next/live race → renders*/
 /*  the client-side countdown widget.                                  */
 /* ------------------------------------------------------------------ */
 
@@ -10,7 +10,11 @@ import {
   matchesSeason,
   GLOBAL_CSV_URLS,
 } from "@/lib/seasonConfig";
-import { mapRaceEvents, toIsraelTimestamp } from "@/lib/scheduleData";
+import {
+  mapRaceEvents,
+  toIsraelTimestamp,
+  DEFAULT_RACE_DURATION_MS,
+} from "@/lib/scheduleData";
 import NextRaceWidget, { type NextRaceData } from "./NextRaceWidget";
 
 export default async function NextRaceWidgetServer() {
@@ -30,9 +34,40 @@ export default async function NextRaceWidgetServer() {
       matchesSeason(e.season, currentSeason.season_key),
     );
 
-    /* 4. Find next upcoming race (earliest future start time) */
+    /* 4. Check for a LIVE race first (started but not ended) */
     const now = Date.now();
 
+    for (const e of seasonEvents) {
+      const startTs = toIsraelTimestamp(e.date, e.start_time);
+      if (startTs === null || startTs > now) continue;
+      // Race has started — check if it's still in the live window
+      if (e.status.toLowerCase() === "completed") continue;
+      const endTs = e.end_time
+        ? toIsraelTimestamp(e.date, e.end_time)
+        : startTs + DEFAULT_RACE_DURATION_MS;
+      if (endTs !== null && now < endTs) {
+        // This race is LIVE
+        const raceData: NextRaceData = {
+          eventId: e.event_id,
+          raceName: e.race_name,
+          raceNumber: e.race_number,
+          season: e.season,
+          league: e.league,
+          track: e.track,
+          countryCode: e.country_code,
+          posterImage: e.poster_image,
+          date: e.date,
+          startTime: e.start_time,
+          startTimestamp: startTs,
+          endTimestamp: endTs,
+          youtubeUrl: e.youtube_url,
+          isLive: true,
+        };
+        return <NextRaceWidget race={raceData} />;
+      }
+    }
+
+    /* 5. Find next upcoming race (earliest future start time) */
     const upcoming = seasonEvents
       .map((e) => {
         const ts = toIsraelTimestamp(e.date, e.start_time);
@@ -50,6 +85,9 @@ export default async function NextRaceWidgetServer() {
     }
 
     const next = upcoming[0];
+    const endTs = next.event.end_time
+      ? toIsraelTimestamp(next.event.date, next.event.end_time)
+      : next.ts + DEFAULT_RACE_DURATION_MS;
 
     const raceData: NextRaceData = {
       eventId: next.event.event_id,
@@ -63,7 +101,9 @@ export default async function NextRaceWidgetServer() {
       date: next.event.date,
       startTime: next.event.start_time,
       startTimestamp: next.ts,
+      endTimestamp: endTs ?? next.ts + DEFAULT_RACE_DURATION_MS,
       youtubeUrl: next.event.youtube_url,
+      isLive: false,
     };
 
     return <NextRaceWidget race={raceData} />;
