@@ -67,8 +67,8 @@ export default function SocialLinks({ items, variant = "full" }: SocialLinksProp
             aria-label={`PSGiL on ${item.label}`}
             className={
               isCompact
-                ? "flex items-center gap-2 rounded-full border border-transparent bg-white/5 px-3 py-1.5 text-xs text-white/70 transition hover:bg-white/10 hover:text-white"
-                : "flex items-center gap-2 rounded-full border border-transparent bg-white/5 px-4 py-2 text-sm text-white/70 transition hover:bg-white/10 hover:text-white"
+                ? "flex items-center gap-2 rounded-full border border-transparent bg-white/5 px-3 py-1.5 text-sm text-white/70 transition hover:bg-white/10 hover:text-white"
+                : "flex items-center gap-2 rounded-full border border-transparent bg-white/5 px-4 py-2 text-base text-white/70 transition hover:bg-white/10 hover:text-white"
             }
           >
             <span style={{ color }}>

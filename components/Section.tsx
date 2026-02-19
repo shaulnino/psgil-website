@@ -17,11 +17,11 @@ export default function Section({ id, title, description, headerRight, children,
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="max-w-2xl">
                 {title && (
-                  <h2 className="font-display text-2xl font-semibold tracking-wide text-white md:text-3xl">
+                  <h2 className="font-display text-3xl font-semibold tracking-wide text-white md:text-4xl">
                     {title}
                   </h2>
                 )}
-                {description && <p className="mt-3 text-base text-white/70">{description}</p>}
+                {description && <p className="mt-3 text-lg text-white/70">{description}</p>}
               </div>
               {headerRight}
             </div>

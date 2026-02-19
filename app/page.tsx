@@ -15,6 +15,9 @@ import {
   mapRaceEvents,
   getLastRaceGroup,
   getNextRaceGroup,
+  getLiveRaceGroup,
+  groupTimestamp,
+  groupEndTimestamp,
 } from "@/lib/scheduleData";
 import type { RaceGroup } from "@/lib/scheduleData";
 import { fetchAllRaceResults } from "@/lib/resultsData";
@@ -24,6 +27,7 @@ import {
   mapLeagueStandings,
   applyLeagueStandings,
 } from "@/lib/driversData";
+import { fetchUniqueWinnersCount, fetchLeagueTotals } from "@/lib/statsData";
 import {
   fetchSeasonsConfig,
   resolveCurrentSeason,
@@ -45,22 +49,32 @@ export default async function Home() {
   const currentSeasonLabel = currentSeason.season_label;
   const seasonCount = seasonsConfig.length;
 
-  /* ---- Template resolver ---- */
+  /* ---- Template resolver (extras filled after parallel fetch below) ---- */
+  let templateExtras: Record<string, string | number> = {};
   const t = (text: string) =>
-    resolveTemplate(text, currentSeasonLabel, seasonCount);
+    resolveTemplate(text, currentSeasonLabel, seasonCount, templateExtras);
 
-  /* ---- Fetch schedule + race results + drivers/teams + standings in parallel ---- */
-  const [scheduleCsv, raceResultsByEvent, driversCsv, teamsCsv, standingsCsv] =
+  /* ---- Fetch schedule + race results + drivers/teams + standings + winners count in parallel ---- */
+  const [scheduleCsv, raceResultsByEvent, driversCsv, teamsCsv, standingsCsv, uniqueWinners, leagueTotals] =
     await Promise.all([
       fetchCsv(GLOBAL_CSV_URLS.schedule).catch(() => ""),
       fetchAllRaceResults(GLOBAL_CSV_URLS.raceResults),
       fetchCsv(GLOBAL_CSV_URLS.drivers).catch(() => ""),
       fetchCsv(GLOBAL_CSV_URLS.teams).catch(() => ""),
       fetchCsv(GLOBAL_CSV_URLS.leagueStandings).catch(() => ""),
+      fetchUniqueWinnersCount(),
+      fetchLeagueTotals(),
     ]);
+
+  templateExtras = {
+    uniqueWinners: uniqueWinners || 0,
+    totalRaces: leagueTotals.totalRaces || "0",
+    totalDrivers: leagueTotals.totalDrivers || "0",
+  };
 
   let lastGroup: RaceGroup | null = null;
   let nextGroup: RaceGroup | null = null;
+  let liveGroup: RaceGroup | null = null;
   try {
     if (scheduleCsv) {
       const raw = parseCsv<Record<string, string>>(scheduleCsv);
@@ -71,6 +85,7 @@ export default async function Home() {
       );
       lastGroup = getLastRaceGroup(events);
       nextGroup = getNextRaceGroup(events);
+      liveGroup = getLiveRaceGroup(events);
     }
   } catch {
     // CSV not available — cards will show fallback
@@ -104,6 +119,20 @@ export default async function Home() {
       : null;
   const lastGroupSafe = stripDate(lastGroup);
   const nextGroupSafe = stripDate(nextGroup);
+  const liveGroupSafe = liveGroup
+    ? {
+        ...stripDate(liveGroup)!,
+        startTimestamp: groupTimestamp(liveGroup),
+        endTimestamp: groupEndTimestamp(liveGroup),
+      }
+    : null;
+  // Also attach timestamps to nextGroup for client-side live transition
+  const nextGroupTimestamps = nextGroup
+    ? {
+        startTimestamp: groupTimestamp(nextGroup),
+        endTimestamp: groupEndTimestamp(nextGroup),
+      }
+    : null;
 
   // Compute unique YouTube links for the "Watch Last Race" hero button
   const lastRaceYoutubeLinks: { label: string; url: string }[] = [];
@@ -169,13 +198,13 @@ export default async function Home() {
           </div>
 
           <div className="mt-8 max-w-3xl">
-            <p className="text-sm uppercase tracking-[0.3em] text-white/60">
+            <p className="text-base uppercase tracking-[0.3em] text-white/60">
               {currentSeasonLabel}
             </p>
             <h1 className="mt-4 font-display text-4xl font-semibold tracking-tight md:text-5xl lg:text-6xl">
               {siteConfig.hero.title}
             </h1>
-            <p className="mt-4 max-w-xl text-base text-white/70 md:text-lg">
+            <p className="mt-4 max-w-xl text-lg text-white/70 md:text-xl">
               {siteConfig.hero.subtitle}
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
@@ -187,7 +216,7 @@ export default async function Home() {
                 label={siteConfig.hero.secondaryCtaLabel}
               />
             </div>
-            <div className="mt-6 flex flex-wrap gap-2.5 text-xs">
+            <div className="mt-6 flex flex-wrap gap-2.5 text-sm">
               {trustChips.map((chip) => (
                 <span
                   key={chip}
@@ -217,9 +246,9 @@ export default async function Home() {
           {siteConfig.leagueFormat.map((item) => (
             <div
               key={item.title}
-              className="rounded-2xl border border-white/10 bg-white/5 p-5 text-sm text-white/70"
+              className="rounded-2xl border border-white/10 bg-white/5 p-5 text-base text-white/70"
             >
-              <h3 className="font-display text-base font-semibold text-[#D4AF37]">
+              <h3 className="font-display text-lg font-semibold text-[#D4AF37]">
                 {item.title}
               </h3>
               <p className="mt-2 text-white/60">{item.description}</p>
@@ -240,6 +269,8 @@ export default async function Home() {
         <HomeRaceCards
           lastGroup={lastGroupSafe}
           nextGroup={nextGroupSafe}
+          liveGroup={liveGroupSafe}
+          nextGroupTimestamps={nextGroupTimestamps}
           raceResultsByEvent={raceResultsByEvent}
           allDrivers={allDrivers}
           allTeams={allTeams}
@@ -248,7 +279,7 @@ export default async function Home() {
 
       <Section title="About Us">
         <div className="rounded-2xl border border-white/10 bg-white/5 p-6 md:p-8">
-          <p className="text-sm text-white/70 md:text-base">
+          <p className="text-base text-white/70 md:text-lg">
             PSGiL is Israel&apos;s largest F1 sim racing league, competing
             primarily on the EA Sports F1 series, running continuously for
             over three years and currently in its{" "}
@@ -271,10 +302,10 @@ export default async function Home() {
               <h2 className="font-display text-2xl font-semibold text-white md:text-3xl">
                 {siteConfig.joinCta.title}
               </h2>
-              <p className="mt-3 max-w-xl text-sm text-white/70 md:text-base">
+              <p className="mt-3 max-w-xl text-base text-white/70 md:text-lg">
                 {siteConfig.joinCta.description}
               </p>
-              <p className="mt-3 text-xs uppercase tracking-[0.2em] text-white/50">
+              <p className="mt-3 text-sm uppercase tracking-[0.2em] text-white/50">
                 {siteConfig.joinCta.subtext}
               </p>
             </div>

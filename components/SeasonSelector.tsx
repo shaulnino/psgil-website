@@ -153,7 +153,7 @@ export default function SeasonSelector({
       className="relative inline-flex items-center gap-3"
     >
       {/* -------- Label -------- */}
-      <span className="text-xs font-bold uppercase tracking-[0.22em] text-[#D4AF37]/70">
+      <span className="text-sm font-bold uppercase tracking-[0.22em] text-[#D4AF37]/70">
         Season
       </span>
 

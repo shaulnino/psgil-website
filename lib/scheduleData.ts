@@ -25,6 +25,8 @@ export type RaceEvent = {
   safety_cars?: number;
   /** "yes" | "no" or empty (treated as "no") */
   reverse_grid?: string;
+  /** End time in HH:MM format (Israel local time). If empty, defaults to start_time + 2h. */
+  end_time?: string;
 };
 
 /**
@@ -79,6 +81,7 @@ export function mapRaceEvents(raw: Record<string, string>[]): RaceEvent[] {
       weather: (row.weather ?? "").trim().toLowerCase() || undefined,
       safety_cars: isNaN(scNum) ? 0 : scNum,
       reverse_grid: (row.reverse_grid ?? "").trim().toLowerCase() || undefined,
+      end_time: (row.end_time ?? "").trim() || undefined,
     };
   });
 }
@@ -160,12 +163,18 @@ export function toIsraelTimestamp(dateStr: string, timeStr?: string): number | n
   const year = parseInt(m[3], 10);
   const [h, min] = (timeStr || "21:00").split(":").map(Number);
 
-  // Determine Israel UTC offset for this date (handles DST automatically)
+  // Determine Israel UTC offset for this date (handles DST automatically).
+  // We use Intl.DateTimeFormat to get the Israel wall-clock hour at a known
+  // UTC reference point (noon UTC).  This avoids the bug where
+  // `new Date(localeString)` parses in the browser's local timezone.
   const refUTC = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
-  const israelStr = refUTC.toLocaleString("en-US", { timeZone: "Asia/Jerusalem" });
-  const israelRef = new Date(israelStr);
-  const offsetMs = israelRef.getTime() - refUTC.getTime();
-  const offsetHours = Math.round(offsetMs / (3_600_000));
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Jerusalem",
+    hour: "numeric",
+    hour12: false,
+  });
+  const israelHourAtRef = parseInt(formatter.format(refUTC), 10);
+  const offsetHours = israelHourAtRef - 12; // Israel hour minus the known UTC hour (12)
 
   // "h:min Israel time" → UTC = h - offset
   return Date.UTC(year, month - 1, day, h - offsetHours, min, 0);
@@ -290,20 +299,88 @@ function buildGroups(events: RaceEvent[]): RaceGroup[] {
 }
 
 /**
- * Return the most recent race-day group where date <= today.
- * Among ties on the same date, prefer groups where at least one event is Completed.
+ * Get the effective timestamp for a race group.
+ * Uses the earliest start_time among events for time-aware comparison.
+ * Falls back to midnight Israel time if no start_time is available.
+ */
+export function groupTimestamp(g: RaceGroup): number {
+  // Find the earliest start_time in the group
+  const startTime = g.events
+    .map((e) => e.start_time)
+    .filter((t): t is string => !!t)
+    .sort()[0]; // earliest HH:MM
+
+  const ts = toIsraelTimestamp(g.date, startTime || undefined);
+  // Fallback to date-only (midnight UTC) if parsing fails
+  return ts ?? g._dateObj!.getTime();
+}
+
+/* ------------------------------------------------------------------ */
+/*  Default race duration (used when end_time is not in the CSV)       */
+/* ------------------------------------------------------------------ */
+
+export const DEFAULT_RACE_DURATION_MS = 2 * 3_600_000; // 2 hours
+
+/**
+ * Get the effective END timestamp for a race group.
+ * Uses the latest end_time among events if available.
+ * Falls back to start_time + DEFAULT_RACE_DURATION_MS.
+ */
+export function groupEndTimestamp(g: RaceGroup): number {
+  // Check for explicit end_time values
+  const endTimes = g.events
+    .map((e) => (e.end_time ? toIsraelTimestamp(e.date, e.end_time) : null))
+    .filter((t): t is number => t !== null);
+
+  if (endTimes.length > 0) {
+    return Math.max(...endTimes);
+  }
+
+  // Default: start + 2 hours
+  return groupTimestamp(g) + DEFAULT_RACE_DURATION_MS;
+}
+
+/**
+ * Return a race-day group that is currently LIVE (started but not ended).
+ * A group is live when: start ≤ now < end AND not marked "completed".
+ */
+export function getLiveRaceGroup(events: RaceEvent[]): RaceGroup | null {
+  const nowUTC = Date.now();
+  const groups = buildGroups(events);
+
+  const live = groups.filter((g) => {
+    // If already marked completed in CSV, it's not live
+    if (g.events.some((e) => e.status.toLowerCase() === "completed")) return false;
+    const start = groupTimestamp(g);
+    const end = groupEndTimestamp(g);
+    return start <= nowUTC && nowUTC < end;
+  });
+
+  if (live.length === 0) return null;
+  // If multiple groups are somehow live, pick the one that started most recently
+  live.sort((a, b) => groupTimestamp(b) - groupTimestamp(a));
+  return live[0];
+}
+
+/**
+ * Return the most recent race-day group that has ENDED (or is "completed").
+ * A race is "last" only after its end time has passed or it's marked completed.
+ * Among ties, prefer groups where at least one event is Completed.
  */
 export function getLastRaceGroup(events: RaceEvent[]): RaceGroup | null {
-  const now = new Date();
-  const todayUTC = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  const nowUTC = Date.now();
 
-  const past = buildGroups(events).filter((g) => g._dateObj!.getTime() <= todayUTC);
+  const past = buildGroups(events).filter((g) => {
+    const completed = g.events.some((e) => e.status.toLowerCase() === "completed");
+    if (completed) return true;
+    // Only count as "last" if the end time has passed
+    return groupEndTimestamp(g) <= nowUTC;
+  });
   if (past.length === 0) return null;
 
   past.sort((a, b) => {
-    const diff = b._dateObj!.getTime() - a._dateObj!.getTime();
+    const diff = groupTimestamp(b) - groupTimestamp(a);
     if (diff !== 0) return diff;
-    // Prefer group that has completed events
     const aComp = a.events.some((e) => e.status.toLowerCase() === "completed") ? 1 : 0;
     const bComp = b.events.some((e) => e.status.toLowerCase() === "completed") ? 1 : 0;
     return bComp - aComp;
@@ -313,18 +390,18 @@ export function getLastRaceGroup(events: RaceEvent[]): RaceGroup | null {
 }
 
 /**
- * Return the next upcoming race-day group where date > today.
- * Among ties on the same date, prefer groups with Scheduled events.
+ * Return the next upcoming race-day group that hasn't started yet.
+ * Uses start_time for time-aware comparison.
+ * Among ties, prefer groups with Scheduled events.
  */
 export function getNextRaceGroup(events: RaceEvent[]): RaceGroup | null {
-  const now = new Date();
-  const todayUTC = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  const nowUTC = Date.now();
 
-  const future = buildGroups(events).filter((g) => g._dateObj!.getTime() > todayUTC);
+  const future = buildGroups(events).filter((g) => groupTimestamp(g) > nowUTC);
   if (future.length === 0) return null;
 
   future.sort((a, b) => {
-    const diff = a._dateObj!.getTime() - b._dateObj!.getTime();
+    const diff = groupTimestamp(a) - groupTimestamp(b);
     if (diff !== 0) return diff;
     const aSched = a.events.some((e) => e.status.toLowerCase() === "scheduled") ? 1 : 0;
     const bSched = b.events.some((e) => e.status.toLowerCase() === "scheduled") ? 1 : 0;

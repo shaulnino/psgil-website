@@ -18,12 +18,12 @@ export default function Footer() {
       <div className="mx-auto w-full max-w-6xl px-6 py-10">
         <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-sm text-white/70">
+            <p className="text-base text-white/70">
               © {new Date().getFullYear()} {siteConfig.leagueName} – F1 Sim Racing
             </p>
-            <p className="mt-2 text-xs text-white/50">{siteConfig.footerNote}</p>
+            <p className="mt-2 text-sm text-white/50">{siteConfig.footerNote}</p>
           </div>
-          <div className="flex flex-wrap items-center gap-4 text-xs text-white/50">
+          <div className="flex flex-wrap items-center gap-4 text-sm text-white/50">
             {footerLinks.map((link) => (
               <LoadingLink
                 key={link.href}

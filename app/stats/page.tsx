@@ -3,9 +3,11 @@ export const dynamic = "force-dynamic";
 import Section from "@/components/Section";
 import StatsPageContent from "@/components/StatsPageContent";
 import { fetchAllStatsData } from "@/lib/statsData";
+import { fetchSeasonsConfig } from "@/lib/seasonConfig";
 
 export default async function StatsPage() {
-  const data = await fetchAllStatsData();
+  const seasons = await fetchSeasonsConfig();
+  const data = await fetchAllStatsData(seasons);
 
   return (
     <main className="bg-[#0B0B0E] text-white">
