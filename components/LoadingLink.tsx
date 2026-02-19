@@ -10,6 +10,7 @@ import {
   type MouseEvent,
   type AnchorHTMLAttributes,
 } from "react";
+import { gaClickJoinNow } from "@/lib/ga";
 
 /* ---------- Tiny CSS spinner ---------- */
 function Spinner({ className = "" }: { className?: string }) {
@@ -137,6 +138,7 @@ export type LoadingButtonProps = {
   className?: string;
   showLoadingText?: boolean;
   external?: boolean;
+  onClick?: () => void;
 };
 
 /**
@@ -150,16 +152,24 @@ export function LoadingButton({
   className = "",
   showLoadingText = false,
   external,
+  onClick,
 }: LoadingButtonProps) {
   const isExternal = external ?? href.startsWith("http");
 
   if (isExternal) {
+    const handleExternalClick = () => {
+      // Auto-track Discord / join link clicks
+      if (href.includes("discord")) gaClickJoinNow();
+      onClick?.();
+    };
+
     return (
       <a
         href={href}
         className={className}
         target="_blank"
         rel="noopener noreferrer"
+        onClick={handleExternalClick}
       >
         {children}
       </a>

@@ -11,6 +11,7 @@ import {
 } from "react";
 import type { Driver, Team } from "@/lib/driversData";
 import DriverModal from "@/components/DriverModal";
+import { gaOpenDriverCard } from "@/lib/ga";
 
 /* ------------------------------------------------------------------ */
 /*  Context                                                            */
@@ -94,6 +95,7 @@ export default function DriverLookupProvider({
       if (result) {
         lastFocused.current = document.activeElement as HTMLElement;
         setSelected(result);
+        gaOpenDriverCard(result.driver.name);
       }
     },
     [getDriver],

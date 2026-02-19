@@ -7,6 +7,7 @@ import { useState } from "react";
 import Button from "@/components/Button";
 import LoadingLink from "@/components/LoadingLink";
 import { siteConfig } from "@/lib/siteConfig";
+import { gaClickJoinNow } from "@/lib/ga";
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
@@ -27,7 +28,7 @@ export default function Header() {
               priority
             />
           </span>
-          <span className="font-display text-lg tracking-wide text-white">
+          <span className="font-display text-xl tracking-wide text-white">
             {siteConfig.leagueName}
           </span>
         </Link>
@@ -35,18 +36,24 @@ export default function Header() {
         <nav className="hidden items-center gap-8 md:flex">
           {siteConfig.navigation.map((link) => {
             const isComingSoon = link.label === "Articles";
+            const isNew = link.label === "Stats";
             return (
-              <div key={link.href} className="relative">
+              <div key={link.href} className="relative flex items-center">
                 <LoadingLink
                   href={link.href}
-                  className={`text-sm font-medium transition ${
+                  className={`text-base font-medium transition ${
                     pathname === link.href ? "text-white" : "text-white/60 hover:text-white"
                   }`}
                 >
                   {link.label}
                 </LoadingLink>
+                {isNew && (
+                  <span className="ml-1.5 rounded-[4px] bg-[#D4AF37] px-1.5 py-0.5 text-[11px] font-bold leading-none text-[#0B0B0E]">
+                    New!
+                  </span>
+                )}
                 {isComingSoon && (
-                  <span className="ml-2 rounded-[4px] bg-red-700/90 px-1.5 py-0.5 text-[9px] font-medium leading-none text-white">
+                  <span className="ml-1.5 rounded-[4px] bg-red-700/90 px-1.5 py-0.5 text-[11px] font-medium leading-none text-white">
                     Coming soon
                   </span>
                 )}
@@ -56,7 +63,7 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <Button href={siteConfig.discordUrl} size="sm" external>
+          <Button href={siteConfig.discordUrl} size="sm" external onClick={gaClickJoinNow}>
             Join Now
           </Button>
           <button
@@ -79,19 +86,25 @@ export default function Header() {
           <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 py-4">
             {siteConfig.navigation.map((link) => {
               const isComingSoon = link.label === "Articles";
+              const isNew = link.label === "Stats";
               return (
                 <div key={link.href} className="flex items-center gap-2">
                   <LoadingLink
                     href={link.href}
                     onClick={() => setIsOpen(false)}
-                    className={`text-sm font-medium transition ${
+                    className={`text-base font-medium transition ${
                       pathname === link.href ? "text-white" : "text-white/70 hover:text-white"
                     }`}
                   >
                     {link.label}
                   </LoadingLink>
+                  {isNew && (
+                    <span className="rounded-[4px] bg-[#D4AF37] px-1.5 py-0.5 text-[11px] font-bold leading-none text-[#0B0B0E]">
+                      New!
+                    </span>
+                  )}
                   {isComingSoon && (
-                    <span className="rounded-[4px] bg-red-700/90 px-1.5 py-0.5 text-[9px] font-medium leading-none text-white">
+                    <span className="rounded-[4px] bg-red-700/90 px-1.5 py-0.5 text-[11px] font-medium leading-none text-white">
                       Coming soon
                     </span>
                   )}

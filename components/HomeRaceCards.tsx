@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import Image from "next/image";
 import ZoomableImage from "@/components/ZoomableImage";
 import type { RaceGroup, RaceEvent } from "@/lib/scheduleData";
@@ -11,14 +11,25 @@ import RaceResultsTable from "@/components/RaceResultsTable";
 import DriverLookupProvider from "@/components/DriverLookupProvider";
 import YouTubeEmbed from "@/components/YouTubeEmbed";
 import { getYouTubeVideoId } from "@/lib/youtube";
+import { gaClickWatchYouTube, gaClickRaceResults } from "@/lib/ga";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
+/** A live group includes start/end timestamps for the client. */
+type LiveGroupData = RaceGroup & {
+  startTimestamp: number;
+  endTimestamp: number;
+};
+
 type HomeRaceCardsProps = {
   lastGroup: RaceGroup | null;
   nextGroup: RaceGroup | null;
+  /** A group that is currently LIVE (started, not ended) from server. */
+  liveGroup?: LiveGroupData | null;
+  /** Pre-computed start/end timestamps for the next group (for client-side live transition). */
+  nextGroupTimestamps?: { startTimestamp: number; endTimestamp: number } | null;
   raceResultsByEvent?: Record<string, RaceResultRow[]>;
   allDrivers?: Driver[];
   allTeams?: Team[];
@@ -94,7 +105,7 @@ function HomeWatchModal({
         {/* Header */}
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#7020B0]/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-[#a855f7]">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#7020B0]/20 px-2.5 py-1 text-xs font-bold uppercase tracking-[0.15em] text-[#a855f7]">
               <span className="h-1.5 w-1.5 rounded-full bg-[#a855f7]" />
               Race Broadcast
             </span>
@@ -149,7 +160,7 @@ function LeagueBadge({ league }: { league: string }) {
   const isMain = league.toLowerCase() === "main";
   return (
     <span
-      className={`inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase leading-none tracking-wider ${
+      className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-semibold uppercase leading-none tracking-wider ${
         isMain
           ? "border border-[#7020B0]/40 bg-[#7020B0]/20 text-[#a855f7]"
           : "border border-[#D4AF37]/30 bg-[#D4AF37]/15 text-[#D4AF37]"
@@ -164,8 +175,15 @@ function LeagueBadge({ league }: { league: string }) {
 /*  Countdown for next race card                                       */
 /* ------------------------------------------------------------------ */
 
-function RaceCountdown({ targetMs }: { targetMs: number }) {
+function RaceCountdown({
+  targetMs,
+  onReachedZero,
+}: {
+  targetMs: number;
+  onReachedZero?: () => void;
+}) {
   const [now, setNow] = useState(Date.now());
+  const calledRef = useRef(false);
 
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1_000);
@@ -173,6 +191,14 @@ function RaceCountdown({ targetMs }: { targetMs: number }) {
   }, []);
 
   const total = Math.max(0, targetMs - now);
+
+  useEffect(() => {
+    if (total <= 0 && !calledRef.current && onReachedZero) {
+      calledRef.current = true;
+      onReachedZero();
+    }
+  }, [total, onReachedZero]);
+
   if (total <= 0) return null;
 
   const days = Math.floor(total / 86_400_000);
@@ -183,28 +209,41 @@ function RaceCountdown({ targetMs }: { targetMs: number }) {
   const pad = (v: number) => String(v).padStart(2, "0");
 
   return (
-    <div className="flex items-center justify-center gap-2 rounded-lg border border-white/5 bg-white/5 px-2 py-1.5">
+    <div className="flex items-center justify-center gap-3 rounded-xl border border-white/5 bg-white/5 px-3 py-2.5">
       {[
-        { v: days, l: "d" },
-        { v: hours, l: "h" },
-        { v: minutes, l: "m" },
-        { v: seconds, l: "s" },
+        { v: days, l: "days" },
+        { v: hours, l: "hrs" },
+        { v: minutes, l: "min" },
+        { v: seconds, l: "sec" },
       ].map((unit, i) => (
-        <div key={unit.l} className="flex items-center gap-2">
+        <div key={unit.l} className="flex items-center gap-3">
           {i > 0 && (
-            <span className="font-display text-xs font-bold text-[#D4AF37]/40">:</span>
+            <span className="font-display text-xl font-bold text-white/20">:</span>
           )}
-          <div className="flex items-baseline gap-0.5">
-            <span className="font-display text-sm font-bold leading-none text-white tabular-nums">
+          <div className="flex flex-col items-center">
+            <span className="font-display text-xl font-bold leading-none text-white tabular-nums md:text-2xl">
               {pad(unit.v)}
             </span>
-            <span className="text-[8px] uppercase text-[#D4AF37]">
+            <span className="mt-0.5 text-[11px] uppercase tracking-wider text-white/40">
               {unit.l}
             </span>
           </div>
         </div>
       ))}
     </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  LIVE badge with pulsing dot                                        */
+/* ------------------------------------------------------------------ */
+
+function LiveBadge() {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-[#D4AF37]/40 bg-[#D4AF37]/10 px-3 py-1 text-sm font-bold uppercase tracking-[0.15em] text-[#D4AF37]">
+      <span className="h-2 w-2 rounded-full bg-[#D4AF37] animate-[live-dot-pulse_1.5s_ease-in-out_infinite]" />
+      LIVE
+    </span>
   );
 }
 
@@ -219,6 +258,9 @@ function RaceGroupCard({
   onShowResults,
   onWatch,
   showCountdown = false,
+  isLive = false,
+  startTimestamp,
+  endTimestamp,
 }: {
   heading: string;
   group: RaceGroup;
@@ -226,6 +268,12 @@ function RaceGroupCard({
   onShowResults?: () => void;
   onWatch?: (label: string, url: string) => void;
   showCountdown?: boolean;
+  /** Is this race currently live? */
+  isLive?: boolean;
+  /** UTC ms when the race starts (for client-side live transition). */
+  startTimestamp?: number | null;
+  /** UTC ms when the race ends (for auto-reload after live). */
+  endTimestamp?: number | null;
 }) {
   const isSingle = group.events.length === 1;
   const first = group.events[0];
@@ -236,33 +284,76 @@ function RaceGroupCard({
   const showResults = completed && hasAnyResults(group, raceResultsByEvent) && !!onShowResults;
   const isWild = group.league.toLowerCase() === "wild";
 
+  // Client-side live state (transitions from countdown → live → ended)
+  const [clientLive, setClientLive] = useState(isLive);
+
   // Compute race start timestamp for countdown (use earliest event with a start_time)
   const countdownTargetMs = useMemo(() => {
-    if (!showCountdown || completed) return null;
+    if (clientLive || isLive || !showCountdown || completed) return null;
+    // Use pre-computed timestamp if available
+    if (startTimestamp && startTimestamp > Date.now()) return startTimestamp;
+    // Fallback: compute from events
     for (const e of group.events) {
       const ts = toIsraelTimestamp(e.date, e.start_time);
       if (ts !== null && ts > Date.now()) return ts;
     }
     return null;
-  }, [showCountdown, completed, group.events]);
+  }, [showCountdown, completed, group.events, startTimestamp, clientLive, isLive]);
+
+  // When countdown reaches zero, transition to live
+  const handleCountdownZero = useCallback(() => {
+    setClientLive(true);
+  }, []);
+
+  // Auto-reload after race ends
+  useEffect(() => {
+    if (!clientLive && !isLive) return;
+    const end = endTimestamp;
+    if (!end) return;
+
+    const check = () => {
+      if (Date.now() >= end) {
+        window.location.reload();
+      }
+    };
+    check();
+    const id = setInterval(check, 10_000); // check every 10s
+    return () => clearInterval(id);
+  }, [clientLive, isLive, endTimestamp]);
+
+  const liveNow = isLive || clientLive;
 
   return (
-    <div className="flex flex-col rounded-2xl border border-white/10 bg-white/5 p-5">
+    <div
+      className={`flex flex-col rounded-2xl border-2 p-5 transition-colors ${
+        liveNow
+          ? "border-[#D4AF37]/50 bg-[#D4AF37]/5 animate-[live-gold-flash_2s_ease-in-out_infinite]"
+          : "border-white/10 bg-white/5"
+      }`}
+    >
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <h3 className="font-display text-lg font-semibold text-white">{heading}</h3>
+          {liveNow ? (
+            <LiveBadge />
+          ) : (
+            <h3 className="font-display text-xl font-semibold text-white">{heading}</h3>
+          )}
           <LeagueBadge league={group.league} />
         </div>
-        {countdownTargetMs ? (
-          <RaceCountdown targetMs={countdownTargetMs} />
+        {liveNow ? (
+          <span className="text-base font-medium text-[#D4AF37]">{group.date}</span>
+        ) : countdownTargetMs ? (
+          <RaceCountdown targetMs={countdownTargetMs} onReachedZero={handleCountdownZero} />
         ) : (
-          <span className="text-sm text-white/60">{group.date}</span>
+          <span className="text-base text-white/60">{group.date}</span>
         )}
       </div>
 
       {/* Poster */}
-      <div className="mt-4 overflow-hidden rounded-xl border border-white/10 bg-[#0B0B0E]">
+      <div className={`mt-4 overflow-hidden rounded-xl border bg-[#0B0B0E] ${
+        liveNow ? "border-[#D4AF37]/20" : "border-white/10"
+      }`}>
         {hasPoster ? (
           <ZoomableImage
             src={poster.poster_image!}
@@ -274,7 +365,7 @@ function RaceGroupCard({
           />
         ) : (
           <div className="flex aspect-video items-center justify-center bg-gradient-to-br from-[#111122] via-[#0B0B0E] to-[#1b0b2e]">
-            <span className="text-xs uppercase tracking-[0.2em] text-white/60">
+            <span className="text-sm uppercase tracking-[0.2em] text-white/60">
               Poster coming soon
             </span>
           </div>
@@ -284,17 +375,17 @@ function RaceGroupCard({
       {/* Description */}
       <div className="mt-4 space-y-1">
         {isSingle ? (
-          <p className="text-sm text-white/70">
+          <p className="text-base text-white/70">
             Season {first.season} · Race #{first.race_number}, {first.race_name}
             {isWild ? " · Wild Event" : ""} · {group.date}
           </p>
         ) : (
           <>
-            <p className="text-sm font-medium text-white/80">
+            <p className="text-base font-medium text-white/80">
               Season {group.season} · {isWild ? "Wild Event Day" : "Race Day"} · {group.date}
             </p>
             {group.events.map((e) => (
-              <p key={e.race_number} className="text-sm text-white/60">
+              <p key={e.race_number} className="text-base text-white/60">
                 Race #{e.race_number}: {e.race_name}
               </p>
             ))}
@@ -326,7 +417,13 @@ function RaceGroupCard({
             Race Results
           </button>
         )}
-        {!completed && (
+        {liveNow && (
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-[#D4AF37]/40 bg-[#D4AF37]/10 px-4 py-2 text-sm font-semibold text-[#D4AF37] animate-[live-dot-pulse_1.5s_ease-in-out_infinite]">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#D4AF37]" />
+            Race in progress
+          </span>
+        )}
+        {!completed && !liveNow && (
           <span className="inline-flex items-center gap-1.5 rounded-full border border-[#FF0000]/30 bg-[#FF0000]/10 px-4 py-2 text-sm font-semibold text-white animate-[upcoming-pulse_2s_ease-in-out_infinite]">
             <span className="h-1.5 w-1.5 rounded-full bg-[#FF0000] animate-[upcoming-pulse_2s_ease-in-out_infinite]" />
             Upcoming
@@ -542,6 +639,8 @@ function GroupResultsModal({
 export default function HomeRaceCards({
   lastGroup,
   nextGroup,
+  liveGroup,
+  nextGroupTimestamps,
   raceResultsByEvent = {},
   allDrivers = [],
   allTeams = [],
@@ -555,16 +654,24 @@ export default function HomeRaceCards({
       (e) => !!e.results_image || (raceResultsByEvent[e.event_id]?.length ?? 0) > 0,
     );
 
-  const handleWatch = (label: string, url: string) => setWatchTarget({ label, url });
+  const handleWatch = (label: string, url: string) => {
+    gaClickWatchYouTube(label);
+    setWatchTarget({ label, url });
+  };
 
   // Nothing to show at all
-  if (!lastGroup && !nextGroup) {
+  if (!lastGroup && !nextGroup && !liveGroup) {
     return (
       <div className="flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 py-16">
         <p className="text-sm text-white/50">Race schedule not available yet.</p>
       </div>
     );
   }
+
+  // The right card shows either a LIVE race (server-detected) or the next race
+  // (which can transition to live client-side when countdown hits zero)
+  const rightCardGroup = liveGroup ?? nextGroup;
+  const rightCardIsLive = !!liveGroup;
 
   return (
     <>
@@ -576,7 +683,10 @@ export default function HomeRaceCards({
             raceResultsByEvent={raceResultsByEvent}
             onShowResults={
               groupHasResults(lastGroup)
-                ? () => setShowResultsGroup(lastGroup)
+                ? () => {
+                    gaClickRaceResults(lastGroup.events[0]?.race_name);
+                    setShowResultsGroup(lastGroup);
+                  }
                 : undefined
             }
             onWatch={handleWatch}
@@ -586,8 +696,24 @@ export default function HomeRaceCards({
             <p className="text-sm text-white/50">No past races yet.</p>
           </div>
         )}
-        {nextGroup ? (
-          <RaceGroupCard heading="Next Race" group={nextGroup} onWatch={handleWatch} showCountdown />
+        {rightCardGroup ? (
+          <RaceGroupCard
+            heading="Next Race"
+            group={rightCardGroup}
+            onWatch={handleWatch}
+            showCountdown={!rightCardIsLive}
+            isLive={rightCardIsLive}
+            startTimestamp={
+              rightCardIsLive
+                ? liveGroup?.startTimestamp
+                : nextGroupTimestamps?.startTimestamp
+            }
+            endTimestamp={
+              rightCardIsLive
+                ? liveGroup?.endTimestamp
+                : nextGroupTimestamps?.endTimestamp
+            }
+          />
         ) : (
           <div className="flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 py-16">
             <p className="text-sm text-white/50">Season complete — stay tuned!</p>

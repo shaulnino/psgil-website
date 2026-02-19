@@ -13,6 +13,7 @@ import SeasonSelector from "@/components/SeasonSelector";
 import RaceResultsTable from "@/components/RaceResultsTable";
 import DriverLookupProvider from "@/components/DriverLookupProvider";
 import YouTubeEmbed from "@/components/YouTubeEmbed";
+import { gaClickWatchYouTube, gaClickRaceResults } from "@/lib/ga";
 import { getYouTubeVideoId } from "@/lib/youtube";
 
 /* ------------------------------------------------------------------ */
@@ -109,11 +110,11 @@ function WatchModal({
         {/* Header */}
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#7020B0]/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-[#a855f7]">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#7020B0]/20 px-2.5 py-1 text-xs font-bold uppercase tracking-[0.15em] text-[#a855f7]">
               <span className="h-1.5 w-1.5 rounded-full bg-[#a855f7]" />
               Race Broadcast
             </span>
-            <h3 className="font-display text-sm font-semibold text-white/80 md:text-base">
+            <h3 className="font-display text-base font-semibold text-white/80 md:text-lg">
               {event.race_name}
             </h3>
             {timeState === "upcoming" && event.start_time && (
@@ -442,7 +443,7 @@ function PosterModal({
                 {event.race_name}
               </h3>
               <span
-                className={`inline-flex items-center justify-center rounded-full px-2 py-px text-[10px] font-semibold uppercase leading-none tracking-wider ${
+                className={`inline-flex items-center justify-center rounded-full px-2 py-px text-xs font-semibold uppercase leading-none tracking-wider ${
                   event.league.toLowerCase() === "main"
                     ? "bg-[#7020B0]/20 text-[#a855f7] border border-[#7020B0]/40"
                     : "bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/30"
@@ -525,7 +526,7 @@ function StatusBadge({ status }: { status: string }) {
   const isCompleted = status.toLowerCase() === "completed";
   return (
     <span
-      className={`inline-flex items-center justify-center gap-1 rounded-full px-2 py-px text-[10px] font-semibold uppercase leading-none tracking-wider md:justify-self-center ${
+      className={`inline-flex items-center justify-center gap-1 rounded-full px-2 py-px text-xs font-semibold uppercase leading-none tracking-wider md:justify-self-center ${
         isCompleted
           ? "border border-emerald-500/30 bg-emerald-500/15 text-emerald-400"
           : "border border-white/10 bg-white/5 text-white/50"
@@ -656,7 +657,7 @@ function RaceBadges({ event }: { event: RaceEvent }) {
       {/* Weather */}
       {weather === "dry" && (
         <Tooltip text="Weather: Dry race">
-          <span className="inline-flex items-center gap-1 rounded-md border border-amber-500/25 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium leading-none text-amber-300/90">
+          <span className="inline-flex items-center gap-1 rounded-md border border-amber-500/25 bg-amber-500/10 px-1.5 py-0.5 text-xs font-medium leading-none text-amber-300/90">
             <SunIcon className="shrink-0" />
             Dry
           </span>
@@ -664,7 +665,7 @@ function RaceBadges({ event }: { event: RaceEvent }) {
       )}
       {weather === "wet" && (
         <Tooltip text="Weather: Wet race">
-          <span className="inline-flex items-center gap-1 rounded-md border border-sky-400/25 bg-sky-400/10 px-1.5 py-0.5 text-[10px] font-medium leading-none text-sky-300/90">
+          <span className="inline-flex items-center gap-1 rounded-md border border-sky-400/25 bg-sky-400/10 px-1.5 py-0.5 text-xs font-medium leading-none text-sky-300/90">
             <CloudRainIcon className="shrink-0" />
             Wet
           </span>
@@ -672,7 +673,7 @@ function RaceBadges({ event }: { event: RaceEvent }) {
       )}
       {weather === "mixed" && (
         <Tooltip text="Weather: Mixed conditions (dry & wet)">
-          <span className="inline-flex items-center gap-1 rounded-md border border-teal-400/25 bg-teal-400/10 px-1.5 py-0.5 text-[10px] font-medium leading-none text-teal-300/90">
+          <span className="inline-flex items-center gap-1 rounded-md border border-teal-400/25 bg-teal-400/10 px-1.5 py-0.5 text-xs font-medium leading-none text-teal-300/90">
             <CloudSunRainIcon className="shrink-0" />
             Mixed
           </span>
@@ -682,7 +683,7 @@ function RaceBadges({ event }: { event: RaceEvent }) {
       {/* Safety cars */}
       {safetyCars > 0 && (
         <Tooltip text={`Safety Cars: ${safetyCars}`}>
-          <span className="inline-flex items-center gap-1 rounded-md border border-yellow-400/25 bg-yellow-400/10 px-1.5 py-0.5 text-[10px] font-bold leading-none text-yellow-300/90">
+          <span className="inline-flex items-center gap-1 rounded-md border border-yellow-400/25 bg-yellow-400/10 px-1.5 py-0.5 text-xs font-bold leading-none text-yellow-300/90">
             SC
             <span className="font-semibold">{safetyCars}</span>
           </span>
@@ -692,7 +693,7 @@ function RaceBadges({ event }: { event: RaceEvent }) {
       {/* Reverse grid */}
       {reverseGrid && (
         <Tooltip text="Reverse grid was used for this race">
-          <span className="inline-flex items-center gap-1 rounded-md border border-[#a855f7]/30 bg-[#a855f7]/10 px-1.5 py-0.5 text-[10px] font-medium leading-none text-[#c084fc]/90">
+          <span className="inline-flex items-center gap-1 rounded-md border border-[#a855f7]/30 bg-[#a855f7]/10 px-1.5 py-0.5 text-xs font-medium leading-none text-[#c084fc]/90">
             RG
           </span>
         </Tooltip>
@@ -709,7 +710,7 @@ function LeagueBadge({ league }: { league: string }) {
   const isMain = league.toLowerCase() === "main";
   return (
     <span
-      className={`inline-flex items-center justify-center rounded-full px-2 py-px text-[10px] font-semibold uppercase leading-none tracking-wider md:justify-self-center ${
+      className={`inline-flex items-center justify-center rounded-full px-2 py-px text-xs font-semibold uppercase leading-none tracking-wider md:justify-self-center ${
         isMain
           ? "border border-[#7020B0]/40 bg-[#7020B0]/20 text-[#a855f7]"
           : "border border-[#D4AF37]/30 bg-[#D4AF37]/15 text-[#D4AF37]"
@@ -808,7 +809,7 @@ function ScheduleListInner({
           <div>
             <div className="overflow-hidden rounded-2xl border border-white/10">
               {/* Desktop header */}
-              <div className="hidden border-b border-white/10 bg-white/5 px-5 py-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/40 md:grid md:grid-cols-[60px_1fr_120px_100px_100px_90px]">
+              <div className="hidden border-b border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white/40 md:grid md:grid-cols-[60px_1fr_120px_100px_100px_90px]">
                 <span>#</span>
                 <span>Race</span>
                 <span className="text-center">Date</span>
@@ -831,12 +832,12 @@ function ScheduleListInner({
                   >
                     {/* Race number */}
                     <div className="flex items-center gap-3 md:contents">
-                      <span className="font-display text-sm font-semibold text-[#D4AF37]">
+                      <span className="font-display text-base font-semibold text-[#D4AF37]">
                         #{event.race_number}
                       </span>
 
                       {/* Race name + metadata badges */}
-                      <span className="font-display text-sm font-semibold text-white md:text-base">
+                      <span className="font-display text-base font-semibold text-white md:text-lg">
                         <span className="inline-flex flex-wrap items-center gap-2">
                           {event.race_name}
                           <RaceBadges event={event} />
@@ -846,7 +847,7 @@ function ScheduleListInner({
 
                     {/* Mobile: meta row */}
                     <div className="flex flex-wrap items-center gap-3 md:contents">
-                      <span className="text-xs text-white/50 md:text-center md:text-sm">
+                      <span className="text-sm text-white/50 md:text-center md:text-base">
                         {event.date}
                       </span>
                       <LeagueBadge league={event.league} />
@@ -877,11 +878,13 @@ function ScheduleListInner({
           onClose={() => setPosterEvent(null)}
           onShowResults={() => {
             const ev = posterEvent;
+            gaClickRaceResults(ev.race_name);
             setPosterEvent(null);
             setResultsEvent(ev);
           }}
           onWatch={() => {
             const ev = posterEvent;
+            gaClickWatchYouTube(ev.race_name);
             setPosterEvent(null);
             setWatchEvent(ev);
           }}

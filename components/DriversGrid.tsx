@@ -7,6 +7,7 @@ import DriverCard from "@/components/DriverCard";
 import DriverModal from "@/components/DriverModal";
 import { AchievementBadgeList } from "@/components/AchievementBadges";
 import Image from "next/image";
+import { gaOpenDriverCard } from "@/lib/ga";
 
 type DriversGridProps = {
   teams: TeamWithDrivers[];
@@ -23,6 +24,11 @@ function isRemote(src?: string) {
 export default function DriversGrid({ teams, reserves, historicDrivers, placeholderSrc, currentSeasonLabel }: DriversGridProps) {
   const [selected, setSelected] = useState<{ driver: Driver; team: Team } | null>(null);
   const lastFocused = useRef<HTMLElement | null>(null);
+
+  const selectDriver = (driver: Driver, team: Team) => {
+    gaOpenDriverCard(driver.name);
+    setSelected({ driver, team });
+  };
 
   useEffect(() => {
     if (!selected) {
@@ -73,7 +79,7 @@ export default function DriversGrid({ teams, reserves, historicDrivers, placehol
                   team={team}
                   placeholderSrc={placeholderSrc}
                   onSelect={(selectedDriver, selectedTeam) =>
-                    setSelected({ driver: selectedDriver, team: selectedTeam })
+                    selectDriver(selectedDriver, selectedTeam)
                   }
                 />
               ))}
@@ -151,7 +157,7 @@ export default function DriversGrid({ teams, reserves, historicDrivers, placehol
                   <AchievementBadgeList driver={driver} iconSize={14} />
                   <span className="flex-1" />
                   {driver.number && (
-                    <span className="inline-flex shrink-0 items-center rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-2.5 py-0.5 text-xs font-semibold text-[#D4AF37]">
+                    <span className="inline-flex shrink-0 items-center rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-2.5 py-0.5 text-sm font-semibold text-[#D4AF37]">
                       #{driver.number}
                     </span>
                   )}
