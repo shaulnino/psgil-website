@@ -21,9 +21,9 @@ export default function Footer() {
             <p className="text-base text-white/70">
               © {new Date().getFullYear()} {siteConfig.leagueName} – F1 Sim Racing
             </p>
-            <p className="mt-2 text-sm text-white/50">{siteConfig.footerNote}</p>
+            <p className="mt-2 text-xs text-white/50">{siteConfig.footerNote}</p>
           </div>
-          <div className="flex flex-wrap items-center gap-4 text-sm text-white/50">
+          <div className="flex flex-wrap items-center gap-4 text-xs text-white/50">
             {footerLinks.map((link) => (
               <LoadingLink
                 key={link.href}

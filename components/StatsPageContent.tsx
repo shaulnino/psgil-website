@@ -566,7 +566,7 @@ function StatsRadarChart({
 /* ------------------------------------------------------------------ */
 
 /** Number of categories to open by default */
-const DEFAULT_OPEN_CATEGORIES = 3;
+const DEFAULT_OPEN_CATEGORIES = 1;
 
 function DriversSection({
   allTime,
@@ -835,8 +835,8 @@ function DriversSection({
         </div>
       )}
 
-      {/* Charts */}
-      {selectedRows.length > 0 && (
+      {/* Charts — only useful in compare mode */}
+      {compare && selectedRows.length > 1 && (
         <div className="grid gap-6 lg:grid-cols-2">
           {barData.length > 0 && (
             <div>
@@ -845,7 +845,7 @@ function DriversSection({
                 data={barData}
                 bars={selectedRows.map((dr, i) => ({
                   key: dr.driver_name,
-                  color: compare ? COMPARE_COLORS[i] : SINGLE_COLOR,
+                  color: COMPARE_COLORS[i],
                   name: dr.driver_name,
                 }))}
                 xKey="metric"
@@ -868,7 +868,7 @@ function DriversSection({
                 data={radarData}
                 subjects={selectedRows.map((dr, i) => ({
                   key: dr.driver_name,
-                  color: compare ? COMPARE_COLORS[i] : SINGLE_COLOR,
+                  color: COMPARE_COLORS[i],
                   name: dr.driver_name,
                 }))}
               />
@@ -1192,12 +1192,7 @@ function CircuitsSection({
       .slice(0, 8);
   }, [metrics]);
 
-  // Season columns for per-season chart
-  const seasonCols = useMemo(() => {
-    return metrics
-      .filter((m) => m.key.startsWith("Season "))
-      .map((m) => m.key);
-  }, [metrics]);
+  const ALL_SEASONS = ["S1", "S2", "S3", "S4", "S5", "S6"] as const;
 
   const singleCircuit = !compare && selectedRows.length === 1 ? selectedRows[0] : null;
 
@@ -1213,14 +1208,14 @@ function CircuitsSection({
     });
   }, [selectedRows, chartCols]);
 
-  // Season breakdown for single circuit
-  const seasonData = useMemo(() => {
-    if (!singleCircuit || seasonCols.length === 0) return [];
-    return seasonCols.map((sc) => ({
-      season: sc.replace("Season ", "S"),
-      value: singleCircuit.metrics[sc] ?? 0,
+  // Season appearances for single circuit (S1–S6, boolean)
+  const seasonAppearances = useMemo(() => {
+    if (!singleCircuit) return [];
+    return ALL_SEASONS.map((label) => ({
+      label,
+      appeared: (singleCircuit.metrics[`Season ${label.slice(1)}`] ?? 0) > 0,
     }));
-  }, [singleCircuit, seasonCols]);
+  }, [singleCircuit]);
 
   return (
     <div className="space-y-6">
@@ -1259,12 +1254,18 @@ function CircuitsSection({
       {/* ---- SINGLE CIRCUIT: All stats in categorised groups ---- */}
       {singleCircuit && (
         <div className="space-y-3">
-          {/* Winners text (special non-metric field) */}
-          {singleCircuit.raw["Winners"] && (
-            <div className="rounded-xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-4 py-3">
-              <p className="text-sm font-semibold uppercase tracking-wider text-[#D4AF37]/60">Winners</p>
-              <p className="mt-1 text-sm font-semibold text-white">{singleCircuit.raw["Winners"]}</p>
-            </div>
+          {/* Podium placements (special non-metric fields) */}
+          {[
+            { key: "Winners", label: "Winners", border: "border-[#D4AF37]/30", bg: "bg-[#D4AF37]/10", text: "text-[#D4AF37]/60" },
+            { key: "2nd Place", label: "2nd Place", border: "border-[#C0C0C0]/30", bg: "bg-[#C0C0C0]/10", text: "text-[#C0C0C0]/60" },
+            { key: "3rd Place", label: "3rd Place", border: "border-[#CD7F32]/30", bg: "bg-[#CD7F32]/10", text: "text-[#CD7F32]/60" },
+          ].map(({ key, label, border, bg, text }) =>
+            singleCircuit.raw[key] ? (
+              <div key={key} className={`rounded-xl border ${border} ${bg} px-4 py-3`}>
+                <p className={`text-sm font-semibold uppercase tracking-wider ${text}`}>{label}</p>
+                <p className="mt-1 text-sm font-semibold text-white">{singleCircuit.raw[key]}</p>
+              </div>
+            ) : null,
           )}
 
           {categories.map((cat, catIdx) => (
@@ -1287,16 +1288,34 @@ function CircuitsSection({
             </CategoryGroup>
           ))}
 
-          {/* Season breakdown chart */}
-          {seasonData.length > 0 && (
+          {/* Season appearances timeline */}
+          {seasonAppearances.length > 0 && (
             <div>
-              <h3 className="mb-2 text-sm font-semibold text-white/60">Appearances per Season</h3>
-              <StatsBarChart
-                data={seasonData}
-                bars={[{ key: "value", color: SINGLE_COLOR, name: "Events" }]}
-                xKey="season"
-                height={250}
-              />
+              <h3 className="mb-3 text-sm font-semibold text-white/60">Season Appearances</h3>
+              <div className="rounded-xl border border-white/10 bg-white/[0.03] px-5 py-4">
+                <div className="flex items-center justify-between gap-2">
+                  {seasonAppearances.map(({ label, appeared }) => (
+                    <div key={label} className="flex flex-col items-center gap-2">
+                      <div
+                        className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all ${
+                          appeared
+                            ? "border-[#7020B0] bg-[#7020B0]/20 shadow-[0_0_12px_rgba(112,32,176,0.4)]"
+                            : "border-white/10 bg-white/[0.03]"
+                        }`}
+                      >
+                        {appeared && (
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 text-[#7020B0]">
+                            <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </div>
+                      <span className={`text-xs font-semibold tracking-wider ${appeared ? "text-white" : "text-white/30"}`}>
+                        {label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
         </div>

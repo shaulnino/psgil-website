@@ -155,6 +155,15 @@ export function LoadingButton({
   onClick,
 }: LoadingButtonProps) {
   const isExternal = external ?? href.startsWith("http");
+  const isHash = href.startsWith("#") || href.startsWith("/#");
+
+  if (isHash) {
+    return (
+      <a href={href} className={className} onClick={() => onClick?.()}>
+        {children}
+      </a>
+    );
+  }
 
   if (isExternal) {
     const handleExternalClick = () => {
