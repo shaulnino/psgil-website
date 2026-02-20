@@ -443,7 +443,7 @@ function PosterModal({
                 {event.race_name}
               </h3>
               <span
-                className={`inline-flex items-center justify-center rounded-full px-2 py-px text-xs font-semibold uppercase leading-none tracking-wider ${
+                className={`inline-flex items-center justify-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
                   event.league.toLowerCase() === "main"
                     ? "bg-[#7020B0]/20 text-[#a855f7] border border-[#7020B0]/40"
                     : "bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/30"
@@ -451,6 +451,13 @@ function PosterModal({
               >
                 {event.league}
               </span>
+              {event.results_status === "provisional" && (
+                <Tooltip text="Provisional results — subject to steward decisions.">
+                  <span className="inline-flex items-center rounded-full border border-orange-400/30 bg-orange-400/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-orange-300/90">
+                    PROV
+                  </span>
+                </Tooltip>
+              )}
             </div>
             <p className="mt-1 text-sm text-white/50">
               Season {event.season} · Race #{event.race_number} ·{" "}
@@ -526,7 +533,7 @@ function StatusBadge({ status }: { status: string }) {
   const isCompleted = status.toLowerCase() === "completed";
   return (
     <span
-      className={`inline-flex items-center justify-center gap-1 rounded-full px-2 py-px text-xs font-semibold uppercase leading-none tracking-wider md:justify-self-center ${
+      className={`inline-flex items-center justify-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider md:justify-self-center ${
         isCompleted
           ? "border border-emerald-500/30 bg-emerald-500/15 text-emerald-400"
           : "border border-white/10 bg-white/5 text-white/50"
@@ -648,12 +655,22 @@ function RaceBadges({ event }: { event: RaceEvent }) {
   const weather = event.weather;
   const safetyCars = event.safety_cars ?? 0;
   const reverseGrid = event.reverse_grid === "yes";
+  const isProvisional = event.results_status === "provisional";
 
-  const hasBadges = !!weather || safetyCars > 0 || reverseGrid;
+  const hasBadges = !!weather || safetyCars > 0 || reverseGrid || isProvisional;
   if (!hasBadges) return null;
 
   return (
     <span className="inline-flex flex-wrap items-center gap-1.5">
+      {/* Provisional results */}
+      {isProvisional && (
+        <Tooltip text="Provisional results — subject to steward decisions.">
+          <span className="inline-flex items-center gap-1 rounded-md border border-orange-400/30 bg-orange-400/10 px-1.5 py-0.5 text-xs font-bold leading-none text-orange-300/90">
+            PROV
+          </span>
+        </Tooltip>
+      )}
+
       {/* Weather */}
       {weather === "dry" && (
         <Tooltip text="Weather: Dry race">
@@ -710,7 +727,7 @@ function LeagueBadge({ league }: { league: string }) {
   const isMain = league.toLowerCase() === "main";
   return (
     <span
-      className={`inline-flex items-center justify-center rounded-full px-2 py-px text-xs font-semibold uppercase leading-none tracking-wider md:justify-self-center ${
+      className={`inline-flex items-center justify-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider md:justify-self-center ${
         isMain
           ? "border border-[#7020B0]/40 bg-[#7020B0]/20 text-[#a855f7]"
           : "border border-[#D4AF37]/30 bg-[#D4AF37]/15 text-[#D4AF37]"
@@ -809,35 +826,35 @@ function ScheduleListInner({
           <div>
             <div className="overflow-hidden rounded-2xl border border-white/10">
               {/* Desktop header */}
-              <div className="hidden border-b border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white/40 md:grid md:grid-cols-[60px_1fr_120px_100px_100px_90px]">
+              <div className="hidden border-b border-white/10 bg-white/5 px-5 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white/40 md:grid md:grid-cols-[60px_1fr_120px_100px_100px_90px_36px]">
                 <span>#</span>
                 <span>Race</span>
                 <span className="text-center">Date</span>
                 <span className="text-center">League</span>
                 <span className="text-center">Status</span>
                 <span className="text-center">Flag</span>
+                <span />
               </div>
 
               {events.map((event, idx) => {
-                const isCompleted =
-                  event.status.toLowerCase() === "completed";
                 return (
                   <button
                     key={`${event.season}-${event.race_number}-${event.league}-${idx}`}
                     type="button"
                     onClick={() => setPosterEvent(event)}
-                    className={`group flex w-full flex-col gap-2 border-b border-white/5 px-5 py-4 text-left transition hover:bg-white/5 md:grid md:grid-cols-[60px_1fr_120px_100px_100px_90px] md:items-center md:gap-0 ${
-                      isCompleted ? "cursor-pointer" : "cursor-pointer"
-                    }`}
+                    className="group relative flex w-full cursor-pointer flex-col gap-2 border-b border-white/5 px-5 py-4 text-left transition-colors hover:bg-white/[0.04] focus-visible:bg-white/[0.04] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[#7020B0]/60 md:grid md:grid-cols-[60px_1fr_120px_100px_100px_90px_36px] md:items-center md:gap-0"
                   >
+                    {/* Left accent bar — visible on hover/focus */}
+                    <span className="pointer-events-none absolute inset-y-0 left-0 w-[3px] rounded-r bg-[#7020B0] opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" />
+
                     {/* Race number */}
                     <div className="flex items-center gap-3 md:contents">
-                      <span className="font-display text-base font-semibold text-[#D4AF37]">
+                      <span className="font-display text-sm font-semibold text-[#D4AF37]">
                         #{event.race_number}
                       </span>
 
                       {/* Race name + metadata badges */}
-                      <span className="font-display text-base font-semibold text-white md:text-lg">
+                      <span className="font-display text-sm font-semibold text-white md:text-base">
                         <span className="inline-flex flex-wrap items-center gap-2">
                           {event.race_name}
                           <RaceBadges event={event} />
@@ -847,7 +864,7 @@ function ScheduleListInner({
 
                     {/* Mobile: meta row */}
                     <div className="flex flex-wrap items-center gap-3 md:contents">
-                      <span className="text-sm text-white/50 md:text-center md:text-base">
+                      <span className="text-xs text-white/50 md:text-center md:text-sm">
                         {event.date}
                       </span>
                       <LeagueBadge league={event.league} />
@@ -860,6 +877,21 @@ function ScheduleListInner({
                         />
                       </span>
                     </div>
+
+                    {/* Chevron + Open label */}
+                    <span className="hidden items-center justify-end gap-1 md:flex">
+                      <span className="text-[10px] font-medium uppercase tracking-wider text-white/0 transition-all group-hover:text-white/50 group-focus-visible:text-white/50">
+                        Open
+                      </span>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        className="h-4 w-4 text-white/30 transition-all group-hover:translate-x-0.5 group-hover:text-white/80 group-focus-visible:translate-x-0.5 group-focus-visible:text-white/80"
+                      >
+                        <path fillRule="evenodd" d="M8.22 5.22a.75.75 0 011.06 0l4.25 4.25a.75.75 0 010 1.06l-4.25 4.25a.75.75 0 01-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 010-1.06z" clipRule="evenodd" />
+                      </svg>
+                    </span>
                   </button>
                 );
               })}

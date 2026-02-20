@@ -9,6 +9,7 @@ import WatchLastRaceButton from "@/components/WatchLastRaceButton";
 import Section from "@/components/Section";
 import SnapshotStrip from "@/components/SnapshotStrip";
 import SocialLinks from "@/components/SocialLinks";
+import ContactSection from "@/components/ContactSection";
 import { siteConfig } from "@/lib/siteConfig";
 import { fetchCsv, parseCsv } from "@/lib/csv";
 import {
@@ -163,7 +164,8 @@ export default async function Home() {
 
   return (
     <main className="bg-[#0B0B0E] text-white">
-      <section className="relative overflow-hidden pb-10 pt-12 md:pt-16">
+      <section className="group/hero relative min-h-[65vh] overflow-hidden">
+        {/* Background image with slow zoom */}
         <div className="absolute inset-0">
           {heroImageExists ? (
             <Image
@@ -171,69 +173,103 @@ export default async function Home() {
               alt="PSGiL racing atmosphere"
               fill
               priority
-              className="object-cover object-center"
+              className="object-cover object-center animate-[hero-zoom_14s_ease-out_forwards] group-hover/hero:brightness-110 transition-[filter] duration-700"
             />
           ) : (
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(112,32,176,0.35),_transparent_55%),linear-gradient(160deg,_#151120,_#0B0B0E_55%)]" />
           )}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/60 to-[#0B0B0E]" />
-          <div className="absolute inset-0 opacity-[0.08] [background-image:repeating-linear-gradient(135deg,_rgba(255,255,255,0.35)_0,_rgba(255,255,255,0.35)_1px,_transparent_1px,_transparent_8px)]" />
+
+          {/* Purple tint overlay */}
+          <div className="absolute inset-0 bg-[#7020B0]/[0.06] mix-blend-overlay" />
+
+          {/* Bottom gradient for text contrast */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/50 to-[#0B0B0E]" />
+
+          {/* Vignette edges */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_50%,_rgba(11,11,14,0.7)_100%)]" />
+
+          {/* Diagonal carbon-fibre texture */}
+          <div className="absolute inset-0 opacity-[0.06] [background-image:repeating-linear-gradient(135deg,_rgba(255,255,255,0.35)_0,_rgba(255,255,255,0.35)_1px,_transparent_1px,_transparent_8px)]" />
+
+          {/* Gliding purple streak */}
           <div className="absolute left-1/2 top-28 h-px w-[80%] -translate-x-1/2 -rotate-6 bg-gradient-to-r from-transparent via-[#7020B0]/70 to-transparent animate-[hero-glide_10s_linear_infinite]" />
-          <div className="absolute right-6 top-16 text-[140px] font-display font-semibold tracking-[0.2em] text-white/5 md:text-[220px]">
+
+          {/* Watermark league name */}
+          <div className="absolute right-6 top-16 text-[140px] font-display font-semibold tracking-[0.2em] text-white/[0.03] md:text-[220px]">
             {siteConfig.leagueName}
           </div>
         </div>
 
-        <div className="relative mx-auto w-full max-w-6xl px-6">
-          <div className="w-full max-w-4xl">
-            <Image
-              src="/psgil-banner.png"
-              alt={`PSGiL ${currentSeasonLabel} banner`}
-              width={2000}
-              height={600}
-              priority
-              className="h-auto w-full rounded-2xl"
-              sizes="(max-width: 768px) 100vw, 70vw"
-            />
-          </div>
-
-          <div className="mt-8 max-w-3xl">
-            <p className="text-base uppercase tracking-[0.3em] text-white/60">
-              {currentSeasonLabel}
-            </p>
-            <h1 className="mt-4 font-display text-4xl font-semibold tracking-tight md:text-5xl lg:text-6xl">
-              {siteConfig.hero.title}
-            </h1>
-            <p className="mt-4 max-w-xl text-lg text-white/70 md:text-xl">
-              {siteConfig.hero.subtitle}
-            </p>
-            <div className="mt-8 flex flex-wrap gap-4">
-              <Button href={siteConfig.discordUrl} external>
-                {siteConfig.hero.primaryCtaLabel}
-              </Button>
-              <WatchLastRaceButton
-                links={lastRaceYoutubeLinks}
-                label={siteConfig.hero.secondaryCtaLabel}
+        {/* Content */}
+        <div className="relative flex min-h-[65vh] flex-col justify-end pb-10 pt-24 md:pt-28">
+          <div className="mx-auto w-full max-w-6xl px-6">
+            {/* Banner with ambient glow */}
+            <div className="relative w-full max-w-4xl">
+              <div className="absolute -inset-6 rounded-3xl bg-[#7020B0]/10 blur-2xl" />
+              <Image
+                src="/psgil-banner.png"
+                alt={`PSGiL ${currentSeasonLabel} banner`}
+                width={2000}
+                height={600}
+                priority
+                className="relative h-auto w-full drop-shadow-[0_0_40px_rgba(112,32,176,0.2)]"
+                sizes="(max-width: 768px) 100vw, 70vw"
               />
             </div>
-            <div className="mt-6 flex flex-wrap gap-2.5 text-sm">
-              {trustChips.map((chip) => (
-                <span
-                  key={chip}
-                  className="inline-flex items-center gap-1.5 rounded-sm bg-white/[0.03] px-3 py-1.5 font-medium tracking-wide text-white/80 select-none cursor-default"
-                >
-                  <span className="h-1 w-1 shrink-0 rounded-full bg-[#D4AF37]/60" />
-                  {chip}
-                  <span className="h-1 w-1 shrink-0 rounded-full bg-[#D4AF37]/60" />
+
+            <div className="mt-8 max-w-3xl">
+              <p className="text-sm uppercase tracking-[0.3em] text-white/60">
+                {currentSeasonLabel}
+              </p>
+              <h1 className="mt-4 font-display text-4xl font-semibold tracking-tight md:text-5xl lg:text-6xl">
+                {siteConfig.hero.title}
+              </h1>
+              <p className="mt-4 max-w-xl text-lg text-white/70 md:text-xl">
+                {siteConfig.hero.subtitle}
+              </p>
+              <div className="mt-8 flex flex-wrap gap-4">
+                <Button href="#contact-us">
+                  {siteConfig.hero.primaryCtaLabel}
+                </Button>
+                <WatchLastRaceButton
+                  links={lastRaceYoutubeLinks}
+                  label={siteConfig.hero.secondaryCtaLabel}
+                />
+              </div>
+              <div className="mt-5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[11px] leading-relaxed tracking-wide">
+                <span className="mr-1 font-semibold uppercase tracking-[0.15em] text-[#D4AF37]/60">
+                  Key facts
                 </span>
-              ))}
+                {trustChips.map((chip, i) => (
+                  <span key={chip} className="inline-flex items-center gap-1.5 select-none">
+                    {i > 0 && (
+                      <span className="h-[3px] w-[3px] shrink-0 rounded-full bg-[#D4AF37]/50" />
+                    )}
+                    <span className="font-medium text-white/70">{chip}</span>
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <div className="mx-auto mt-4 w-full max-w-6xl px-6">
+      <div className="mx-auto mt-4 flex w-full max-w-6xl items-center gap-2 px-6">
+        <span className="text-xs font-semibold uppercase tracking-wider text-[#D4AF37]/60">Follow us</span>
         <SocialLinks items={siteConfig.socials} variant="compact" />
+        <a
+          href="#contact-us"
+          className="group/social relative inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/[0.06] bg-white/[0.03] transition-all duration-200 hover:border-white/15 hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7020B0]/60 focus-visible:ring-offset-1 focus-visible:ring-offset-[#0B0B0E]"
+          aria-label="Contact Us"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-[18px] w-[18px] text-[#D4AF37] transition-all duration-200 group-hover/social:drop-shadow-[0_0_6px_rgba(212,175,55,0.4)]">
+            <path d="M3 4a2 2 0 00-2 2v1.161l8.441 4.221a1.25 1.25 0 001.118 0L19 7.162V6a2 2 0 00-2-2H3z" />
+            <path d="M19 8.839l-7.77 3.885a2.75 2.75 0 01-2.46 0L1 8.839V14a2 2 0 002 2h14a2 2 0 002-2V8.839z" />
+          </svg>
+          <span className="pointer-events-none absolute -top-9 left-1/2 z-50 -translate-x-1/2 whitespace-nowrap rounded-md bg-[#1a1a2e] px-2.5 py-1 text-[11px] font-medium text-white/90 opacity-0 shadow-lg ring-1 ring-white/10 transition-opacity group-hover/social:opacity-100" role="tooltip">
+            Contact Us
+          </span>
+        </a>
       </div>
 
       <SnapshotStrip stats={snapshotStats} />
@@ -241,12 +277,13 @@ export default async function Home() {
       <Section
         title="League Format"
         description="Structured racing built for consistency and clean results."
+        brandTitle
       >
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {siteConfig.leagueFormat.map((item) => (
             <div
               key={item.title}
-              className="rounded-2xl border border-white/10 bg-white/5 p-5 text-base text-white/70"
+              className="rounded-2xl border border-white/10 bg-white/5 p-5 text-sm text-white/70"
             >
               <h3 className="font-display text-lg font-semibold text-[#D4AF37]">
                 {item.title}
@@ -260,6 +297,7 @@ export default async function Home() {
       <Section
         title="Races"
         description="Latest action and what is coming up next."
+        brandTitle
         headerRight={
           <Button href="/schedule" size="sm">
             Full Schedule
@@ -277,7 +315,7 @@ export default async function Home() {
         />
       </Section>
 
-      <Section title="About Us">
+      <Section title="About Us" brandTitle>
         <div className="rounded-2xl border border-white/10 bg-white/5 p-6 md:p-8">
           <p className="text-base text-white/70 md:text-lg">
             PSGiL is Israel&apos;s largest F1 sim racing league, competing
@@ -295,32 +333,15 @@ export default async function Home() {
         </div>
       </Section>
 
-      <Section>
-        <div className="rounded-2xl border border-[#7020B0]/40 bg-[#120b1a] px-6 py-10 md:px-10">
-          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-            <div>
-              <h2 className="font-display text-2xl font-semibold text-white md:text-3xl">
-                {siteConfig.joinCta.title}
-              </h2>
-              <p className="mt-3 max-w-xl text-base text-white/70 md:text-lg">
-                {siteConfig.joinCta.description}
-              </p>
-              <p className="mt-3 text-sm uppercase tracking-[0.2em] text-white/50">
-                {siteConfig.joinCta.subtext}
-              </p>
-            </div>
-            <Button href={siteConfig.discordUrl} external>
-              {siteConfig.joinCta.buttonLabel}
-            </Button>
-          </div>
-        </div>
-      </Section>
+
 
       <Section
-        title="Follow PSGiL"
-        description="Stay connected for announcements and race highlights."
+        id="contact-us"
+        title="Contact Us"
+        description="Get in touch with the league."
+        brandTitle
       >
-        <SocialLinks items={siteConfig.socials} />
+        <ContactSection />
       </Section>
     </main>
   );

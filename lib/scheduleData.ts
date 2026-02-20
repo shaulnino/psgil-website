@@ -27,6 +27,8 @@ export type RaceEvent = {
   reverse_grid?: string;
   /** End time in HH:MM format (Israel local time). If empty, defaults to start_time + 2h. */
   end_time?: string;
+  /** "provisional" | "final" or empty — whether race results are pending steward decisions */
+  results_status?: string;
 };
 
 /**
@@ -82,6 +84,7 @@ export function mapRaceEvents(raw: Record<string, string>[]): RaceEvent[] {
       safety_cars: isNaN(scNum) ? 0 : scNum,
       reverse_grid: (row.reverse_grid ?? "").trim().toLowerCase() || undefined,
       end_time: (row.end_time ?? "").trim() || undefined,
+      results_status: (row.results_status ?? "").trim().toLowerCase() || undefined,
     };
   });
 }

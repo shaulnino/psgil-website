@@ -209,22 +209,22 @@ function RaceCountdown({
   const pad = (v: number) => String(v).padStart(2, "0");
 
   return (
-    <div className="flex items-center justify-center gap-3 rounded-xl border border-white/5 bg-white/5 px-3 py-2.5">
+    <div className="inline-flex h-[34px] items-center gap-1.5 rounded-full border border-[#7020B0]/30 bg-[#13111a] px-3 transition-all hover:border-[#7020B0]/50 hover:shadow-[0_0_10px_rgba(112,32,176,0.15)]">
       {[
-        { v: days, l: "days" },
-        { v: hours, l: "hrs" },
-        { v: minutes, l: "min" },
-        { v: seconds, l: "sec" },
+        { v: days, l: "d" },
+        { v: hours, l: "h" },
+        { v: minutes, l: "m" },
+        { v: seconds, l: "s" },
       ].map((unit, i) => (
-        <div key={unit.l} className="flex items-center gap-3">
+        <div key={unit.l} className="flex items-center gap-1">
           {i > 0 && (
-            <span className="font-display text-xl font-bold text-white/20">:</span>
+            <span className="text-[11px] font-bold text-white/15">:</span>
           )}
-          <div className="flex flex-col items-center">
-            <span className="font-display text-xl font-bold leading-none text-white tabular-nums md:text-2xl">
+          <div className="flex items-baseline gap-px">
+            <span className="font-display text-[13px] font-semibold leading-none text-[#D4AF37] tabular-nums">
               {pad(unit.v)}
             </span>
-            <span className="mt-0.5 text-[11px] uppercase tracking-wider text-white/40">
+            <span className="text-[9px] font-medium text-white/30">
               {unit.l}
             </span>
           </div>
@@ -342,11 +342,9 @@ function RaceGroupCard({
           <LeagueBadge league={group.league} />
         </div>
         {liveNow ? (
-          <span className="text-base font-medium text-[#D4AF37]">{group.date}</span>
-        ) : countdownTargetMs ? (
-          <RaceCountdown targetMs={countdownTargetMs} onReachedZero={handleCountdownZero} />
+          <span className="text-sm font-medium text-[#D4AF37]">{group.date}</span>
         ) : (
-          <span className="text-base text-white/60">{group.date}</span>
+          <span className="text-sm text-white/60">{group.date}</span>
         )}
       </div>
 
@@ -375,17 +373,17 @@ function RaceGroupCard({
       {/* Description */}
       <div className="mt-4 space-y-1">
         {isSingle ? (
-          <p className="text-base text-white/70">
+          <p className="text-sm text-white/70">
             Season {first.season} · Race #{first.race_number}, {first.race_name}
             {isWild ? " · Wild Event" : ""} · {group.date}
           </p>
         ) : (
           <>
-            <p className="text-base font-medium text-white/80">
+            <p className="text-sm font-medium text-white/80">
               Season {group.season} · {isWild ? "Wild Event Day" : "Race Day"} · {group.date}
             </p>
             {group.events.map((e) => (
-              <p key={e.race_number} className="text-base text-white/60">
+              <p key={e.race_number} className="text-sm text-white/60">
                 Race #{e.race_number}: {e.race_name}
               </p>
             ))}
@@ -394,7 +392,7 @@ function RaceGroupCard({
       </div>
 
       {/* Actions — pushed to the bottom of the card */}
-      <div className="mt-auto flex flex-wrap gap-3 pt-5">
+      <div className="mt-auto flex flex-wrap items-center gap-3 pt-5">
         {youtubeLinks.map((yt) => (
           <button
             key={yt.url}
@@ -424,10 +422,15 @@ function RaceGroupCard({
           </span>
         )}
         {!completed && !liveNow && (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-[#FF0000]/30 bg-[#FF0000]/10 px-4 py-2 text-sm font-semibold text-white animate-[upcoming-pulse_2s_ease-in-out_infinite]">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#FF0000] animate-[upcoming-pulse_2s_ease-in-out_infinite]" />
-            Upcoming
+          <span className="inline-flex h-[34px] items-center gap-2 rounded-full border border-[#7020B0]/30 bg-[#13111a] px-3 transition-all hover:border-[#7020B0]/50 hover:shadow-[0_0_10px_rgba(112,32,176,0.15)]">
+            <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+            <span className="text-[13px] font-medium text-white/90">Upcoming</span>
           </span>
+        )}
+        {countdownTargetMs && !liveNow && (
+          <div className="ml-auto">
+            <RaceCountdown targetMs={countdownTargetMs} onReachedZero={handleCountdownZero} />
+          </div>
         )}
       </div>
 

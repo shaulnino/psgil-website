@@ -53,7 +53,7 @@ export default function DriverCard({ driver, team, placeholderSrc, onSelect }: D
         <AchievementBadgeList driver={driver} iconSize={14} />
         <span className="flex-1" />
         {driver.number && (
-          <span className="inline-flex shrink-0 items-center rounded-full border border-[#D4AF37]/40 bg-[#D4AF37]/15 px-3 py-1 text-sm font-bold text-[#D4AF37]">
+          <span className="inline-flex shrink-0 items-center rounded-full border border-[#D4AF37]/40 bg-[#D4AF37]/15 px-2.5 py-0.5 text-xs font-bold text-[#D4AF37]">
             #{driver.number}
           </span>
         )}

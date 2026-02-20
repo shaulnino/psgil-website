@@ -63,7 +63,7 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <Button href={siteConfig.discordUrl} size="sm" external onClick={gaClickJoinNow}>
+          <Button href="/#contact-us" size="sm" onClick={gaClickJoinNow}>
             Join Now
           </Button>
           <button

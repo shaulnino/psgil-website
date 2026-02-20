@@ -67,6 +67,7 @@ export default async function SchedulePage() {
       <Section
         title="Schedule & Race Results"
         description="Full race calendar and results for every PSGiL season."
+        pageHeader
       >
         <ScheduleList
           seasonsConfig={seasonsConfig}

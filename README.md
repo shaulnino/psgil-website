@@ -1,38 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PSGiL Website
+
+Premiere Sim Gaming Israeli League — official website.
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Create a `.env.local` file with the following:
 
-## Learn More
+| Variable             | Required | Description                                      |
+| -------------------- | -------- | ------------------------------------------------ |
+| `GMAIL_APP_PASSWORD` | Yes      | Gmail App Password for sending emails via SMTP.  |
 
-To learn more about Next.js, take a look at the following resources:
+### Gmail App Password setup
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Enable 2-Step Verification on the Gmail account (`psgileague@gmail.com`).
+2. Go to [Google App Passwords](https://myaccount.google.com/apppasswords).
+3. Generate a new app password for "Mail".
+4. Copy the 16-character password into `GMAIL_APP_PASSWORD`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Contact form emails
 
-## Deploy on Vercel
+The contact form (`/api/contact`) sends two emails per submission:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. **Admin notification** — to `psgileague@gmail.com` with the form data.
+2. **Auto-reply** — to the user confirming receipt. The template varies by form mode:
+   - *Sign-up*: "PSGiL — Sign up received 🏁"
+   - *Question*: "PSGiL — We got your message ✅"
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# psgil-website
-# psgil-website
+### Anti-spam
+
+- A hidden honeypot field rejects bot submissions silently.
+- In-memory rate limiting allows max 5 submissions per IP per 60 seconds.

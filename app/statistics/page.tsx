@@ -66,8 +66,11 @@ export default async function TablesPage() {
 
   return (
     <main className="bg-[#0B0B0E] text-white">
-      <section className="py-12 md:py-16">
-        <div className="mx-auto w-full max-w-6xl px-6">
+      <section className="relative py-14 md:py-20">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-[280px] overflow-hidden">
+          <div className="absolute left-1/2 top-0 h-[280px] w-[600px] -translate-x-1/2 rounded-full bg-[#7020B0]/[0.07] blur-[100px]" />
+        </div>
+        <div className="relative mx-auto w-full max-w-6xl px-6">
           <TablesPageContent
             seasonsConfig={seasonsConfig}
             defaultSeasonKey={currentSeason.season_key}

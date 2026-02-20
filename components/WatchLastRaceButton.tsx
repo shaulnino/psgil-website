@@ -23,8 +23,8 @@ type Props = {
 const base =
   "inline-flex items-center justify-center rounded-full font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7020B0]/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B0B0E]";
 const secondary =
-  "bg-red-600 border border-red-600 text-white hover:bg-red-700 hover:border-red-700 hover:shadow-[0_0_16px_rgba(220,38,38,0.4)]";
-const md = "h-12 px-7 text-base md:text-lg";
+  "border border-[#7020B0]/50 bg-[#13111a] text-white hover:-translate-y-0.5 hover:border-[#7020B0]/70 hover:shadow-[0_0_16px_rgba(112,32,176,0.3)]";
+const md = "h-11 px-6 text-sm md:text-base";
 const btnClass = `${base} ${secondary} ${md}`;
 
 /* ------------------------------------------------------------------ */
