@@ -112,12 +112,15 @@ function TablesInner({
       placeholderSrc={placeholderSrc}
     >
       {/* Title row + season selector */}
-      <div className="mb-10 flex flex-wrap items-center justify-between gap-4">
+      <div className="mb-12 flex flex-wrap items-center justify-between gap-4">
         <div className="max-w-2xl">
-          <h2 className="font-display text-2xl font-semibold tracking-wide text-white md:text-3xl">
-            Tables
-          </h2>
-          <p className="mt-3 text-base text-white/70">
+          <h1 className="font-display text-4xl font-bold tracking-wider md:text-5xl">
+            <span className="bg-gradient-to-r from-[#7020B0] via-[#a855f7] to-[#D4AF37] bg-clip-text text-transparent drop-shadow-[0_0_24px_rgba(112,32,176,0.25)]">
+              Tables
+            </span>
+          </h1>
+          <div className="mt-3 h-[3px] w-36 rounded-full bg-gradient-to-r from-[#7020B0] to-[#D4AF37] shadow-[0_0_8px_rgba(112,32,176,0.4)]" />
+          <p className="mt-4 text-base tracking-wide text-white/85 md:text-lg">
             Official championship standings, updated after each round.
           </p>
         </div>

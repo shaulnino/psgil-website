@@ -85,10 +85,10 @@ function MiniFlag({ code }: { code: string }) {
 function CountdownUnit({ value, label }: { value: number; label: string }) {
   return (
     <div className="flex flex-col items-center">
-      <span className="font-display text-xl font-bold leading-none text-white tabular-nums md:text-2xl">
+      <span className="font-display text-lg font-bold leading-none text-white tabular-nums md:text-xl">
         {String(value).padStart(2, "0")}
       </span>
-      <span className="mt-0.5 text-[11px] uppercase tracking-wider text-white/40">
+      <span className="mt-0.5 text-[10px] uppercase tracking-wider text-white/40">
         {label}
       </span>
     </div>
@@ -399,11 +399,11 @@ export default function NextRaceWidget({ race }: { race: NextRaceData | null }) 
           ) : countdown && countdown.total > 0 ? (
             <div className="mt-3 flex items-center justify-center gap-3 rounded-xl bg-white/5 px-3 py-2.5 border border-white/5">
               <CountdownUnit value={countdown.days} label="days" />
-              <span className="font-display text-xl font-bold text-white/20">:</span>
+              <span className="font-display text-lg font-bold text-white/20">:</span>
               <CountdownUnit value={countdown.hours} label="hrs" />
-              <span className="font-display text-xl font-bold text-white/20">:</span>
+              <span className="font-display text-lg font-bold text-white/20">:</span>
               <CountdownUnit value={countdown.minutes} label="min" />
-              <span className="font-display text-xl font-bold text-white/20">:</span>
+              <span className="font-display text-lg font-bold text-white/20">:</span>
               <CountdownUnit value={countdown.seconds} label="sec" />
             </div>
           ) : null}

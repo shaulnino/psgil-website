@@ -169,6 +169,7 @@ export default async function DriversPage() {
       <Section
         title="Drivers"
         description="Official PSGiL roster: teams, drivers, and profiles — updated as the season progresses."
+        pageHeader
       >
         <DriversGrid
           teams={teams}

@@ -14,6 +14,7 @@ export default async function StatsPage() {
       <Section
         title="Stats"
         description="Deep stats for every driver, season, and circuit in PSGiL history."
+        pageHeader
       >
         <StatsPageContent data={data} />
       </Section>
