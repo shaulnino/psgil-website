@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import Button from "@/components/Button";
@@ -16,8 +15,8 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-[#0B0B0E]/80 backdrop-blur">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-6">
-        <Link href="/" className="flex items-center gap-3">
-          <span className="flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-white/5 md:h-14 md:w-14">
+        <LoadingLink href="/" hideSpinner className="group flex items-center gap-3">
+          <span className="flex h-12 w-12 items-center justify-center rounded-full transition md:h-14 md:w-14 group-aria-[busy=true]:animate-pulse">
             <Image
               src="/psgil-logo.png"
               alt="PSGiL logo"
@@ -31,7 +30,7 @@ export default function Header() {
           <span className="font-display text-xl tracking-wide text-white">
             {siteConfig.leagueName}
           </span>
-        </Link>
+        </LoadingLink>
 
         <nav className="hidden items-center gap-8 md:flex">
           {siteConfig.navigation.map((link) => {

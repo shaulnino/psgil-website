@@ -126,7 +126,6 @@ export default function DriverLookupProvider({
       {selected && (
         <DriverModal
           driver={selected.driver}
-          team={selected.team}
           placeholderSrc={placeholderSrc}
           onClose={() => setSelected(null)}
           currentSeasonLabel={currentSeasonLabel}

@@ -51,6 +51,8 @@ export type LoadingLinkProps = {
   showLoadingText?: boolean;
   /** Extra onClick handler (runs before navigation) */
   onClick?: (e: MouseEvent<HTMLAnchorElement>) => void;
+  /** Keep loading state but hide spinner (useful for logo links) */
+  hideSpinner?: boolean;
 } & Omit<
   AnchorHTMLAttributes<HTMLAnchorElement>,
   "href" | "onClick" | "children"
@@ -71,6 +73,7 @@ export default function LoadingLink({
   className = "",
   showLoadingText = false,
   onClick: externalOnClick,
+  hideSpinner = false,
   ...rest
 }: LoadingLinkProps) {
   const router = useRouter();
@@ -115,15 +118,19 @@ export default function LoadingLink({
       {...rest}
     >
       {isLoading ? (
-        <span className="inline-flex items-center gap-2">
-          <Spinner className="h-4 w-4 shrink-0" />
-          {showLoadingText ? (
-            <span>Loading…</span>
-          ) : (
-            /* Render children dimmed so button width stays the same */
-            <span className="opacity-60">{children}</span>
-          )}
-        </span>
+        hideSpinner ? (
+          <span className="inline-flex items-center">{children}</span>
+        ) : (
+          <span className="inline-flex items-center gap-2">
+            <Spinner className="h-4 w-4 shrink-0" />
+            {showLoadingText ? (
+              <span>Loading…</span>
+            ) : (
+              /* Render children dimmed so button width stays the same */
+              <span className="opacity-60">{children}</span>
+            )}
+          </span>
+        )
       ) : (
         children
       )}

@@ -158,26 +158,6 @@ export async function fetchStandings(url: string): Promise<StandingsRow[]> {
 }
 
 /**
- * Fetch race results from the given CSV URL, optionally filtering by event_id.
- * Returns empty array on failure.
- */
-export async function fetchRaceResults(
-  url: string,
-  eventId?: string,
-): Promise<RaceResultRow[]> {
-  if (!url) return [];
-  try {
-    const csv = await fetchCsv(url);
-    const raw = parseCsv<Record<string, string>>(csv);
-    const all = mapRaceResults(raw);
-    if (eventId) return all.filter((r) => r.event_id === eventId);
-    return all;
-  } catch {
-    return [];
-  }
-}
-
-/**
  * Fetch race results for ALL events from the given CSV URL, grouped by event_id.
  */
 export async function fetchAllRaceResults(

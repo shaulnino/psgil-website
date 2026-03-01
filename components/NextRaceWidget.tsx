@@ -269,7 +269,7 @@ export default function NextRaceWidget({ race }: { race: NextRaceData | null }) 
         className={`border-t shadow-2xl shadow-black/50 backdrop-blur-md md:rounded-2xl md:border ${
           isLiveNow
             ? "border-2 border-[#D4AF37]/50 bg-[#0e0e14]/95 animate-[live-gold-flash_2s_ease-in-out_infinite]"
-            : "border-white/10 bg-[#0e0e14]/95"
+            : "border-[#D4AF37]/20 bg-[#0e0e14]/95 shadow-[0_0_18px_rgba(212,175,55,0.06)]"
         }`}
       >
         {/* Header bar */}
@@ -285,7 +285,7 @@ export default function NextRaceWidget({ race }: { race: NextRaceData | null }) 
             ) : (
               <>
                 <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
-                <span className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50">
+                <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[#D4AF37]/65">
                   Next Race
                 </span>
               </>
@@ -364,7 +364,7 @@ export default function NextRaceWidget({ race }: { race: NextRaceData | null }) 
               </div>
 
               {race.track && (
-                <p className="mt-0.5 truncate text-xs text-white/40">
+                <p className="mt-0.5 truncate text-xs text-[#D4AF37]/45">
                   {race.track}
                 </p>
               )}
@@ -397,7 +397,7 @@ export default function NextRaceWidget({ race }: { race: NextRaceData | null }) 
               </span>
             </div>
           ) : countdown && countdown.total > 0 ? (
-            <div className="mt-3 flex items-center justify-center gap-3 rounded-xl bg-white/5 px-3 py-2.5 border border-white/5">
+            <div className="mt-3 flex items-center justify-center gap-3 rounded-xl border border-[#D4AF37]/15 bg-[#D4AF37]/[0.06] px-3 py-2.5">
               <CountdownUnit value={countdown.days} label="days" />
               <span className="font-display text-lg font-bold text-white/20">:</span>
               <CountdownUnit value={countdown.hours} label="hrs" />

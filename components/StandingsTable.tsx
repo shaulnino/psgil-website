@@ -237,8 +237,6 @@ type StandingsTableProps = {
   standings: StandingsRow[];
   caption?: string;
   type: "drivers" | "constructors";
-  highlightDriverId?: string;
-  highlightTeamKey?: string;
 };
 
 export default function StandingsTable({

@@ -347,18 +347,6 @@ export function detectCircuitMetrics(rows: CircuitStatRow[]): MetricInfo[] {
 /*  Curated "highlight" metrics (top cards row)                        */
 /* ------------------------------------------------------------------ */
 
-/** Metrics for the top "quick stats" cards (best 8 at a glance) */
-export const DRIVER_HIGHLIGHT_METRICS = [
-  "Events Participation",
-  "Event Wins",
-  "Event Podiums",
-  "Total Points",
-  "Pole Positions",
-  "Fastest Laps",
-  "Championships",
-  "Driver Rating",
-];
-
 /** Default bar chart metrics for drivers */
 export const DRIVER_CHART_METRICS = [
   "Total Points",

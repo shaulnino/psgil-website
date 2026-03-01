@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import {
   BarChart,
   Bar,
+  Cell,
   XAxis,
   YAxis,
   Tooltip,
@@ -15,6 +16,9 @@ import {
   PolarGrid,
   PolarAngleAxis,
   PolarRadiusAxis,
+  LineChart,
+  Line,
+  CartesianGrid,
 } from "recharts";
 import type {
   DriverStatRow,
@@ -31,6 +35,17 @@ import {
   DRIVER_CHART_METRICS,
   DRIVER_RATING_METRICS,
 } from "@/lib/statsData";
+import type { RaceResultRow } from "@/lib/resultsData";
+import type { RaceEvent } from "@/lib/scheduleData";
+import RaceResultsTable from "@/components/RaceResultsTable";
+import {
+  buildDriverIndex,
+  getDriverNames,
+  buildEventMeta,
+  getFilterOptions,
+  computeH2H,
+} from "@/lib/h2h";
+import type { H2HRaceRow } from "@/lib/h2h";
 
 /* ------------------------------------------------------------------ */
 /*  Props                                                              */
@@ -43,13 +58,17 @@ type StatsData = {
   circuits: { rows: CircuitStatRow[]; headers: string[] };
 };
 
-type Props = { data: StatsData };
+type Props = {
+  data: StatsData;
+  raceResults?: Record<string, RaceResultRow[]>;
+  events?: RaceEvent[];
+};
 
 /* ------------------------------------------------------------------ */
 /*  Constants & helpers                                                 */
 /* ------------------------------------------------------------------ */
 
-const TABS = ["Drivers", "League", "Circuits", "Rankings"] as const;
+const TABS = ["Drivers", "League", "Circuits", "Head-to-Head", "Rankings"] as const;
 type Tab = (typeof TABS)[number];
 
 const COMPARE_COLORS = ["#7020B0", "#D4AF37", "#22d3ee", "#f472b6"];
@@ -59,6 +78,36 @@ function parseNum(v: string): number | null {
   if (!v || v === "-" || v === "N/A") return null;
   const n = Number(v.replace(/%/g, "").replace(/,/g, "").trim());
   return isNaN(n) ? null : n;
+}
+
+function isLowerBetterMetric(metricLabel: string): boolean {
+  const s = metricLabel.toLowerCase();
+  return (
+    s.includes("position") ||
+    s.includes("grid") ||
+    s.includes("finish") ||
+    s.includes("rank") ||
+    s.includes("time") ||
+    s.includes("gap") ||
+    s.includes("penalty")
+  );
+}
+
+function getDriverParticipationCount(row: DriverStatRow): number {
+  const entries = Object.entries(row.metrics).filter(
+    ([key, val]) => Number.isFinite(val) && !key.includes("%"),
+  );
+  const raceEvents = entries.find(([key]) =>
+    key.trim().toLowerCase() === "race events",
+  );
+  if (raceEvents) return raceEvents[1];
+
+  const participationLike = entries
+    .filter(([key]) => /participation|race events?|events participated|races participated/i.test(key))
+    .map(([, val]) => val);
+  if (participationLike.length > 0) return Math.max(...participationLike);
+
+  return 0;
 }
 
 function fmtVal(v: number | string | undefined, pct = false): string {
@@ -271,19 +320,28 @@ function EmptyState({ message }: { message: string }) {
 function CategoryGroup({
   category,
   defaultOpen = false,
+  open,
+  onToggle,
   children,
 }: {
   category: MetricCategory;
   defaultOpen?: boolean;
+  open?: boolean;
+  onToggle?: () => void;
   children: React.ReactNode;
 }) {
-  const [open, setOpen] = useState(defaultOpen);
+  const [internalOpen, setInternalOpen] = useState(defaultOpen);
+  const isOpen = open ?? internalOpen;
+  const handleToggle = () => {
+    onToggle?.();
+    if (open === undefined) setInternalOpen((v) => !v);
+  };
 
   return (
     <div className="rounded-xl border border-white/10 overflow-hidden">
       <button
         type="button"
-        onClick={() => setOpen(!open)}
+        onClick={handleToggle}
         className="flex w-full items-center justify-between gap-2 bg-[#7020B0]/80 px-4 py-3 text-left transition hover:bg-[#7020B0]"
       >
         <div className="flex items-center gap-2">
@@ -293,13 +351,13 @@ function CategoryGroup({
           </span>
         </div>
         <svg
-          className={`h-4 w-4 shrink-0 text-white/70 transition-transform ${open ? "rotate-180" : ""}`}
+          className={`h-4 w-4 shrink-0 text-white/70 transition-transform ${isOpen ? "rotate-180" : ""}`}
           fill="none" stroke="currentColor" viewBox="0 0 24 24"
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
-      {open && <div className="border-t border-[#7020B0]/30 bg-white/[0.02] px-4 py-3">{children}</div>}
+      {isOpen && <div className="border-t border-[#7020B0]/30 bg-white/[0.02] px-4 py-3">{children}</div>}
     </div>
   );
 }
@@ -423,6 +481,8 @@ function StatsBarChart({
   height = 320,
   normalise = false,
   hideLegend = false,
+  leaderAware = false,
+  isLowerBetter = () => false,
 }: {
   data: Record<string, string | number>[];
   bars: { key: string; color: string; name: string }[];
@@ -432,6 +492,10 @@ function StatsBarChart({
   normalise?: boolean;
   /** Hide the built-in Recharts legend (useful when rendering a separate sticky legend) */
   hideLegend?: boolean;
+  /** Dim non-leading bars per metric row for quicker visual comparison */
+  leaderAware?: boolean;
+  /** Metric direction callback used by leaderAware */
+  isLowerBetter?: (metricLabel: string) => boolean;
 }) {
   // Build actual and normalised data
   const { chartData, actualData } = useMemo(() => {
@@ -454,6 +518,24 @@ function StatsBarChart({
     });
     return { chartData: norm, actualData: data };
   }, [data, bars, xKey, normalise]);
+
+  const leadersByRow = useMemo(() => {
+    return actualData.map((row) => {
+      const label = String(row[xKey] ?? "");
+      const values = bars
+        .map((b) => {
+          const raw = row[b.key];
+          const v = typeof raw === "number" ? raw : Number(raw ?? 0);
+          return { key: b.key, value: Number.isFinite(v) ? v : null };
+        })
+        .filter((x): x is { key: string; value: number } => x.value !== null);
+      if (values.length === 0) return new Set<string>();
+      const target = isLowerBetter(label)
+        ? Math.min(...values.map((v) => v.value))
+        : Math.max(...values.map((v) => v.value));
+      return new Set(values.filter((v) => v.value === target).map((v) => v.key));
+    });
+  }, [actualData, bars, xKey, isLowerBetter]);
 
   // Custom tooltip showing actual values when normalised
   function NormTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string; dataKey: string }>; label?: string }) {
@@ -508,7 +590,26 @@ function StatsBarChart({
               fill={b.color}
               radius={[4, 4, 0, 0]}
               maxBarSize={40}
-            />
+            >
+              {chartData.map((_, idx) => {
+                const isLeader = leadersByRow[idx]?.has(b.key) ?? false;
+                return (
+                  <Cell
+                    key={`${b.key}-${idx}`}
+                    fill={b.color}
+                    fillOpacity={
+                      leaderAware
+                        ? isLeader
+                          ? 1
+                          : 0.28
+                        : 1
+                    }
+                    stroke={leaderAware && isLeader ? "rgba(255,255,255,0.45)" : "none"}
+                    strokeWidth={leaderAware && isLeader ? 1 : 0}
+                  />
+                );
+              })}
+            </Bar>
           ))}
         </BarChart>
       </ResponsiveContainer>
@@ -519,7 +620,7 @@ function StatsBarChart({
 function StatsRadarChart({
   data,
   subjects,
-  height = 350,
+  height = 420,
 }: {
   data: { subject: string; [key: string]: string | number }[];
   subjects: { key: string; color: string; name: string }[];
@@ -528,7 +629,7 @@ function StatsRadarChart({
   return (
     <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
       <ResponsiveContainer width="100%" height={height}>
-        <RadarChart cx="50%" cy="50%" outerRadius="55%" data={data}>
+        <RadarChart cx="50%" cy="50%" outerRadius="72%" data={data}>
           <PolarGrid stroke={CHART_THEME.grid} />
           <PolarAngleAxis
             dataKey="subject"
@@ -538,7 +639,8 @@ function StatsRadarChart({
             angle={90}
             tick={{ fill: "#fff", fontSize: 10 }}
             axisLine={false}
-            domain={[0, 100]}
+            domain={[0, 110]}
+            ticks={[0, 25, 50, 75, 100] as any}
           />
           {subjects.map((s) => (
             <Radar
@@ -568,13 +670,609 @@ function StatsRadarChart({
 /** Number of categories to open by default */
 const DEFAULT_OPEN_CATEGORIES = 1;
 
+const DRIVER_CUM_METRICS = [
+  { key: "points", label: "Points (Cumulative)" },
+  { key: "wins", label: "Wins (Cumulative)" },
+  { key: "podiums", label: "Podiums (Cumulative)" },
+  { key: "top5", label: "Top 5 (Cumulative)" },
+  { key: "top10", label: "Top 10 (Cumulative)" },
+  { key: "poles", label: "Poles (Cumulative)" },
+  { key: "fastestLaps", label: "Fastest Laps (Cumulative)" },
+  { key: "dotd", label: "DOTD (Cumulative)" },
+  { key: "dnfs", label: "DNFs (Cumulative)" },
+  { key: "finished", label: "Races Finished (Cumulative)" },
+  { key: "avgFinish", label: "Avg Finish (Running)" },
+  { key: "avgGrid", label: "Avg Grid (Running)" },
+  { key: "avgPoints", label: "Avg Points (Running)" },
+] as const;
+
+type DriverCumMetricKey = (typeof DRIVER_CUM_METRICS)[number]["key"];
+
+type DriverRacePoint = {
+  eventId: string;
+  raceName: string;
+  date: string;
+  seasonKey: string;
+  points: number;
+  finish: number | null;
+  grid: number | null;
+  status: string;
+  fastestLap: string;
+  dotd: string;
+};
+
+function toSeasonKey(raw: string): string {
+  const s = (raw ?? "").trim();
+  if (!s) return "";
+  return s.startsWith("S") || s.startsWith("s") ? s.toUpperCase() : `S${s}`;
+}
+
+function normalizeDriverName(raw: string): string {
+  return (raw ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+function parseDateMaybe(value: string): number {
+  const s = (value ?? "").trim();
+  const m = s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+  if (!m) return Number.NaN;
+  const d = parseInt(m[1], 10);
+  const mo = parseInt(m[2], 10) - 1;
+  const y = parseInt(m[3], 10);
+  return new Date(y, mo, d).getTime();
+}
+
+function isDnfStatus(st: string): boolean {
+  const s = (st ?? "").trim().toLowerCase();
+  return s === "dnf" || s === "dns" || s === "dsq" || s === "retired";
+}
+
+function DriverCumulativeChart({
+  driverName,
+  raceResults,
+  events,
+  mode,
+  seasonKey,
+}: {
+  driverName: string;
+  raceResults: Record<string, RaceResultRow[]>;
+  events: RaceEvent[];
+  mode: "All-time" | "Season";
+  seasonKey: string;
+}) {
+  const [metric, setMetric] = useState<DriverCumMetricKey>("points");
+  const [raceCount, setRaceCount] = useState<number>(0);
+
+  const eventMap = useMemo(() => {
+    const map = new Map<
+      string,
+      { raceName: string; date: string; seasonKey: string }
+    >();
+    for (const e of events) {
+      map.set(e.event_id, {
+        raceName: e.race_name || e.event_id,
+        date: e.date || "",
+        seasonKey: toSeasonKey(e.season),
+      });
+    }
+    return map;
+  }, [events]);
+
+  const allDriverRaces = useMemo(() => {
+    const target = normalizeDriverName(driverName);
+    const rows: DriverRacePoint[] = [];
+    for (const [eventId, list] of Object.entries(raceResults)) {
+      const row = list.find(
+        (r) => normalizeDriverName(r.driver_name ?? "") === target,
+      );
+      if (!row) continue;
+      const meta = eventMap.get(eventId);
+      const finish = parseNum(row.position);
+      const grid = parseNum(row.grid);
+      const points = parseNum(row.points) ?? 0;
+      const seasonFromId = eventId.match(/^s(\d+)/i)?.[1];
+      rows.push({
+        eventId,
+        raceName: meta?.raceName ?? eventId,
+        date: meta?.date ?? "",
+        seasonKey: meta?.seasonKey ?? (seasonFromId ? `S${seasonFromId}` : ""),
+        points,
+        finish,
+        grid,
+        status: row.status ?? "",
+        fastestLap: row.fastest_lap ?? "",
+        dotd: row.dotd ?? "",
+      });
+    }
+    rows.sort((a, b) => {
+      const ta = parseDateMaybe(a.date);
+      const tb = parseDateMaybe(b.date);
+      if (Number.isFinite(ta) && Number.isFinite(tb) && ta !== tb) return ta - tb;
+      return a.eventId.localeCompare(b.eventId);
+    });
+    return rows;
+  }, [raceResults, eventMap, driverName]);
+
+  const driverRaces = useMemo(() => {
+    if (mode !== "Season") return allDriverRaces;
+    return allDriverRaces.filter((r) => r.seasonKey === seasonKey);
+  }, [allDriverRaces, mode, seasonKey]);
+
+  const chartData = useMemo(() => {
+    if (driverRaces.length === 0) return [];
+    const sliced = raceCount > 0 ? driverRaces.slice(-raceCount) : driverRaces;
+    const before =
+      raceCount > 0 ? driverRaces.slice(0, Math.max(0, driverRaces.length - raceCount)) : [];
+
+    const acc = {
+      races: 0,
+      points: 0,
+      wins: 0,
+      podiums: 0,
+      top5: 0,
+      top10: 0,
+      poles: 0,
+      fastestLaps: 0,
+      dotd: 0,
+      dnfs: 0,
+      finished: 0,
+      finishSum: 0,
+      finishCount: 0,
+      gridSum: 0,
+      gridCount: 0,
+    };
+
+    const consume = (r: DriverRacePoint) => {
+      acc.races += 1;
+      acc.points += r.points;
+      if (r.finish === 1) acc.wins += 1;
+      if (r.finish !== null && r.finish <= 3) acc.podiums += 1;
+      if (r.finish !== null && r.finish <= 5) acc.top5 += 1;
+      if (r.finish !== null && r.finish <= 10) acc.top10 += 1;
+      if (r.grid === 1) acc.poles += 1;
+      const fl = r.fastestLap.trim().toLowerCase();
+      if (fl === "yes" || fl === "1" || fl === "true") acc.fastestLaps += 1;
+      const d = r.dotd.trim().toLowerCase();
+      if (d === "yes" || d === "1" || d === "true") acc.dotd += 1;
+      if (isDnfStatus(r.status)) acc.dnfs += 1;
+      else acc.finished += 1;
+      if (r.finish !== null) {
+        acc.finishSum += r.finish;
+        acc.finishCount += 1;
+      }
+      if (r.grid !== null) {
+        acc.gridSum += r.grid;
+        acc.gridCount += 1;
+      }
+    };
+
+    for (const r of before) consume(r);
+
+    return sliced.map((r) => {
+      consume(r);
+      let value: number | null = null;
+      switch (metric) {
+        case "points":
+          value = acc.points;
+          break;
+        case "wins":
+          value = acc.wins;
+          break;
+        case "podiums":
+          value = acc.podiums;
+          break;
+        case "top5":
+          value = acc.top5;
+          break;
+        case "top10":
+          value = acc.top10;
+          break;
+        case "poles":
+          value = acc.poles;
+          break;
+        case "fastestLaps":
+          value = acc.fastestLaps;
+          break;
+        case "dotd":
+          value = acc.dotd;
+          break;
+        case "dnfs":
+          value = acc.dnfs;
+          break;
+        case "finished":
+          value = acc.finished;
+          break;
+        case "avgFinish":
+          value = acc.finishCount > 0 ? acc.finishSum / acc.finishCount : null;
+          break;
+        case "avgGrid":
+          value = acc.gridCount > 0 ? acc.gridSum / acc.gridCount : null;
+          break;
+        case "avgPoints":
+          value = acc.races > 0 ? acc.points / acc.races : null;
+          break;
+      }
+      return {
+        name: r.seasonKey ? `${r.raceName} (${r.seasonKey})` : r.raceName,
+        value,
+      };
+    });
+  }, [driverRaces, metric, raceCount]);
+
+  const metricOptions = DRIVER_CUM_METRICS.map((m) => m.label);
+  const selectedMetricLabel =
+    DRIVER_CUM_METRICS.find((m) => m.key === metric)?.label ?? metric;
+
+  return (
+    <div className="space-y-4 rounded-xl border border-white/10 bg-white/[0.02] p-4 sm:p-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h3 className="text-sm font-semibold text-white/60">Driver Cumulative Trend</h3>
+        <div className="flex gap-1 rounded-lg bg-white/5 p-0.5">
+          {[5, 10, 15, 0].map((n) => (
+            <button
+              key={n}
+              onClick={() => setRaceCount(n)}
+              className={`rounded-md px-2.5 py-1 text-xs font-semibold transition ${
+                raceCount === n
+                  ? "bg-[#7020B0] text-white shadow"
+                  : "text-white/50 hover:text-white/80"
+              }`}
+            >
+              {n === 0 ? "All" : `Last ${n}`}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="max-w-sm">
+        <SearchableSelect
+          options={metricOptions}
+          value={selectedMetricLabel}
+          onChange={(v) => {
+            const label = String(v);
+            const found = DRIVER_CUM_METRICS.find((m) => m.label === label);
+            if (found) setMetric(found.key);
+          }}
+          placeholder="Select metric…"
+        />
+      </div>
+
+      {chartData.length === 0 ? (
+        <div className="flex h-48 items-center justify-center rounded-xl border border-white/10 bg-white/[0.02]">
+          <p className="text-sm text-white/40">
+            No race-by-race data available for this driver in the current filter.
+          </p>
+        </div>
+      ) : (
+        <div className="h-72">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartData} margin={{ top: 8, right: 12, bottom: 4, left: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+              <XAxis
+                dataKey="name"
+                tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }}
+                axisLine={{ stroke: "rgba(255,255,255,0.1)" }}
+                tickLine={false}
+                interval="preserveStartEnd"
+                angle={-18}
+                textAnchor="end"
+                height={56}
+              />
+              <YAxis
+                tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }}
+                axisLine={{ stroke: "rgba(255,255,255,0.1)" }}
+                tickLine={false}
+                width={40}
+              />
+              <Tooltip
+                contentStyle={{
+                  background: "#1a1a24",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: 8,
+                  fontSize: 12,
+                  color: "#fff",
+                }}
+                labelStyle={{ color: "rgba(255,255,255,0.5)", marginBottom: 4 }}
+              />
+              <Line
+                type="monotone"
+                dataKey="value"
+                name={selectedMetricLabel}
+                stroke="#7020B0"
+                strokeWidth={2.5}
+                dot={{ r: 3, fill: "#7020B0" }}
+                activeDot={{ r: 5 }}
+                connectNulls
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DriverCompareCumulativeChart({
+  driverNames,
+  raceResults,
+  events,
+  mode,
+  seasonKey,
+}: {
+  driverNames: string[];
+  raceResults: Record<string, RaceResultRow[]>;
+  events: RaceEvent[];
+  mode: "All-time" | "Season";
+  seasonKey: string;
+}) {
+  const [metric, setMetric] = useState<DriverCumMetricKey>("points");
+  const [raceCount, setRaceCount] = useState<number>(0);
+
+  const eventMap = useMemo(() => {
+    const map = new Map<
+      string,
+      { raceName: string; date: string; seasonKey: string }
+    >();
+    for (const e of events) {
+      map.set(e.event_id, {
+        raceName: e.race_name || e.event_id,
+        date: e.date || "",
+        seasonKey: toSeasonKey(e.season),
+      });
+    }
+    return map;
+  }, [events]);
+
+  const rowsByDriver = useMemo(() => {
+    const out = new Map<string, Map<string, DriverRacePoint>>();
+    for (const name of driverNames) {
+      const target = normalizeDriverName(name);
+      const map = new Map<string, DriverRacePoint>();
+      for (const [eventId, list] of Object.entries(raceResults)) {
+        const row = list.find(
+          (r) => normalizeDriverName(r.driver_name ?? "") === target,
+        );
+        if (!row) continue;
+        const meta = eventMap.get(eventId);
+        const seasonFromId = eventId.match(/^s(\d+)/i)?.[1];
+        map.set(eventId, {
+          eventId,
+          raceName: meta?.raceName ?? eventId,
+          date: meta?.date ?? "",
+          seasonKey: meta?.seasonKey ?? (seasonFromId ? `S${seasonFromId}` : ""),
+          points: parseNum(row.points) ?? 0,
+          finish: parseNum(row.position),
+          grid: parseNum(row.grid),
+          status: row.status ?? "",
+          fastestLap: row.fastest_lap ?? "",
+          dotd: row.dotd ?? "",
+        });
+      }
+      out.set(name, map);
+    }
+    return out;
+  }, [driverNames, raceResults, eventMap]);
+
+  const timeline = useMemo(() => {
+    const ids = new Set<string>();
+    for (const map of rowsByDriver.values()) {
+      for (const eid of map.keys()) ids.add(eid);
+    }
+    let eventsList = Array.from(ids).map((eid) => {
+      const m = eventMap.get(eid);
+      return {
+        eventId: eid,
+        raceName: m?.raceName ?? eid,
+        seasonKey: m?.seasonKey ?? (eid.match(/^s(\d+)/i)?.[1] ? `S${eid.match(/^s(\d+)/i)?.[1]}` : ""),
+        date: m?.date ?? "",
+      };
+    });
+    if (mode === "Season") {
+      eventsList = eventsList.filter((e) => e.seasonKey === seasonKey);
+    }
+    eventsList.sort((a, b) => {
+      const ta = parseDateMaybe(a.date);
+      const tb = parseDateMaybe(b.date);
+      if (Number.isFinite(ta) && Number.isFinite(tb) && ta !== tb) return ta - tb;
+      return a.eventId.localeCompare(b.eventId);
+    });
+    return eventsList;
+  }, [rowsByDriver, eventMap, mode, seasonKey]);
+
+  const chartData = useMemo(() => {
+    if (timeline.length === 0) return [];
+    const sliced = raceCount > 0 ? timeline.slice(-raceCount) : timeline;
+    const before = raceCount > 0 ? timeline.slice(0, Math.max(0, timeline.length - raceCount)) : [];
+
+    const createAcc = () => ({
+      races: 0,
+      points: 0,
+      wins: 0,
+      podiums: 0,
+      top5: 0,
+      top10: 0,
+      poles: 0,
+      fastestLaps: 0,
+      dotd: 0,
+      dnfs: 0,
+      finished: 0,
+      finishSum: 0,
+      finishCount: 0,
+      gridSum: 0,
+      gridCount: 0,
+    });
+
+    const accByDriver = new Map<string, ReturnType<typeof createAcc>>();
+    for (const n of driverNames) accByDriver.set(n, createAcc());
+
+    const consume = (name: string, r: DriverRacePoint | undefined) => {
+      if (!r) return;
+      const acc = accByDriver.get(name)!;
+      acc.races += 1;
+      acc.points += r.points;
+      if (r.finish === 1) acc.wins += 1;
+      if (r.finish !== null && r.finish <= 3) acc.podiums += 1;
+      if (r.finish !== null && r.finish <= 5) acc.top5 += 1;
+      if (r.finish !== null && r.finish <= 10) acc.top10 += 1;
+      if (r.grid === 1) acc.poles += 1;
+      const fl = r.fastestLap.trim().toLowerCase();
+      if (fl === "yes" || fl === "1" || fl === "true") acc.fastestLaps += 1;
+      const d = r.dotd.trim().toLowerCase();
+      if (d === "yes" || d === "1" || d === "true") acc.dotd += 1;
+      if (isDnfStatus(r.status)) acc.dnfs += 1;
+      else acc.finished += 1;
+      if (r.finish !== null) {
+        acc.finishSum += r.finish;
+        acc.finishCount += 1;
+      }
+      if (r.grid !== null) {
+        acc.gridSum += r.grid;
+        acc.gridCount += 1;
+      }
+    };
+
+    for (const ev of before) {
+      for (const n of driverNames) consume(n, rowsByDriver.get(n)?.get(ev.eventId));
+    }
+
+    return sliced.map((ev) => {
+      const row: Record<string, string | number | null> = {
+        name: ev.seasonKey ? `${ev.raceName} (${ev.seasonKey})` : ev.raceName,
+      };
+      for (const n of driverNames) {
+        const r = rowsByDriver.get(n)?.get(ev.eventId);
+        consume(n, r);
+        const acc = accByDriver.get(n)!;
+        let value: number | null = null;
+        switch (metric) {
+          case "points": value = acc.points; break;
+          case "wins": value = acc.wins; break;
+          case "podiums": value = acc.podiums; break;
+          case "top5": value = acc.top5; break;
+          case "top10": value = acc.top10; break;
+          case "poles": value = acc.poles; break;
+          case "fastestLaps": value = acc.fastestLaps; break;
+          case "dotd": value = acc.dotd; break;
+          case "dnfs": value = acc.dnfs; break;
+          case "finished": value = acc.finished; break;
+          case "avgFinish": value = acc.finishCount > 0 ? acc.finishSum / acc.finishCount : null; break;
+          case "avgGrid": value = acc.gridCount > 0 ? acc.gridSum / acc.gridCount : null; break;
+          case "avgPoints": value = acc.races > 0 ? acc.points / acc.races : null; break;
+        }
+        row[n] = value;
+      }
+      return row;
+    });
+  }, [timeline, raceCount, driverNames, rowsByDriver, metric]);
+
+  const metricOptions = DRIVER_CUM_METRICS.map((m) => m.label);
+  const selectedMetricLabel =
+    DRIVER_CUM_METRICS.find((m) => m.key === metric)?.label ?? metric;
+
+  if (driverNames.length < 2) return null;
+
+  return (
+    <div className="space-y-4 rounded-xl border border-white/10 bg-white/[0.02] p-4 sm:p-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h3 className="text-sm font-semibold text-white/60">Compare Cumulative Trend</h3>
+        <div className="flex gap-1 rounded-lg bg-white/5 p-0.5">
+          {[5, 10, 15, 0].map((n) => (
+            <button
+              key={n}
+              onClick={() => setRaceCount(n)}
+              className={`rounded-md px-2.5 py-1 text-xs font-semibold transition ${
+                raceCount === n ? "bg-[#7020B0] text-white shadow" : "text-white/50 hover:text-white/80"
+              }`}
+            >
+              {n === 0 ? "All" : `Last ${n}`}
+            </button>
+          ))}
+        </div>
+      </div>
+      <p className="text-xs text-white/40">
+        Note: this trend uses a combined race timeline (union of selected drivers&apos; races), not only shared races.
+      </p>
+
+      <div className="max-w-sm">
+        <SearchableSelect
+          options={metricOptions}
+          value={selectedMetricLabel}
+          onChange={(v) => {
+            const label = String(v);
+            const found = DRIVER_CUM_METRICS.find((m) => m.label === label);
+            if (found) setMetric(found.key);
+          }}
+          placeholder="Select metric…"
+        />
+      </div>
+
+      {chartData.length === 0 ? (
+        <div className="flex h-48 items-center justify-center rounded-xl border border-white/10 bg-white/[0.02]">
+          <p className="text-sm text-white/40">No race-by-race data available for selected drivers in the current filter.</p>
+        </div>
+      ) : (
+        <div className="h-72">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartData} margin={{ top: 8, right: 12, bottom: 4, left: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+              <XAxis
+                dataKey="name"
+                tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }}
+                axisLine={{ stroke: "rgba(255,255,255,0.1)" }}
+                tickLine={false}
+                interval="preserveStartEnd"
+                angle={-18}
+                textAnchor="end"
+                height={56}
+              />
+              <YAxis
+                tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }}
+                axisLine={{ stroke: "rgba(255,255,255,0.1)" }}
+                tickLine={false}
+                width={40}
+              />
+              <Tooltip
+                contentStyle={{
+                  background: "#1a1a24",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: 8,
+                  fontSize: 12,
+                  color: "#fff",
+                }}
+                labelStyle={{ color: "rgba(255,255,255,0.5)", marginBottom: 4 }}
+              />
+              <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
+              {driverNames.map((name, i) => (
+                <Line
+                  key={name}
+                  type="monotone"
+                  dataKey={name}
+                  name={name}
+                  stroke={COMPARE_COLORS[i % COMPARE_COLORS.length]}
+                  strokeWidth={2.5}
+                  dot={{ r: 3, fill: COMPARE_COLORS[i % COMPARE_COLORS.length] }}
+                  activeDot={{ r: 5 }}
+                  connectNulls
+                />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function DriversSection({
   allTime,
   bySeason,
+  raceResults = {},
+  events = [],
   initialDriver,
 }: {
   allTime: { rows: DriverStatRow[]; headers: string[] };
   bySeason: Record<string, { rows: DriverStatRow[]; headers: string[] }>;
+  raceResults?: Record<string, RaceResultRow[]>;
+  events?: RaceEvent[];
   initialDriver?: string;
 }) {
   // Derive the default season from bySeason keys (newest first)
@@ -603,6 +1301,21 @@ function DriversSection({
 
   const metrics = useMemo(() => detectMetrics(dataset.rows), [dataset.rows]);
   const categories = useMemo(() => categoriseMetrics(metrics), [metrics]);
+  const defaultOpenCategoryIds = useMemo(
+    () => new Set(categories.slice(0, DEFAULT_OPEN_CATEGORIES).map((c) => c.id)),
+    [categories],
+  );
+  const [openCategoryIds, setOpenCategoryIds] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    setOpenCategoryIds((prev) => {
+      const valid = new Set(categories.map((c) => c.id));
+      const next = new Set([...prev].filter((id) => valid.has(id)));
+      if (next.size === 0) return new Set(defaultOpenCategoryIds);
+      return next;
+    });
+  }, [categories, defaultOpenCategoryIds]);
+  const allCategoriesExpanded =
+    categories.length > 0 && openCategoryIds.size === categories.length;
 
   // Ensure selected drivers exist in the current dataset
   const validDrivers = useMemo(
@@ -613,9 +1326,14 @@ function DriversSection({
   // Auto-select first driver if none selected
   useEffect(() => {
     if (validDrivers.length === 0 && driverNames.length > 0 && !compare) {
-      setSelectedDrivers([driverNames[0]]);
+      const eligible = dataset.rows
+        .filter((r) => getDriverParticipationCount(r) >= 15)
+        .map((r) => r.driver_name);
+      const pool = eligible.length > 0 ? eligible : driverNames;
+      const random = pool[Math.floor(Math.random() * pool.length)];
+      if (random) setSelectedDrivers([random]);
     }
-  }, [validDrivers, driverNames, compare]);
+  }, [validDrivers, driverNames, compare, dataset.rows]);
 
   const selectedRows = useMemo(
     () =>
@@ -758,6 +1476,24 @@ function DriversSection({
         />
       </div>
 
+      {categories.length > 0 && (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() =>
+              setOpenCategoryIds(
+                allCategoriesExpanded
+                  ? new Set()
+                  : new Set(categories.map((c) => c.id)),
+              )
+            }
+            className="rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/70 transition hover:text-white"
+          >
+            {allCategoriesExpanded ? "Collapse all" : "Expand all"}
+          </button>
+        </div>
+      )}
+
       {/* ---- SINGLE DRIVER: All stats in categorised groups ---- */}
       {singleDriver && (
         <div className="space-y-3">
@@ -766,6 +1502,15 @@ function DriversSection({
               key={cat.id}
               category={cat}
               defaultOpen={catIdx < DEFAULT_OPEN_CATEGORIES}
+              open={openCategoryIds.has(cat.id)}
+              onToggle={() =>
+                setOpenCategoryIds((prev) => {
+                  const next = new Set(prev);
+                  if (next.has(cat.id)) next.delete(cat.id);
+                  else next.add(cat.id);
+                  return next;
+                })
+              }
             >
               <div className="grid grid-cols-1 gap-x-6 sm:grid-cols-2 lg:grid-cols-3">
                 {cat.metrics.map((m) => (
@@ -780,6 +1525,13 @@ function DriversSection({
               </div>
             </CategoryGroup>
           ))}
+          <DriverCumulativeChart
+            driverName={singleDriver.driver_name}
+            raceResults={raceResults}
+            events={events}
+            mode={mode}
+            seasonKey={season}
+          />
         </div>
       )}
 
@@ -791,6 +1543,15 @@ function DriversSection({
               key={cat.id}
               category={cat}
               defaultOpen={catIdx < DEFAULT_OPEN_CATEGORIES}
+              open={openCategoryIds.has(cat.id)}
+              onToggle={() =>
+                setOpenCategoryIds((prev) => {
+                  const next = new Set(prev);
+                  if (next.has(cat.id)) next.delete(cat.id);
+                  else next.add(cat.id);
+                  return next;
+                })
+              }
             >
               <div className="overflow-x-auto -mx-4">
                 <table className="w-full text-sm">
@@ -811,22 +1572,44 @@ function DriversSection({
                     </tr>
                   </thead>
                   <tbody>
-                    {cat.metrics.map((m) => (
-                      <tr key={m.key} className="border-b border-white/5">
-                        <td className="px-4 py-1.5 text-sm text-white/60">
-                          {m.tooltip ? (
-                            <MetricTooltip text={m.tooltip}>
-                              <span>{m.label}</span>
-                            </MetricTooltip>
-                          ) : m.label}
-                        </td>
-                        {selectedRows.map((dr) => (
-                          <td key={dr.driver_name} className="px-4 py-1.5 text-right text-sm font-semibold text-[#D4AF37] tabular-nums">
-                            {fmtVal(dr.metrics[m.key], m.isPercentage)}
+                    {cat.metrics.map((m) => {
+                      const numeric = selectedRows.map((dr) => ({
+                        driver: dr.driver_name,
+                        value: dr.metrics[m.key] ?? 0,
+                      }));
+                      const target = isLowerBetterMetric(m.label)
+                        ? Math.min(...numeric.map((x) => x.value))
+                        : Math.max(...numeric.map((x) => x.value));
+                      const leaders = new Set(
+                        numeric.filter((x) => x.value === target).map((x) => x.driver),
+                      );
+                      return (
+                        <tr key={m.key} className="border-b border-white/5">
+                          <td className="px-4 py-1.5 text-sm text-white/60">
+                            {m.tooltip ? (
+                              <MetricTooltip text={m.tooltip}>
+                                <span>{m.label}</span>
+                              </MetricTooltip>
+                            ) : m.label}
                           </td>
-                        ))}
-                      </tr>
-                    ))}
+                          {selectedRows.map((dr) => {
+                            const isLeader = leaders.has(dr.driver_name);
+                            return (
+                              <td
+                                key={dr.driver_name}
+                                className={`px-4 py-1.5 text-right text-sm font-semibold tabular-nums ${
+                                  isLeader
+                                    ? "text-[#D4AF37]"
+                                    : "text-white/40"
+                                }`}
+                              >
+                                {fmtVal(dr.metrics[m.key], m.isPercentage)}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -837,43 +1620,60 @@ function DriversSection({
 
       {/* Charts — only useful in compare mode */}
       {compare && selectedRows.length > 1 && (
-        <div className="grid gap-6 lg:grid-cols-2">
-          {barData.length > 0 && (
-            <div>
-              <h3 className="mb-2 text-sm font-semibold text-white/60">Key Metrics (normalised)</h3>
-              <StatsBarChart
-                data={barData}
-                bars={selectedRows.map((dr, i) => ({
-                  key: dr.driver_name,
-                  color: COMPARE_COLORS[i],
-                  name: dr.driver_name,
-                }))}
-                xKey="metric"
-                normalise
-              />
-              <div className="mt-2 flex justify-end">
-                <button
-                  onClick={() => setShowAllMetrics(true)}
-                  className="text-sm font-semibold text-[#D4AF37]/80 hover:text-[#D4AF37] transition"
-                >
-                  All Metrics →
-                </button>
+        <div className="space-y-6">
+          <div className="grid gap-6 lg:grid-cols-2">
+            {barData.length > 0 && (
+              <div>
+                <h3 className="mb-2 text-sm font-semibold text-white/60">Key Metrics (normalised)</h3>
+                <StatsBarChart
+                  data={barData}
+                  bars={selectedRows.map((dr, i) => ({
+                    key: dr.driver_name,
+                    color: COMPARE_COLORS[i],
+                    name: dr.driver_name,
+                  }))}
+                  xKey="metric"
+                  normalise
+                  leaderAware
+                  isLowerBetter={isLowerBetterMetric}
+                  hideLegend
+                  height={360}
+                />
+                <p className="mt-2 text-xs text-white/35">
+                  Brighter bars and highlighted values indicate the current leader for each metric.
+                </p>
+                <div className="mt-2 flex justify-end">
+                  <button
+                    onClick={() => setShowAllMetrics(true)}
+                    className="text-sm font-semibold text-[#D4AF37]/80 hover:text-[#D4AF37] transition"
+                  >
+                    All Metrics →
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
-          {radarData.length > 0 && (
-            <div>
-              <h3 className="mb-2 text-sm font-semibold text-white/60">Driver Ratings</h3>
-              <StatsRadarChart
-                data={radarData}
-                subjects={selectedRows.map((dr, i) => ({
-                  key: dr.driver_name,
-                  color: COMPARE_COLORS[i],
-                  name: dr.driver_name,
-                }))}
-              />
-            </div>
-          )}
+            )}
+            {radarData.length > 0 && (
+              <div>
+                <h3 className="mb-2 text-sm font-semibold text-white/60">Driver Ratings</h3>
+                <StatsRadarChart
+                  data={radarData}
+                  subjects={selectedRows.map((dr, i) => ({
+                    key: dr.driver_name,
+                    color: COMPARE_COLORS[i],
+                    name: dr.driver_name,
+                  }))}
+                />
+              </div>
+            )}
+          </div>
+
+          <DriverCompareCumulativeChart
+            driverNames={selectedRows.map((dr) => dr.driver_name)}
+            raceResults={raceResults}
+            events={events}
+            mode={mode}
+            seasonKey={season}
+          />
         </div>
       )}
 
@@ -987,6 +1787,8 @@ function DriversSection({
                       normalise
                       height={400}
                       hideLegend
+                      leaderAware={compare}
+                      isLowerBetter={isLowerBetterMetric}
                     />
                   </div>
                 </div>
@@ -1159,6 +1961,21 @@ function CircuitsSection({
 
   const metrics = useMemo(() => detectCircuitMetrics(circuits.rows), [circuits.rows]);
   const categories = useMemo(() => categoriseMetrics(metrics), [metrics]);
+  const defaultOpenCategoryIds = useMemo(
+    () => new Set(categories.slice(0, DEFAULT_OPEN_CATEGORIES).map((c) => c.id)),
+    [categories],
+  );
+  const [openCategoryIds, setOpenCategoryIds] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    setOpenCategoryIds((prev) => {
+      const valid = new Set(categories.map((c) => c.id));
+      const next = new Set([...prev].filter((id) => valid.has(id)));
+      if (next.size === 0) return new Set(defaultOpenCategoryIds);
+      return next;
+    });
+  }, [categories, defaultOpenCategoryIds]);
+  const allCategoriesExpanded =
+    categories.length > 0 && openCategoryIds.size === categories.length;
 
   // Auto-select first circuit
   useEffect(() => {
@@ -1251,6 +2068,24 @@ function CircuitsSection({
         />
       </div>
 
+      {categories.length > 0 && (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() =>
+              setOpenCategoryIds(
+                allCategoriesExpanded
+                  ? new Set()
+                  : new Set(categories.map((c) => c.id)),
+              )
+            }
+            className="rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/70 transition hover:text-white"
+          >
+            {allCategoriesExpanded ? "Collapse all" : "Expand all"}
+          </button>
+        </div>
+      )}
+
       {/* ---- SINGLE CIRCUIT: All stats in categorised groups ---- */}
       {singleCircuit && (
         <div className="space-y-3">
@@ -1273,6 +2108,15 @@ function CircuitsSection({
               key={cat.id}
               category={cat}
               defaultOpen={catIdx < DEFAULT_OPEN_CATEGORIES}
+              open={openCategoryIds.has(cat.id)}
+              onToggle={() =>
+                setOpenCategoryIds((prev) => {
+                  const next = new Set(prev);
+                  if (next.has(cat.id)) next.delete(cat.id);
+                  else next.add(cat.id);
+                  return next;
+                })
+              }
             >
               <div className="grid grid-cols-1 gap-x-6 sm:grid-cols-2 lg:grid-cols-3">
                 {cat.metrics.map((m) => (
@@ -1329,6 +2173,15 @@ function CircuitsSection({
               key={cat.id}
               category={cat}
               defaultOpen={catIdx < DEFAULT_OPEN_CATEGORIES}
+              open={openCategoryIds.has(cat.id)}
+              onToggle={() =>
+                setOpenCategoryIds((prev) => {
+                  const next = new Set(prev);
+                  if (next.has(cat.id)) next.delete(cat.id);
+                  else next.add(cat.id);
+                  return next;
+                })
+              }
             >
               <div className="overflow-x-auto -mx-4">
                 <table className="w-full text-sm">
@@ -1706,10 +2559,826 @@ function RankingsSection({
 }
 
 /* ------------------------------------------------------------------ */
+/*  Head-to-Head section                                               */
+/* ------------------------------------------------------------------ */
+
+const H2H_CARD_TOOLTIPS: Record<string, string> = {
+  "H2H Wins": "Times the driver finished ahead of the other in shared races.",
+  "Race Wins (P1)": "Number of P1 finishes in shared races.",
+  "Podiums": "Top 3 finishes (P1–P3) in shared races.",
+  "Podium Rate %": "Percentage of shared races finishing on the podium.",
+  "Top 5": "Finishes inside the top 5 in shared races.",
+  "Top 10": "Finishes inside the top 10 in shared races.",
+  "Total Points": "Sum of all points scored across shared races.",
+  "Pts / Race": "Average points earned per shared race.",
+  "Avg Finish": "Average finishing position across shared races. Lower is better.",
+  "Best Finish": "Highest (lowest number) finishing position achieved. Lower is better.",
+  "Worst Finish": "Lowest (highest number) finishing position. Lower is better.",
+  "Avg Grid": "Average qualifying position across shared races. Lower is better.",
+  "Best Grid": "Best qualifying position achieved. Lower is better.",
+  "Grid H2H": "Times the driver out-qualified the other in shared races.",
+  "Poles": "Number of pole positions (P1 grid) in shared races.",
+  "Front Row": "Times starting P1 or P2 on the grid in shared races.",
+  "Fastest Laps": "Number of fastest laps set in shared races.",
+  "DOTDs": "Driver of the Day awards in shared races.",
+  "Races Finished": "Shared races completed without retiring (no DNF/DSQ).",
+  "DNFs": "Did Not Finish count (DNF, DSQ, DNS, Retired). Lower is better.",
+};
+
+function H2HStatCard({
+  label,
+  valueA,
+  valueB,
+  format = "int",
+  higherIsBetter = true,
+}: {
+  label: string;
+  valueA: number | null;
+  valueB: number | null;
+  format?: "int" | "float" | "pts";
+  higherIsBetter?: boolean;
+}) {
+  const tip = H2H_CARD_TOOLTIPS[label];
+  const fmt = (v: number | null) => {
+    if (v === null) return "-";
+    if (format === "float") return v.toFixed(2);
+    if (format === "pts") return v.toFixed(1);
+    return String(v);
+  };
+
+  let winnerSide: "a" | "b" | null = null;
+  if (valueA !== null && valueB !== null && valueA !== valueB) {
+    if (higherIsBetter) winnerSide = valueA > valueB ? "a" : "b";
+    else winnerSide = valueA < valueB ? "a" : "b";
+  }
+
+  const nA = valueA ?? 0;
+  const nB = valueB ?? 0;
+  const total = Math.abs(nA) + Math.abs(nB);
+  const pctA = total > 0 ? (Math.abs(nA) / total) * 100 : 50;
+  const pctB = total > 0 ? (Math.abs(nB) / total) * 100 : 50;
+
+  return (
+    <div className={`group relative rounded-xl border px-4 pb-3 pt-4 transition ${
+      winnerSide === "a"
+        ? "border-[#7020B0]/30 bg-[#7020B0]/[0.06]"
+        : winnerSide === "b"
+          ? "border-[#D4AF37]/30 bg-[#D4AF37]/[0.06]"
+          : "border-white/10 bg-white/[0.03]"
+    }`}>
+      <span className="mb-3 block text-center text-[10px] font-semibold uppercase tracking-widest text-white/35">{label}</span>
+      {tip && (
+        <span className="pointer-events-none absolute inset-x-0 bottom-[calc(100%+8px)] z-50 flex justify-center opacity-0 transition group-hover:opacity-100">
+          <span className="w-48 rounded-lg border border-white/10 bg-[#1a1a24] px-3 py-2 text-[11px] font-normal normal-case leading-relaxed tracking-normal text-white/60 shadow-xl">
+            {tip}
+          </span>
+        </span>
+      )}
+      <div className="flex items-end justify-between gap-2">
+        <div className="flex flex-col items-center gap-0.5">
+          <span className={`text-xl font-extrabold tabular-nums leading-none ${winnerSide === "a" ? "text-[#9040D0]" : "text-white/50"}`}>
+            {fmt(valueA)}
+          </span>
+        </div>
+        <div className="mb-1 flex h-5 w-5 shrink-0 items-center justify-center">
+          {winnerSide === "a" && (
+            <svg className="h-3 w-3 text-[#7020B0]" viewBox="0 0 12 12" fill="currentColor"><path d="M1 6l4-4v3h6v2H5v3z" /></svg>
+          )}
+          {winnerSide === "b" && (
+            <svg className="h-3 w-3 text-[#D4AF37]" viewBox="0 0 12 12" fill="currentColor"><path d="M11 6l-4-4v3H1v2h6v3z" /></svg>
+          )}
+          {!winnerSide && (
+            <span className="text-[10px] font-bold text-white/20">=</span>
+          )}
+        </div>
+        <div className="flex flex-col items-center gap-0.5">
+          <span className={`text-xl font-extrabold tabular-nums leading-none ${winnerSide === "b" ? "text-[#D4AF37]" : "text-white/50"}`}>
+            {fmt(valueB)}
+          </span>
+        </div>
+      </div>
+      {/* Proportional bar */}
+      <div className="mt-3 flex h-1 overflow-hidden rounded-full bg-white/5">
+        <div
+          className={`transition-all duration-500 ${winnerSide === "a" ? "bg-[#7020B0]" : "bg-[#7020B0]/30"}`}
+          style={{ width: `${pctA}%` }}
+        />
+        <div
+          className={`transition-all duration-500 ${winnerSide === "b" ? "bg-[#D4AF37]" : "bg-[#D4AF37]/30"}`}
+          style={{ width: `${pctB}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  H2H Trend Chart                                                    */
+/* ------------------------------------------------------------------ */
+
+const H2H_CHART_METRICS = [
+  { key: "finish", label: "Finish Pos", group: "Per Race" },
+  { key: "grid", label: "Grid Pos", group: "Per Race" },
+  { key: "points", label: "Points", group: "Per Race" },
+  { key: "posGain", label: "Pos Gain", group: "Per Race" },
+  { key: "cumPoints", label: "Cum. Points", group: "Cumulative" },
+  { key: "cumWins", label: "Cum. H2H Wins", group: "Cumulative" },
+  { key: "cumVictories", label: "Cum. Race Wins", group: "Cumulative" },
+  { key: "cumPodiums", label: "Cum. Podiums", group: "Cumulative" },
+  { key: "cumTop5", label: "Cum. Top 5", group: "Cumulative" },
+  { key: "cumTop10", label: "Cum. Top 10", group: "Cumulative" },
+  { key: "cumFastestLaps", label: "Cum. Fastest Laps", group: "Cumulative" },
+  { key: "cumPoles", label: "Cum. Poles", group: "Cumulative" },
+  { key: "cumDOTDs", label: "Cum. DOTDs", group: "Cumulative" },
+  { key: "cumFrontRow", label: "Cum. Front Row", group: "Cumulative" },
+  { key: "cumDNFs", label: "Cum. DNFs", group: "Cumulative" },
+  { key: "cumGridWins", label: "Cum. Grid H2H", group: "Cumulative" },
+  { key: "avgFinish", label: "Running Avg Finish", group: "Running Avg" },
+  { key: "avgGrid", label: "Running Avg Grid", group: "Running Avg" },
+  { key: "avgPtsPerRace", label: "Running Pts/Race", group: "Running Avg" },
+] as const;
+
+type H2HMetricKey = (typeof H2H_CHART_METRICS)[number]["key"];
+const H2H_CHART_GROUPS = [...new Set(H2H_CHART_METRICS.map((m) => m.group))];
+
+const RACE_COUNT_OPTIONS = [5, 10, 15, 0] as const;
+
+function H2HTrendChart({
+  races,
+  driverA,
+  driverB,
+}: {
+  races: H2HRaceRow[];
+  driverA: string;
+  driverB: string;
+}) {
+  const [selectedMetrics, setSelectedMetrics] = useState<H2HMetricKey[]>(["finish"]);
+  const [raceCount, setRaceCount] = useState<number>(0);
+
+  const toggleMetric = useCallback((key: H2HMetricKey) => {
+    setSelectedMetrics((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
+    );
+  }, []);
+
+  const chartData = useMemo(() => {
+    const sliced = raceCount > 0 ? races.slice(-raceCount) : races;
+
+    const acc = {
+      cumPtsA: 0, cumPtsB: 0,
+      cumWinsA: 0, cumWinsB: 0,
+      cumVictoriesA: 0, cumVictoriesB: 0,
+      cumPodiumsA: 0, cumPodiumsB: 0,
+      cumTop5A: 0, cumTop5B: 0,
+      cumTop10A: 0, cumTop10B: 0,
+      cumFLA: 0, cumFLB: 0,
+      cumPolesA: 0, cumPolesB: 0,
+      cumDOTDsA: 0, cumDOTDsB: 0,
+      cumFrontRowA: 0, cumFrontRowB: 0,
+      cumDNFsA: 0, cumDNFsB: 0,
+      cumGridWinsA: 0, cumGridWinsB: 0,
+      finishSumA: 0, finishSumB: 0, finishCountA: 0, finishCountB: 0,
+      gridSumA: 0, gridSumB: 0, gridCountA: 0, gridCountB: 0,
+      raceIdx: 0,
+    };
+
+    const updateAcc = (r: H2HRaceRow) => {
+      acc.cumPtsA += r.pointsA; acc.cumPtsB += r.pointsB;
+      if (r.winner === "a") acc.cumWinsA++; else if (r.winner === "b") acc.cumWinsB++;
+      if (r.finishA === 1) acc.cumVictoriesA++; if (r.finishB === 1) acc.cumVictoriesB++;
+      if (r.finishA !== null && r.finishA <= 3) acc.cumPodiumsA++; if (r.finishB !== null && r.finishB <= 3) acc.cumPodiumsB++;
+      if (r.finishA !== null && r.finishA <= 5) acc.cumTop5A++; if (r.finishB !== null && r.finishB <= 5) acc.cumTop5B++;
+      if (r.finishA !== null && r.finishA <= 10) acc.cumTop10A++; if (r.finishB !== null && r.finishB <= 10) acc.cumTop10B++;
+      if (r.gridA === 1) acc.cumPolesA++; if (r.gridB === 1) acc.cumPolesB++;
+      if (r.gridA !== null && r.gridA <= 2) acc.cumFrontRowA++; if (r.gridB !== null && r.gridB <= 2) acc.cumFrontRowB++;
+      if (r.gridA !== null && r.gridB !== null) { if (r.gridA < r.gridB) acc.cumGridWinsA++; else if (r.gridB < r.gridA) acc.cumGridWinsB++; }
+      const sA = (r.statusA || "").trim().toLowerCase();
+      const sB = (r.statusB || "").trim().toLowerCase();
+      if (["dnf","dsq","dns","retired"].includes(sA)) acc.cumDNFsA++;
+      if (["dnf","dsq","dns","retired"].includes(sB)) acc.cumDNFsB++;
+      if (r.finishA !== null) { acc.finishSumA += r.finishA; acc.finishCountA++; }
+      if (r.finishB !== null) { acc.finishSumB += r.finishB; acc.finishCountB++; }
+      if (r.gridA !== null) { acc.gridSumA += r.gridA; acc.gridCountA++; }
+      if (r.gridB !== null) { acc.gridSumB += r.gridB; acc.gridCountB++; }
+      acc.raceIdx++;
+    };
+
+    if (raceCount > 0 && races.length > raceCount) {
+      for (const r of races.slice(0, races.length - raceCount)) updateAcc(r);
+    }
+
+    // FL / DOTD detection needs the raw status strings from H2HRaceRow
+    // We don't have fastest_lap/dotd in H2HRaceRow, so track them via index
+    // Actually these aren't in H2HRaceRow — we'll skip per-race FL/DOTD cumulative for now
+    // and only include metrics derivable from the race row fields
+
+    return sliced.map((r) => {
+      updateAcc(r);
+      const label = r.raceName;
+      return {
+        name: label,
+        finishA: r.finishA, finishB: r.finishB,
+        gridA: r.gridA, gridB: r.gridB,
+        pointsA: r.pointsA, pointsB: r.pointsB,
+        posGainA: r.gridA !== null && r.finishA !== null ? r.gridA - r.finishA : null,
+        posGainB: r.gridB !== null && r.finishB !== null ? r.gridB - r.finishB : null,
+        cumPointsA: acc.cumPtsA, cumPointsB: acc.cumPtsB,
+        cumWinsA: acc.cumWinsA, cumWinsB: acc.cumWinsB,
+        cumVictoriesA: acc.cumVictoriesA, cumVictoriesB: acc.cumVictoriesB,
+        cumPodiumsA: acc.cumPodiumsA, cumPodiumsB: acc.cumPodiumsB,
+        cumTop5A: acc.cumTop5A, cumTop5B: acc.cumTop5B,
+        cumTop10A: acc.cumTop10A, cumTop10B: acc.cumTop10B,
+        cumFastestLapsA: acc.cumFLA, cumFastestLapsB: acc.cumFLB,
+        cumPolesA: acc.cumPolesA, cumPolesB: acc.cumPolesB,
+        cumDOTDsA: acc.cumDOTDsA, cumDOTDsB: acc.cumDOTDsB,
+        cumFrontRowA: acc.cumFrontRowA, cumFrontRowB: acc.cumFrontRowB,
+        cumDNFsA: acc.cumDNFsA, cumDNFsB: acc.cumDNFsB,
+        cumGridWinsA: acc.cumGridWinsA, cumGridWinsB: acc.cumGridWinsB,
+        avgFinishA: acc.finishCountA > 0 ? acc.finishSumA / acc.finishCountA : null,
+        avgFinishB: acc.finishCountB > 0 ? acc.finishSumB / acc.finishCountB : null,
+        avgGridA: acc.gridCountA > 0 ? acc.gridSumA / acc.gridCountA : null,
+        avgGridB: acc.gridCountB > 0 ? acc.gridSumB / acc.gridCountB : null,
+        avgPtsPerRaceA: acc.raceIdx > 0 ? acc.cumPtsA / acc.raceIdx : null,
+        avgPtsPerRaceB: acc.raceIdx > 0 ? acc.cumPtsB / acc.raceIdx : null,
+      };
+    });
+  }, [races, raceCount]);
+
+  const nameA = driverA.split(" ").pop() ?? driverA;
+  const nameB = driverB.split(" ").pop() ?? driverB;
+
+  const lineConfigs: { dataKeyA: string; dataKeyB: string; label: string }[] = selectedMetrics.map((key) => ({
+    dataKeyA: `${key}A`,
+    dataKeyB: `${key}B`,
+    label: H2H_CHART_METRICS.find((m) => m.key === key)!.label,
+  }));
+
+  if (races.length < 2) return null;
+
+  return (
+    <div className="space-y-4 rounded-xl border border-white/10 bg-white/[0.02] p-4 sm:p-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h3 className="text-sm font-semibold text-white/60">Trend Over Races</h3>
+
+        {/* Race count selector */}
+        <div className="flex gap-1 rounded-lg bg-white/5 p-0.5">
+          {RACE_COUNT_OPTIONS.map((n) => (
+            <button
+              key={n}
+              onClick={() => setRaceCount(n)}
+              className={`rounded-md px-2.5 py-1 text-xs font-semibold transition ${
+                raceCount === n
+                  ? "bg-[#7020B0] text-white shadow"
+                  : "text-white/50 hover:text-white/80"
+              }`}
+            >
+              {n === 0 ? "All" : `Last ${n}`}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Metric selectors — dropdown per group */}
+      <div className="flex flex-wrap items-start gap-3">
+        {H2H_CHART_GROUPS.map((group) => {
+          const groupMetrics = H2H_CHART_METRICS.filter((m) => m.group === group);
+          const activeInGroup = groupMetrics.filter((m) => selectedMetrics.includes(m.key));
+          const tooltip = group === "Per Race"
+            ? "The actual value for each race (e.g. finish position that race)."
+            : group === "Cumulative"
+              ? "A running total that grows race by race (e.g. total podiums so far)."
+              : "The average of all races up to that point, updated after each race.";
+          return (
+            <div key={group} className="relative w-52">
+              <div className="mb-1 flex items-center gap-1.5">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-white/30">{group}</span>
+                <span className="group/tip relative cursor-help">
+                  <svg className="h-3 w-3 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z" />
+                  </svg>
+                  <span className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 w-52 -translate-x-1/2 rounded-lg border border-white/10 bg-[#1a1a24] px-3 py-2 text-[11px] leading-relaxed text-white/60 opacity-0 shadow-xl transition group-hover/tip:opacity-100">
+                    {tooltip}
+                  </span>
+                </span>
+              </div>
+              <SearchableSelect
+                options={groupMetrics.map((m) => m.label)}
+                value={activeInGroup.map((m) => m.label)}
+                onChange={(v) => {
+                  const labels = (Array.isArray(v) ? v : [v]) as string[];
+                  const keys = labels
+                    .map((l) => groupMetrics.find((m) => m.label === l)?.key)
+                    .filter(Boolean) as H2HMetricKey[];
+                  const otherKeys = selectedMetrics.filter(
+                    (k) => !groupMetrics.some((m) => m.key === k),
+                  );
+                  setSelectedMetrics([...otherKeys, ...keys]);
+                }}
+                placeholder={`Select ${group.toLowerCase()}…`}
+                multiple
+              />
+            </div>
+          );
+        })}
+      </div>
+
+      {selectedMetrics.length === 0 && (
+        <p className="py-8 text-center text-sm text-white/30">Select at least one metric to display.</p>
+      )}
+
+      {selectedMetrics.length > 0 && (
+        <div className="h-72">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartData} margin={{ top: 8, right: 12, bottom: 4, left: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+              <XAxis
+                dataKey="name"
+                tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }}
+                axisLine={{ stroke: "rgba(255,255,255,0.1)" }}
+                tickLine={false}
+                interval="preserveStartEnd"
+                angle={-18}
+                textAnchor="end"
+                height={56}
+              />
+              <YAxis
+                tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }}
+                axisLine={{ stroke: "rgba(255,255,255,0.1)" }}
+                tickLine={false}
+                width={36}
+              />
+              <Tooltip
+                contentStyle={{
+                  background: "#1a1a24",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: 8,
+                  fontSize: 12,
+                  color: "#fff",
+                }}
+                labelStyle={{ color: "rgba(255,255,255,0.5)", marginBottom: 4 }}
+              />
+              <Legend
+                wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
+              />
+              {lineConfigs.map((cfg) => (
+                <Line
+                  key={cfg.dataKeyA}
+                  type="monotone"
+                  dataKey={cfg.dataKeyA}
+                  name={`${nameA} ${cfg.label}`}
+                  stroke="#7020B0"
+                  strokeWidth={2}
+                  dot={{ r: 3, fill: "#7020B0" }}
+                  activeDot={{ r: 5 }}
+                  connectNulls
+                  strokeDasharray={lineConfigs.length > 1 ? lineConfigs.indexOf(cfg) === 0 ? undefined : `${(lineConfigs.indexOf(cfg) + 1) * 4} ${(lineConfigs.indexOf(cfg) + 1) * 2}` : undefined}
+                />
+              ))}
+              {lineConfigs.map((cfg) => (
+                <Line
+                  key={cfg.dataKeyB}
+                  type="monotone"
+                  dataKey={cfg.dataKeyB}
+                  name={`${nameB} ${cfg.label}`}
+                  stroke="#D4AF37"
+                  strokeWidth={2}
+                  dot={{ r: 3, fill: "#D4AF37" }}
+                  activeDot={{ r: 5 }}
+                  connectNulls
+                  strokeDasharray={lineConfigs.length > 1 ? lineConfigs.indexOf(cfg) === 0 ? undefined : `${(lineConfigs.indexOf(cfg) + 1) * 4} ${(lineConfigs.indexOf(cfg) + 1) * 2}` : undefined}
+                />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function H2HWinBar({ winsA, winsB, ties }: { winsA: number; winsB: number; ties: number }) {
+  const total = winsA + winsB + ties;
+  if (total === 0) return null;
+  const pA = (winsA / total) * 100;
+  const pT = (ties / total) * 100;
+  const pB = (winsB / total) * 100;
+
+  return (
+    <div className="space-y-2">
+      <div className="flex justify-between text-sm font-semibold">
+        <span className="text-[#7020B0]">{winsA} wins</span>
+        {ties > 0 && <span className="text-white/40">{ties} ties</span>}
+        <span className="text-[#D4AF37]">{winsB} wins</span>
+      </div>
+      <div className="flex h-3 overflow-hidden rounded-full bg-white/5">
+        <div className="bg-[#7020B0] transition-all" style={{ width: `${pA}%` }} />
+        <div className="bg-white/20 transition-all" style={{ width: `${pT}%` }} />
+        <div className="bg-[#D4AF37] transition-all" style={{ width: `${pB}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function H2HSection({
+  raceResults,
+  events,
+}: {
+  raceResults: Record<string, RaceResultRow[]>;
+  events: RaceEvent[];
+}) {
+  const driverIndex = useMemo(() => buildDriverIndex(raceResults), [raceResults]);
+  const driverNames = useMemo(() => getDriverNames(driverIndex), [driverIndex]);
+  const eventMeta = useMemo(() => buildEventMeta(events), [events]);
+  const filterOptions = useMemo(() => getFilterOptions(eventMeta), [eventMeta]);
+
+  const [driverA, setDriverA] = useState("");
+  const [driverB, setDriverB] = useState("");
+  const [seasonFilters, setSeasonFilters] = useState<string[]>([]);
+  const [circuitFilters, setCircuitFilters] = useState<string[]>([]);
+  const [weatherFilters, setWeatherFilters] = useState<string[]>([]);
+  const [resultsEventId, setResultsEventId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!resultsEventId) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setResultsEventId(null); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [resultsEventId]);
+
+  const h2h = useMemo(() => {
+    if (!driverA || !driverB || driverA === driverB) return null;
+    return computeH2H(driverIndex, driverA, driverB, eventMeta, {
+      seasons: seasonFilters.length > 0 ? seasonFilters : undefined,
+      circuits: circuitFilters.length > 0 ? circuitFilters : undefined,
+      weather: weatherFilters.length > 0 ? weatherFilters : undefined,
+    });
+  }, [driverIndex, driverA, driverB, eventMeta, seasonFilters, circuitFilters, weatherFilters]);
+
+  const optionsA = useMemo(
+    () => driverNames.filter((n) => n !== driverB),
+    [driverNames, driverB],
+  );
+  const optionsB = useMemo(
+    () => driverNames.filter((n) => n !== driverA),
+    [driverNames, driverA],
+  );
+
+  const activeFilterCount = seasonFilters.length + circuitFilters.length + weatherFilters.length;
+  const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+  const activeFilterLabel = [
+    seasonFilters.length > 0 && seasonFilters.map((s) => `S${s.replace("S", "")}`).join(", "),
+    circuitFilters.length > 0 && circuitFilters.join(", "),
+    weatherFilters.length > 0 && weatherFilters.map(capitalize).join(", "),
+  ].filter(Boolean).join(" · ");
+
+  return (
+    <div className="space-y-6">
+      {/* Explainer */}
+      <div className="mx-auto max-w-2xl rounded-xl border border-[#7020B0]/20 bg-[#7020B0]/[0.04] px-5 py-4 text-center text-sm leading-relaxed text-white/50">
+        <span className="font-semibold text-white/70">How is this different from Compare?</span>{" "}
+        The Drivers tab compares career stats across <em>all</em> races each driver entered.
+        Head-to-Head only counts races where <em>both</em> drivers participated,
+        giving you a direct, fair comparison on the same tracks and conditions.
+      </div>
+
+      {/* Driver selectors */}
+      <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+        <div className="w-full max-w-xs">
+          <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-[#7020B0]">
+            Driver A
+          </label>
+          <SearchableSelect
+            options={optionsA}
+            value={driverA}
+            onChange={(v) => setDriverA(v as string)}
+            placeholder="Select Driver A…"
+          />
+        </div>
+
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 text-sm font-bold text-white/40">
+          vs
+        </div>
+
+        <div className="w-full max-w-xs">
+          <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-[#D4AF37]">
+            Driver B
+          </label>
+          <SearchableSelect
+            options={optionsB}
+            value={driverB}
+            onChange={(v) => setDriverB(v as string)}
+            placeholder="Select Driver B…"
+          />
+        </div>
+      </div>
+
+      {/* Swap + Filters row */}
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        {driverA && driverB && (
+          <button
+            onClick={() => { const tmp = driverA; setDriverA(driverB); setDriverB(tmp); }}
+            className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/50 transition hover:border-white/20 hover:text-white/80"
+          >
+            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+            </svg>
+            Swap
+          </button>
+        )}
+
+        <div className="h-5 w-px bg-white/10" />
+
+        <span className="text-xs font-medium uppercase tracking-wider text-white/30">Filter by</span>
+
+        {/* Season multi-select */}
+        <div className="w-48">
+          <SearchableSelect
+            options={filterOptions.seasons.map((s) => `Season ${s.replace("S", "")}`)}
+            value={seasonFilters.map((s) => `Season ${s.replace("S", "")}`)}
+            onChange={(v) => {
+              const arr = (Array.isArray(v) ? v : [v]) as string[];
+              setSeasonFilters(arr.map((label) => `S${label.replace("Season ", "")}`));
+            }}
+            placeholder="All seasons"
+            multiple
+          />
+        </div>
+
+        {/* Circuit multi-select */}
+        <div className="w-48">
+          <SearchableSelect
+            options={filterOptions.circuits}
+            value={circuitFilters}
+            onChange={(v) => setCircuitFilters((Array.isArray(v) ? v : [v]) as string[])}
+            placeholder="All circuits"
+            multiple
+          />
+        </div>
+
+        {/* Weather multi-select */}
+        {filterOptions.weather.length > 0 && (
+          <div className="w-40">
+            <SearchableSelect
+              options={filterOptions.weather.map(capitalize)}
+              value={weatherFilters.map(capitalize)}
+              onChange={(v) => {
+                const arr = (Array.isArray(v) ? v : [v]) as string[];
+                setWeatherFilters(arr.map((w) => w.toLowerCase()));
+              }}
+              placeholder="All weather"
+              multiple
+            />
+          </div>
+        )}
+
+        {activeFilterCount > 0 && (
+          <button
+            onClick={() => { setSeasonFilters([]); setCircuitFilters([]); setWeatherFilters([]); }}
+            className="flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-medium text-white/40 transition hover:text-white/70"
+          >
+            Clear all
+            <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
+      </div>
+
+      {/* Empty state */}
+      {(!driverA || !driverB) && (
+        <EmptyState message="Select two drivers to compare their head-to-head record." />
+      )}
+
+      {driverA && driverB && driverA === driverB && (
+        <EmptyState message="Please select two different drivers." />
+      )}
+
+      {/* No shared races */}
+      {h2h && h2h.summary.sharedRaces === 0 && (
+        <EmptyState
+          message={
+            activeFilterCount > 0
+              ? `No shared races between ${driverA} and ${driverB} for ${activeFilterLabel}.`
+              : `${driverA} and ${driverB} have no shared races.`
+          }
+        />
+      )}
+
+      {/* Results */}
+      {h2h && h2h.summary.sharedRaces > 0 && (
+        <div className="space-y-8">
+          {/* Header */}
+          <div className="text-center">
+            <p className="text-sm text-white/40">
+              <span className="font-semibold text-white/70">{h2h.summary.sharedRaces}</span>{" "}
+              shared race{h2h.summary.sharedRaces !== 1 ? "s" : ""}
+              {activeFilterCount > 0 && (
+                <span className="text-white/30"> · {activeFilterLabel}</span>
+              )}
+            </p>
+          </div>
+
+          {/* Win bar */}
+          <div className="mx-auto max-w-lg">
+            <H2HWinBar
+              winsA={h2h.summary.winsA}
+              winsB={h2h.summary.winsB}
+              ties={h2h.summary.ties}
+            />
+          </div>
+
+          {/* Summary stat cards */}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            <H2HStatCard label="H2H Wins" valueA={h2h.summary.winsA} valueB={h2h.summary.winsB} />
+            <H2HStatCard label="Race Wins (P1)" valueA={h2h.summary.victoriesA} valueB={h2h.summary.victoriesB} />
+            <H2HStatCard label="Podiums" valueA={h2h.summary.podiumsA} valueB={h2h.summary.podiumsB} />
+            <H2HStatCard label="Podium Rate %" valueA={h2h.summary.podiumRateA} valueB={h2h.summary.podiumRateB} format="float" />
+            <H2HStatCard label="Top 5" valueA={h2h.summary.top5A} valueB={h2h.summary.top5B} />
+            <H2HStatCard label="Top 10" valueA={h2h.summary.top10A} valueB={h2h.summary.top10B} />
+            <H2HStatCard label="Total Points" valueA={h2h.summary.pointsA} valueB={h2h.summary.pointsB} format="pts" />
+            <H2HStatCard label="Pts / Race" valueA={h2h.summary.pointsPerRaceA} valueB={h2h.summary.pointsPerRaceB} format="float" />
+            <H2HStatCard label="Avg Finish" valueA={h2h.summary.avgFinishA} valueB={h2h.summary.avgFinishB} format="float" higherIsBetter={false} />
+            <H2HStatCard label="Best Finish" valueA={h2h.summary.bestFinishA} valueB={h2h.summary.bestFinishB} higherIsBetter={false} />
+            <H2HStatCard label="Worst Finish" valueA={h2h.summary.worstFinishA} valueB={h2h.summary.worstFinishB} higherIsBetter={false} />
+            <H2HStatCard label="Avg Grid" valueA={h2h.summary.avgGridA} valueB={h2h.summary.avgGridB} format="float" higherIsBetter={false} />
+            <H2HStatCard label="Best Grid" valueA={h2h.summary.bestGridA} valueB={h2h.summary.bestGridB} higherIsBetter={false} />
+            <H2HStatCard label="Grid H2H" valueA={h2h.summary.gridWinsA} valueB={h2h.summary.gridWinsB} />
+            <H2HStatCard label="Poles" valueA={h2h.summary.polesA} valueB={h2h.summary.polesB} />
+            <H2HStatCard label="Front Row" valueA={h2h.summary.frontRowA} valueB={h2h.summary.frontRowB} />
+            <H2HStatCard label="Fastest Laps" valueA={h2h.summary.fastestLapsA} valueB={h2h.summary.fastestLapsB} />
+            <H2HStatCard label="DOTDs" valueA={h2h.summary.dotdsA} valueB={h2h.summary.dotdsB} />
+            <H2HStatCard label="Races Finished" valueA={h2h.summary.finishedA} valueB={h2h.summary.finishedB} />
+            <H2HStatCard label="DNFs" valueA={h2h.summary.dnfsA} valueB={h2h.summary.dnfsB} higherIsBetter={false} />
+          </div>
+
+          {/* Trend chart */}
+          <H2HTrendChart races={h2h.races} driverA={driverA} driverB={driverB} />
+
+          {/* Race-by-race table */}
+          <div className="overflow-x-auto rounded-xl border border-white/10 bg-white/[0.02]">
+            <table className="w-full min-w-[820px] text-sm">
+              <thead>
+                <tr className="border-b border-white/10 text-xs uppercase tracking-wider text-white/40">
+                  <th className="px-3 py-3 text-left font-medium" rowSpan={2}>Race</th>
+                  <th className="px-3 py-3 text-left font-medium" rowSpan={2}>Date</th>
+                  <th className="px-3 py-3 text-center font-medium" rowSpan={2}>Season</th>
+                  <th className="px-3 py-3 text-center font-medium" rowSpan={2}>League</th>
+                  <th className="border-l border-white/10 px-3 py-2 text-center font-medium" colSpan={2}>Finish</th>
+                  <th className="border-l border-white/10 px-3 py-2 text-center font-medium" colSpan={2}>Grid</th>
+                  <th className="border-l border-white/10 px-3 py-3 text-center font-medium" rowSpan={2}>Better</th>
+                </tr>
+                <tr className="border-b border-white/5 text-[10px] uppercase tracking-wider">
+                  <th className="border-l border-white/10 px-3 py-1 text-center font-medium text-[#7020B0]/70">{driverA.split(" ").pop()}</th>
+                  <th className="px-3 py-1 text-center font-medium text-[#D4AF37]/70">{driverB.split(" ").pop()}</th>
+                  <th className="border-l border-white/10 px-3 py-1 text-center font-medium text-[#7020B0]/70">{driverA.split(" ").pop()}</th>
+                  <th className="px-3 py-1 text-center font-medium text-[#D4AF37]/70">{driverB.split(" ").pop()}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {h2h.races.map((race) => {
+                  const gridWinner = race.gridA !== null && race.gridB !== null
+                    ? race.gridA < race.gridB ? "a" : race.gridB < race.gridA ? "b" : null
+                    : null;
+                  return (
+                    <tr
+                      key={race.eventId}
+                      className="transition hover:bg-white/[0.03]"
+                    >
+                      <td className="px-3 py-2.5 font-medium text-white/80">
+                        <button
+                          type="button"
+                          onClick={() => setResultsEventId(race.eventId)}
+                          className="text-left underline decoration-white/20 underline-offset-2 transition hover:text-[#a855f7] hover:decoration-[#7020B0]/40"
+                        >
+                          {race.raceName}
+                        </button>
+                        {race.circuit && race.circuit !== race.raceName && (
+                          <span className="ml-1.5 text-[10px] text-white/30">{race.circuit}</span>
+                        )}
+                      </td>
+                      <td className="px-3 py-2.5 text-white/50">{race.date}</td>
+                      <td className="px-3 py-2.5 text-center">
+                        {race.season && (
+                          <span className="inline-block rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-semibold text-white/50">
+                            {race.season}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-3 py-2.5 text-center">
+                        {race.league && (
+                          <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${
+                            race.league.toLowerCase() === "wild"
+                              ? "bg-orange-500/10 text-orange-400"
+                              : "bg-[#7020B0]/10 text-[#9040D0]"
+                          }`}>
+                            {race.league}
+                          </span>
+                        )}
+                      </td>
+                      <td className={`border-l border-white/10 px-3 py-2.5 text-center tabular-nums ${race.winner === "a" ? "font-bold text-[#7020B0]" : "text-white/60"}`}>
+                        {race.statusA && race.finishA === null ? race.statusA : (race.finishA ?? "-")}
+                      </td>
+                      <td className={`px-3 py-2.5 text-center tabular-nums ${race.winner === "b" ? "font-bold text-[#D4AF37]" : "text-white/60"}`}>
+                        {race.statusB && race.finishB === null ? race.statusB : (race.finishB ?? "-")}
+                      </td>
+                      <td className={`border-l border-white/10 px-3 py-2.5 text-center tabular-nums ${gridWinner === "a" ? "font-semibold text-[#7020B0]/80" : "text-white/40"}`}>
+                        {race.gridA ?? "-"}
+                      </td>
+                      <td className={`px-3 py-2.5 text-center tabular-nums ${gridWinner === "b" ? "font-semibold text-[#D4AF37]/80" : "text-white/40"}`}>
+                        {race.gridB ?? "-"}
+                      </td>
+                      <td className="border-l border-white/10 px-3 py-2.5 text-center">
+                        {race.winner === "a" && (
+                          <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#7020B0] shadow-[0_0_6px_rgba(112,32,176,0.5)]" />
+                        )}
+                        {race.winner === "b" && (
+                          <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#D4AF37] shadow-[0_0_6px_rgba(212,175,55,0.5)]" />
+                        )}
+                        {race.winner === "tie" && (
+                          <span className="text-xs text-white/30">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Race results modal */}
+      {resultsEventId && (() => {
+        const resultRows = raceResults[resultsEventId] ?? [];
+        const meta = eventMeta.get(resultsEventId);
+        const eventObj = events.find((e) => e.event_id === resultsEventId);
+        const ytUrl = eventObj?.youtube_url;
+        return (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+            onClick={() => setResultsEventId(null)}
+          >
+            <div
+              className="relative mx-4 w-full max-w-5xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-3 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <h3 className="font-display text-sm font-semibold text-white/80 md:text-base">
+                    {meta?.raceName ?? resultsEventId}
+                  </h3>
+                  {meta?.season && (
+                    <span className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-semibold text-white/40">
+                      {meta.season}
+                    </span>
+                  )}
+                  {ytUrl && (
+                    <a
+                      href={ytUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1 text-[11px] font-medium text-red-400 transition hover:bg-red-500/20"
+                    >
+                      <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M23.5 6.2a3 3 0 00-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 00.5 6.2 31.9 31.9 0 000 12a31.9 31.9 0 00.5 5.8 3 3 0 002.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 002.1-2.1A31.9 31.9 0 0024 12a31.9 31.9 0 00-.5-5.8zM9.5 15.6V8.4l6.3 3.6-6.3 3.6z" />
+                      </svg>
+                      Watch Race
+                    </a>
+                  )}
+                </div>
+                <button
+                  onClick={() => setResultsEventId(null)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/80 transition hover:text-white"
+                >
+                  ×
+                </button>
+              </div>
+
+              {resultRows.length > 0 ? (
+                <div className="max-h-[85vh] overflow-auto rounded-2xl border border-white/10 bg-[#0B0B0E] p-3 shadow-[0_0_30px_rgba(0,0,0,0.4)]">
+                  <RaceResultsTable
+                    results={resultRows}
+                    caption={`${meta?.raceName ?? resultsEventId} — Race Results`}
+                  />
+                </div>
+              ) : (
+                <div className="flex items-center justify-center rounded-2xl border border-white/10 bg-[#0B0B0E] py-16">
+                  <p className="text-sm text-white/50">Results not available yet.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Main component                                                     */
 /* ------------------------------------------------------------------ */
 
-export default function StatsPageContent({ data }: Props) {
+export default function StatsPageContent({ data, raceResults, events }: Props) {
   const searchParams = useSearchParams();
   const initialDriver = searchParams.get("driver") ?? undefined;
   const initialTab = searchParams.get("tab") ?? undefined;
@@ -1745,12 +3414,20 @@ export default function StatsPageContent({ data }: Props) {
           key={effectiveDriver ?? "default"}
           allTime={data.driversAllTime}
           bySeason={data.driversBySeason}
+          raceResults={raceResults ?? {}}
+          events={events ?? []}
           initialDriver={effectiveDriver}
         />
       )}
       {tab === "League" && <LeagueSection league={data.league} />}
       {tab === "Circuits" && (
         <CircuitsSection circuits={data.circuits} />
+      )}
+      {tab === "Head-to-Head" && raceResults && events && (
+        <H2HSection raceResults={raceResults} events={events} />
+      )}
+      {tab === "Head-to-Head" && (!raceResults || !events) && (
+        <EmptyState message="Race results data is not available." />
       )}
       {tab === "Rankings" && (
         <RankingsSection
