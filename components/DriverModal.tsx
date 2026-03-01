@@ -4,12 +4,11 @@ import { useState, useRef, useCallback, useEffect, createContext, useContext } f
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import LoadingLink from "@/components/LoadingLink";
-import type { Driver, Team } from "@/lib/driversData";
+import type { Driver } from "@/lib/driversData";
 import { buildAchievements } from "@/components/AchievementBadges";
 
 type DriverModalProps = {
   driver: Driver;
-  team: Team;
   placeholderSrc: string;
   onClose: () => void;
   currentSeasonLabel?: string;
@@ -241,7 +240,7 @@ function Tooltip({ text, children, triggerClassName, wide }: { text: React.React
 /*  DriverModal                                                        */
 /* ------------------------------------------------------------------ */
 
-export default function DriverModal({ driver, team, placeholderSrc, onClose, currentSeasonLabel }: DriverModalProps) {
+export default function DriverModal({ driver, placeholderSrc, onClose, currentSeasonLabel }: DriverModalProps) {
   const [statMode, setStatMode] = useState<StatMode>("alltime");
   const [portalEl, setPortalEl] = useState<HTMLDivElement | null>(null);
   const [scrollEl, setScrollEl] = useState<HTMLDivElement | null>(null);
@@ -503,7 +502,7 @@ export default function DriverModal({ driver, team, placeholderSrc, onClose, cur
               <LoadingLink
                 href={`/stats?driver=${encodeURIComponent(driver.name)}`}
                 className="inline-flex items-center gap-2 rounded-lg border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-5 py-2.5 text-sm font-semibold text-[#D4AF37] transition hover:bg-[#D4AF37]/20 hover:border-[#D4AF37]/50"
-                onClick={onClose}
+                showLoadingText
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />

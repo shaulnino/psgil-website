@@ -11,6 +11,12 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+## Safe Refactor Guardrail
+
+For low-risk refactor phases, use the manual click-through and build gate checklist:
+
+- `docs/manual-smoke-checklist.md`
+
 ## Environment Variables
 
 Create a `.env.local` file with the following:

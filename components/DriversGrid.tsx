@@ -171,7 +171,6 @@ export default function DriversGrid({ teams, reserves, historicDrivers, placehol
       {selected && (
         <DriverModal
           driver={selected.driver}
-          team={selected.team}
           placeholderSrc={placeholderSrc}
           onClose={() => setSelected(null)}
           currentSeasonLabel={currentSeasonLabel}

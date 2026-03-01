@@ -201,14 +201,6 @@ export function resolveCurrentSeason(configs: SeasonConfig[]): SeasonConfig {
   return sorted[0] ?? createFallbackSeason();
 }
 
-/** Find a season config by its key (e.g. "S6"). */
-export function getSeasonByKey(
-  configs: SeasonConfig[],
-  key: string,
-): SeasonConfig | undefined {
-  return configs.find((c) => c.season_key === key);
-}
-
 /** Build the list for season dropdown (newest first). */
 export function getSeasonsForDropdown(
   configs: SeasonConfig[],

@@ -104,31 +104,6 @@ export function sortRaceEvents(events: RaceEvent[]): RaceEvent[] {
   });
 }
 
-/** Group events by season for rendering. */
-export function groupBySeason(events: RaceEvent[]): { season: string; events: RaceEvent[] }[] {
-  const map = new Map<string, RaceEvent[]>();
-  for (const event of events) {
-    const key = event.season || "Unknown";
-    if (!map.has(key)) map.set(key, []);
-    map.get(key)!.push(event);
-  }
-  // Return sorted: latest season first
-  return Array.from(map.entries())
-    .sort(([a], [b]) => (parseInt(b, 10) || 0) - (parseInt(a, 10) || 0))
-    .map(([season, events]) => ({ season, events }));
-}
-
-/**
- * Convert a 2-letter country code to a flag emoji.
- * Falls back to 🏁 when the code is missing or invalid.
- */
-export function countryFlag(code: string): string {
-  if (!code || code.length !== 2) return "🏁";
-  const upper = code.toUpperCase();
-  const offset = 0x1f1e6 - 65; // 'A' = 65
-  return String.fromCodePoint(upper.charCodeAt(0) + offset, upper.charCodeAt(1) + offset);
-}
-
 /* ------------------------------------------------------------------ */
 /*  Date helpers                                                        */
 /* ------------------------------------------------------------------ */
@@ -181,70 +156,6 @@ export function toIsraelTimestamp(dateStr: string, timeStr?: string): number | n
 
   // "h:min Israel time" → UTC = h - offset
   return Date.UTC(year, month - 1, day, h - offsetHours, min, 0);
-}
-
-/* ------------------------------------------------------------------ */
-/*  Last Race / Next Race selectors                                     */
-/* ------------------------------------------------------------------ */
-
-/**
- * Return the most recent event whose date is <= today.
- * Among ties on the same date, prefer status=Completed.
- */
-export function getLastRace(events: RaceEvent[]): RaceEvent | null {
-  const now = new Date();
-  const todayUTC = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
-
-  const past = events
-    .map((e) => ({ event: e, date: parseDateDDMMYYYY(e.date) }))
-    .filter((x): x is { event: RaceEvent; date: Date } => x.date !== null && x.date.getTime() <= todayUTC);
-
-  if (past.length === 0) return null;
-
-  // Sort descending by date, then prefer Completed
-  past.sort((a, b) => {
-    const diff = b.date.getTime() - a.date.getTime();
-    if (diff !== 0) return diff;
-    // Prefer completed
-    const aComp = a.event.status.toLowerCase() === "completed" ? 1 : 0;
-    const bComp = b.event.status.toLowerCase() === "completed" ? 1 : 0;
-    return bComp - aComp;
-  });
-
-  return past[0].event;
-}
-
-/**
- * Return the next upcoming event whose date is > today.
- * Among ties on the same date, prefer status=Scheduled.
- */
-export function getNextRace(events: RaceEvent[]): RaceEvent | null {
-  const now = new Date();
-  const todayUTC = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
-
-  const future = events
-    .map((e) => ({ event: e, date: parseDateDDMMYYYY(e.date) }))
-    .filter((x): x is { event: RaceEvent; date: Date } => x.date !== null && x.date.getTime() > todayUTC);
-
-  if (future.length === 0) return null;
-
-  // Sort ascending by date, then prefer Scheduled
-  future.sort((a, b) => {
-    const diff = a.date.getTime() - b.date.getTime();
-    if (diff !== 0) return diff;
-    const aSched = a.event.status.toLowerCase() === "scheduled" ? 1 : 0;
-    const bSched = b.event.status.toLowerCase() === "scheduled" ? 1 : 0;
-    return bSched - aSched;
-  });
-
-  return future[0].event;
-}
-
-/** Build a description string for a single race event. */
-export function raceDescription(event: RaceEvent): string {
-  const parts = [`Season ${event.season}`, `Race #${event.race_number}`, event.race_name];
-  if (event.league.toLowerCase() === "wild") parts.push("Wild Event");
-  return parts.filter(Boolean).join(", ");
 }
 
 /* ------------------------------------------------------------------ */

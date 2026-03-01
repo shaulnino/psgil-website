@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useTransition } from "react";
 
 /* ------------------------------------------------------------------ */
 /*  Season dropdown – persists selection in ?season= query param       */
@@ -64,6 +64,7 @@ export default function SeasonSelector({
 }: SeasonSelectorProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
@@ -74,12 +75,19 @@ export default function SeasonSelector({
 
   const handleSelect = useCallback(
     (value: string) => {
+      if (isPending) return;
+      if (value === selected) {
+        setOpen(false);
+        return;
+      }
       const params = new URLSearchParams(searchParams.toString());
       params.set("season", value);
-      router.replace(`?${params.toString()}`, { scroll: false });
       setOpen(false);
+      startTransition(() => {
+        router.replace(`?${params.toString()}`, { scroll: false });
+      });
     },
-    [router, searchParams],
+    [router, searchParams, selected, isPending],
   );
 
   /* Close on click outside */
@@ -165,6 +173,8 @@ export default function SeasonSelector({
         aria-haspopup="listbox"
         aria-controls="season-listbox"
         aria-label={selectedLabel}
+        aria-busy={isPending}
+        disabled={isPending}
         onClick={() => setOpen((v) => !v)}
         onKeyDown={handleKeyDown}
         className={`
@@ -179,31 +189,44 @@ export default function SeasonSelector({
           }
           focus-visible:border-[#7020B0] focus-visible:shadow-[0_0_12px_rgba(112,32,176,0.25),0_0_4px_rgba(212,175,55,0.15)]
           focus-visible:ring-1 focus-visible:ring-[#7020B0]/40
+          disabled:cursor-wait disabled:opacity-80
         `}
       >
         {/* Season text + gold number */}
         <SeasonLabel label={selectedLabel} highlight />
 
         {/* Chevron */}
-        <svg
-          className={`h-4 w-4 text-white/40 transition-transform duration-200 group-hover:text-white/60 ${
-            open ? "rotate-180" : ""
-          }`}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2.5}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M19 9l-7 7-7-7"
-          />
-        </svg>
+        {isPending ? (
+          <svg
+            className="h-4 w-4 animate-spin text-[#D4AF37]"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2.5}
+          >
+            <path d="M12 3a9 9 0 1 0 9 9" strokeLinecap="round" />
+          </svg>
+        ) : (
+          <svg
+            className={`h-4 w-4 text-white/40 transition-transform duration-200 group-hover:text-white/60 ${
+              open ? "rotate-180" : ""
+            }`}
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2.5}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        )}
       </button>
 
       {/* -------- Dropdown list -------- */}
-      {open && (
+      {open && !isPending && (
         <ul
           id="season-listbox"
           ref={listRef}

@@ -42,6 +42,17 @@ function DotdBadge() {
   );
 }
 
+function PoleBadge() {
+  return (
+    <span
+      title="Pole Position"
+      className="ml-1 inline-flex cursor-default items-center rounded-full bg-sky-500/20 px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-sky-300"
+    >
+      POLE
+    </span>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /*  Clickable driver name cell                                          */
 /* ------------------------------------------------------------------ */
@@ -58,6 +69,7 @@ function DriverNameCell({
     <>
       {row.fastest_lap?.toLowerCase() === "yes" && <FastestLapBadge />}
       {row.dotd?.toLowerCase() === "yes" && <DotdBadge />}
+      {parseInt(row.grid, 10) === 1 && <PoleBadge />}
     </>
   );
 
@@ -156,7 +168,7 @@ const raceResultsColumns: ColumnDef<RaceResultRow>[] = [
     label: "Status",
     accessor: (row) => {
       const st = row.status.toLowerCase();
-      if (st === "dnf" || st === "dsq")
+      if (st === "dnf" || st === "dns" || st === "dsq")
         return (
           <span className="font-semibold text-red-400 uppercase">
             {row.status}
@@ -177,7 +189,6 @@ const raceResultsColumns: ColumnDef<RaceResultRow>[] = [
 type RaceResultsTableProps = {
   results: RaceResultRow[];
   caption?: string;
-  highlightDriverId?: string;
 };
 
 export default function RaceResultsTable({
