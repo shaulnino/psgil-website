@@ -126,14 +126,6 @@ function buildArticleMessage(article, siteBaseUrl) {
   return { message, link };
 }
 
-function resolveCoverImageUrl(rawUrl, siteBaseUrl) {
-  const value = normalize(rawUrl);
-  if (!value) return "";
-  if (/^https?:\/\//i.test(value)) return value;
-  if (value.startsWith("/")) return `${siteBaseUrl.replace(/\/+$/, "")}${value}`;
-  return `${siteBaseUrl.replace(/\/+$/, "")}/${value}`;
-}
-
 async function postToFacebookFeed({ facebookPageId, facebookPageAccessToken, message, link }) {
   const endpoint = `${GRAPH_API_BASE}/${encodeURIComponent(facebookPageId)}/feed`;
   const params = new URLSearchParams();
@@ -171,65 +163,12 @@ async function postToFacebookFeed({ facebookPageId, facebookPageAccessToken, mes
 
 async function postArticleToFacebook(article, cfg) {
   const { message, link } = buildArticleMessage(article, cfg.siteBaseUrl);
-  const coverImageUrl = resolveCoverImageUrl(article.cover_image_url, cfg.siteBaseUrl);
-
-  const usePhotoEndpoint = Boolean(coverImageUrl);
-  if (!usePhotoEndpoint) {
-    return postToFacebookFeed({
-      facebookPageId: cfg.facebookPageId,
-      facebookPageAccessToken: cfg.facebookPageAccessToken,
-      message,
-      link,
-    });
-  }
-
-  const endpoint = `${GRAPH_API_BASE}/${encodeURIComponent(cfg.facebookPageId)}/photos`;
-  const params = new URLSearchParams();
-  params.set("access_token", cfg.facebookPageAccessToken);
-  params.set("url", coverImageUrl);
-  params.set("caption", message);
-  params.set("published", "true");
-
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: params,
+  return postToFacebookFeed({
+    facebookPageId: cfg.facebookPageId,
+    facebookPageAccessToken: cfg.facebookPageAccessToken,
+    message,
+    link,
   });
-
-  const bodyText = await response.text();
-  let payload;
-  try {
-    payload = JSON.parse(bodyText);
-  } catch {
-    payload = { raw: bodyText };
-  }
-
-  if (!response.ok) {
-    const errorCode = payload?.error?.code;
-    const errorMsg = payload?.error?.message || "unknown error";
-    console.error("Facebook /photos API error response:", payload);
-
-    // If image upload fails (invalid/inaccessible image), fallback to /feed post.
-    if (errorCode === 324 || /invalid image file/i.test(errorMsg)) {
-      console.warn("Image upload failed; falling back to text/link post via /feed.");
-      return postToFacebookFeed({
-        facebookPageId: cfg.facebookPageId,
-        facebookPageAccessToken: cfg.facebookPageAccessToken,
-        message,
-        link,
-      });
-    }
-
-    throw new Error(`Facebook /photos request failed: ${response.status}`);
-  }
-
-  const postId = payload?.post_id || payload?.id || "";
-  if (!postId) {
-    console.error("Facebook API response missing post id:", payload);
-    throw new Error("Facebook API did not return a post id.");
-  }
-
-  return { postId, endpoint: usePhotoEndpoint ? "photos" : "feed" };
 }
 
 function indexToA1Column(index1Based) {
