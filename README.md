@@ -96,10 +96,11 @@ How it works:
 
 1. Reads `articles` from `NEWS_SHEET_CSV_URL`
 2. Filters: `status=published` and `fb_posted!=true`
-3. Posts to Facebook Graph API:
-   - with image: `/{page-id}/photos` (caption includes article link)
-   - without image: `/{page-id}/feed`
-4. Updates the same sheet row with:
+3. Derives `PAGE_ACCESS_TOKEN` from `FACEBOOK_USER_ACCESS_TOKEN` via `GET /me/accounts` (preferred path)
+4. Sanity-checks the target page via `GET /{page-id}?fields=id,name`
+5. Posts to Facebook Graph API via `POST /{page-id}/feed` with `published=true` and article link
+6. Verifies post visibility via `GET /{post_id}?fields=id,permalink_url,is_published`
+7. Updates the same sheet row with:
    - `fb_posted=true`
    - `fb_post_id=<facebook id>`
    - `fb_posted_at=<ISO timestamp>`
@@ -107,13 +108,15 @@ How it works:
 Required GitHub Secrets:
 
 - `FACEBOOK_PAGE_ID`
-- `FACEBOOK_PAGE_ACCESS_TOKEN`
+- `FACEBOOK_USER_ACCESS_TOKEN` (required, long-lived user token with page permissions)
 - `NEWS_SHEET_CSV_URL`
 - `SITE_BASE_URL` (example: `https://psgil.com`)
 - `GOOGLE_SERVICE_ACCOUNT_JSON` (full JSON key as one secret value)
 - `SHEET_ID` (Google Spreadsheet ID)
+- `FACEBOOK_PAGE_ACCESS_TOKEN` (optional fallback; used only if user token is missing)
 - `SHEET_TAB_NAME` (optional, defaults to `articles`)
 - `MAX_POSTS_PER_RUN` (optional, defaults to `1`)
+- `DRY_RUN` (optional, set `true` to log payloads and skip posting/sheet updates)
 
 Manual local run (for debugging):
 
