@@ -161,6 +161,30 @@ async function postToFacebookFeed({ facebookPageId, facebookPageAccessToken, mes
   return { postId, endpoint: "feed" };
 }
 
+async function fetchFacebookPostDebugInfo({ postId, facebookPageAccessToken }) {
+  const fields = "permalink_url,is_published";
+  const endpoint = `${GRAPH_API_BASE}/${encodeURIComponent(postId)}?fields=${encodeURIComponent(fields)}&access_token=${encodeURIComponent(facebookPageAccessToken)}`;
+  const response = await fetch(endpoint, { method: "GET" });
+  const bodyText = await response.text();
+
+  let payload;
+  try {
+    payload = JSON.parse(bodyText);
+  } catch {
+    payload = { raw: bodyText };
+  }
+
+  if (!response.ok) {
+    console.warn("Could not fetch Facebook post debug info:", payload);
+    return null;
+  }
+
+  return {
+    permalinkUrl: payload?.permalink_url || "",
+    isPublished: payload?.is_published,
+  };
+}
+
 async function postArticleToFacebook(article, cfg) {
   const { message, link } = buildArticleMessage(article, cfg.siteBaseUrl);
   return postToFacebookFeed({
@@ -315,6 +339,15 @@ async function main() {
 
     const { postId, endpoint } = await postArticleToFacebook(article, cfg);
     console.log(`Facebook post created via /${endpoint}. post_id=${postId}`);
+    const debugInfo = await fetchFacebookPostDebugInfo({
+      postId,
+      facebookPageAccessToken: cfg.facebookPageAccessToken,
+    });
+    if (debugInfo) {
+      console.log(
+        `Facebook post visibility: is_published=${String(debugInfo.isPublished)} permalink=${debugInfo.permalinkUrl || "n/a"}`,
+      );
+    }
 
     const postedAtIso = new Date().toISOString();
     await markArticlePostedInSheet({
