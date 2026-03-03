@@ -28,10 +28,12 @@ jobs:
           NEWS_SHEET_CSV_URL: ${{ secrets.NEWS_SHEET_CSV_URL }}
           SITE_BASE_URL: ${{ secrets.SITE_BASE_URL }}
           FACEBOOK_PAGE_ID: ${{ secrets.FACEBOOK_PAGE_ID }}
+          FACEBOOK_USER_ACCESS_TOKEN: ${{ secrets.FACEBOOK_USER_ACCESS_TOKEN }}
           FACEBOOK_PAGE_ACCESS_TOKEN: ${{ secrets.FACEBOOK_PAGE_ACCESS_TOKEN }}
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
           SHEET_ID: ${{ secrets.SHEET_ID }}
           SHEET_TAB_NAME: ${{ secrets.SHEET_TAB_NAME }}
           MAX_POSTS_PER_RUN: ${{ secrets.MAX_POSTS_PER_RUN }}
+          DRY_RUN: ${{ secrets.DRY_RUN }}
         run: node scripts/post_facebook_from_sheet.js
 

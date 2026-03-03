@@ -1,7 +1,12 @@
 /* eslint-disable no-console */
 const { google } = require("googleapis");
-
-const GRAPH_API_BASE = "https://graph.facebook.com/v19.0";
+const {
+  maskToken,
+  getPageAccessToken,
+  sanityCheckPageAccess,
+  postToFacebookPage,
+  fetchPostVisibility,
+} = require("../lib/facebook");
 
 function requiredEnv(name) {
   const value = (process.env[name] || "").trim();
@@ -126,72 +131,14 @@ function buildArticleMessage(article, siteBaseUrl) {
   return { message, link };
 }
 
-async function postToFacebookFeed({ facebookPageId, facebookPageAccessToken, message, link }) {
-  const endpoint = `${GRAPH_API_BASE}/${encodeURIComponent(facebookPageId)}/feed`;
-  const params = new URLSearchParams();
-  params.set("access_token", facebookPageAccessToken);
-  params.set("message", message);
-  params.set("link", link);
-
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: params,
-  });
-
-  const bodyText = await response.text();
-  let payload;
-  try {
-    payload = JSON.parse(bodyText);
-  } catch {
-    payload = { raw: bodyText };
-  }
-
-  if (!response.ok) {
-    console.error("Facebook /feed API error response:", payload);
-    throw new Error(`Facebook /feed request failed: ${response.status}`);
-  }
-
-  const postId = payload?.post_id || payload?.id || "";
-  if (!postId) {
-    console.error("Facebook /feed response missing post id:", payload);
-    throw new Error("Facebook /feed did not return a post id.");
-  }
-
-  return { postId, endpoint: "feed" };
-}
-
-async function fetchFacebookPostDebugInfo({ postId, facebookPageAccessToken }) {
-  const fields = "permalink_url,is_published";
-  const endpoint = `${GRAPH_API_BASE}/${encodeURIComponent(postId)}?fields=${encodeURIComponent(fields)}&access_token=${encodeURIComponent(facebookPageAccessToken)}`;
-  const response = await fetch(endpoint, { method: "GET" });
-  const bodyText = await response.text();
-
-  let payload;
-  try {
-    payload = JSON.parse(bodyText);
-  } catch {
-    payload = { raw: bodyText };
-  }
-
-  if (!response.ok) {
-    console.warn("Could not fetch Facebook post debug info:", payload);
-    return null;
-  }
-
-  return {
-    permalinkUrl: payload?.permalink_url || "",
-    isPublished: payload?.is_published,
-  };
-}
-
 async function postArticleToFacebook(article, cfg) {
   const { message, link } = buildArticleMessage(article, cfg.siteBaseUrl);
-  return postToFacebookFeed({
-    facebookPageId: cfg.facebookPageId,
-    facebookPageAccessToken: cfg.facebookPageAccessToken,
+  return postToFacebookPage({
+    pageId: cfg.facebookPageId,
+    pageAccessToken: cfg.facebookPageAccessToken,
     message,
     link,
+    dryRun: cfg.dryRun,
   });
 }
 
@@ -302,20 +249,54 @@ function getEligibleArticles(rows) {
 }
 
 async function main() {
+  const userAccessToken = optionalEnv("FACEBOOK_USER_ACCESS_TOKEN", "");
+  const fallbackPageAccessToken = optionalEnv("FACEBOOK_PAGE_ACCESS_TOKEN", "");
+
   const cfg = {
     newsSheetCsvUrl: requiredEnv("NEWS_SHEET_CSV_URL"),
     siteBaseUrl: requiredEnv("SITE_BASE_URL"),
     facebookPageId: requiredEnv("FACEBOOK_PAGE_ID"),
-    facebookPageAccessToken: requiredEnv("FACEBOOK_PAGE_ACCESS_TOKEN"),
+    facebookUserAccessToken: userAccessToken,
+    facebookPageAccessToken: "",
     googleServiceAccountJson: requiredEnv("GOOGLE_SERVICE_ACCOUNT_JSON"),
     sheetId: requiredEnv("SHEET_ID"),
     sheetTabName: optionalEnv("SHEET_TAB_NAME", "articles"),
     maxPostsPerRun: Number.parseInt(optionalEnv("MAX_POSTS_PER_RUN", "1"), 10) || 1,
+    dryRun: normalizeLower(optionalEnv("DRY_RUN", "false")) === "true",
   };
 
   console.log("Starting Facebook article posting run...");
   console.log(`Sheet tab: ${cfg.sheetTabName}`);
   console.log(`Max posts per run: ${cfg.maxPostsPerRun}`);
+  console.log(`Dry run: ${cfg.dryRun}`);
+  console.log(`Page id: ${cfg.facebookPageId}`);
+
+  if (cfg.facebookUserAccessToken) {
+    console.log(
+      `Deriving page token from USER token ${maskToken(cfg.facebookUserAccessToken)}...`,
+    );
+    cfg.facebookPageAccessToken = await getPageAccessToken({
+      userAccessToken: cfg.facebookUserAccessToken,
+      pageId: cfg.facebookPageId,
+    });
+  } else if (fallbackPageAccessToken) {
+    console.warn(
+      "FACEBOOK_USER_ACCESS_TOKEN is missing; falling back to FACEBOOK_PAGE_ACCESS_TOKEN.",
+    );
+    cfg.facebookPageAccessToken = fallbackPageAccessToken;
+  } else {
+    throw new Error(
+      "Missing token configuration. Provide FACEBOOK_USER_ACCESS_TOKEN (preferred) or FACEBOOK_PAGE_ACCESS_TOKEN.",
+    );
+  }
+
+  console.log(`Using page token ${maskToken(cfg.facebookPageAccessToken)}`);
+
+  const pageSanity = await sanityCheckPageAccess({
+    pageId: cfg.facebookPageId,
+    pageAccessToken: cfg.facebookPageAccessToken,
+  });
+  console.log(`Sanity check page: id=${pageSanity.id} name=${pageSanity.name}`);
 
   const csvResponse = await fetch(cfg.newsSheetCsvUrl, { cache: "no-store" });
   if (!csvResponse.ok) {
@@ -338,27 +319,34 @@ async function main() {
     console.log(`Posting article: "${articleTitle}" (${articleSlug})`);
 
     const { postId, endpoint } = await postArticleToFacebook(article, cfg);
-    console.log(`Facebook post created via /${endpoint}. post_id=${postId}`);
-    const debugInfo = await fetchFacebookPostDebugInfo({
-      postId,
-      facebookPageAccessToken: cfg.facebookPageAccessToken,
-    });
-    if (debugInfo) {
-      console.log(
-        `Facebook post visibility: is_published=${String(debugInfo.isPublished)} permalink=${debugInfo.permalinkUrl || "n/a"}`,
-      );
+    console.log(`Facebook post created via /${endpoint}. post_id=${postId || "(dry-run)"}`);
+
+    if (!cfg.dryRun && postId) {
+      const debugInfo = await fetchPostVisibility({
+        postId,
+        pageAccessToken: cfg.facebookPageAccessToken,
+      });
+      if (debugInfo) {
+        console.log(
+          `Facebook post visibility: is_published=${String(debugInfo.is_published)} permalink=${debugInfo.permalink_url || "n/a"}`,
+        );
+      }
     }
 
-    const postedAtIso = new Date().toISOString();
-    await markArticlePostedInSheet({
-      article,
-      postId,
-      postedAtIso,
-      sheetId: cfg.sheetId,
-      sheetTabName: cfg.sheetTabName,
-      googleServiceAccountJson: cfg.googleServiceAccountJson,
-    });
-    console.log(`Sheet updated for article "${articleTitle}" as posted.`);
+    if (!cfg.dryRun && postId) {
+      const postedAtIso = new Date().toISOString();
+      await markArticlePostedInSheet({
+        article,
+        postId,
+        postedAtIso,
+        sheetId: cfg.sheetId,
+        sheetTabName: cfg.sheetTabName,
+        googleServiceAccountJson: cfg.googleServiceAccountJson,
+      });
+      console.log(`Sheet updated for article "${articleTitle}" as posted.`);
+    } else {
+      console.log(`DRY_RUN: skipped sheet update for "${articleTitle}".`);
+    }
   }
 
   console.log("Run completed successfully.");
