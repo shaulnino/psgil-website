@@ -35,7 +35,6 @@ export default function Header() {
         <nav className="hidden items-center gap-8 md:flex">
           {siteConfig.navigation.map((link) => {
             const isComingSoon = link.label === "Articles";
-            const isNew = link.label === "Stats";
             return (
               <div key={link.href} className="relative flex items-center">
                 <LoadingLink
@@ -46,11 +45,6 @@ export default function Header() {
                 >
                   {link.label}
                 </LoadingLink>
-                {isNew && (
-                  <span className="ml-1.5 rounded-[4px] bg-[#D4AF37] px-1.5 py-0.5 text-[11px] font-bold leading-none text-[#0B0B0E]">
-                    New!
-                  </span>
-                )}
                 {isComingSoon && (
                   <span className="ml-1.5 rounded-[4px] bg-red-700/90 px-1.5 py-0.5 text-[11px] font-medium leading-none text-white">
                     Coming soon
@@ -85,7 +79,6 @@ export default function Header() {
           <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 py-4">
             {siteConfig.navigation.map((link) => {
               const isComingSoon = link.label === "Articles";
-              const isNew = link.label === "Stats";
               return (
                 <div key={link.href} className="flex items-center gap-2">
                   <LoadingLink
@@ -97,11 +90,6 @@ export default function Header() {
                   >
                     {link.label}
                   </LoadingLink>
-                  {isNew && (
-                    <span className="rounded-[4px] bg-[#D4AF37] px-1.5 py-0.5 text-[11px] font-bold leading-none text-[#0B0B0E]">
-                      New!
-                    </span>
-                  )}
                   {isComingSoon && (
                     <span className="rounded-[4px] bg-red-700/90 px-1.5 py-0.5 text-[11px] font-medium leading-none text-white">
                       Coming soon
