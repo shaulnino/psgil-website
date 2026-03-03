@@ -25,6 +25,7 @@ Create a `.env.local` file with the following:
 | -------------------- | -------- | ------------------------------------------------ |
 | `GMAIL_APP_PASSWORD` | Yes      | Gmail App Password for sending emails via SMTP.  |
 | `NEWS_SHEET_URL`     | Yes      | Public Google Sheets CSV URL for the `articles` tab. |
+| `SITE_BASE_URL`      | No       | Public site base URL used for absolute RSS/OG links (defaults to `https://psgil.com`). |
 
 ### Gmail App Password setup
 
@@ -63,9 +64,6 @@ Required headers in that tab:
 - `tags` (optional comma-separated)
 - `status` (`draft` or `published`)
 - `content` (Markdown or plain paragraphs separated by blank lines)
-- `fb_posted` (empty or `true`)
-- `fb_post_id` (filled automatically by automation)
-- `fb_posted_at` (ISO timestamp, filled automatically)
 
 Publishing rules:
 
@@ -83,43 +81,19 @@ Images:
 - `cover_image_url` must be publicly accessible (no auth required).
 - If an image is missing/broken, the site automatically falls back to a local placeholder.
 
-## Facebook auto-post automation (GitHub Actions)
+## RSS feed for automation
 
-When a new article is marked `published` and `fb_posted` is not `true`, GitHub Actions can auto-post it to your Facebook Page.
+Use the RSS feed to drive no-code automations (IFTTT, Zapier, Make, social schedulers):
 
-- Workflow file: `.github/workflows/facebook-articles.yml`
-- Script: `scripts/post_facebook_from_sheet.js`
-- Trigger: every 15 minutes + manual `workflow_dispatch`
-- Safety: posts oldest eligible article first, default `MAX_POSTS_PER_RUN=1`
+- Feed URL: `/news/rss.xml`
+- Full production example: `https://psgil.com/news/rss.xml`
 
-How it works:
+The feed is RSS 2.0 with media namespace and includes:
 
-1. Reads `articles` from `NEWS_SHEET_CSV_URL`
-2. Filters: `status=published` and `fb_posted!=true`
-3. Derives `PAGE_ACCESS_TOKEN` from `FACEBOOK_USER_ACCESS_TOKEN` via `GET /me/accounts` (preferred path)
-4. Sanity-checks the target page via `GET /{page-id}?fields=id,name`
-5. Posts to Facebook Graph API via `POST /{page-id}/feed` with `published=true` and article link
-6. Verifies post visibility via `GET /{post_id}?fields=id,permalink_url,is_published`
-7. Updates the same sheet row with:
-   - `fb_posted=true`
-   - `fb_post_id=<facebook id>`
-   - `fb_posted_at=<ISO timestamp>`
+- `title`
+- `link`
+- `description` (excerpt)
+- `pubDate`
+- `media:content` image tag when `cover_image_url` exists
 
-Required GitHub Secrets:
-
-- `FACEBOOK_PAGE_ID`
-- `FACEBOOK_USER_ACCESS_TOKEN` (required, long-lived user token with page permissions)
-- `NEWS_SHEET_CSV_URL`
-- `SITE_BASE_URL` (example: `https://psgil.com`)
-- `GOOGLE_SERVICE_ACCOUNT_JSON` (full JSON key as one secret value)
-- `SHEET_ID` (Google Spreadsheet ID)
-- `FACEBOOK_PAGE_ACCESS_TOKEN` (optional fallback; used only if user token is missing)
-- `SHEET_TAB_NAME` (optional, defaults to `articles`)
-- `MAX_POSTS_PER_RUN` (optional, defaults to `1`)
-- `DRY_RUN` (optional, set `true` to log payloads and skip posting/sheet updates)
-
-Manual local run (for debugging):
-
-```bash
-npm run post:facebook-articles
-```
+When a new article is marked `published` in the sheet, it appears in the feed automatically.
