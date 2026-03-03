@@ -37,22 +37,71 @@ function toSeasonKeyFromEventId(eventId: string): string | null {
   return m ? `S${m[1]}` : null;
 }
 
+function resolveSiteBaseUrl(): string {
+  const envBase =
+    process.env.SITE_BASE_URL ||
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "");
+  return String(envBase || "").trim().replace(/\/+$/, "") || "https://psgil.com";
+}
+
+function resolveAbsoluteUrl(baseUrl: string, value: string): string {
+  const raw = String(value || "").trim();
+  if (!raw) return `${baseUrl}/psgil-banner.png`;
+  if (/^https?:\/\//i.test(raw)) return raw;
+  return `${baseUrl}${raw.startsWith("/") ? "" : "/"}${raw}`;
+}
+
 export async function generateMetadata({
   params,
 }: NewsArticlePageProps): Promise<Metadata> {
+  const baseUrl = resolveSiteBaseUrl();
   const { slug } = await params;
   const article = await fetchArticleBySlug(slug);
+  const url = `${baseUrl}/news/${encodeURIComponent(slug)}`;
 
   if (!article) {
     return {
       title: "News Article | PSGiL",
       description: "PSGiL news article.",
+      openGraph: {
+        title: "News Article | PSGiL",
+        description: "PSGiL news article.",
+        url,
+        type: "article",
+        siteName: "PSGiL - Premier Sim Gaming Israeli League",
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: "News Article | PSGiL",
+        description: "PSGiL news article.",
+      },
     };
   }
+
+  const imageUrl = resolveAbsoluteUrl(baseUrl, article.coverImageUrl);
 
   return {
     title: `${article.title} | PSGiL News`,
     description: article.excerpt,
+    alternates: {
+      canonical: url,
+    },
+    openGraph: {
+      title: article.title,
+      description: article.excerpt,
+      url,
+      type: "article",
+      siteName: "PSGiL - Premier Sim Gaming Israeli League",
+      publishedTime: new Date(`${article.date}T00:00:00Z`).toISOString(),
+      images: [{ url: imageUrl }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: article.title,
+      description: article.excerpt,
+      images: [imageUrl],
+    },
   };
 }
 
