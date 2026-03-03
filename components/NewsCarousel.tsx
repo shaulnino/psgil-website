@@ -1,0 +1,139 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import LoadingLink from "@/components/LoadingLink";
+import NewsImage from "@/components/NewsImage";
+import type { NewsArticle } from "@/lib/newsData";
+import { formatNewsDate } from "@/lib/newsData";
+
+type NewsCarouselProps = {
+  articles: NewsArticle[];
+};
+
+const AUTO_ADVANCE_MS = 6000;
+
+export default function NewsCarousel({ articles }: NewsCarouselProps) {
+  const [index, setIndex] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+
+  const total = articles.length;
+  const active = useMemo(() => articles[index] ?? null, [articles, index]);
+
+  useEffect(() => {
+    setIndex(0);
+  }, [total]);
+
+  useEffect(() => {
+    if (total <= 1 || isHovered) return;
+    const timer = window.setInterval(() => {
+      setIndex((prev) => (prev + 1) % total);
+    }, AUTO_ADVANCE_MS);
+    return () => window.clearInterval(timer);
+  }, [isHovered, total]);
+
+  if (total === 0 || !active) {
+    return (
+      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-sm text-white/65">
+        No published articles yet.
+      </div>
+    );
+  }
+
+  const prev = () => setIndex((v) => (v - 1 + total) % total);
+  const next = () => setIndex((v) => (v + 1) % total);
+
+  return (
+    <div
+      className="relative rounded-2xl border border-white/10 bg-[#111118]/90"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onTouchStart={(e) => setTouchStartX(e.touches[0]?.clientX ?? null)}
+      onTouchEnd={(e) => {
+        const endX = e.changedTouches[0]?.clientX;
+        if (touchStartX === null || typeof endX !== "number") return;
+        const delta = endX - touchStartX;
+        if (Math.abs(delta) > 40) {
+          if (delta < 0) next();
+          if (delta > 0) prev();
+        }
+        setTouchStartX(null);
+      }}
+    >
+      <LoadingLink href={`/news/${encodeURIComponent(active.slug)}`} className="block">
+        <div className="grid gap-0 md:grid-cols-2">
+          <div className="relative h-60 overflow-hidden rounded-t-2xl md:h-full md:rounded-l-2xl md:rounded-tr-none">
+            <NewsImage
+              src={active.coverImageUrl}
+              alt={active.title}
+              loading="lazy"
+              className="h-full w-full object-cover"
+            />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-black/20 to-transparent" />
+          </div>
+          <div className="flex flex-col justify-between p-6 md:p-7">
+            <div>
+              {total > 1 && (
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/45">
+                  Story {index + 1} of {total}
+                </p>
+              )}
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#D4AF37]/70">
+                {formatNewsDate(active.date)}
+              </p>
+              <h3 className="mt-3 font-display text-2xl font-bold tracking-wide text-white">
+                {active.title}
+              </h3>
+              <p className="mt-3 text-sm leading-6 text-white/70">
+                {active.excerpt}
+              </p>
+            </div>
+            <span className="mt-6 inline-flex w-fit items-center rounded-full bg-[#7020B0] px-4 py-2 text-sm font-semibold text-white shadow-[0_0_18px_rgba(112,32,176,0.35)]">
+              Read
+            </span>
+          </div>
+        </div>
+      </LoadingLink>
+
+      {total > 1 && (
+        <>
+          <button
+            type="button"
+            onClick={prev}
+            className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full border border-white/15 bg-black/45 p-2 text-white/90 transition hover:border-white/30 hover:bg-black/65"
+            aria-label="Previous article"
+          >
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onClick={next}
+            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full border border-white/15 bg-black/45 p-2 text-white/90 transition hover:border-white/30 hover:bg-black/65"
+            aria-label="Next article"
+          >
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 6l6 6-6 6" />
+            </svg>
+          </button>
+          <div className="flex items-center justify-center gap-2 py-2">
+            {articles.map((article, i) => (
+              <button
+                key={article.id}
+                type="button"
+                onClick={() => setIndex(i)}
+                className={`h-2.5 w-2.5 rounded-full transition ${
+                  i === index ? "bg-[#D4AF37]" : "bg-white/35 hover:bg-white/60"
+                }`}
+                aria-label={`Go to article ${i + 1}`}
+              />
+            ))}
+          </div>
+        </>
+      )}
+
+    </div>
+  );
+}
+

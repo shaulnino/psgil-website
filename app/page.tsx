@@ -10,6 +10,8 @@ import Section from "@/components/Section";
 import SnapshotStrip from "@/components/SnapshotStrip";
 import SocialLinks from "@/components/SocialLinks";
 import ContactSection from "@/components/ContactSection";
+import NewsCarousel from "@/components/NewsCarousel";
+import LoadingLink from "@/components/LoadingLink";
 import { siteConfig } from "@/lib/siteConfig";
 import { fetchCsv, parseCsv } from "@/lib/csv";
 import {
@@ -29,6 +31,7 @@ import {
   applyLeagueStandings,
 } from "@/lib/driversData";
 import { fetchUniqueWinnersCount, fetchLeagueTotals } from "@/lib/statsData";
+import { fetchLatestArticles, formatNewsDate } from "@/lib/newsData";
 import {
   fetchSeasonsConfig,
   resolveCurrentSeason,
@@ -56,7 +59,7 @@ export default async function Home() {
     resolveTemplate(text, currentSeasonLabel, seasonCount, templateExtras);
 
   /* ---- Fetch schedule + race results + drivers/teams + standings + winners count in parallel ---- */
-  const [scheduleCsv, raceResultsByEvent, driversCsv, teamsCsv, standingsCsv, uniqueWinners, leagueTotals] =
+  const [scheduleCsv, raceResultsByEvent, driversCsv, teamsCsv, standingsCsv, uniqueWinners, leagueTotals, latestNews] =
     await Promise.all([
       fetchCsv(GLOBAL_CSV_URLS.schedule).catch(() => ""),
       fetchAllRaceResults(GLOBAL_CSV_URLS.raceResults),
@@ -65,6 +68,7 @@ export default async function Home() {
       fetchCsv(GLOBAL_CSV_URLS.leagueStandings).catch(() => ""),
       fetchUniqueWinnersCount(),
       fetchLeagueTotals(),
+      fetchLatestArticles(3),
     ]);
 
   templateExtras = {
@@ -160,7 +164,7 @@ export default async function Home() {
     ...stat,
     value: t(stat.value),
   }));
-  const aboutBullets = siteConfig.aboutBullets.map(t);
+  const featuredNews = latestNews[0] ?? null;
 
   return (
     <main className="bg-[#0B0B0E] text-white">
@@ -272,6 +276,43 @@ export default async function Home() {
         </a>
       </div>
 
+      {featuredNews && (
+        <section className="py-4">
+          <div className="mx-auto w-full max-w-6xl px-6">
+            <div className="rounded-2xl border border-[#7020B0]/35 bg-[linear-gradient(135deg,rgba(112,32,176,0.16),rgba(11,11,14,0.96))] p-4 md:p-5">
+              <div className="flex flex-wrap items-center gap-3 md:gap-4">
+                <span className="inline-flex items-center rounded-full border border-[#D4AF37]/40 bg-[#D4AF37]/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#D4AF37]">
+                  News Flash
+                </span>
+                <span className="text-[11px] font-semibold uppercase tracking-[0.13em] text-white/55">
+                  {formatNewsDate(featuredNews.date)}
+                </span>
+                <LoadingLink
+                  href={`/news/${encodeURIComponent(featuredNews.slug)}`}
+                  className="min-w-0 flex-1 text-sm font-semibold text-white transition hover:text-[#d7b3ff] md:text-base"
+                >
+                  <span className="line-clamp-2 md:line-clamp-1">{featuredNews.title}</span>
+                </LoadingLink>
+                <div className="ml-auto flex items-center gap-2">
+                  <LoadingLink
+                    href={`/news/${encodeURIComponent(featuredNews.slug)}`}
+                    className="inline-flex items-center rounded-full bg-[#7020B0] px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-[#7f2fc0]"
+                  >
+                    Read
+                  </LoadingLink>
+                  <LoadingLink
+                    href="/news"
+                    className="inline-flex items-center rounded-full border border-white/20 px-3.5 py-1.5 text-xs font-semibold text-white/85 transition hover:border-white/35 hover:text-white"
+                  >
+                    All News
+                  </LoadingLink>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       <SnapshotStrip stats={snapshotStats} />
 
       <Section
@@ -313,6 +354,19 @@ export default async function Home() {
           allDrivers={allDrivers}
           allTeams={allTeams}
         />
+      </Section>
+
+      <Section
+        title="Latest News"
+        description="Fresh updates, race stories, and league highlights."
+        brandTitle
+        headerRight={
+          <Button href="/news" size="sm">
+            All News
+          </Button>
+        }
+      >
+        <NewsCarousel articles={latestNews} />
       </Section>
 
       <Section title="About Us" brandTitle>

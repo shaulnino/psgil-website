@@ -37,11 +37,42 @@ function parseLine(line: string): string[] {
   return result;
 }
 
+function splitCsvRows(csv: string): string[] {
+  const rows: string[] = [];
+  const source = csv.replace(/^\uFEFF/, "");
+  let current = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < source.length; i += 1) {
+    const char = source[i];
+    const next = source[i + 1];
+
+    if (char === "\"") {
+      if (inQuotes && next === "\"") {
+        current += "\"\"";
+        i += 1;
+        continue;
+      }
+      inQuotes = !inQuotes;
+      current += char;
+      continue;
+    }
+
+    if (char === "\n" && !inQuotes) {
+      rows.push(current.replace(/\r$/, ""));
+      current = "";
+      continue;
+    }
+
+    current += char;
+  }
+
+  if (current.length > 0) rows.push(current.replace(/\r$/, ""));
+  return rows;
+}
+
 export function parseCsv<T extends Record<string, string>>(csv: string): T[] {
-  const lines = csv
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean);
+  const lines = splitCsvRows(csv).filter((line) => line.trim().length > 0);
 
   if (lines.length === 0) {
     return [];
