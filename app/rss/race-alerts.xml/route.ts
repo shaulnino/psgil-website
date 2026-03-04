@@ -33,6 +33,22 @@ function resolveSiteBaseUrl(): string {
   return normalized || FALLBACK_SITE_URL;
 }
 
+function resolveAbsoluteUrl(baseUrl: string, value?: string): string {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  if (/^https?:\/\//i.test(raw)) return raw;
+  return `${baseUrl}${raw.startsWith("/") ? "" : "/"}${raw}`;
+}
+
+function inferMimeTypeFromUrl(url: string): string {
+  const value = url.toLowerCase();
+  if (value.endsWith(".png")) return "image/png";
+  if (value.endsWith(".webp")) return "image/webp";
+  if (value.endsWith(".gif")) return "image/gif";
+  if (value.endsWith(".jpg") || value.endsWith(".jpeg")) return "image/jpeg";
+  return "image/jpeg";
+}
+
 function normalizeSeasonKey(raw: string): string {
   const value = String(raw || "").trim();
   if (!value) return "";
@@ -84,7 +100,7 @@ function parseRaceIdParam(value: string | null): string {
 function createRssXml(baseUrl: string, itemXml: string): string {
   const now = new Date().toUTCString();
   return `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0">
+<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
 <channel>
   <title>PSGiL Race Alerts</title>
   <link>${xmlEscape(`${baseUrl}/schedule`)}</link>
@@ -102,13 +118,21 @@ function createAlertItemXml(baseUrl: string, event: RaceEvent): string {
   const link = buildWatchLink(baseUrl, event);
   const guid = buildAlertGuid(event);
   const pubDate = new Date().toUTCString();
+  const posterUrl = resolveAbsoluteUrl(baseUrl, event.poster_image);
+  const posterMimeType = posterUrl ? inferMimeTypeFromUrl(posterUrl) : "";
+  const mediaTag = posterUrl
+    ? `\n    <media:content url="${xmlEscape(posterUrl)}" medium="image" />`
+    : "";
+  const enclosureTag = posterUrl
+    ? `\n    <enclosure url="${xmlEscape(posterUrl)}" type="${posterMimeType}" />`
+    : "";
 
   return `  <item>
     <title>${xmlEscape(title)}</title>
     <link>${xmlEscape(link)}</link>
     <guid isPermaLink="false">${xmlEscape(guid)}</guid>
     <description>${xmlEscape(description)}</description>
-    <pubDate>${pubDate}</pubDate>
+    <pubDate>${pubDate}</pubDate>${mediaTag}${enclosureTag}
   </item>`;
 }
 
