@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Section from "@/components/Section";
 import LoadingLink from "@/components/LoadingLink";
+import NewsCategoryTag from "@/components/NewsCategoryTag";
 import NewsImage from "@/components/NewsImage";
 import NewsArticleActions from "@/components/NewsArticleActions";
 import { fetchCsv, parseCsv } from "@/lib/csv";
@@ -17,6 +18,7 @@ import { mapDrivers, mapTeams, type Driver, type Team } from "@/lib/driversData"
 import {
   fetchArticleBySlug,
   fetchArticlesWithStatus,
+  extractYouTubeVideoId,
   formatNewsDate,
   renderArticleBody,
 } from "@/lib/newsData";
@@ -133,6 +135,7 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
   }
 
   const bodyHtml = await renderArticleBody(article.content);
+  const embeddedVideoId = extractYouTubeVideoId(article.youtubeUrl);
   const articleId = article.id.toLowerCase();
   const isRecap = articleId.includes("recap");
   const isPreview = articleId.includes("preview");
@@ -215,6 +218,9 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
                 <span className="mx-2 text-white/45">•</span>
                 {article.author}
               </p>
+              <div className="mt-3">
+                <NewsCategoryTag category={article.category} />
+              </div>
               <h1 className="mt-3 font-display text-3xl font-bold tracking-wide text-white md:text-5xl">
                 {article.title}
               </h1>
@@ -234,6 +240,22 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
           </div>
 
           <div className="p-6 md:p-8">
+            {embeddedVideoId && (
+              <div className="mb-6 overflow-hidden rounded-2xl border border-white/10 bg-black">
+                <div className="aspect-video w-full">
+                  <iframe
+                    src={`https://www.youtube.com/embed/${embeddedVideoId}`}
+                    title={`${article.title} video`}
+                    className="h-full w-full"
+                    loading="lazy"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                    allowFullScreen
+                  />
+                </div>
+              </div>
+            )}
+
             <NewsArticleActions
               isRecap={isRecap}
               isPreview={isPreview}

@@ -1,6 +1,11 @@
 import sanitizeHtml from "sanitize-html";
 import { marked } from "marked";
 import { fetchCsv, parseCsv } from "@/lib/csv";
+import {
+  NEWS_CATEGORY,
+  type NewsCategory,
+  normalizeNewsCategory,
+} from "@/lib/newsCategories";
 
 export type NewsArticle = {
   id: string;
@@ -11,6 +16,8 @@ export type NewsArticle = {
   excerpt: string;
   coverImageUrl: string;
   tags: string[];
+  category: NewsCategory;
+  youtubeUrl: string;
   content: string;
 };
 
@@ -41,6 +48,8 @@ const DEV_FALLBACK_ARTICLES: NewsArticle[] = [
       "This is a local development fallback article. Connect NEWS_SHEET_URL to show real Google Sheets content.",
     coverImageUrl: "/psgil-banner.png",
     tags: ["sample", "local"],
+    category: NEWS_CATEGORY.HUB,
+    youtubeUrl: "",
     content: `## This is a fallback article
 
 Use this entry to validate the News UI locally:
@@ -55,6 +64,29 @@ When \`NEWS_SHEET_URL\` is configured, this fallback is automatically replaced b
 
 function s(value: string | undefined): string {
   return (value ?? "").trim();
+}
+
+function normalizeHeader(value: string): string {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
+}
+
+function getField(
+  row: Record<string, string>,
+  names: string[],
+): string {
+  for (const name of names) {
+    if (name in row) return s(row[name]);
+  }
+
+  const expected = new Set(names.map(normalizeHeader));
+  for (const [key, val] of Object.entries(row)) {
+    if (expected.has(normalizeHeader(key))) return s(val);
+  }
+
+  return "";
 }
 
 function toSlug(value: string): string {
@@ -101,6 +133,10 @@ function mapArticleRow(row: Record<string, string>, index: number): NewsArticle 
     excerpt,
     coverImageUrl: s(row.cover_image_url),
     tags: parseTags(s(row.tags)),
+    category: normalizeNewsCategory(
+      getField(row, ["category", "news_category", "article_category"]),
+    ),
+    youtubeUrl: getField(row, ["youtube_url", "youtube", "video_url"]),
     content,
   };
 }
@@ -212,5 +248,38 @@ export async function renderArticleBody(content: string): Promise<string> {
       }),
     },
   });
+}
+
+export function extractYouTubeVideoId(rawUrl: string): string | null {
+  const value = s(rawUrl);
+  if (!value) return null;
+
+  let parsed: URL;
+  try {
+    parsed = new URL(value);
+  } catch {
+    return null;
+  }
+
+  const host = parsed.hostname.replace(/^www\./i, "").toLowerCase();
+  let candidate = "";
+
+  if (host === "youtu.be") {
+    candidate = parsed.pathname.split("/").filter(Boolean)[0] || "";
+  } else if (host === "youtube.com" || host === "m.youtube.com") {
+    if (parsed.pathname === "/watch") {
+      candidate = parsed.searchParams.get("v") || "";
+    } else if (parsed.pathname.startsWith("/live/")) {
+      candidate = parsed.pathname.split("/").filter(Boolean)[1] || "";
+    } else if (parsed.pathname.startsWith("/embed/")) {
+      candidate = parsed.pathname.split("/").filter(Boolean)[1] || "";
+    } else if (parsed.pathname.startsWith("/shorts/")) {
+      candidate = parsed.pathname.split("/").filter(Boolean)[1] || "";
+    }
+  }
+
+  const cleaned = candidate.trim();
+  if (!/^[A-Za-z0-9_-]{6,}$/.test(cleaned)) return null;
+  return cleaned;
 }
 

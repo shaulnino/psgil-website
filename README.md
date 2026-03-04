@@ -62,6 +62,8 @@ Required headers in that tab:
 - `excerpt`
 - `cover_image_url` (public direct URL)
 - `tags` (optional comma-separated)
+- `category` (optional: `announcements` | `race` | `hub`)
+- `youtube_url` (optional YouTube URL for in-article embed)
 - `status` (`draft` or `published`)
 - `content` (Markdown or plain paragraphs separated by blank lines)
 
@@ -70,6 +72,8 @@ Publishing rules:
 - Only rows with `status=published` are shown on the website.
 - Articles are sorted newest-first by `date`.
 - Missing author defaults to `PSGiL`.
+- Missing/invalid `category` defaults to `hub` (`F1 & Sim Hub`).
+- Missing `youtube_url` means no video embed is rendered on the article page.
 
 Content notes:
 

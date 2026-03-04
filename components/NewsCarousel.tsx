@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import LoadingLink from "@/components/LoadingLink";
+import NewsCategoryTag from "@/components/NewsCategoryTag";
 import NewsImage from "@/components/NewsImage";
 import type { NewsArticle } from "@/lib/newsData";
 import { formatNewsDate } from "@/lib/newsData";
@@ -78,9 +79,12 @@ export default function NewsCarousel({ articles }: NewsCarouselProps) {
                   Story {index + 1} of {total}
                 </p>
               )}
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#D4AF37]/70">
-                {formatNewsDate(active.date)}
-              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#D4AF37]/70">
+                  {formatNewsDate(active.date)}
+                </p>
+                <NewsCategoryTag category={active.category} />
+              </div>
               <h3 className="mt-3 font-display text-2xl font-bold tracking-wide text-white">
                 {active.title}
               </h3>
