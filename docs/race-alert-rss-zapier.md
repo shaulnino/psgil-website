@@ -1,6 +1,6 @@
 # PSGiL Race Alert RSS (Zapier)
 
-Use this dedicated feed to auto-post a "race starts in 5 minutes" alert via Zapier.
+Use this dedicated feed to auto-post a "race starts soon" alert via Zapier.
 
 ## Feed URL
 
@@ -12,7 +12,7 @@ Use this dedicated feed to auto-post a "race starts in 5 minutes" alert via Zapi
 - The feed checks the same schedule CSV used by the site countdown widgets.
 - It finds the next `Scheduled` race and computes start time in `Asia/Jerusalem`.
 - It emits exactly one RSS item only in this window:
-  - `now >= race_start - 5 minutes`
+  - `now >= race_start - 15 minutes`
   - `now < race_start`
 - The item links to the watch flow on site:
   - `/schedule?season=Sx&event=<event_id>&watch=1#watch`
@@ -36,7 +36,7 @@ Use this dedicated feed to auto-post a "race starts in 5 minutes" alert via Zapi
 ## Polling frequency note
 
 - Best reliability: poll every 1-2 minutes if your plan allows it.
-- If polling is slower, consider widening the alert window in code (e.g. from 5 to 10 minutes).
+- Current alert window is 15 minutes before race start (to better match slower polling intervals such as 15 minutes).
 
 ## Debug/testing query params
 

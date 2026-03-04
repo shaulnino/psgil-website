@@ -12,7 +12,7 @@ import {
 
 export const dynamic = "force-dynamic";
 
-const ALERT_WINDOW_MINUTES = 5;
+const ALERT_WINDOW_MINUTES = 15;
 const FALLBACK_SITE_URL = "https://psgil.com";
 
 function xmlEscape(value: string): string {
@@ -113,8 +113,8 @@ ${itemXml}
 }
 
 function createAlertItemXml(baseUrl: string, event: RaceEvent): string {
-  const title = `PSGiL starts in 5 minutes — ${event.race_name}`;
-  const description = `The ${event.race_name} broadcast is about to begin. Jump in now and watch the race live on PSGiL.`;
+  const title = `PSGiL Race Starting Soon — ${event.race_name}`;
+  const description = "The race will begin shortly. Watch it live here:";
   const link = buildWatchLink(baseUrl, event);
   const guid = buildAlertGuid(event);
   const pubDate = new Date().toUTCString();
