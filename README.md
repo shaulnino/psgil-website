@@ -101,3 +101,11 @@ The feed is RSS 2.0 with media namespace and includes:
 - `media:content` image tag when `cover_image_url` exists
 
 When a new article is marked `published` in the sheet, it appears in the feed automatically.
+
+Race countdown alert feed (for social auto-posting without Facebook API):
+
+- Feed URL: `/rss/race-alerts.xml`
+- Full production example: `https://psgil.com/rss/race-alerts.xml`
+- Emits one alert item only in the 5-minute pre-race window for the next scheduled race
+- Prevents duplicate alerts using persisted posted-state storage
+- Setup guide: `docs/race-alert-rss-zapier.md`
