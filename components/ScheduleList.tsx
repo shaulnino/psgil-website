@@ -764,6 +764,12 @@ function ScheduleListInner({
   const searchParams = useSearchParams();
   const selectedSeasonKey =
     searchParams.get("season") || defaultSeasonKey;
+  const queryEventId = (searchParams.get("event") || searchParams.get("race_id") || "")
+    .trim()
+    .toLowerCase();
+  const queryWatch = ["1", "true", "yes"].includes(
+    (searchParams.get("watch") || "").trim().toLowerCase(),
+  );
 
   const seasonsList = getSeasonsForDropdown(seasonsConfig);
 
@@ -791,6 +797,25 @@ function ScheduleListInner({
     null,
   );
   const [watchEvent, setWatchEvent] = useState<RaceEvent | null>(null);
+  const queryHandledRef = useRef(false);
+
+  useEffect(() => {
+    if (!queryEventId || queryHandledRef.current) return;
+    const matched = events.find(
+      (event) => event.event_id.trim().toLowerCase() === queryEventId,
+    );
+    if (!matched) return;
+
+    const target = document.getElementById(matched.event_id);
+    if (target) target.scrollIntoView({ behavior: "smooth", block: "center" });
+
+    if (queryWatch && matched.youtube_url) {
+      setWatchEvent(matched);
+    } else {
+      setPosterEvent(matched);
+    }
+    queryHandledRef.current = true;
+  }, [events, queryEventId, queryWatch]);
 
   if (seasonsConfig.length === 0) {
     return (
@@ -840,6 +865,7 @@ function ScheduleListInner({
                 return (
                   <button
                     key={`${event.season}-${event.race_number}-${event.league}-${idx}`}
+                    id={event.event_id}
                     type="button"
                     onClick={() => setPosterEvent(event)}
                     className="group relative flex w-full cursor-pointer flex-col gap-2 border-b border-white/5 px-5 py-4 text-left transition-colors hover:bg-white/[0.04] focus-visible:bg-white/[0.04] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[#7020B0]/60 md:grid md:grid-cols-[60px_1fr_120px_100px_100px_90px_36px] md:items-center md:gap-0"
