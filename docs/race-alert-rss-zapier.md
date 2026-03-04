@@ -16,6 +16,9 @@ Use this dedicated feed to auto-post a "race starts in 5 minutes" alert via Zapi
   - `now < race_start`
 - The item links to the watch flow on site:
   - `/schedule?season=Sx&event=<event_id>&watch=1#watch`
+- If poster image exists in schedule data, the feed also emits:
+  - `media:content` (image)
+  - `enclosure` (image)
 - Once emitted, the race alert is marked as posted so it is not emitted again.
 
 ## Zapier setup
@@ -28,6 +31,7 @@ Use this dedicated feed to auto-post a "race starts in 5 minutes" alert via Zapi
    - Post text/title: RSS `title`
    - Link URL: RSS `link`
    - Body/description: RSS `description`
+   - Image URL: RSS `media:content.url` (or `enclosure.url` fallback)
 
 ## Polling frequency note
 
