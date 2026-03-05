@@ -15,6 +15,7 @@ import {
   type StandingsRow,
 } from "@/lib/resultsData";
 import { mapDrivers, mapTeams, type Driver, type Team } from "@/lib/driversData";
+import { attachRewardsToDrivers, fetchRewards } from "@/lib/rewardsData";
 import {
   fetchArticleBySlug,
   fetchArticlesWithStatus,
@@ -162,15 +163,17 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
 
   if (isRecap && eventId) {
     try {
-      const [allResults, driversCsv, teamsCsv] = await Promise.all([
+      const [allResults, driversCsv, teamsCsv, rewards] = await Promise.all([
         fetchAllRaceResults(GLOBAL_CSV_URLS.raceResults),
         fetchCsv(GLOBAL_CSV_URLS.drivers).catch(() => ""),
         fetchCsv(GLOBAL_CSV_URLS.teams).catch(() => ""),
+        fetchRewards(GLOBAL_CSV_URLS.rewards),
       ]);
       resultsRows = allResults[eventId] ?? [];
       modalDrivers = driversCsv
         ? mapDrivers(parseCsv<Record<string, string>>(driversCsv))
         : [];
+      modalDrivers = attachRewardsToDrivers(modalDrivers, rewards);
       modalTeams = teamsCsv
         ? mapTeams(parseCsv<Record<string, string>>(teamsCsv))
         : [];

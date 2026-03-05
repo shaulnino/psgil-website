@@ -32,15 +32,18 @@ export default function Header() {
           </span>
         </LoadingLink>
 
-        <nav className="hidden items-center gap-8 md:flex">
+        <nav className="hidden items-center gap-2 md:flex">
           {siteConfig.navigation.map((link) => {
             const isComingSoon = link.label === "Articles";
+            const active = pathname === link.href;
             return (
               <div key={link.href} className="relative flex items-center">
                 <LoadingLink
                   href={link.href}
-                  className={`text-base font-medium transition ${
-                    pathname === link.href ? "text-white" : "text-white/60 hover:text-white"
+                  className={`rounded-lg border px-3 py-1.5 text-sm font-semibold transition ${
+                    active
+                      ? "border-[#7020B0]/70 bg-[#7020B0]/25 text-white shadow-[0_0_16px_rgba(112,32,176,0.25)]"
+                      : "border-transparent text-white/65 hover:border-white/10 hover:bg-white/5 hover:text-white"
                   }`}
                 >
                   {link.label}
@@ -76,16 +79,19 @@ export default function Header() {
 
       {isOpen && (
         <div className="border-t border-white/10 bg-[#0B0B0E] md:hidden">
-          <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 py-4">
+          <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-6 py-4">
             {siteConfig.navigation.map((link) => {
               const isComingSoon = link.label === "Articles";
+              const active = pathname === link.href;
               return (
                 <div key={link.href} className="flex items-center gap-2">
                   <LoadingLink
                     href={link.href}
                     onClick={() => setIsOpen(false)}
-                    className={`text-base font-medium transition ${
-                      pathname === link.href ? "text-white" : "text-white/70 hover:text-white"
+                    className={`w-full rounded-lg border px-3 py-2 text-base font-semibold transition ${
+                      active
+                        ? "border-[#7020B0]/70 bg-[#7020B0]/25 text-white"
+                        : "border-white/10 bg-white/5 text-white/75 hover:bg-white/10 hover:text-white"
                     }`}
                   >
                     {link.label}

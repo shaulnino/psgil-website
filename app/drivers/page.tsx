@@ -12,6 +12,7 @@ import {
   applyLeagueStandings,
   mapLeagueStandings,
 } from "@/lib/driversData";
+import { attachRewardsToDrivers, fetchRewards } from "@/lib/rewardsData";
 import {
   fetchSeasonsConfig,
   resolveCurrentSeason,
@@ -96,12 +97,7 @@ const DEMO_DRIVER = {
   // Race events
   events: "42",
   season_events: "6",
-  // Achievements
-  titles_league_1st: "3",
-  titles_league_2nd: "1",
-  titles_lower_1st: "1",
-  titles_wild_1st: "2",
-  titles_wild_3rd: "1",
+  rewards: [],
   // League standings
   league_rank_main: "4",
   league_rank_wild: "2",
@@ -126,13 +122,15 @@ export default async function DriversPage() {
       Promise<string>,
       Promise<string>,
       Promise<string | null>,
+      Promise<Awaited<ReturnType<typeof fetchRewards>>>,
     ] = [
       fetchCsv(GLOBAL_CSV_URLS.drivers),
       fetchCsv(GLOBAL_CSV_URLS.teams),
       fetchCsv(GLOBAL_CSV_URLS.leagueStandings).catch(() => null),
+      fetchRewards(GLOBAL_CSV_URLS.rewards),
     ];
 
-    const [driversCsv, teamsCsv, standingsCsv] =
+    const [driversCsv, teamsCsv, standingsCsv, rewards] =
       await Promise.all(csvPromises);
 
     let drivers = mapDrivers(
@@ -147,13 +145,15 @@ export default async function DriversPage() {
       drivers = applyLeagueStandings(drivers, standings);
     }
 
+    drivers = attachRewardsToDrivers(drivers, rewards);
+
     const teamsData = mapTeams(
       parseCsv<Record<string, string>>(teamsCsv),
     );
     teams = groupDriversByTeam(teamsData, drivers);
     reserves = getReserveDrivers(drivers);
     historic = getHistoricDrivers(drivers);
-  } catch (error) {
+  } catch {
     teams = [];
     reserves = [];
     historic = [];

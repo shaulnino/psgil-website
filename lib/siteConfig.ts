@@ -43,9 +43,9 @@ export const siteConfig: SiteConfig = {
       "PSGiL is Israel's premium F1 sim racing league. Competitive clean racing, full season stats, and a community-first Formula 1 league experience.",
   },
   navigation: [
-    { label: "Drivers", href: "/drivers" },
     { label: "Schedule & Results", href: "/schedule" },
     { label: "Tables", href: "/statistics" },
+    { label: "Drivers", href: "/drivers" },
     { label: "Stats", href: "/stats" },
     { label: "News", href: "/news" },
   ],

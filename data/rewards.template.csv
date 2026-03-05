@@ -1,0 +1,12 @@
+season_id,competition,award_code,award_label,recipient_type,recipient_id,notes,source,icon_key,tooltip,rank
+4,main,champion,Champion,driver,driver_id_here,,standings,,,
+4,main,runner_up,Runner-up,driver,driver_id_here,,standings,,,
+4,main,third_place,Third Place,driver,driver_id_here,,standings,,,
+4,main,best_of_rest,Best of the Rest,driver,driver_id_here,,standings,,,
+4,main,cleanest_driver,Cleanest Driver,driver,driver_id_here,"Penalty points combined: game+stewards",manual,,,
+4,main,driver_of_season,Driver of the Season,driver,driver_id_here,,manual,,,
+4,main,grid_climber,Grid Climber,driver,driver_id_here,,manual,,,
+4,main,mr_consistent,Mr. Consistent,driver,driver_id_here,,manual,,,
+4,community,most_improved,Most Improved Driver,driver,driver_id_here,Community vote,community_vote,,,
+4,community,most_valuable,Most Valuable Driver,driver,driver_id_here,Community vote,community_vote,,,
+4,constructors,constructors_champion,Constructors Champion,team,team_key_here,,standings,,,
