@@ -70,6 +70,7 @@ const GID = {
   constructorsStandingsWild: "769074374",
   schedule: "2105913561",
   raceResults: "1960669750",
+  rewards: "206883001",
 } as const;
 
 export const SEASONS_CONFIG_CSV_URL = sheetUrl(GID.seasonsConfig);
@@ -91,7 +92,7 @@ export const GLOBAL_CSV_URLS = {
   raceResults: sheetUrl(GID.raceResults),
 
   /* Rewards dataset (optional override via env) */
-  rewards: process.env.REWARDS_SHEET_URL?.trim() || "",
+  rewards: process.env.REWARDS_SHEET_URL?.trim() || sheetUrl(GID.rewards),
 };
 
 /* ------------------------------------------------------------------ */
