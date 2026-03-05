@@ -25,6 +25,7 @@ Create a `.env.local` file with the following:
 | -------------------- | -------- | ------------------------------------------------ |
 | `GMAIL_APP_PASSWORD` | Yes      | Gmail App Password for sending emails via SMTP.  |
 | `NEWS_SHEET_URL`     | Yes      | Public Google Sheets CSV URL for the `articles` tab. |
+| `REWARDS_SHEET_URL`  | No       | Public CSV URL for the `rewards` dataset (season awards). |
 | `SITE_BASE_URL`      | No       | Public site base URL used for absolute RSS/OG links (defaults to `https://psgil.com`). |
 
 ### Gmail App Password setup
@@ -106,6 +107,27 @@ Race countdown alert feed (for social auto-posting without Facebook API):
 
 - Feed URL: `/rss/race-alerts.xml`
 - Full production example: `https://psgil.com/rss/race-alerts.xml`
-- Emits one alert item only in the 5-minute pre-race window for the next scheduled race
+- Emits one alert item only in the 15-minute pre-race window for the next scheduled race
 - Prevents duplicate alerts using persisted posted-state storage
 - Setup guide: `docs/race-alert-rss-zapier.md`
+
+## Season Rewards Dataset
+
+To keep rewards season-aware and future-proof, use a dedicated `rewards` CSV and set its public URL in `REWARDS_SHEET_URL`.
+
+Required columns (one row per award winner):
+
+- `season_id`
+- `competition` (`main` | `lower` | `wild` | `constructors` | `community`)
+- `award_code` (stable key, e.g. `champion`, `cleanest_driver`)
+- `award_label` (human-readable label for UI)
+- `recipient_type` (`driver` | `team`)
+- `recipient_id` (must match `driver_id` or `team_key`)
+
+Optional columns:
+
+- `notes`
+- `source`
+- `icon_key`
+- `tooltip`
+- `rank` (lower number = higher priority)

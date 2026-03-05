@@ -2,6 +2,13 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import type { Driver } from "@/lib/driversData";
+import {
+  DEFAULT_AWARD_LABELS,
+  DEFAULT_AWARD_RANK,
+  DEFAULT_AWARD_TOOLTIPS,
+  type AwardCode,
+  type RewardCompetition,
+} from "@/lib/rewardsData";
 
 /* ------------------------------------------------------------------ */
 /*  Medal colours & types                                              */
@@ -136,6 +143,87 @@ export function LionIcon({ tier, size = 18 }: { tier: MedalTier; size?: number }
   );
 }
 
+function RibbonIcon({ color, size = 18 }: { color: string; size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="9" r="5" fill={color} fillOpacity={0.2} stroke={color} strokeWidth={1.5} />
+      <path d="M9 13.5 7 21l5-2 5 2-2-7.5" fill={color} fillOpacity={0.2} stroke={color} strokeWidth={1.5} strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function SparkIcon({ color, size = 18 }: { color: string; size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 3 14.4 8.6 20 11l-5.6 2.4L12 19l-2.4-5.6L4 11l5.6-2.4L12 3Z" fill={color} fillOpacity={0.2} stroke={color} strokeWidth={1.5} />
+    </svg>
+  );
+}
+
+function UpArrowIcon({ color, size = 18 }: { color: string; size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 20V6M12 6 7 11M12 6l5 5" stroke={color} strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="5" y="19" width="14" height="2" rx="1" fill={color} fillOpacity={0.25} />
+    </svg>
+  );
+}
+
+function ShieldCheckIcon({ color, size = 18 }: { color: string; size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 3 4 7v5c0 4.8 2.9 8.8 8 10 5.1-1.2 8-5.2 8-10V7l-8-4Z" fill={color} fillOpacity={0.2} stroke={color} strokeWidth={1.5} />
+      <path d="m9.5 12.5 1.8 1.8 3.4-3.4" stroke={color} strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function TargetIcon({ color, size = 18 }: { color: string; size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="8" stroke={color} strokeWidth={1.6} />
+      <circle cx="12" cy="12" r="4.5" stroke={color} strokeWidth={1.5} strokeOpacity={0.85} />
+      <circle cx="12" cy="12" r="1.4" fill={color} />
+      <path d="M17.5 6.5 14.8 9.2" stroke={color} strokeWidth={1.4} strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function CrownIcon({ color, size = 18 }: { color: string; size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M4 8.5 8.2 12l3.8-5 3.8 5L20 8.5 18.2 18H5.8L4 8.5Z"
+        fill={color}
+        fillOpacity={0.2}
+        stroke={color}
+        strokeWidth={1.5}
+        strokeLinejoin="round"
+      />
+      <path
+        d="M8.5 20h7"
+        stroke={color}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+      />
+      <circle cx="4.8" cy="8.2" r="1.1" fill={color} />
+      <circle cx="12" cy="6.5" r="1.1" fill={color} />
+      <circle cx="19.2" cy="8.2" r="1.1" fill={color} />
+    </svg>
+  );
+}
+
+function TeamCupIcon({ color, size = 18 }: { color: string; size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M6 5h12v4a6 6 0 0 1-12 0V5Z" fill={color} fillOpacity={0.2} stroke={color} strokeWidth={1.5} />
+      <path d="M9 20h6M10 16h4" stroke={color} strokeWidth={1.5} strokeLinecap="round" />
+      <circle cx="8" cy="8.5" r="1.2" fill={color} />
+      <circle cx="16" cy="8.5" r="1.2" fill={color} />
+    </svg>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /*  Achievement definitions & builder                                  */
 /* ------------------------------------------------------------------ */
@@ -144,46 +232,181 @@ export type AchievementDef = {
   icon: React.ReactNode;
   tooltip: string;
   ariaLabel: string;
+  count: number;
 };
 
-export function buildAchievements(driver: Driver, iconSize = 18): AchievementDef[] {
-  const achievements: AchievementDef[] = [];
+function competitionLabel(competition: RewardCompetition): string {
+  switch (competition) {
+    case "main":
+      return "Main League";
+    case "lower":
+      return "Lower League";
+    case "wild":
+      return "Wild League";
+    case "constructors":
+      return "Constructors";
+    case "community":
+      return "Community";
+    default:
+      return "";
+  }
+}
 
-  const defs: {
-    field: keyof Driver;
-    tier: MedalTier;
-    Icon: typeof TrophyIcon;
-    label: string;
-    tooltip: string;
-  }[] = [
-    // League Championship
-    { field: "titles_league_1st", tier: "gold", Icon: TrophyIcon, label: "League champion", tooltip: "League champion – Gold trophy" },
-    { field: "titles_league_2nd", tier: "silver", Icon: TrophyIcon, label: "2nd place in league championship", tooltip: "2nd place in league championship – Silver trophy" },
-    { field: "titles_league_3rd", tier: "bronze", Icon: TrophyIcon, label: "3rd place in league championship", tooltip: "3rd place in league championship – Bronze trophy" },
-    // Lower Bracket Championship
-    { field: "titles_lower_1st", tier: "gold", Icon: PlateIcon, label: "Lower Bracket champion", tooltip: "Lower Bracket champion – Gold plate" },
-    { field: "titles_lower_2nd", tier: "silver", Icon: PlateIcon, label: "2nd place in lower bracket championship", tooltip: "2nd place in lower bracket championship – Silver plate" },
-    { field: "titles_lower_3rd", tier: "bronze", Icon: PlateIcon, label: "3rd place in lower bracket championship", tooltip: "3rd place in lower bracket championship – Bronze plate" },
-    // Wild League Championship
-    { field: "titles_wild_1st", tier: "gold", Icon: LionIcon, label: "Wild League champion", tooltip: "Wild League champion – Gold lion" },
-    { field: "titles_wild_2nd", tier: "silver", Icon: LionIcon, label: "2nd place in Wild League championship", tooltip: "2nd place in Wild League championship – Silver lion" },
-    { field: "titles_wild_3rd", tier: "bronze", Icon: LionIcon, label: "3rd place in Wild League championship", tooltip: "3rd place in Wild League championship – Bronze lion" },
-  ];
+function placementLabel(awardCode: AwardCode, competition: RewardCompetition): string {
+  const comp = competitionLabel(competition);
+  switch (awardCode) {
+    case "champion":
+      return `${comp} Champion`;
+    case "runner_up":
+      return `${comp} Runner-up`;
+    case "third_place":
+      return `${comp} Third Place`;
+    default:
+      return DEFAULT_AWARD_LABELS[awardCode] ?? awardCode;
+  }
+}
 
-  for (const def of defs) {
-    const raw = driver[def.field];
-    const count = raw ? parseInt(raw, 10) : 0;
-    if (!count || count <= 0) continue;
-    for (let i = 0; i < count; i++) {
-      achievements.push({
-        icon: <def.Icon tier={def.tier} size={iconSize} />,
-        tooltip: def.tooltip,
-        ariaLabel: def.label,
-      });
-    }
+export function getAwardIcon(
+  awardCode: AwardCode,
+  size = 18,
+  competition: RewardCompetition = "main",
+): React.ReactNode {
+  const colorGold = MEDAL_COLORS.gold;
+  const colorSilver = MEDAL_COLORS.silver;
+  const colorBronze = MEDAL_COLORS.bronze;
+  const purple = "#a855f7";
+  const blue = "#60a5fa";
+  const green = "#34d399";
+  let baseIcon: React.ReactNode;
+  switch (awardCode) {
+    case "champion":
+      baseIcon =
+        competition === "lower" ? (
+          <PlateIcon tier="gold" size={size} />
+        ) : competition === "wild" ? (
+          <LionIcon tier="gold" size={size} />
+        ) : (
+          <TrophyIcon tier="gold" size={size} />
+        );
+      break;
+    case "runner_up":
+      baseIcon =
+        competition === "lower" ? (
+          <PlateIcon tier="silver" size={size} />
+        ) : competition === "wild" ? (
+          <LionIcon tier="silver" size={size} />
+        ) : (
+          <TrophyIcon tier="silver" size={size} />
+        );
+      break;
+    case "third_place":
+      baseIcon =
+        competition === "lower" ? (
+          <PlateIcon tier="bronze" size={size} />
+        ) : competition === "wild" ? (
+          <LionIcon tier="bronze" size={size} />
+        ) : (
+          <TrophyIcon tier="bronze" size={size} />
+        );
+      break;
+    case "constructors_champion":
+      baseIcon = <TeamCupIcon color={colorGold} size={size} />;
+      break;
+    case "constructors_runner_up":
+      baseIcon = <TeamCupIcon color={colorSilver} size={size} />;
+      break;
+    case "constructors_third_place":
+      baseIcon = <TeamCupIcon color={colorBronze} size={size} />;
+      break;
+    case "best_of_rest":
+      baseIcon = <RibbonIcon color={purple} size={size} />;
+      break;
+    case "cleanest_driver":
+      baseIcon = <ShieldCheckIcon color={green} size={size} />;
+      break;
+    case "driver_of_season":
+      baseIcon = <SparkIcon color={colorGold} size={size} />;
+      break;
+    case "grid_climber":
+      baseIcon = <UpArrowIcon color={blue} size={size} />;
+      break;
+    case "mr_consistent":
+      baseIcon = <TargetIcon color={colorSilver} size={size} />;
+      break;
+    case "most_improved":
+      baseIcon = <UpArrowIcon color={purple} size={size} />;
+      break;
+    case "most_valuable":
+      baseIcon = <CrownIcon color={colorGold} size={size} />;
+      break;
+    default:
+      baseIcon = <TrophyIcon tier="gold" size={size} />;
   }
 
-  return achievements;
+  return baseIcon;
+}
+
+export function buildAchievements(driver: Driver, iconSize = 18): AchievementDef[] {
+  const rewards = driver.rewards ?? [];
+  if (rewards.length === 0) return [];
+
+  const grouped = new Map<
+    string,
+    {
+      awardCode: AwardCode;
+      competition: RewardCompetition;
+      count: number;
+      seasons: number[];
+      notes: string[];
+      tooltip?: string;
+    }
+  >();
+
+  for (const reward of rewards) {
+    const groupKey = `${reward.competition}:${reward.award_code}`;
+    const curr = grouped.get(groupKey) ?? {
+      awardCode: reward.award_code,
+      competition: reward.competition,
+      count: 0,
+      seasons: [],
+      notes: [],
+      tooltip: reward.tooltip,
+    };
+    curr.count += 1;
+    curr.seasons.push(reward.season_id);
+    if (reward.notes) curr.notes.push(reward.notes);
+    if (reward.tooltip) curr.tooltip = reward.tooltip;
+    grouped.set(groupKey, curr);
+  }
+
+  return Array.from(grouped.entries())
+    .sort(([, a], [, b]) => {
+      const rankA = DEFAULT_AWARD_RANK[a.awardCode] ?? 999;
+      const rankB = DEFAULT_AWARD_RANK[b.awardCode] ?? 999;
+      if (rankA !== rankB) return rankA - rankB;
+      return a.competition.localeCompare(b.competition);
+    })
+    .map(([, info]) => {
+    const label = placementLabel(info.awardCode, info.competition);
+    const seasonList = Array.from(new Set(info.seasons)).sort((a, b) => a - b);
+    const defaultTooltip =
+      DEFAULT_AWARD_TOOLTIPS[info.awardCode] ?? DEFAULT_AWARD_LABELS[info.awardCode] ?? label;
+    const tipParts = [
+      label,
+      info.tooltip || defaultTooltip,
+      `Seasons: ${seasonList.map((s) => `S${s}`).join(", ")}`,
+      info.notes.length > 0
+        ? `Notes: ${Array.from(new Set(info.notes)).join(" | ")}`
+        : "",
+    ].filter(Boolean);
+
+      return {
+        icon: getAwardIcon(info.awardCode, iconSize, info.competition),
+        tooltip: tipParts.join(" — "),
+        ariaLabel: `${label} (${info.count})`,
+        count: info.count,
+      };
+    });
 }
 
 /* ------------------------------------------------------------------ */
@@ -231,6 +454,9 @@ function InlineTooltip({
       onMouseEnter={show}
       onMouseLeave={hide}
       onClick={() => (visible ? hide() : show())}
+      onFocus={show}
+      onBlur={hide}
+      tabIndex={0}
     >
       {children}
       {visible && (
@@ -271,10 +497,20 @@ export function AchievementBadgeList({
 }) {
   const achievements = buildAchievements(driver, iconSize);
   if (achievements.length === 0) return null;
+  const maxVisible = 6;
+  const visible = achievements.slice(0, maxVisible);
+  const hiddenCount = Math.max(0, achievements.length - maxVisible);
+  const hiddenTooltip =
+    hiddenCount > 0
+      ? achievements
+          .slice(maxVisible)
+          .map((a) => a.ariaLabel.replace(/\s*\(\d+\)$/, ""))
+          .join(", ")
+      : "";
 
   return (
     <span className="inline-flex shrink-0 items-center gap-0.5">
-      {achievements.map((ach, i) => (
+      {visible.map((ach, i) => (
         <InlineTooltip key={i} text={ach.tooltip}>
           <span
             className="inline-flex cursor-help items-center justify-center"
@@ -285,6 +521,13 @@ export function AchievementBadgeList({
           </span>
         </InlineTooltip>
       ))}
+      {hiddenCount > 0 && (
+        <InlineTooltip text={`More awards: ${hiddenTooltip}`}>
+          <span className="inline-flex cursor-help items-center justify-center rounded-full border border-white/15 bg-white/5 px-1.5 text-[10px] font-semibold text-white/75">
+            +{hiddenCount}
+          </span>
+        </InlineTooltip>
+      )}
     </span>
   );
 }

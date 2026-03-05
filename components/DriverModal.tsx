@@ -5,7 +5,8 @@ import { createPortal } from "react-dom";
 import Image from "next/image";
 import LoadingLink from "@/components/LoadingLink";
 import type { Driver } from "@/lib/driversData";
-import { buildAchievements } from "@/components/AchievementBadges";
+import { buildAchievements, getAwardIcon } from "@/components/AchievementBadges";
+import type { AwardCode, RewardCompetition } from "@/lib/rewardsData";
 
 type DriverModalProps = {
   driver: Driver;
@@ -159,7 +160,7 @@ function Tooltip({ text, children, triggerClassName, wide }: { text: React.React
     left = Math.max(8, Math.min(left, containerRect.width - TOOLTIP_W - 8));
 
     setPos({ top, left, above });
-  }, [container]);
+  }, [container, wide]);
 
   const show = useCallback(() => {
     reposition();
@@ -256,6 +257,175 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
   const hasAnyRatings = hasAllTimeRatings || hasSeasonRatings;
 
   const achievements = buildAchievements(driver);
+  const driverRewards = driver.rewards ?? [];
+  const countRewards = (
+    competition: RewardCompetition,
+    awardCode: AwardCode,
+  ): number =>
+    driverRewards.filter(
+      (r) => r.competition === competition && r.award_code === awardCode,
+    ).length;
+  const seasonsFor = (
+    competitions: RewardCompetition[],
+    awardCodes: AwardCode[],
+  ): number[] =>
+    Array.from(
+      new Set(
+        driverRewards
+          .filter(
+            (r) =>
+              competitions.includes(r.competition) &&
+              awardCodes.includes(r.award_code),
+          )
+          .map((r) => r.season_id),
+      ),
+    ).sort((a, b) => a - b);
+  const rewardStatCards = [
+    {
+      label: "Main Champion Titles",
+      value: countRewards("main", "champion"),
+      tooltip: "Seasons won as Main League champion.",
+      awardCode: "champion" as AwardCode,
+      iconCompetition: "main" as RewardCompetition,
+      seasons: seasonsFor(["main"], ["champion"]),
+    },
+    {
+      label: "Main 2nd Titles",
+      value: countRewards("main", "runner_up"),
+      tooltip: "Seasons finished 2nd in Main League.",
+      awardCode: "runner_up" as AwardCode,
+      iconCompetition: "main" as RewardCompetition,
+      seasons: seasonsFor(["main"], ["runner_up"]),
+    },
+    {
+      label: "Main 3rd Titles",
+      value: countRewards("main", "third_place"),
+      tooltip: "Seasons finished 3rd in Main League.",
+      awardCode: "third_place" as AwardCode,
+      iconCompetition: "main" as RewardCompetition,
+      seasons: seasonsFor(["main"], ["third_place"]),
+    },
+    {
+      label: "Lower Champion Titles",
+      value: countRewards("lower", "champion"),
+      tooltip: "Seasons won as Lower League champion.",
+      awardCode: "champion" as AwardCode,
+      iconCompetition: "lower" as RewardCompetition,
+      seasons: seasonsFor(["lower"], ["champion"]),
+    },
+    {
+      label: "Lower 2nd Titles",
+      value: countRewards("lower", "runner_up"),
+      tooltip: "Seasons finished 2nd in Lower League.",
+      awardCode: "runner_up" as AwardCode,
+      iconCompetition: "lower" as RewardCompetition,
+      seasons: seasonsFor(["lower"], ["runner_up"]),
+    },
+    {
+      label: "Lower 3rd Titles",
+      value: countRewards("lower", "third_place"),
+      tooltip: "Seasons finished 3rd in Lower League.",
+      awardCode: "third_place" as AwardCode,
+      iconCompetition: "lower" as RewardCompetition,
+      seasons: seasonsFor(["lower"], ["third_place"]),
+    },
+    {
+      label: "Wild Champion Titles",
+      value: countRewards("wild", "champion"),
+      tooltip: "Seasons won as Wild League champion.",
+      awardCode: "champion" as AwardCode,
+      iconCompetition: "wild" as RewardCompetition,
+      seasons: seasonsFor(["wild"], ["champion"]),
+    },
+    {
+      label: "Wild 2nd Titles",
+      value: countRewards("wild", "runner_up"),
+      tooltip: "Seasons finished 2nd in Wild League.",
+      awardCode: "runner_up" as AwardCode,
+      iconCompetition: "wild" as RewardCompetition,
+      seasons: seasonsFor(["wild"], ["runner_up"]),
+    },
+    {
+      label: "Wild 3rd Titles",
+      value: countRewards("wild", "third_place"),
+      tooltip: "Seasons finished 3rd in Wild League.",
+      awardCode: "third_place" as AwardCode,
+      iconCompetition: "wild" as RewardCompetition,
+      seasons: seasonsFor(["wild"], ["third_place"]),
+    },
+    {
+      label: "Best of the Rest",
+      value:
+        countRewards("main", "best_of_rest") +
+        countRewards("lower", "best_of_rest") +
+        countRewards("wild", "best_of_rest"),
+      tooltip: "Finished 4th overall in a season championship.",
+      awardCode: "best_of_rest" as AwardCode,
+      iconCompetition: "main" as RewardCompetition,
+      seasons: seasonsFor(["main", "lower", "wild"], ["best_of_rest"]),
+    },
+    {
+      label: "Cleanest Driver",
+      value:
+        countRewards("main", "cleanest_driver") +
+        countRewards("lower", "cleanest_driver") +
+        countRewards("wild", "cleanest_driver"),
+      tooltip: "Lowest combined penalties (game + stewards) across a season.",
+      awardCode: "cleanest_driver" as AwardCode,
+      iconCompetition: "main" as RewardCompetition,
+      seasons: seasonsFor(["main", "lower", "wild"], ["cleanest_driver"]),
+    },
+    {
+      label: "Driver of the Season",
+      value:
+        countRewards("main", "driver_of_season") +
+        countRewards("lower", "driver_of_season") +
+        countRewards("wild", "driver_of_season"),
+      tooltip: "Most Driver of the Day awards in a season.",
+      awardCode: "driver_of_season" as AwardCode,
+      iconCompetition: "main" as RewardCompetition,
+      seasons: seasonsFor(["main", "lower", "wild"], ["driver_of_season"]),
+    },
+    {
+      label: "Grid Climber",
+      value:
+        countRewards("main", "grid_climber") +
+        countRewards("lower", "grid_climber") +
+        countRewards("wild", "grid_climber"),
+      tooltip: "Most total positions gained across a season.",
+      awardCode: "grid_climber" as AwardCode,
+      iconCompetition: "main" as RewardCompetition,
+      seasons: seasonsFor(["main", "lower", "wild"], ["grid_climber"]),
+    },
+    {
+      label: "Mr. Consistent",
+      value:
+        countRewards("main", "mr_consistent") +
+        countRewards("lower", "mr_consistent") +
+        countRewards("wild", "mr_consistent"),
+      tooltip: "Finished the most races in a season.",
+      awardCode: "mr_consistent" as AwardCode,
+      iconCompetition: "main" as RewardCompetition,
+      seasons: seasonsFor(["main", "lower", "wild"], ["mr_consistent"]),
+    },
+    {
+      label: "Most Improved",
+      value: countRewards("community", "most_improved"),
+      tooltip: "Community vote: Most Improved Driver.",
+      awardCode: "most_improved" as AwardCode,
+      iconCompetition: "community" as RewardCompetition,
+      seasons: seasonsFor(["community"], ["most_improved"]),
+    },
+    {
+      label: "Most Valuable",
+      value: countRewards("community", "most_valuable"),
+      tooltip: "Community vote: Most Valuable Driver.",
+      awardCode: "most_valuable" as AwardCode,
+      iconCompetition: "community" as RewardCompetition,
+      seasons: seasonsFor(["community"], ["most_valuable"]),
+    },
+  ];
+  const earnedRewardStats = rewardStatCards.filter((item) => item.value > 0);
 
   return (
     <div
@@ -313,7 +483,7 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
                       {achievements.map((ach, i) => (
                         <Tooltip key={i} text={ach.tooltip}>
                           <span
-                            className="flex h-[26px] w-[26px] cursor-help items-center justify-center rounded-md border border-white/10 bg-white/5 transition hover:bg-white/10"
+                            className="flex min-h-[26px] min-w-[26px] cursor-help items-center justify-center rounded-md border border-white/10 bg-white/5 px-0.5 transition hover:bg-white/10"
                             aria-label={ach.ariaLabel}
                             role="img"
                           >
@@ -354,6 +524,41 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
             </div>
 
             {/* ---- Quick Stats + Toggle ---- */}
+            {earnedRewardStats.length > 0 && (
+              <div className="mt-8">
+                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-white/60">
+                  Records & Awards
+                </h3>
+                <div className="mt-3 rounded-xl border border-white/10 bg-white/5 px-4 py-2">
+                  <ul className="divide-y divide-white/10">
+                    {earnedRewardStats.map((item) => (
+                      <li key={item.label} className="flex items-center justify-between py-1.5 text-sm">
+                        <Tooltip text={item.tooltip}>
+                          <span className="inline-flex cursor-help items-center gap-2 text-white/75">
+                            <span className="inline-flex h-4 w-4 items-center justify-center">
+                              {getAwardIcon(item.awardCode, 14, item.iconCompetition)}
+                            </span>
+                            <span className="text-[13px]">{item.label}</span>
+                          </span>
+                        </Tooltip>
+                        <Tooltip
+                          text={
+                            item.seasons.length > 0
+                              ? `Seasons: ${item.seasons.map((s: number) => `S${s}`).join(", ")}`
+                              : "No seasons found"
+                          }
+                        >
+                          <span className="cursor-help font-display text-sm font-semibold text-[#D4AF37]">
+                            {item.value}
+                          </span>
+                        </Tooltip>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+
             {(hasAnyStats || hasAnyRatings) && (
               <div className="mt-8">
                 <div className="flex flex-wrap items-center justify-between gap-4">

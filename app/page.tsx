@@ -30,6 +30,7 @@ import {
   mapLeagueStandings,
   applyLeagueStandings,
 } from "@/lib/driversData";
+import { attachRewardsToDrivers, fetchRewards } from "@/lib/rewardsData";
 import { fetchUniqueWinnersCount, fetchLeagueTotals } from "@/lib/statsData";
 import { fetchLatestArticles, formatNewsDate } from "@/lib/newsData";
 import {
@@ -59,13 +60,14 @@ export default async function Home() {
     resolveTemplate(text, currentSeasonLabel, seasonCount, templateExtras);
 
   /* ---- Fetch schedule + race results + drivers/teams + standings + winners count in parallel ---- */
-  const [scheduleCsv, raceResultsByEvent, driversCsv, teamsCsv, standingsCsv, uniqueWinners, leagueTotals, latestNews] =
+  const [scheduleCsv, raceResultsByEvent, driversCsv, teamsCsv, standingsCsv, rewards, uniqueWinners, leagueTotals, latestNews] =
     await Promise.all([
       fetchCsv(GLOBAL_CSV_URLS.schedule).catch(() => ""),
       fetchAllRaceResults(GLOBAL_CSV_URLS.raceResults),
       fetchCsv(GLOBAL_CSV_URLS.drivers).catch(() => ""),
       fetchCsv(GLOBAL_CSV_URLS.teams).catch(() => ""),
       fetchCsv(GLOBAL_CSV_URLS.leagueStandings).catch(() => ""),
+      fetchRewards(GLOBAL_CSV_URLS.rewards),
       fetchUniqueWinnersCount(),
       fetchLeagueTotals(),
       fetchLatestArticles(3),
@@ -107,6 +109,7 @@ export default async function Home() {
     );
     allDrivers = applyLeagueStandings(allDrivers, standings);
   }
+  allDrivers = attachRewardsToDrivers(allDrivers, rewards);
 
   const allTeams = teamsCsv
     ? mapTeams(parseCsv<Record<string, string>>(teamsCsv))

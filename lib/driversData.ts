@@ -1,3 +1,5 @@
+import type { Reward } from "@/lib/rewardsData";
+
 export type DriverRole = "main" | "reserve" | "historic";
 
 export type DriverStats = {
@@ -83,16 +85,8 @@ export type Driver = {
   // Race events (total participated)
   events?: string;
   season_events?: string;
-  // Achievements (counts per placement tier)
-  titles_league_1st?: string;
-  titles_league_2nd?: string;
-  titles_league_3rd?: string;
-  titles_lower_1st?: string;
-  titles_lower_2nd?: string;
-  titles_lower_3rd?: string;
-  titles_wild_1st?: string;
-  titles_wild_2nd?: string;
-  titles_wild_3rd?: string;
+  // Season-aware rewards (loaded from rewards dataset)
+  rewards?: Reward[];
   // League standings (injected via applyLeagueStandings)
   league_rank_main?: string;
   league_rank_wild?: string;
@@ -227,16 +221,7 @@ export function mapDrivers(raw: Record<string, string>[]): Driver[] {
     // Race events
     events: row.events || undefined,
     season_events: row.season_events || undefined,
-    // Achievements
-    titles_league_1st: row.titles_league_1st || undefined,
-    titles_league_2nd: row.titles_league_2nd || undefined,
-    titles_league_3rd: row.titles_league_3rd || undefined,
-    titles_lower_1st: row.titles_lower_1st || undefined,
-    titles_lower_2nd: row.titles_lower_2nd || undefined,
-    titles_lower_3rd: row.titles_lower_3rd || undefined,
-    titles_wild_1st: row.titles_wild_1st || undefined,
-    titles_wild_2nd: row.titles_wild_2nd || undefined,
-    titles_wild_3rd: row.titles_wild_3rd || undefined,
+    rewards: [],
   }));
 }
 

@@ -11,6 +11,7 @@ import {
   mapLeagueStandings,
   applyLeagueStandings,
 } from "@/lib/driversData";
+import { attachRewardsToDrivers, fetchRewards } from "@/lib/rewardsData";
 import {
   fetchSeasonsConfig,
   resolveCurrentSeason,
@@ -21,7 +22,7 @@ import {
 /*  Schedule page – Server Component                                   */
 /*  ----------------------------------------------------------------  */
 /*  Fetches ALL schedule events & race results (every season) from     */
-/*  global CSVs.  The client component filters by selected season.     */
+/*  source CSV files. The client component filters by selected season.  */
 /* ------------------------------------------------------------------ */
 
 export default async function SchedulePage() {
@@ -30,13 +31,14 @@ export default async function SchedulePage() {
   const currentSeason = resolveCurrentSeason(seasonsConfig);
 
   // 2. Fetch ALL schedule + race results + drivers/teams in parallel
-  const [scheduleCsv, raceResultsByEvent, driversCsv, teamsCsv, standingsCsv] =
+  const [scheduleCsv, raceResultsByEvent, driversCsv, teamsCsv, standingsCsv, rewards] =
     await Promise.all([
       fetchCsv(GLOBAL_CSV_URLS.schedule).catch(() => ""),
       fetchAllRaceResults(GLOBAL_CSV_URLS.raceResults),
       fetchCsv(GLOBAL_CSV_URLS.drivers).catch(() => ""),
       fetchCsv(GLOBAL_CSV_URLS.teams).catch(() => ""),
       fetchCsv(GLOBAL_CSV_URLS.leagueStandings).catch(() => ""),
+      fetchRewards(GLOBAL_CSV_URLS.rewards),
     ]);
 
   // 3. Parse ALL events (every season)
@@ -57,6 +59,7 @@ export default async function SchedulePage() {
     );
     allDrivers = applyLeagueStandings(allDrivers, standings);
   }
+  allDrivers = attachRewardsToDrivers(allDrivers, rewards);
 
   const allTeams = teamsCsv
     ? mapTeams(parseCsv<Record<string, string>>(teamsCsv))

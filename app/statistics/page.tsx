@@ -9,6 +9,7 @@ import {
   mapLeagueStandings,
   applyLeagueStandings,
 } from "@/lib/driversData";
+import { attachRewardsToDrivers, fetchRewards } from "@/lib/rewardsData";
 import {
   fetchSeasonsConfig,
   resolveCurrentSeason,
@@ -38,6 +39,7 @@ export default async function TablesPage() {
     driversCsv,
     teamsCsv,
     standingsCsv,
+    rewards,
   ] = await Promise.all([
     fetchStandings(GLOBAL_CSV_URLS.driversStandingsMain),
     fetchStandings(GLOBAL_CSV_URLS.constructorsStandingsMain),
@@ -46,6 +48,7 @@ export default async function TablesPage() {
     fetchCsv(GLOBAL_CSV_URLS.drivers).catch(() => ""),
     fetchCsv(GLOBAL_CSV_URLS.teams).catch(() => ""),
     fetchCsv(GLOBAL_CSV_URLS.leagueStandings).catch(() => ""),
+    fetchRewards(GLOBAL_CSV_URLS.rewards),
   ]);
 
   // 3. Parse drivers & teams
@@ -63,6 +66,7 @@ export default async function TablesPage() {
     );
     drivers = applyLeagueStandings(drivers, standings);
   }
+  drivers = attachRewardsToDrivers(drivers, rewards);
 
   return (
     <main className="bg-[#0B0B0E] text-white">
@@ -82,6 +86,7 @@ export default async function TablesPage() {
             }}
             drivers={drivers}
             teams={teams}
+            rewards={rewards}
             placeholderSrc={PLACEHOLDER_PHOTO}
           />
         </div>

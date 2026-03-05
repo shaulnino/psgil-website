@@ -89,6 +89,9 @@ export const GLOBAL_CSV_URLS = {
   /* Schedule & race results (all seasons, filtered by "season" column) */
   schedule: sheetUrl(GID.schedule),
   raceResults: sheetUrl(GID.raceResults),
+
+  /* Rewards dataset (optional override via env) */
+  rewards: process.env.REWARDS_SHEET_URL?.trim() || "",
 };
 
 /* ------------------------------------------------------------------ */

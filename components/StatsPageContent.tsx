@@ -81,7 +81,26 @@ function parseNum(v: string): number | null {
 }
 
 function isLowerBetterMetric(metricLabel: string): boolean {
-  const s = metricLabel.toLowerCase();
+  const s = metricLabel.toLowerCase().replace(/\s+/g, " ").trim();
+
+  // Explicit overrides from competition rules:
+  // these are cumulative/achievement metrics where higher always wins.
+  if (
+    s.includes("top 10 finishes") ||
+    s.includes("top 5 finishes") ||
+    s.includes("top 3 finishes %") ||
+    s.includes("position changes") ||
+    s.includes("avg. position changes per race") ||
+    s.includes("pole positions")
+  ) {
+    return false;
+  }
+
+  // Reliability penalties where lower is better.
+  if (s === "dnf" || s === "dns" || s === "dsq") {
+    return true;
+  }
+
   return (
     s.includes("position") ||
     s.includes("grid") ||
@@ -156,20 +175,22 @@ function resolveMetrics(
 
 function TabBar({ tabs, active, onChange }: { tabs: readonly string[]; active: string; onChange: (t: string) => void }) {
   return (
-    <div className="flex gap-1 rounded-xl bg-white/5 p-1">
-      {tabs.map((t) => (
-        <button
-          key={t}
-          onClick={() => onChange(t)}
-          className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
-            active === t
-              ? "bg-[#7020B0] text-white shadow"
-              : "text-white/60 hover:text-white hover:bg-white/5"
-          }`}
-        >
-          {t}
-        </button>
-      ))}
+    <div className="overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+      <div className="inline-flex min-w-max snap-x snap-mandatory gap-1 rounded-xl bg-white/5 p-1">
+        {tabs.map((t) => (
+          <button
+            key={t}
+            onClick={() => onChange(t)}
+            className={`shrink-0 snap-start rounded-lg px-3 py-2 text-xs font-semibold transition sm:px-4 sm:text-sm ${
+              active === t
+                ? "bg-[#7020B0] text-white shadow"
+                : "text-white/60 hover:bg-white/5 hover:text-white"
+            }`}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
