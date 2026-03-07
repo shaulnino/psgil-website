@@ -103,9 +103,9 @@ function createRssXml(baseUrl: string, itemXml: string): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
 <channel>
-  <title>PSGiL Race Alerts</title>
+  <title>PSGiL Race Alerts (Instagram)</title>
   <link>${xmlEscape(`${baseUrl}/schedule`)}</link>
-  <description>Automated countdown alerts before PSGiL race start.</description>
+  <description>Instagram-ready race reminder alerts for PSGiL.</description>
   <language>en</language>
   <lastBuildDate>${now}</lastBuildDate>
 ${itemXml}
@@ -114,22 +114,23 @@ ${itemXml}
 }
 
 function createAlertItemXml(baseUrl: string, event: RaceEvent): string {
-  const title = `PSGiL Race Starting Soon — ${event.race_name}`;
-  const description = "The race will begin shortly. Watch it live here:";
+  const title = `PSGiL goes live in 15 minutes! ${event.race_name}`;
   const link = buildWatchLink(baseUrl, event);
-  const guid = buildAlertGuid(event);
+  const guid = `${buildAlertGuid(event)}-instagram`;
   const caption = `PSGiL goes live in 15 minutes! ${event.race_name}\nWatch on our website:\n${link}`;
+  const description = "Race reminder: the stream starts shortly.";
   const pubDate = new Date().toUTCString();
-  const posterUrl = resolveAbsoluteUrl(
+  const imageUrl = resolveAbsoluteUrl(
     baseUrl,
     event.poster_image || DEFAULT_SOCIAL_IMAGE,
   );
-  const posterMimeType = posterUrl ? inferMimeTypeFromUrl(posterUrl) : "";
-  const mediaTag = posterUrl
-    ? `\n    <media:content url="${xmlEscape(posterUrl)}" medium="image" />`
+  const imageMimeType = imageUrl ? inferMimeTypeFromUrl(imageUrl) : "";
+
+  const mediaTag = imageUrl
+    ? `\n    <media:content url="${xmlEscape(imageUrl)}" medium="image" />`
     : "";
-  const enclosureTag = posterUrl
-    ? `\n    <enclosure url="${xmlEscape(posterUrl)}" type="${posterMimeType}" />`
+  const enclosureTag = imageUrl
+    ? `\n    <enclosure url="${xmlEscape(imageUrl)}" type="${imageMimeType}" />`
     : "";
 
   return `  <item>
@@ -140,7 +141,7 @@ function createAlertItemXml(baseUrl: string, event: RaceEvent): string {
     <pubDate>${pubDate}</pubDate>${mediaTag}${enclosureTag}
     <social_type>race_alert</social_type>
     <social_caption>${xmlEscape(caption)}</social_caption>
-    <social_image_url>${xmlEscape(posterUrl)}</social_image_url>
+    <social_image_url>${xmlEscape(imageUrl)}</social_image_url>
   </item>`;
 }
 
@@ -201,7 +202,7 @@ export async function GET(request: Request) {
       nowMs >= startTs - ALERT_WINDOW_MINUTES * 60_000 &&
       nowMs < startTs,
   );
-  const alertKey = buildAlertKey(targetEvent);
+  const alertKey = `${buildAlertKey(targetEvent)}|instagram`;
   const alreadyPosted = await hasRaceAlertBeenPosted(alertKey);
   const shouldEmit = force || (inWindow && !alreadyPosted);
 

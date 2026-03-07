@@ -92,6 +92,7 @@ Use the RSS feed to drive no-code automations (IFTTT, Zapier, Make, social sched
 
 - Feed URL: `/news/rss.xml`
 - Full production example: `https://psgil.com/news/rss.xml`
+- Instagram-ready variant: `/rss/articles-instagram.xml`
 
 The feed is RSS 2.0 with media namespace and includes:
 
@@ -107,9 +108,11 @@ Race countdown alert feed (for social auto-posting without Facebook API):
 
 - Feed URL: `/rss/race-alerts.xml`
 - Full production example: `https://psgil.com/rss/race-alerts.xml`
+- Instagram-ready variant: `https://psgil.com/rss/race-alerts-instagram.xml`
 - Emits one alert item only in the 15-minute pre-race window for the next scheduled race
 - Prevents duplicate alerts using persisted posted-state storage
 - Setup guide: `docs/race-alert-rss-zapier.md`
+- Instagram setup guide: `docs/instagram-rss-zapier.md`
 
 ## Season Rewards Dataset
 
