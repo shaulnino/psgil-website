@@ -48,32 +48,32 @@ export async function GET() {
   const itemsXml = articles
     .map((article) => {
       const articleUrl = `${baseUrl}/news/${encodeURIComponent(article.slug)}`;
-      const title = xmlEscape(article.title);
-      const description = xmlEscape(article.excerpt);
-      const pubDate = new Date(`${article.date}T00:00:00Z`).toUTCString();
       const imageUrl = resolveAbsoluteUrl(
         baseUrl,
         article.coverImageUrl || DEFAULT_SOCIAL_IMAGE,
       );
       const caption = `New on PSGiL News: ${article.title}\nRead more on our website.\n${articleUrl}`;
+      const pubDate = new Date(`${article.date}T00:00:00Z`).toUTCString();
+      const tags = article.tags.length ? `Tags: ${article.tags.join(", ")}` : "";
+      const description = [article.excerpt, tags].filter(Boolean).join(" | ");
+
       const mediaTag = imageUrl
         ? `\n      <media:content url="${xmlEscape(imageUrl)}" medium="image" />`
         : "";
       const enclosureTag = imageUrl
         ? `\n      <enclosure url="${xmlEscape(imageUrl)}" type="${inferMimeTypeFromUrl(imageUrl)}" />`
         : "";
-      const socialFields = `\n      <social_type>article</social_type>\n      <social_caption>${xmlEscape(caption)}</social_caption>\n      <social_image_url>${xmlEscape(imageUrl)}</social_image_url>`;
-      const tagsXml = article.tags
-        .map((tag) => `\n      <category>${xmlEscape(tag)}</category>`)
-        .join("");
-      const categoryXml = `\n      <category>${xmlEscape(article.category)}</category>`;
 
       return `  <item>
-      <title>${title}</title>
+      <title>${xmlEscape(article.title)}</title>
       <link>${xmlEscape(articleUrl)}</link>
       <guid isPermaLink="true">${xmlEscape(articleUrl)}</guid>
-      <description>${description}</description>
-      <pubDate>${pubDate}</pubDate>${mediaTag}${enclosureTag}${categoryXml}${tagsXml}${socialFields}
+      <description>${xmlEscape(description)}</description>
+      <pubDate>${pubDate}</pubDate>${mediaTag}${enclosureTag}
+      <category>${xmlEscape(article.category)}</category>
+      <social_type>article</social_type>
+      <social_caption>${xmlEscape(caption)}</social_caption>
+      <social_image_url>${xmlEscape(imageUrl)}</social_image_url>
     </item>`;
     })
     .join("\n");
@@ -81,9 +81,9 @@ export async function GET() {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
 <channel>
-  <title>PSGiL News</title>
+  <title>PSGiL News (Instagram)</title>
   <link>${xmlEscape(`${baseUrl}/news`)}</link>
-  <description>Latest PSGiL news articles and race updates.</description>
+  <description>Instagram-ready PSGiL news feed.</description>
   <language>en</language>
   <lastBuildDate>${now}</lastBuildDate>
 ${itemsXml}

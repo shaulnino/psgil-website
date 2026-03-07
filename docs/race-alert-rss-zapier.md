@@ -6,6 +6,7 @@ Use this dedicated feed to auto-post a "race starts soon" alert via Zapier.
 
 - Production: `https://psgil.com/rss/race-alerts.xml`
 - Local: `http://localhost:3000/rss/race-alerts.xml`
+- Instagram-specific variant: `https://psgil.com/rss/race-alerts-instagram.xml`
 
 ## How it works
 
@@ -41,7 +42,7 @@ Use this dedicated feed to auto-post a "race starts soon" alert via Zapier.
 ## Debug/testing query params
 
 - `?force=1`
-  - Emit an alert item for the next scheduled race even if not in the 5-minute window.
+  - Emit an alert item for the next scheduled race even if not in the 15-minute window.
 - `?race_id=s6_r04_main&force=1`
   - Emit for a specific race id.
 - `?commit=1`
@@ -53,4 +54,5 @@ Examples:
 - `https://psgil.com/rss/race-alerts.xml?force=1`
 - `https://psgil.com/rss/race-alerts.xml?race_id=s6_r04_main&force=1`
 - `https://psgil.com/rss/race-alerts.xml?race_id=s6_r04_main&force=1&commit=1`
+- `https://psgil.com/rss/race-alerts-instagram.xml?force=1`
 
