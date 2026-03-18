@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import LoadingLink from "@/components/LoadingLink";
 import YouTubeEmbed from "@/components/YouTubeEmbed";
 import RaceResultsTable from "@/components/RaceResultsTable";
 import StandingsTable from "@/components/StandingsTable";
@@ -17,6 +16,8 @@ type NewsArticleActionsProps = {
   resultsCaption: string;
   seasonStandingsRows: StandingsRow[];
   seasonTableCaption: string;
+  constructorsStandingsRows?: StandingsRow[];
+  constructorsTableCaption?: string;
   drivers: Driver[];
   teams: Team[];
 };
@@ -73,15 +74,19 @@ export default function NewsArticleActions({
   resultsCaption,
   seasonStandingsRows,
   seasonTableCaption,
+  constructorsStandingsRows = [],
+  constructorsTableCaption = "Main Constructors Standings",
   drivers,
   teams,
 }: NewsArticleActionsProps) {
   const [watchOpen, setWatchOpen] = useState(false);
   const [resultsOpen, setResultsOpen] = useState(false);
   const [seasonTableOpen, setSeasonTableOpen] = useState(false);
+  const [constructorsTableOpen, setConstructorsTableOpen] = useState(false);
   const hasResults = resultsRows.length > 0;
   const hasWatch = !!watchUrl;
   const hasSeasonTable = seasonStandingsRows.length > 0;
+  const hasConstructorsTable = constructorsStandingsRows.length > 0;
 
   if (!isRecap && !isPreview) return null;
 
@@ -94,6 +99,7 @@ export default function NewsArticleActions({
               type="button"
               onClick={() => setWatchOpen(true)}
               disabled={!hasWatch}
+              title={hasWatch ? undefined : "YouTube link not available yet"}
               className="inline-flex items-center gap-2 rounded-full bg-[#7020B0] px-4 py-2 text-sm font-semibold text-white shadow-[0_0_18px_rgba(112,32,176,0.35)] transition enabled:hover:-translate-y-0.5 enabled:hover:shadow-[0_0_24px_rgba(112,32,176,0.55)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -112,6 +118,30 @@ export default function NewsArticleActions({
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-6m4 6V7m4 10v-3M5 21h14" />
               </svg>
               Race Results
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSeasonTableOpen(true)}
+              disabled={!hasSeasonTable}
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/[0.03] px-4 py-2 text-sm font-semibold text-white/90 transition enabled:hover:border-[#7020B0]/55 enabled:hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 3v18h18M7 14v4m5-8v8m5-12v12" />
+              </svg>
+              Drivers Championship
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setConstructorsTableOpen(true)}
+              disabled={!hasConstructorsTable}
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/[0.03] px-4 py-2 text-sm font-semibold text-white/90 transition enabled:hover:border-[#7020B0]/55 enabled:hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+              Constructors Championship
             </button>
           </>
         )}
@@ -155,7 +185,7 @@ export default function NewsArticleActions({
       )}
 
       {seasonTableOpen && hasSeasonTable && (
-        <ModalShell title="Season Table" onClose={() => setSeasonTableOpen(false)}>
+        <ModalShell title="Drivers Championship" onClose={() => setSeasonTableOpen(false)}>
           <div className="max-h-[85vh] overflow-auto rounded-2xl border border-white/10 bg-[#0B0B0E] p-3 shadow-[0_0_30px_rgba(0,0,0,0.4)]">
             <DriverLookupProvider
               drivers={drivers}
@@ -166,6 +196,24 @@ export default function NewsArticleActions({
                 standings={seasonStandingsRows}
                 caption={seasonTableCaption}
                 type="drivers"
+              />
+            </DriverLookupProvider>
+          </div>
+        </ModalShell>
+      )}
+
+      {constructorsTableOpen && hasConstructorsTable && (
+        <ModalShell title="Constructors Championship" onClose={() => setConstructorsTableOpen(false)}>
+          <div className="max-h-[85vh] overflow-auto rounded-2xl border border-white/10 bg-[#0B0B0E] p-3 shadow-[0_0_30px_rgba(0,0,0,0.4)]">
+            <DriverLookupProvider
+              drivers={drivers}
+              teams={teams}
+              placeholderSrc="/placeholders/driver.png"
+            >
+              <StandingsTable
+                standings={constructorsStandingsRows}
+                caption={constructorsTableCaption}
+                type="constructors"
               />
             </DriverLookupProvider>
           </div>

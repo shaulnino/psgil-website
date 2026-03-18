@@ -49,11 +49,13 @@ function uniqueYoutubeUrls(group: RaceGroup): { label: string; url: string }[] {
   const seen = new Set<string>();
   const result: { label: string; url: string }[] = [];
   for (const e of group.events) {
-    if (e.youtube_url && !seen.has(e.youtube_url)) {
-      seen.add(e.youtube_url);
+    const youtubeUrl = (e.youtube_url ?? "").trim();
+    const hasValidYoutube = !!getYouTubeVideoId(youtubeUrl);
+    if (hasValidYoutube && !seen.has(youtubeUrl)) {
+      seen.add(youtubeUrl);
       result.push({
         label: group.events.length > 1 ? `Watch Race #${e.race_number}` : "Watch the Race",
-        url: e.youtube_url,
+        url: youtubeUrl,
       });
     }
   }
@@ -281,6 +283,7 @@ function RaceGroupCard({
   const hasPoster = !!poster.poster_image;
   const completed = isGroupCompleted(group);
   const youtubeLinks = uniqueYoutubeUrls(group);
+  const hasYoutube = youtubeLinks.length > 0;
   const showResults = completed && hasAnyResults(group, raceResultsByEvent) && !!onShowResults;
   const isWild = group.league.toLowerCase() === "wild";
 
@@ -393,19 +396,34 @@ function RaceGroupCard({
 
       {/* Actions — pushed to the bottom of the card */}
       <div className="mt-auto flex flex-wrap items-center gap-3 pt-5">
-        {youtubeLinks.map((yt) => (
+        {hasYoutube ? (
+          youtubeLinks.map((yt) => (
+            <button
+              key={yt.url}
+              type="button"
+              onClick={() => onWatch?.(yt.label, yt.url)}
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-[#7020B0] px-4 py-2 text-sm font-semibold text-white shadow-[0_0_20px_rgba(112,32,176,0.35)] transition hover:-translate-y-0.5 hover:shadow-[0_0_28px_rgba(112,32,176,0.6)]"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+              </svg>
+              {yt.label}
+            </button>
+          ))
+        ) : (
           <button
-            key={yt.url}
             type="button"
-            onClick={() => onWatch?.(yt.label, yt.url)}
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-[#7020B0] px-4 py-2 text-sm font-semibold text-white shadow-[0_0_20px_rgba(112,32,176,0.35)] transition hover:-translate-y-0.5 hover:shadow-[0_0_28px_rgba(112,32,176,0.6)]"
+            disabled
+            aria-disabled="true"
+            title="YouTube link not available yet"
+            className="inline-flex cursor-not-allowed items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white/45"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
               <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
             </svg>
-            {yt.label}
+            Watch the Race
           </button>
-        ))}
+        )}
         {showResults && (
           <button
             type="button"

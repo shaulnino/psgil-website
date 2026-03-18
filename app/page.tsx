@@ -21,8 +21,9 @@ import {
   getLiveRaceGroup,
   groupTimestamp,
   groupEndTimestamp,
+  toIsraelTimestamp,
 } from "@/lib/scheduleData";
-import type { RaceGroup } from "@/lib/scheduleData";
+import type { RaceGroup, RaceEvent } from "@/lib/scheduleData";
 import { fetchAllRaceResults } from "@/lib/resultsData";
 import {
   mapDrivers,
@@ -33,6 +34,7 @@ import {
 import { attachRewardsToDrivers, fetchRewards } from "@/lib/rewardsData";
 import { fetchUniqueWinnersCount, fetchLeagueTotals } from "@/lib/statsData";
 import { fetchLatestArticles, formatNewsDate } from "@/lib/newsData";
+import { getYouTubeVideoId } from "@/lib/youtube";
 import {
   fetchSeasonsConfig,
   resolveCurrentSeason,
@@ -44,6 +46,11 @@ import {
 const heroImagePath = "/hero.jpg";
 const resolvePublic = (filePath: string) =>
   path.join(process.cwd(), "public", filePath.replace(/^\/+/, ""));
+const newsFallbackImage = "/psgil-banner.png";
+
+function isRemote(src?: string) {
+  return !!src && src.startsWith("http");
+}
 
 export default async function Home() {
   const heroImageExists = existsSync(resolvePublic(heroImagePath));
@@ -82,6 +89,7 @@ export default async function Home() {
   let lastGroup: RaceGroup | null = null;
   let nextGroup: RaceGroup | null = null;
   let liveGroup: RaceGroup | null = null;
+  let seasonEvents: RaceEvent[] = [];
   try {
     if (scheduleCsv) {
       const raw = parseCsv<Record<string, string>>(scheduleCsv);
@@ -90,6 +98,7 @@ export default async function Home() {
       const events = allEvents.filter((e) =>
         matchesSeason(e.season, currentSeason.season_key),
       );
+      seasonEvents = events;
       lastGroup = getLastRaceGroup(events);
       nextGroup = getNextRaceGroup(events);
       liveGroup = getLiveRaceGroup(events);
@@ -147,17 +156,47 @@ export default async function Home() {
   if (lastGroup) {
     const seen = new Set<string>();
     for (const e of lastGroup.events) {
-      if (e.youtube_url && !seen.has(e.youtube_url)) {
-        seen.add(e.youtube_url);
+      const youtubeUrl = (e.youtube_url ?? "").trim();
+      const hasValidYoutube = !!getYouTubeVideoId(youtubeUrl);
+      if (hasValidYoutube && !seen.has(youtubeUrl)) {
+        seen.add(youtubeUrl);
         lastRaceYoutubeLinks.push({
           label: `Watch Race #${e.race_number} – ${e.race_name}`,
-          url: e.youtube_url,
+          url: youtubeUrl,
         });
       }
     }
     // If all races share the same URL, simplify the label
     if (lastRaceYoutubeLinks.length === 1) {
       lastRaceYoutubeLinks[0].label = siteConfig.hero.secondaryCtaLabel;
+    }
+  }
+
+  // Fallback for the hero button:
+  // if the latest race group has no valid YouTube URL, use the newest
+  // available URL from this season so "Watch Last Race" still works.
+  if (lastRaceYoutubeLinks.length === 0 && seasonEvents.length > 0) {
+    const completedEvents = seasonEvents.filter(
+      (e) => e.status.toLowerCase() === "completed",
+    );
+    const pool = completedEvents.length > 0 ? completedEvents : seasonEvents;
+
+    const latestWithYoutube = [...pool]
+      .sort((a, b) => {
+        const aTs = toIsraelTimestamp(a.date, a.start_time) ?? 0;
+        const bTs = toIsraelTimestamp(b.date, b.start_time) ?? 0;
+        if (bTs !== aTs) return bTs - aTs;
+        const aRace = parseInt(a.race_number, 10) || 0;
+        const bRace = parseInt(b.race_number, 10) || 0;
+        return bRace - aRace;
+      })
+      .find((e) => !!getYouTubeVideoId((e.youtube_url ?? "").trim()));
+
+    if (latestWithYoutube) {
+      lastRaceYoutubeLinks.push({
+        label: siteConfig.hero.secondaryCtaLabel,
+        url: (latestWithYoutube.youtube_url ?? "").trim(),
+      });
     }
   }
 
@@ -282,33 +321,61 @@ export default async function Home() {
       {featuredNews && (
         <section className="py-4">
           <div className="mx-auto w-full max-w-6xl px-6">
-            <div className="rounded-2xl border border-[#7020B0]/35 bg-[linear-gradient(135deg,rgba(112,32,176,0.16),rgba(11,11,14,0.96))] p-4 md:p-5">
-              <div className="flex flex-wrap items-center gap-3 md:gap-4">
-                <span className="inline-flex items-center rounded-full border border-[#D4AF37]/40 bg-[#D4AF37]/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#D4AF37]">
-                  News Flash
-                </span>
-                <span className="text-[11px] font-semibold uppercase tracking-[0.13em] text-white/55">
-                  {formatNewsDate(featuredNews.date)}
-                </span>
+            <div className="overflow-hidden rounded-2xl border border-[#7020B0]/35 bg-[linear-gradient(135deg,rgba(112,32,176,0.16),rgba(11,11,14,0.98))] shadow-[0_0_32px_rgba(112,32,176,0.16)]">
+              <div className="grid gap-0 md:grid-cols-[240px_1fr]">
                 <LoadingLink
                   href={`/news/${encodeURIComponent(featuredNews.slug)}`}
-                  className="min-w-0 flex-1 text-sm font-semibold text-white transition hover:text-[#d7b3ff] md:text-base"
+                  className="group relative block h-44 md:h-full"
                 >
-                  <span className="line-clamp-2 md:line-clamp-1">{featuredNews.title}</span>
+                  <Image
+                    src={featuredNews.coverImageUrl || newsFallbackImage}
+                    alt={featuredNews.title}
+                    fill
+                    className="object-cover transition duration-300 group-hover:scale-[1.02]"
+                    sizes="(max-width: 768px) 100vw, 240px"
+                    unoptimized={isRemote(featuredNews.coverImageUrl)}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                  <span className="absolute left-3 top-3 inline-flex items-center rounded-full border border-[#D4AF37]/50 bg-[#D4AF37]/12 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#D4AF37]">
+                    Featured Story
+                  </span>
                 </LoadingLink>
-                <div className="ml-auto flex items-center gap-2">
+
+                <div className="p-4 md:p-5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center rounded-full border border-[#7020B0]/45 bg-[#7020B0]/18 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#d9bcff]">
+                      News Flash
+                    </span>
+                    <span className="text-[11px] font-semibold uppercase tracking-[0.13em] text-white/55">
+                      {formatNewsDate(featuredNews.date)}
+                    </span>
+                  </div>
+
                   <LoadingLink
                     href={`/news/${encodeURIComponent(featuredNews.slug)}`}
-                    className="inline-flex items-center rounded-full bg-[#7020B0] px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-[#7f2fc0]"
+                    className="mt-3 block text-base font-semibold leading-tight text-white transition hover:text-[#d7b3ff] md:text-xl"
                   >
-                    Read
+                    <span className="line-clamp-2">{featuredNews.title}</span>
                   </LoadingLink>
-                  <LoadingLink
-                    href="/news"
-                    className="inline-flex items-center rounded-full border border-white/20 px-3.5 py-1.5 text-xs font-semibold text-white/85 transition hover:border-white/35 hover:text-white"
-                  >
-                    All News
-                  </LoadingLink>
+
+                  <p className="mt-2 line-clamp-2 text-sm text-white/65 md:text-[15px]">
+                    {featuredNews.excerpt}
+                  </p>
+
+                  <div className="mt-4 flex items-center gap-2">
+                    <LoadingLink
+                      href={`/news/${encodeURIComponent(featuredNews.slug)}`}
+                      className="inline-flex items-center rounded-full bg-[#7020B0] px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-[#7f2fc0]"
+                    >
+                      Read
+                    </LoadingLink>
+                    <LoadingLink
+                      href="/news"
+                      className="inline-flex items-center rounded-full border border-white/20 px-3.5 py-1.5 text-xs font-semibold text-white/85 transition hover:border-white/35 hover:text-white"
+                    >
+                      All News
+                    </LoadingLink>
+                  </div>
                 </div>
               </div>
             </div>
