@@ -23,6 +23,7 @@ import {
   formatNewsDate,
   renderArticleBody,
 } from "@/lib/newsData";
+import { getYouTubeVideoId } from "@/lib/youtube";
 
 export const revalidate = 300;
 
@@ -146,6 +147,7 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
   let watchUrl: string | null = null;
   let resultsRows: RaceResultRow[] = [];
   let seasonStandingsRows: StandingsRow[] = [];
+  let constructorsStandingsRows: StandingsRow[] = [];
   let modalDrivers: Driver[] = [];
   let modalTeams: Team[] = [];
   if (eventId) {
@@ -155,7 +157,8 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
         ? mapRaceEvents(parseCsv<Record<string, string>>(scheduleCsv))
         : [];
       const matchedEvent = events.find((e) => e.event_id.toLowerCase() === eventId.toLowerCase());
-      if (matchedEvent?.youtube_url) watchUrl = matchedEvent.youtube_url;
+      const candidateWatchUrl = (matchedEvent?.youtube_url ?? "").trim();
+      if (getYouTubeVideoId(candidateWatchUrl)) watchUrl = candidateWatchUrl;
     } catch {
       // Best-effort only; CTAs below still work with schedule fallback links.
     }
@@ -163,13 +166,23 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
 
   if (isRecap && eventId) {
     try {
-      const [allResults, driversCsv, teamsCsv, rewards] = await Promise.all([
+      const [allResults, driversCsv, teamsCsv, rewards, allDriversStandings, allConstructorsStandings] = await Promise.all([
         fetchAllRaceResults(GLOBAL_CSV_URLS.raceResults),
         fetchCsv(GLOBAL_CSV_URLS.drivers).catch(() => ""),
         fetchCsv(GLOBAL_CSV_URLS.teams).catch(() => ""),
         fetchRewards(GLOBAL_CSV_URLS.rewards),
+        seasonKey
+          ? fetchStandings(GLOBAL_CSV_URLS.driversStandingsMain)
+          : Promise.resolve([] as StandingsRow[]),
+        seasonKey
+          ? fetchStandings(GLOBAL_CSV_URLS.constructorsStandingsMain)
+          : Promise.resolve([] as StandingsRow[]),
       ]);
       resultsRows = allResults[eventId] ?? [];
+      if (seasonKey) {
+        seasonStandingsRows = filterBySeason(allDriversStandings, seasonKey);
+        constructorsStandingsRows = filterBySeason(allConstructorsStandings, seasonKey);
+      }
       modalDrivers = driversCsv
         ? mapDrivers(parseCsv<Record<string, string>>(driversCsv))
         : [];
@@ -270,6 +283,12 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
                 seasonKey
                   ? `Season ${seasonKey.replace(/^S/i, "")} — Main Drivers Standings`
                   : "Season — Main Drivers Standings"
+              }
+              constructorsStandingsRows={constructorsStandingsRows}
+              constructorsTableCaption={
+                seasonKey
+                  ? `Season ${seasonKey.replace(/^S/i, "")} — Main Constructors Standings`
+                  : "Season — Main Constructors Standings"
               }
               drivers={modalDrivers}
               teams={modalTeams}
