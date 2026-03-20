@@ -130,6 +130,134 @@ body {
   }
 }
 
+@keyframes steward-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes steward-gold-sheen {
+  0% {
+    transform: translateX(-120%);
+    opacity: 0;
+  }
+  35% {
+    opacity: 0.35;
+  }
+  100% {
+    transform: translateX(140%);
+    opacity: 0;
+  }
+}
+
+.stewards-ui .steward-panel {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(212, 175, 55, 0.42);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.012)),
+    radial-gradient(circle at 12% 0%, rgba(212, 175, 55, 0.16), transparent 48%),
+    #13131b;
+  box-shadow:
+    0 0 0 1px rgba(212, 175, 55, 0.12) inset,
+    0 10px 26px rgba(0, 0, 0, 0.22);
+  transition:
+    transform 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease,
+    background-color 220ms ease;
+  animation: steward-fade-up 260ms ease both;
+}
+
+.stewards-ui .steward-panel::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 48%;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(212, 175, 55, 1), rgba(212, 175, 55, 0.15), transparent);
+  opacity: 0.95;
+}
+
+.stewards-ui .steward-panel::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 36%,
+    rgba(212, 175, 55, 0.2) 48%,
+    transparent 64%
+  );
+  transform: translateX(-120%);
+}
+
+.stewards-ui .steward-panel:hover {
+  transform: translateY(-2px);
+  border-color: rgba(212, 175, 55, 0.45);
+  box-shadow:
+    0 16px 34px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(212, 175, 55, 0.12) inset,
+    0 0 22px rgba(212, 175, 55, 0.12);
+}
+
+.stewards-ui .steward-panel:hover::before {
+  animation: steward-gold-sheen 680ms ease;
+}
+
+.stewards-ui .steward-soft {
+  border: 1px solid rgba(212, 175, 55, 0.34);
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.08), rgba(0, 0, 0, 0.24));
+  transition: border-color 180ms ease, background-color 180ms ease;
+}
+
+.stewards-ui .steward-soft:hover {
+  border-color: rgba(212, 175, 55, 0.42);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.stewards-ui details.steward-expand > summary {
+  transition: background-color 180ms ease;
+}
+
+.stewards-ui details.steward-expand[open] > summary {
+  background: linear-gradient(90deg, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0.05));
+}
+
+.stewards-ui .steward-table tbody tr {
+  transition: background-color 160ms ease;
+}
+
+.stewards-ui .steward-table tbody tr:hover {
+  background: rgba(212, 175, 55, 0.14);
+}
+
+.stewards-ui .steward-panel h2,
+.stewards-ui .steward-panel h3,
+.stewards-ui .steward-panel h4 {
+  color: #f4d98a;
+  text-shadow: 0 0 12px rgba(212, 175, 55, 0.16);
+}
+
+.stewards-ui .steward-panel thead {
+  background: linear-gradient(90deg, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0.06));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stewards-ui .steward-panel,
+  .stewards-ui .steward-panel::before {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
 .news-prose {
   color: rgba(255, 255, 255, 0.84);
   line-height: 1.85;
