@@ -7,6 +7,7 @@ import Button from "@/components/Button";
 import LoadingLink from "@/components/LoadingLink";
 import { siteConfig } from "@/lib/siteConfig";
 import { gaClickJoinNow } from "@/lib/ga";
+import StewardNotifBadge from "@/app/stewards/components/StewardNotifBadge";
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
@@ -35,9 +36,10 @@ export default function Header() {
         <nav className="hidden items-center gap-2 md:flex">
           {siteConfig.navigation.map((link) => {
             const isComingSoon = link.label === "Articles";
-            const active = pathname === link.href;
+            const isStewards = link.label === "Stewards";
+            const active = pathname === link.href || (isStewards && pathname.startsWith("/stewards"));
             return (
-              <div key={link.href} className="relative flex items-center">
+              <div key={link.href} className="relative flex items-center gap-1.5">
                 <LoadingLink
                   href={link.href}
                   className={`rounded-lg border px-3 py-1.5 text-sm font-semibold transition ${
@@ -49,10 +51,11 @@ export default function Header() {
                   {link.label}
                 </LoadingLink>
                 {isComingSoon && (
-                  <span className="ml-1.5 rounded-[4px] bg-red-700/90 px-1.5 py-0.5 text-[11px] font-medium leading-none text-white">
+                  <span className="rounded-[4px] bg-red-700/90 px-1.5 py-0.5 text-[11px] font-medium leading-none text-white">
                     Coming soon
                   </span>
                 )}
+                {isStewards && <StewardNotifBadge />}
               </div>
             );
           })}

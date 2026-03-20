@@ -48,6 +48,7 @@ export const siteConfig: SiteConfig = {
     { label: "Drivers", href: "/drivers" },
     { label: "Stats", href: "/stats" },
     { label: "News", href: "/news" },
+    { label: "Stewards", href: "/stewards/login" },
   ],
   hero: {
     title: "PSGiL – F1 Sim Racing League",

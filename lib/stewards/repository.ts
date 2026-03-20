@@ -1,0 +1,628 @@
+import { randomUUID } from "node:crypto";
+import { readStore, writeStore } from "@/lib/stewards/store";
+import type {
+  CaseResponse,
+  CaseStatus,
+  DriverVerdict,
+  InternalComment,
+  StewardCase,
+  StewardRole,
+  StewardStore,
+  StewardUser,
+  Verdict,
+  VerdictDecision,
+  WeekendSession,
+} from "@/lib/stewards/types";
+
+export type RemoveUserResult =
+  | { ok: true }
+  | { ok: false; reason: "not-found" | "cannot-remove-self" | "last-admin" };
+
+export type PendingIndicator = { id: string; label: string; count: number; href: string };
+
+export type DriverVerdictWithDriver = DriverVerdict & { driver: StewardUser | null };
+
+export type CaseWithRelations = {
+  caseItem: StewardCase;
+  complainant: StewardUser | null;
+  involvedDrivers: StewardUser[];
+  responses: (CaseResponse & { user: StewardUser | null })[];
+  internalComments: (InternalComment & { author: StewardUser | null })[];
+  verdict: Verdict | null;
+  driverVerdicts: DriverVerdictWithDriver[];
+};
+
+type NewUserInput = {
+  name: string;
+  email: string;
+  passwordHash: string;
+  roles: StewardRole[];
+};
+
+type NewCaseInput = {
+  title: string;
+  season: string;
+  round: string;
+  weekendSession: WeekendSession;
+  incidentLapNumber: number | null;
+  qualifyingTime: string | null;
+  complainantId: string;
+  involvedDriverIds: string[];
+  description: string;
+  attachmentUrls: string[];
+  links: string[];
+};
+
+type NewResponseInput = {
+  caseId: string;
+  userId: string;
+  text: string;
+  attachmentUrls: string[];
+  links: string[];
+};
+
+type NewInternalCommentInput = {
+  caseId: string;
+  authorId: string;
+  text: string;
+};
+
+export type DriverVerdictEntry = {
+  driverId: string;
+  license_points: number | null;
+  time_penalty_seconds: number | null;
+  warning_text: string | null;
+};
+
+type UpsertVerdictInput = {
+  caseId: string;
+  updatedBy: string;
+  driverEntries: DriverVerdictEntry[];
+  verdict_decision: VerdictDecision | null;
+  verdict_summary: string;
+  verdict_full_text: string;
+  is_published: boolean;
+};
+
+const STATUSES: CaseStatus[] = [
+  "Open",
+  "Waiting for Response",
+  "Under Review",
+  "Verdict Ready",
+  "Closed",
+  "Archived",
+];
+
+const VALID_ROLES: StewardRole[] = ["admin", "steward", "member"];
+
+const normalizeRoles = (roles: StewardRole[]) =>
+  [...new Set(roles.filter((r) => VALID_ROLES.includes(r)))];
+
+const attachmentsFromUrls = (urls: string[]) =>
+  urls.map((url, idx) => ({ name: `Attachment ${idx + 1}`, url }));
+
+export async function listUsers(): Promise<StewardUser[]> {
+  const store = await readStore();
+  return store.users.map((u) => ({ ...u, roles: normalizeRoles(u.roles ?? []) }));
+}
+
+export async function getUserById(id: string) {
+  const users = await listUsers();
+  return users.find((u) => u.id === id) ?? null;
+}
+
+export async function getUserByEmail(email: string) {
+  const users = await listUsers();
+  return users.find((u) => u.email.toLowerCase() === email.toLowerCase()) ?? null;
+}
+
+export async function createUser(input: NewUserInput) {
+  const store = await readStore();
+  const now = new Date().toISOString();
+  const user: StewardUser = {
+    id: `u_${randomUUID()}`,
+    name: input.name.trim(),
+    email: input.email.trim().toLowerCase(),
+    roles: normalizeRoles(input.roles),
+    passwordHash: input.passwordHash,
+    isActive: true,
+    createdAt: now,
+    updatedAt: now,
+  };
+  store.users.push(user);
+  await writeStore(store);
+  return user;
+}
+
+export async function updateUser(
+  userId: string,
+  fields: { name?: string; email?: string; passwordHash?: string },
+) {
+  const store = await readStore();
+  const user = store.users.find((u) => u.id === userId);
+  if (!user) return false;
+  if (fields.name)         user.name         = fields.name.trim();
+  if (fields.email)        user.email        = fields.email.trim().toLowerCase();
+  if (fields.passwordHash) user.passwordHash = fields.passwordHash;
+  user.updatedAt = new Date().toISOString();
+  await writeStore(store);
+  return true;
+}
+
+export async function updateUserRoles(userId: string, roles: StewardRole[]) {
+  const store = await readStore();
+  const user = store.users.find((u) => u.id === userId);
+  if (!user) return;
+  user.roles = normalizeRoles(roles);
+  user.updatedAt = new Date().toISOString();
+  await writeStore(store);
+}
+
+export async function removeUserById(userId: string, actorUserId: string): Promise<RemoveUserResult> {
+  if (userId === actorUserId) return { ok: false, reason: "cannot-remove-self" };
+  const store = await readStore();
+  const target = store.users.find((u) => u.id === userId);
+  if (!target) return { ok: false, reason: "not-found" };
+  if (target.roles.includes("admin")) {
+    const adminCount = store.users.filter((u) => u.isActive && u.roles.includes("admin")).length;
+    if (adminCount <= 1) return { ok: false, reason: "last-admin" };
+  }
+  store.users = store.users.filter((u) => u.id !== userId);
+  await writeStore(store);
+  return { ok: true };
+}
+
+const WAITING_DELAY_MS = 10 * 60 * 1000; // 10 minutes
+
+/** Lazily promote Open cases that are older than WAITING_DELAY_MS to "Waiting for Response". */
+async function maybePromoteOpenCases(store: StewardStore): Promise<boolean> {
+  const now = Date.now();
+  let changed = false;
+  for (const c of store.cases) {
+    if (c.status === "Open" && now - new Date(c.createdAt).getTime() >= WAITING_DELAY_MS) {
+      c.status = "Waiting for Response";
+      c.updatedAt = new Date().toISOString();
+      changed = true;
+    }
+  }
+  return changed;
+}
+
+export async function listCases() {
+  const store = await readStore();
+  if (await maybePromoteOpenCases(store)) await writeStore(store);
+  return [...store.cases].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+export async function createCase(input: NewCaseInput) {
+  const store = await readStore();
+  const now = new Date().toISOString();
+  const caseItem: StewardCase = {
+    id: `case_${randomUUID()}`,
+    caseNumber: store.cases.length + 1,
+    title: input.title.trim(),
+    season: input.season.trim(),
+    round: input.round.trim(),
+    weekendSession: input.weekendSession,
+    incidentLapNumber: input.incidentLapNumber,
+    qualifyingTime: input.qualifyingTime,
+    complainantId: input.complainantId,
+    involvedDriverIds: input.involvedDriverIds,
+    description: input.description.trim(),
+    status: "Open",
+    attachments: attachmentsFromUrls(input.attachmentUrls),
+    links: input.links,
+    responseIds: [],
+    internalCommentIds: [],
+    verdictId: null,
+    createdAt: now,
+    updatedAt: now,
+    closedAt: null,
+    archivedAt: null,
+  };
+  store.cases.push(caseItem);
+  await writeStore(store);
+  return caseItem;
+}
+
+export async function getCaseById(caseId: string): Promise<CaseWithRelations | null> {
+  const store = await readStore();
+  if (await maybePromoteOpenCases(store)) await writeStore(store);
+  const caseItem = store.cases.find((c) => c.id === caseId);
+  if (!caseItem) return null;
+  const complainant = store.users.find((u) => u.id === caseItem.complainantId) ?? null;
+  const involvedDrivers = store.users.filter((u) => caseItem.involvedDriverIds.includes(u.id));
+  const responses = store.responses
+    .filter((r) => r.caseId === caseId)
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+    .map((r) => ({ ...r, user: store.users.find((u) => u.id === r.userId) ?? null }));
+  const internalComments = store.internalComments
+    .filter((c) => c.caseId === caseId)
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+    .map((c) => ({ ...c, author: store.users.find((u) => u.id === c.authorId) ?? null }));
+  const verdict = store.verdicts.find((v) => v.caseId === caseId) ?? null;
+
+  // Per-driver verdicts. For legacy cases that only have penalty fields on the
+  // Verdict record itself, synthesise DriverVerdict rows on-the-fly so the rest
+  // of the UI never has to care about the old format.
+  let driverVerdicts: DriverVerdictWithDriver[] = store.driverVerdicts
+    .filter((dv) => dv.caseId === caseId)
+    .map((dv) => ({ ...dv, driver: store.users.find((u) => u.id === dv.driverId) ?? null }));
+
+  if (driverVerdicts.length === 0 && verdict && (
+    verdict.license_points != null || verdict.time_penalty_seconds != null || verdict.warning_text
+  )) {
+    // Legacy: expand single-verdict into per-involved-driver entries
+    const now = new Date().toISOString();
+    driverVerdicts = caseItem.involvedDriverIds.map((driverId, i) => ({
+      id: `legacy_dv_${i}`,
+      caseId,
+      driverId,
+      license_points: verdict.license_points ?? null,
+      time_penalty_seconds: verdict.time_penalty_seconds ?? null,
+      warning_text: verdict.warning_text ?? null,
+      createdAt: now,
+      updatedAt: now,
+      driver: store.users.find((u) => u.id === driverId) ?? null,
+    }));
+  }
+
+  return { caseItem, complainant, involvedDrivers, responses, internalComments, verdict, driverVerdicts };
+}
+
+export async function addCaseResponse(input: NewResponseInput) {
+  const store = await readStore();
+  const caseItem = store.cases.find((c) => c.id === input.caseId);
+  if (!caseItem) return;
+  const now = new Date().toISOString();
+  const responseId = `resp_${randomUUID()}`;
+  store.responses.push({
+    id: responseId,
+    caseId: input.caseId,
+    userId: input.userId,
+    text: input.text.trim(),
+    attachments: attachmentsFromUrls(input.attachmentUrls),
+    links: input.links,
+    createdAt: now,
+    updatedAt: now,
+  });
+  caseItem.responseIds.push(responseId);
+
+  // Only change status on active cases — never touch Verdict Ready / Closed / Archived
+  if (caseItem.status === "Open" || caseItem.status === "Waiting for Response") {
+    const allResponded = caseItem.involvedDriverIds.every((driverId) =>
+      store.responses.some((r) => r.caseId === input.caseId && r.userId === driverId),
+    );
+    caseItem.status = allResponded ? "Under Review" : "Waiting for Response";
+  }
+
+  caseItem.updatedAt = now;
+  await writeStore(store);
+}
+
+export async function addInternalComment(input: NewInternalCommentInput) {
+  const store = await readStore();
+  const caseItem = store.cases.find((c) => c.id === input.caseId);
+  if (!caseItem) return;
+  const now = new Date().toISOString();
+  const commentId = `ic_${randomUUID()}`;
+  store.internalComments.push({
+    id: commentId,
+    caseId: input.caseId,
+    authorId: input.authorId,
+    text: input.text.trim(),
+    stewardOnly: true,
+    createdAt: now,
+    updatedAt: now,
+  });
+  caseItem.internalCommentIds.push(commentId);
+  caseItem.updatedAt = now;
+  await writeStore(store);
+}
+
+export async function upsertVerdict(input: UpsertVerdictInput) {
+  const store = await readStore();
+  const caseItem = store.cases.find((c) => c.id === input.caseId);
+  if (!caseItem) return;
+  const now = new Date().toISOString();
+
+  // Upsert case-level verdict record (no longer contains per-driver penalties)
+  const existing = store.verdicts.find((v) => v.caseId === input.caseId);
+  if (existing) {
+    existing.verdict_decision = input.verdict_decision;
+    existing.verdict_summary = input.verdict_summary.trim();
+    existing.verdict_full_text = input.verdict_full_text.trim();
+    existing.is_published = input.is_published;
+    existing.published_at = input.is_published ? existing.published_at ?? now : null;
+    existing.updatedBy = input.updatedBy;
+    existing.updatedAt = now;
+    caseItem.verdictId = existing.id;
+  } else {
+    const verdict: Verdict = {
+      id: `verdict_${randomUUID()}`,
+      caseId: input.caseId,
+      verdict_decision: input.verdict_decision,
+      verdict_summary: input.verdict_summary.trim(),
+      verdict_full_text: input.verdict_full_text.trim(),
+      is_published: input.is_published,
+      published_at: input.is_published ? now : null,
+      updatedBy: input.updatedBy,
+      createdAt: now,
+      updatedAt: now,
+    };
+    store.verdicts.push(verdict);
+    caseItem.verdictId = verdict.id;
+  }
+
+  // Replace all driverVerdict entries for this case
+  store.driverVerdicts = store.driverVerdicts.filter((dv) => dv.caseId !== input.caseId);
+  for (const entry of input.driverEntries) {
+    if (!entry.driverId) continue;
+    store.driverVerdicts.push({
+      id: `dv_${randomUUID()}`,
+      caseId: input.caseId,
+      driverId: entry.driverId,
+      license_points: entry.license_points,
+      time_penalty_seconds: entry.time_penalty_seconds,
+      warning_text: entry.warning_text,
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+
+  const ACTIVE_STATUSES: CaseStatus[] = ["Open", "Waiting for Response", "Under Review"];
+  if (input.is_published) {
+    // Only write Closed once — never re-open a case that is already Archived
+    if (caseItem.status !== "Archived") {
+      caseItem.status = "Closed";
+      caseItem.closedAt = caseItem.closedAt ?? now;
+    }
+  } else if (ACTIVE_STATUSES.includes(caseItem.status)) {
+    // Draft save: promote active cases to Verdict Ready; never touch Closed/Archived/Verdict Ready
+    caseItem.status = "Verdict Ready";
+  }
+  caseItem.updatedAt = now;
+  await writeStore(store);
+}
+
+export async function publishVerdict(caseId: string, updatedBy: string) {
+  const store = await readStore();
+  const caseItem = store.cases.find((c) => c.id === caseId);
+  const verdict = store.verdicts.find((v) => v.caseId === caseId);
+  if (!caseItem || !verdict) return false;
+  const now = new Date().toISOString();
+  verdict.is_published = true;
+  verdict.published_at = verdict.published_at ?? now;
+  verdict.updatedBy = updatedBy;
+  verdict.updatedAt = now;
+  if (caseItem.status !== "Archived") {
+    caseItem.status = "Closed";
+    caseItem.closedAt = caseItem.closedAt ?? now;
+    caseItem.updatedAt = now;
+  }
+  await writeStore(store);
+  return true;
+}
+
+export async function updateCaseStatus(caseId: string, status: CaseStatus) {
+  if (!STATUSES.includes(status)) return;
+  const store = await readStore();
+  const caseItem = store.cases.find((c) => c.id === caseId);
+  if (!caseItem) return;
+  const now = new Date().toISOString();
+  caseItem.status = status;
+  caseItem.updatedAt = now;
+  caseItem.closedAt = status === "Closed" ? now : caseItem.closedAt;
+  caseItem.archivedAt = status === "Archived" ? now : caseItem.archivedAt;
+  await writeStore(store);
+}
+
+export type HistoricalDriverEntry = {
+  driverId: string;
+  licensePoints: number | null;
+  timePenaltySeconds: number | null;
+  warningText: string | null;
+};
+
+export type HistoricalCaseInput = {
+  season: string;
+  round: string;
+  weekendSession: WeekendSession;
+  description: string;
+  verdictDecision: VerdictDecision | null;
+  verdictSummary: string;
+  verdictFullText: string;
+  adminUserId: string;
+  driverEntries: HistoricalDriverEntry[];
+};
+
+export async function addHistoricalCase(input: HistoricalCaseInput) {
+  const store = await readStore();
+  const now = new Date().toISOString();
+  const caseId = `case_${randomUUID()}`;
+  const verdictId = `verdict_${randomUUID()}`;
+
+  const involvedDriverIds = input.driverEntries.map((e) => e.driverId);
+
+  // Build a readable title from driver names
+  const driverNames = involvedDriverIds
+    .map((id) => store.users.find((u) => u.id === id)?.name.split(" ")[0] ?? id)
+    .join(", ");
+  const title = `${input.season} ${input.round} – ${driverNames} (historical)`;
+
+  const caseItem: StewardCase = {
+    id: caseId,
+    caseNumber: store.cases.length + 1,
+    title,
+    season: input.season.trim(),
+    round: input.round.trim(),
+    weekendSession: input.weekendSession,
+    incidentLapNumber: null,
+    qualifyingTime: null,
+    complainantId: input.adminUserId,
+    involvedDriverIds,
+    description: input.description.trim() || "Historical penalty entry.",
+    status: "Closed",
+    attachments: [],
+    links: [],
+    responseIds: [],
+    internalCommentIds: [],
+    verdictId,
+    createdAt: now,
+    updatedAt: now,
+    closedAt: now,
+    archivedAt: null,
+  };
+
+  const verdict: Verdict = {
+    id: verdictId,
+    caseId,
+    verdict_decision: input.verdictDecision,
+    verdict_summary: input.verdictSummary.trim(),
+    verdict_full_text: input.verdictFullText.trim(),
+    is_published: true,
+    published_at: now,
+    updatedBy: input.adminUserId,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  const driverVerdicts: DriverVerdict[] = input.driverEntries.map((e) => ({
+    id: `dv_${randomUUID()}`,
+    caseId,
+    driverId: e.driverId,
+    license_points: e.licensePoints,
+    time_penalty_seconds: e.timePenaltySeconds,
+    warning_text: e.warningText,
+    createdAt: now,
+    updatedAt: now,
+  }));
+
+  store.cases.push(caseItem);
+  store.verdicts.push(verdict);
+  store.driverVerdicts.push(...driverVerdicts);
+  await writeStore(store);
+  return caseItem;
+}
+
+export async function deleteCaseById(caseId: string) {
+  const store = await readStore();
+  if (!store.cases.some((c) => c.id === caseId)) return false;
+  store.cases = store.cases.filter((c) => c.id !== caseId);
+  store.responses = store.responses.filter((r) => r.caseId !== caseId);
+  store.internalComments = store.internalComments.filter((c) => c.caseId !== caseId);
+  store.verdicts = store.verdicts.filter((v) => v.caseId !== caseId);
+  store.driverVerdicts = store.driverVerdicts.filter((dv) => dv.caseId !== caseId);
+  await writeStore(store);
+  return true;
+}
+
+export type DriverPenaltyRow = {
+  driverId: string;
+  driverName: string;
+  season: string;
+  totalLicensePoints: number;
+  totalTimePenaltySeconds: number;
+  totalWarningsCount: number;
+  totalCases: number;
+};
+
+export async function aggregateDriverPenalties(): Promise<DriverPenaltyRow[]> {
+  const store = await readStore();
+  const rows = new Map<string, DriverPenaltyRow>();
+
+  // Build a set of published case IDs
+  const publishedCaseIds = new Set(
+    store.verdicts.filter((v) => v.is_published).map((v) => v.caseId),
+  );
+
+  // Aggregate from per-driver verdict entries
+  for (const dv of store.driverVerdicts) {
+    if (!publishedCaseIds.has(dv.caseId)) continue;
+    const caseItem = store.cases.find((c) => c.id === dv.caseId);
+    if (!caseItem) continue;
+    const driver = store.users.find((u) => u.id === dv.driverId);
+    const key = `${dv.driverId}:${caseItem.season}`;
+    const row = rows.get(key) ?? {
+      driverId: dv.driverId,
+      driverName: driver?.name ?? dv.driverId,
+      season: caseItem.season,
+      totalLicensePoints: 0,
+      totalTimePenaltySeconds: 0,
+      totalWarningsCount: 0,
+      totalCases: 0,
+    };
+    if (dv.license_points != null) row.totalLicensePoints += dv.license_points;
+    if (dv.time_penalty_seconds != null) row.totalTimePenaltySeconds += dv.time_penalty_seconds;
+    if (dv.warning_text?.trim()) row.totalWarningsCount += 1;
+    row.totalCases += 1;
+    rows.set(key, row);
+  }
+
+  // Fallback: handle legacy verdicts that still carry per-case penalty fields
+  // (before the per-driver migration) for involved drivers with no driverVerdict entries
+  for (const verdict of store.verdicts) {
+    if (!verdict.is_published) continue;
+    if (verdict.license_points == null && verdict.time_penalty_seconds == null && !verdict.warning_text) continue;
+    const caseItem = store.cases.find((c) => c.id === verdict.caseId);
+    if (!caseItem) continue;
+    const alreadyMigrated = store.driverVerdicts.some((dv) => dv.caseId === verdict.caseId);
+    if (alreadyMigrated) continue; // already handled above
+    for (const driverId of caseItem.involvedDriverIds) {
+      const driver = store.users.find((u) => u.id === driverId);
+      const key = `${driverId}:${caseItem.season}`;
+      const row = rows.get(key) ?? {
+        driverId,
+        driverName: driver?.name ?? driverId,
+        season: caseItem.season,
+        totalLicensePoints: 0,
+        totalTimePenaltySeconds: 0,
+        totalWarningsCount: 0,
+        totalCases: 0,
+      };
+      if (verdict.license_points != null) row.totalLicensePoints += verdict.license_points;
+      if (verdict.time_penalty_seconds != null) row.totalTimePenaltySeconds += verdict.time_penalty_seconds;
+      if (verdict.warning_text?.trim()) row.totalWarningsCount += 1;
+      row.totalCases += 1;
+      rows.set(key, row);
+    }
+  }
+
+  return [...rows.values()];
+}
+
+export async function getPendingIndicatorsForUser(user: StewardUser): Promise<PendingIndicator[]> {
+  const store = await readStore();
+  const indicators: PendingIndicator[] = [];
+  const activeCases = store.cases.filter((c) => c.status !== "Closed" && c.status !== "Archived");
+  const respondedCaseIds = new Set(
+    store.responses.filter((r) => r.userId === user.id).map((r) => r.caseId),
+  );
+  if (user.roles.includes("member")) {
+    const pendingResponse = activeCases.filter(
+      (c) => c.involvedDriverIds.includes(user.id) && !respondedCaseIds.has(c.id),
+    ).length;
+    if (pendingResponse > 0) {
+      indicators.push({
+        id: "driver-response",
+        label: "Cases waiting for your response",
+        count: pendingResponse,
+        href: "/stewards/cases?view=driver",
+      });
+    }
+  }
+  if (user.roles.includes("steward") || user.roles.includes("admin")) {
+    const pendingReview = activeCases.filter((c) =>
+      !store.verdicts.some((v) => v.caseId === c.id && v.is_published),
+    ).length;
+    if (pendingReview > 0) {
+      indicators.push({
+        id: "steward-review",
+        label: "Cases requiring steward review",
+        count: pendingReview,
+        href: "/stewards/cases?view=steward",
+      });
+    }
+  }
+  return indicators;
+}
