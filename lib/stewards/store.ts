@@ -17,12 +17,13 @@ const BLOB_KEY        = "store";
 /* ------------------------------------------------------------------ */
 
 /**
- * True when running inside a real Netlify environment (build, SSR, edge).
- * The NETLIFY env var is injected automatically by Netlify.
- * NETLIFY_DEV is injected by `netlify dev`.
+ * True when running inside a real Netlify environment at runtime.
+ * NETLIFY_BLOBS_CONTEXT is injected by the Netlify runtime on every function
+ * invocation (production + preview). NETLIFY_DEV is injected by `netlify dev`.
+ * Note: process.env.NETLIFY is only available at BUILD time, not runtime.
  */
 function isNetlifyEnv(): boolean {
-  return !!(process.env.NETLIFY || process.env.NETLIFY_DEV);
+  return !!(process.env.NETLIFY_BLOBS_CONTEXT || process.env.NETLIFY_DEV);
 }
 
 /* ------------------------------------------------------------------ */
