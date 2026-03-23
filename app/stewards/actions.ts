@@ -19,15 +19,21 @@ import {
   addCaseResponse,
   addInternalComment,
   addHistoricalCase,
+  addManualPenalty,
+  checkAndGeneratePenalties,
   createCase,
   createUser,
   deleteCaseById,
+  deletePenaltyToServe,
   getCaseById,
+  getNextMainLeagueRace,
   getUserByEmail,
   listUsers,
   publishVerdict,
   removeUserById,
+  rollForwardPenalty,
   updateCaseStatus,
+  updatePenaltyStatus,
   updateUser,
   updateUserRoles,
   upsertVerdict,
@@ -278,6 +284,9 @@ export async function upsertVerdictAction(formData: FormData) {
   }
   revalidatePath(`/stewards/cases/${caseId}`);
   revalidatePath("/stewards/penalties");
+  revalidatePath("/stewards/penalties-to-serve");
+  // Auto-generate penalties-to-serve if thresholds crossed
+  await checkAndGeneratePenalties(caseId).catch(() => {});
 }
 
 export async function publishVerdictAction(formData: FormData) {
@@ -291,10 +300,13 @@ export async function publishVerdictAction(formData: FormData) {
       const users = await listUsers();
       await notifyVerdictPublished(caseData.caseItem, caseData.verdict, users);
     }
+    // Auto-generate penalties-to-serve if thresholds crossed
+    await checkAndGeneratePenalties(caseId).catch(() => {});
   }
   revalidatePath(`/stewards/cases/${caseId}`);
   revalidatePath("/stewards/cases");
   revalidatePath("/stewards/penalties");
+  revalidatePath("/stewards/penalties-to-serve");
   redirect(`/stewards/cases/${caseId}?view=steward`);
 }
 
@@ -418,4 +430,73 @@ export async function removeCaseAction(formData: FormData) {
   revalidatePath("/stewards/cases");
   revalidatePath("/stewards/penalties");
   redirect(redirectTo);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Penalties to Serve — admin actions                                  */
+/* ------------------------------------------------------------------ */
+
+export async function addManualPenaltyAction(formData: FormData) {
+  const admin = await requireRole(["admin"]);
+  const driverId       = String(formData.get("driver_id")       ?? "").trim();
+  const penaltyType    = String(formData.get("penalty_type")    ?? "").trim() || "manual";
+  const penaltyLabel   = String(formData.get("penalty_label")   ?? "").trim();
+  const penaltyDesc    = String(formData.get("penalty_description") ?? "").trim();
+  const adminNotes     = String(formData.get("admin_notes")     ?? "").trim() || null;
+  if (!driverId || !penaltyLabel) redirect("/stewards/penalties-to-serve?error=missing-fields");
+
+  const raceSlot = await getNextMainLeagueRace();
+  await addManualPenalty({
+    driverId, penaltyType, penaltyLabel, penaltyDescription: penaltyDesc,
+    adminNotes, createdBy: admin.id,
+    assignedRaceId: raceSlot?.id ?? null,
+    assignedRaceLabel: raceSlot?.label ?? null,
+    assignedRaceStartTime: raceSlot?.startTime ?? null,
+  });
+  revalidatePath("/stewards/penalties-to-serve");
+}
+
+export async function markPenaltyServedAction(formData: FormData) {
+  await requireRole(["admin"]);
+  const id    = String(formData.get("penalty_id") ?? "").trim();
+  const notes = String(formData.get("admin_notes") ?? "").trim() || undefined;
+  if (!id) redirect("/stewards/penalties-to-serve");
+  await updatePenaltyStatus({ penaltyId: id, status: "served", adminNotes: notes });
+  revalidatePath("/stewards/penalties-to-serve");
+}
+
+export async function markPenaltyNotServedAction(formData: FormData) {
+  await requireRole(["admin"]);
+  const id    = String(formData.get("penalty_id") ?? "").trim();
+  const notes = String(formData.get("admin_notes") ?? "").trim() || "";
+  if (!id) redirect("/stewards/penalties-to-serve");
+  const newPenalty = await rollForwardPenalty(id, notes);
+  if (newPenalty) {
+    // Email notification for roll-forward
+    try {
+      const { notifyPenaltyRolledForward } = await import("@/lib/stewards/notifications");
+      const { listUsers: listU } = await import("@/lib/stewards/repository");
+      const users = await listU();
+      const driver = users.find((u) => u.id === newPenalty.driverId);
+      if (driver) await notifyPenaltyRolledForward(newPenalty, driver);
+    } catch { /* non-fatal */ }
+  }
+  revalidatePath("/stewards/penalties-to-serve");
+}
+
+export async function cancelPenaltyAction(formData: FormData) {
+  await requireRole(["admin"]);
+  const id    = String(formData.get("penalty_id") ?? "").trim();
+  const notes = String(formData.get("admin_notes") ?? "").trim() || undefined;
+  if (!id) redirect("/stewards/penalties-to-serve");
+  await updatePenaltyStatus({ penaltyId: id, status: "cancelled", adminNotes: notes });
+  revalidatePath("/stewards/penalties-to-serve");
+}
+
+export async function deletePenaltyAction(formData: FormData) {
+  await requireRole(["admin"]);
+  const id = String(formData.get("penalty_id") ?? "").trim();
+  if (!id) redirect("/stewards/penalties-to-serve");
+  await deletePenaltyToServe(id);
+  revalidatePath("/stewards/penalties-to-serve");
 }

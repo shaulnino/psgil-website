@@ -41,5 +41,6 @@ export function buildDefaultStore(): StewardStore {
     internalComments: [],
     verdicts: [],
     driverVerdicts: [],
+    penaltiesToServe: [],
   };
 }

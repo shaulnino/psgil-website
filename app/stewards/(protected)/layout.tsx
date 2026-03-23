@@ -31,6 +31,7 @@ export default async function StewardProtectedLayout({
           <Link href="/stewards" className="rounded-full px-3 py-1.5 transition hover:bg-[#D4AF37]/10 hover:text-[#f3d98a]">Dashboard</Link>
           <Link href="/stewards/cases" className="rounded-full px-3 py-1.5 transition hover:bg-[#D4AF37]/10 hover:text-[#f3d98a]">Cases</Link>
           <Link href="/stewards/penalties" className="rounded-full px-3 py-1.5 transition hover:bg-[#D4AF37]/10 hover:text-[#f3d98a]">Penalties</Link>
+          <Link href="/stewards/penalties-to-serve" className="rounded-full px-3 py-1.5 transition hover:bg-[#D4AF37]/10 hover:text-[#f3d98a]">Penalties to Serve</Link>
           {user.roles.includes("admin") && (
             <Link href="/stewards/admin" className="rounded-full px-3 py-1.5 transition hover:bg-[#D4AF37]/10 hover:text-[#f3d98a]">Admin</Link>
           )}

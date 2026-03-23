@@ -40,6 +40,7 @@ async function readFromBlob(): Promise<StewardStore> {
     return initial;
   }
   if (!data.driverVerdicts) data.driverVerdicts = [];
+  if (!data.penaltiesToServe) data.penaltiesToServe = [];
   return data;
 }
 
@@ -65,6 +66,7 @@ async function readFromFile(): Promise<StewardStore> {
     const raw = await readFile(STORE_PATH, "utf8");
     const store = JSON.parse(raw) as StewardStore;
     if (!store.driverVerdicts) store.driverVerdicts = [];
+    if (!store.penaltiesToServe) store.penaltiesToServe = [];
     return store;
   } catch {
     const initial = buildDefaultStore();

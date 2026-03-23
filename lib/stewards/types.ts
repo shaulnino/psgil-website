@@ -107,6 +107,45 @@ export type StewardCase = {
   archivedAt: string | null;
 };
 
+export type PenaltyToServeStatus =
+  | "pending"
+  | "assigned"
+  | "awaiting_confirmation"
+  | "served"
+  | "not_served"
+  | "rolled_forward"
+  | "cancelled";
+
+export type PenaltyToServe = {
+  id: string;
+  driverId: string;
+  /** "threshold" = auto-generated from license-point rule; "manual" = admin-created */
+  sourceType: "threshold" | "manual";
+  /** The license-point threshold that triggered this (null for manual) */
+  sourceThresholdPoints: number | null;
+  /** Case IDs whose verdicts pushed the driver over the threshold */
+  sourceCaseIds: string[];
+  penaltyType: string;        // e.g. "qualifying_ban"
+  penaltyLabel: string;       // e.g. "Qualifying Ban"
+  penaltyDescription: string;
+  /** event_id from schedule CSV */
+  assignedRaceId: string | null;
+  /** Human-readable race label, snapshotted at creation time */
+  assignedRaceLabel: string | null;
+  /** ISO timestamp of race start, used for "awaiting confirmation" promotion */
+  assignedRaceStartTime: string | null;
+  status: PenaltyToServeStatus;
+  servedAt: string | null;
+  adminNotes: string | null;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  /** ID of the penalty this record was rolled forward from */
+  rolledFromPenaltyId: string | null;
+  /** 1 = original issue, 2 = first roll-forward, etc. */
+  cycleNumber: number;
+};
+
 export type StewardStore = {
   users: StewardUser[];
   cases: StewardCase[];
@@ -114,4 +153,5 @@ export type StewardStore = {
   internalComments: InternalComment[];
   verdicts: Verdict[];
   driverVerdicts: DriverVerdict[];
+  penaltiesToServe: PenaltyToServe[];
 };

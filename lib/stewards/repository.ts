@@ -5,6 +5,8 @@ import type {
   CaseStatus,
   DriverVerdict,
   InternalComment,
+  PenaltyToServe,
+  PenaltyToServeStatus,
   StewardCase,
   StewardRole,
   StewardStore,
@@ -13,6 +15,10 @@ import type {
   VerdictDecision,
   WeekendSession,
 } from "@/lib/stewards/types";
+import { fetchThresholdRules } from "@/lib/stewards/penaltyRules";
+import { fetchCsv, parseCsv } from "@/lib/csv";
+import { mapRaceEvents, toIsraelTimestamp } from "@/lib/scheduleData";
+import { GLOBAL_CSV_URLS } from "@/lib/seasonConfig";
 
 export type RemoveUserResult =
   | { ok: true }
@@ -591,6 +597,269 @@ export async function aggregateDriverPenalties(): Promise<DriverPenaltyRow[]> {
   return [...rows.values()];
 }
 
+/* ------------------------------------------------------------------ */
+/*  Next Main League Race helper                                        */
+/* ------------------------------------------------------------------ */
+
+type RaceSlot = { id: string; label: string; startTime: string };
+
+export async function getNextMainLeagueRace(): Promise<RaceSlot | null> {
+  try {
+    const csv = await fetchCsv(GLOBAL_CSV_URLS.schedule);
+    const events = mapRaceEvents(parseCsv<Record<string, string>>(csv));
+    const now = Date.now();
+    const future = events
+      .filter((e) => {
+        if ((e.league ?? "").toLowerCase() !== "main") return false;
+        const ts = toIsraelTimestamp(e.date, e.start_time ?? undefined);
+        return ts !== null && ts > now;
+      })
+      .sort((a, b) => {
+        const ta = toIsraelTimestamp(a.date, a.start_time ?? undefined) ?? 0;
+        const tb = toIsraelTimestamp(b.date, b.start_time ?? undefined) ?? 0;
+        return ta - tb;
+      });
+    if (!future.length) return null;
+    const e = future[0];
+    const raceNo = (e.race_number ?? "").trim().padStart(2, "0");
+    const label = `${e.season} R${raceNo}${e.race_name ? ` – ${e.race_name}` : ""} (Main)`;
+    const ts = toIsraelTimestamp(e.date, e.start_time ?? undefined)!;
+    return { id: e.event_id, label, startTime: new Date(ts).toISOString() };
+  } catch {
+    return null;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Penalties to Serve — auto-generation                               */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Compute total license points per driver from ALL published verdicts.
+ * Returns a map of driverId → total license points.
+ */
+function computeDriverPoints(store: StewardStore): Map<string, number> {
+  const totals = new Map<string, number>();
+  const publishedCaseIds = new Set(
+    store.verdicts.filter((v) => v.is_published).map((v) => v.caseId),
+  );
+  for (const dv of store.driverVerdicts) {
+    if (!publishedCaseIds.has(dv.caseId)) continue;
+    if (dv.license_points == null || dv.license_points === 0) continue;
+    totals.set(dv.driverId, (totals.get(dv.driverId) ?? 0) + dv.license_points);
+  }
+  return totals;
+}
+
+/**
+ * After a verdict is saved/published, check whether any driver has crossed
+ * a threshold and generate PenaltyToServe records as needed.
+ * Deduplication: a threshold penalty for (driverId, thresholdPoints) is only
+ * created if no non-cancelled record already exists for that combination.
+ */
+export async function checkAndGeneratePenalties(triggeringCaseId: string): Promise<void> {
+  const rules = await fetchThresholdRules();
+  if (!rules.length) return;
+
+  const store = await readStore();
+  const driverPoints = computeDriverPoints(store);
+  if (!driverPoints.size) return;
+
+  const raceSlot = await getNextMainLeagueRace();
+  const now = new Date().toISOString();
+  let changed = false;
+
+  for (const [driverId, total] of driverPoints) {
+    for (const rule of rules) {
+      if (total < rule.thresholdLicensePoints) continue;
+      // Dedup: skip if a non-cancelled record already exists for this driver + threshold
+      const existing = store.penaltiesToServe.find(
+        (p) =>
+          p.driverId === driverId &&
+          p.sourceThresholdPoints === rule.thresholdLicensePoints &&
+          p.sourceType === "threshold" &&
+          p.status !== "cancelled",
+      );
+      if (existing) continue;
+
+      const penalty: PenaltyToServe = {
+        id: `pts_${randomUUID()}`,
+        driverId,
+        sourceType: "threshold",
+        sourceThresholdPoints: rule.thresholdLicensePoints,
+        sourceCaseIds: [triggeringCaseId],
+        penaltyType: rule.penaltyType,
+        penaltyLabel: rule.penaltyLabel,
+        penaltyDescription: rule.penaltyDescription,
+        assignedRaceId: raceSlot?.id ?? null,
+        assignedRaceLabel: raceSlot?.label ?? null,
+        assignedRaceStartTime: raceSlot?.startTime ?? null,
+        status: raceSlot ? "assigned" : "pending",
+        servedAt: null,
+        adminNotes: null,
+        createdBy: "system",
+        createdAt: now,
+        updatedAt: now,
+        rolledFromPenaltyId: null,
+        cycleNumber: 1,
+      };
+      store.penaltiesToServe.push(penalty);
+      changed = true;
+
+      // Email the driver (fire-and-forget, non-fatal)
+      const driver = store.users.find((u) => u.id === driverId);
+      if (driver) {
+        import("@/lib/stewards/notifications")
+          .then(({ notifyPenaltyAssigned }) => notifyPenaltyAssigned(penalty, driver))
+          .catch(() => {});
+      }
+    }
+  }
+
+  if (changed) await writeStore(store);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Penalties to Serve — CRUD                                           */
+/* ------------------------------------------------------------------ */
+
+export async function listPenaltiesToServe(): Promise<PenaltyToServe[]> {
+  const store = await readStore();
+  // Lazily promote "assigned" penalties whose race has passed to "awaiting_confirmation"
+  const now = Date.now();
+  const GRACE_MS = 2 * 60 * 60 * 1000; // 2 hours after race start
+  let changed = false;
+  for (const p of store.penaltiesToServe) {
+    if (p.status === "assigned" && p.assignedRaceStartTime) {
+      const raceTs = new Date(p.assignedRaceStartTime).getTime();
+      if (now >= raceTs + GRACE_MS) {
+        p.status = "awaiting_confirmation";
+        p.updatedAt = new Date().toISOString();
+        changed = true;
+      }
+    }
+  }
+  if (changed) await writeStore(store);
+  return [...store.penaltiesToServe].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+export type ManualPenaltyInput = {
+  driverId: string;
+  penaltyType: string;
+  penaltyLabel: string;
+  penaltyDescription: string;
+  adminNotes: string | null;
+  createdBy: string;
+  assignedRaceId: string | null;
+  assignedRaceLabel: string | null;
+  assignedRaceStartTime: string | null;
+};
+
+export async function addManualPenalty(input: ManualPenaltyInput): Promise<PenaltyToServe> {
+  const store = await readStore();
+  const now = new Date().toISOString();
+  const penalty: PenaltyToServe = {
+    id: `pts_${randomUUID()}`,
+    driverId: input.driverId,
+    sourceType: "manual",
+    sourceThresholdPoints: null,
+    sourceCaseIds: [],
+    penaltyType: input.penaltyType,
+    penaltyLabel: input.penaltyLabel,
+    penaltyDescription: input.penaltyDescription,
+    assignedRaceId: input.assignedRaceId,
+    assignedRaceLabel: input.assignedRaceLabel,
+    assignedRaceStartTime: input.assignedRaceStartTime,
+    status: input.assignedRaceId ? "assigned" : "pending",
+    servedAt: null,
+    adminNotes: input.adminNotes,
+    createdBy: input.createdBy,
+    createdAt: now,
+    updatedAt: now,
+    rolledFromPenaltyId: null,
+    cycleNumber: 1,
+  };
+  store.penaltiesToServe.push(penalty);
+  await writeStore(store);
+  return penalty;
+}
+
+export type UpdatePenaltyStatusInput = {
+  penaltyId: string;
+  status: PenaltyToServeStatus;
+  adminNotes?: string;
+};
+
+export async function updatePenaltyStatus(input: UpdatePenaltyStatusInput): Promise<PenaltyToServe | null> {
+  const store = await readStore();
+  const penalty = store.penaltiesToServe.find((p) => p.id === input.penaltyId);
+  if (!penalty) return null;
+  const now = new Date().toISOString();
+  penalty.status = input.status;
+  if (input.adminNotes !== undefined) penalty.adminNotes = input.adminNotes;
+  if (input.status === "served") penalty.servedAt = now;
+  penalty.updatedAt = now;
+  await writeStore(store);
+  return penalty;
+}
+
+/**
+ * Mark a penalty as "not_served" and create a new rolled-forward record
+ * assigned to the next Main League race.
+ * Returns the new rolled-forward penalty.
+ */
+export async function rollForwardPenalty(
+  penaltyId: string,
+  adminNotes: string,
+): Promise<PenaltyToServe | null> {
+  const store = await readStore();
+  const original = store.penaltiesToServe.find((p) => p.id === penaltyId);
+  if (!original) return null;
+
+  const raceSlot = await getNextMainLeagueRace();
+  const now = new Date().toISOString();
+
+  // Mark original as rolled_forward
+  original.status = "rolled_forward";
+  original.adminNotes = adminNotes || original.adminNotes;
+  original.updatedAt = now;
+
+  const newPenalty: PenaltyToServe = {
+    id: `pts_${randomUUID()}`,
+    driverId: original.driverId,
+    sourceType: original.sourceType,
+    sourceThresholdPoints: original.sourceThresholdPoints,
+    sourceCaseIds: original.sourceCaseIds,
+    penaltyType: original.penaltyType,
+    penaltyLabel: original.penaltyLabel,
+    penaltyDescription: original.penaltyDescription,
+    assignedRaceId: raceSlot?.id ?? null,
+    assignedRaceLabel: raceSlot?.label ?? null,
+    assignedRaceStartTime: raceSlot?.startTime ?? null,
+    status: raceSlot ? "assigned" : "pending",
+    servedAt: null,
+    adminNotes: null,
+    createdBy: "system",
+    createdAt: now,
+    updatedAt: now,
+    rolledFromPenaltyId: original.id,
+    cycleNumber: original.cycleNumber + 1,
+  };
+
+  store.penaltiesToServe.push(newPenalty);
+  await writeStore(store);
+  return newPenalty;
+}
+
+export async function deletePenaltyToServe(penaltyId: string): Promise<boolean> {
+  const store = await readStore();
+  const before = store.penaltiesToServe.length;
+  store.penaltiesToServe = store.penaltiesToServe.filter((p) => p.id !== penaltyId);
+  if (store.penaltiesToServe.length === before) return false;
+  await writeStore(store);
+  return true;
+}
+
 export async function getPendingIndicatorsForUser(user: StewardUser): Promise<PendingIndicator[]> {
   const store = await readStore();
   const indicators: PendingIndicator[] = [];
@@ -621,6 +890,19 @@ export async function getPendingIndicatorsForUser(user: StewardUser): Promise<Pe
         label: "Cases requiring steward review",
         count: pendingReview,
         href: "/stewards/cases?view=steward",
+      });
+    }
+  }
+  if (user.roles.includes("admin")) {
+    const awaitingConfirmation = store.penaltiesToServe.filter(
+      (p) => p.status === "awaiting_confirmation",
+    ).length;
+    if (awaitingConfirmation > 0) {
+      indicators.push({
+        id: "penalty-confirmation",
+        label: "Penalties awaiting service confirmation",
+        count: awaitingConfirmation,
+        href: "/stewards/penalties-to-serve",
       });
     }
   }
