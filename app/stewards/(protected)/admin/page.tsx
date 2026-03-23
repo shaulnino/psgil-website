@@ -4,7 +4,6 @@ import {
   updateUserRoleAction,
 } from "@/app/stewards/actions";
 import EditUserPanel from "./EditUserPanel";
-import HistoricalPenaltyForm from "./HistoricalPenaltyForm";
 import FormActionButton from "@/app/stewards/components/FormActionButton";
 import { requireRole } from "@/lib/stewards/auth";
 import { listUsers } from "@/lib/stewards/repository";
@@ -65,8 +64,6 @@ export default async function StewardAdminPage({ searchParams }: { searchParams:
           </div>
         </form>
       </section>
-
-      <HistoricalPenaltyForm drivers={memberDrivers} />
 
       <section className="steward-panel overflow-hidden rounded-2xl">
         <div className="overflow-x-auto">

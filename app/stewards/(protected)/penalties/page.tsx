@@ -1,16 +1,22 @@
 import FormActionButton from "@/app/stewards/components/FormActionButton";
 import { requireStewardUser } from "@/lib/stewards/auth";
-import { aggregateDriverPenalties } from "@/lib/stewards/repository";
+import { aggregateDriverPenalties, listUsers } from "@/lib/stewards/repository";
+import HistoricalPenaltyForm from "@/app/stewards/(protected)/admin/HistoricalPenaltyForm";
 
 type SearchParams = Promise<{ season?: string; driver?: string; sort?: "points" | "seconds" | "warnings" | "cases" }>;
 
 export default async function StewardPenaltiesPage({ searchParams }: { searchParams: SearchParams }) {
-  await requireStewardUser();
+  const user = await requireStewardUser();
+  const isAdmin = user.roles.includes("admin");
   const params = await searchParams;
   const seasonFilter = (params.season ?? "").trim().toLowerCase();
   const driverFilter = (params.driver ?? "").trim().toLowerCase();
   const sort = params.sort ?? "points";
-  const rows = await aggregateDriverPenalties();
+  const [rows, allUsers] = await Promise.all([
+    aggregateDriverPenalties(),
+    isAdmin ? listUsers() : Promise.resolve([]),
+  ]);
+  const memberDrivers = allUsers.filter((u) => u.roles.includes("member"));
   const filtered = rows
     .filter((r) => (!seasonFilter || r.season.toLowerCase().includes(seasonFilter)) && (!driverFilter || r.driverName.toLowerCase().includes(driverFilter)))
     .sort((a, b) => {
@@ -47,6 +53,8 @@ export default async function StewardPenaltiesPage({ searchParams }: { searchPar
           </table>
         </div>
       </section>
+
+      {isAdmin && <HistoricalPenaltyForm drivers={memberDrivers} />}
     </div>
   );
 }
