@@ -895,9 +895,12 @@ export async function updatePenaltyStatus(input: UpdatePenaltyStatusInput): Prom
 }
 
 /**
- * Mark a penalty as "not_served" and create a new rolled-forward record
- * assigned to the next Main League race.
- * Returns the new rolled-forward penalty.
+ * Mark a penalty as "rolled_forward" and create a new record assigned to the
+ * first future Main League race that comes AFTER all of the driver's other
+ * already-queued active penalties.
+ *
+ * Example: driver has QB #2 on Race N+1.  QB #1 was not served at Race N.
+ * → QB #1 is rolled to Race N+2 (after QB #2), not to Race N+1.
  */
 export async function rollForwardPenalty(
   penaltyId: string,
@@ -907,13 +910,20 @@ export async function rollForwardPenalty(
   const original = store.penaltiesToServe.find((p) => p.id === penaltyId);
   if (!original) return null;
 
-  const raceSlot = await getNextMainLeagueRace();
+  const futureRaces = await getFutureMainLeagueRaces();
   const now = new Date().toISOString();
 
-  // Mark original as rolled_forward
+  // Mark original as rolled_forward FIRST so driverLatestQueuedRaceMs
+  // correctly excludes it and only counts the remaining active penalties.
   original.status = "rolled_forward";
   original.adminNotes = adminNotes || original.adminNotes;
   original.updatedAt = now;
+
+  // Chain after the driver's remaining active penalties (e.g. other queued bans)
+  const assignAfterMs = driverLatestQueuedRaceMs(store, original.driverId);
+  const slot = futureRaces.find(
+    (r) => new Date(r.startTime).getTime() > assignAfterMs,
+  ) ?? null;
 
   const newPenalty: PenaltyToServe = {
     id: `pts_${randomUUID()}`,
@@ -926,10 +936,10 @@ export async function rollForwardPenalty(
     penaltyType: original.penaltyType,
     penaltyLabel: original.penaltyLabel,
     penaltyDescription: original.penaltyDescription,
-    assignedRaceId: raceSlot?.id ?? null,
-    assignedRaceLabel: raceSlot?.label ?? null,
-    assignedRaceStartTime: raceSlot?.startTime ?? null,
-    status: raceSlot ? "assigned" : "pending",
+    assignedRaceId: slot?.id ?? null,
+    assignedRaceLabel: slot?.label ?? null,
+    assignedRaceStartTime: slot?.startTime ?? null,
+    status: slot ? "assigned" : "pending",
     servedAt: null,
     adminNotes: null,
     createdBy: "system",
