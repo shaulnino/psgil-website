@@ -1,19 +1,13 @@
 /**
- * Penalty threshold rules — loaded dynamically from Google Sheets.
+ * Penalty threshold rules — loaded dynamically from the PSGiL Google Sheet
+ * (penalty_rules tab, GID 696729647).
  *
- * HOW TO SET UP:
- * 1. Add a new tab to the PSGiL Google Sheet named "penalty_rules"
- * 2. Add these columns (exact header names):
- *      id | active | threshold_license_points | penalty_type | penalty_label | penalty_description | applies_to | notes
- * 3. Example rows:
- *      rule_3pts | TRUE | 3 | qualifying_ban | Qualifying Ban | Driver must start from the pit lane | main_league |
- *      rule_6pts | TRUE | 6 | race_ban       | Race Ban        | Driver is excluded from the race    | main_league |
- * 4. Publish the sheet tab as CSV and copy the URL
- * 5. Set environment variable PENALTY_RULES_CSV_URL to that URL
- *    (In Netlify: Site settings → Environment variables)
+ * Sheet columns: id | active | threshold_license_points | penalty_type |
+ *                penalty_label | penalty_description | applies_to | notes
  */
 
 import { fetchCsv, parseCsv } from "@/lib/csv";
+import { GLOBAL_CSV_URLS } from "@/lib/seasonConfig";
 
 export type ThresholdRule = {
   id: string;
@@ -53,8 +47,7 @@ const CACHE_TTL_MS = 5 * 60 * 1000; // 5-minute cache
  * Falls back to empty array if env var is not configured.
  */
 export async function fetchThresholdRules(): Promise<ThresholdRule[]> {
-  const url = process.env.PENALTY_RULES_CSV_URL;
-  if (!url) return [];
+  const url = GLOBAL_CSV_URLS.penaltyRules;
 
   const now = Date.now();
   if (_cache && now - _cacheTime < CACHE_TTL_MS) return _cache;
