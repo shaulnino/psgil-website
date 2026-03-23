@@ -33,12 +33,14 @@ import {
   removeUserById,
   rollForwardPenalty,
   updateCaseStatus,
+  updateHistoricalCase,
+  updatePenaltyFields,
   updatePenaltyStatus,
   updateUser,
   updateUserRoles,
   upsertVerdict,
 } from "@/lib/stewards/repository";
-import type { HistoricalDriverEntry } from "@/lib/stewards/repository";
+import type { HistoricalDriverEntry, UpdateHistoricalCaseInput } from "@/lib/stewards/repository";
 import {
   notifyAllResponsesSubmitted,
   notifyCaseSubmitted,
@@ -497,4 +499,62 @@ export async function deletePenaltyAction(formData: FormData) {
   if (!id) redirect("/stewards/penalties-to-serve");
   await deletePenaltyToServe(id);
   revalidatePath("/stewards/penalties-to-serve");
+}
+
+export async function editPenaltyToServeAction(formData: FormData) {
+  await requireRole(["admin"]);
+  const id          = String(formData.get("penalty_id")          ?? "").trim();
+  const label       = String(formData.get("penalty_label")       ?? "").trim();
+  const type        = String(formData.get("penalty_type")        ?? "").trim() || "manual";
+  const description = String(formData.get("penalty_description") ?? "").trim();
+  const notes       = String(formData.get("admin_notes")         ?? "").trim() || null;
+  if (!id || !label) redirect("/stewards/penalties-to-serve?error=missing-fields");
+  await updatePenaltyFields(id, { penaltyLabel: label, penaltyType: type, penaltyDescription: description, adminNotes: notes });
+  revalidatePath("/stewards/penalties-to-serve");
+}
+
+export async function editHistoricalCaseAction(formData: FormData) {
+  await requireRole(["admin"]);
+  const VALID_DECISIONS: VerdictDecision[] = ["Racing Incident", "No Further Action", "Penalty Imposed", "Driver Reprimand", "Other"];
+  const caseId          = String(formData.get("case_id")           ?? "").trim();
+  const season          = String(formData.get("season")            ?? "").trim();
+  const round           = String(formData.get("round")             ?? "").trim();
+  const weekendSession  = String(formData.get("weekendSession")    ?? "Race") as WeekendSession;
+  const description     = String(formData.get("description")       ?? "").trim();
+  const decisionRaw     = String(formData.get("verdict_decision")  ?? "").trim() as VerdictDecision;
+  const verdictDecision = VALID_DECISIONS.includes(decisionRaw) ? decisionRaw : null;
+  const verdictFullText = String(formData.get("verdict_full_text") ?? "").trim();
+  const entriesJson     = String(formData.get("driver_entries_json") ?? "[]");
+  if (!caseId || !season || !round) redirect("/stewards/penalties?error=missing-fields");
+
+  let rawEntries: { driverId: string; licensePoints: string; timePenaltySeconds: string; warningText: string }[] = [];
+  try { rawEntries = JSON.parse(entriesJson); } catch { /* ignore */ }
+
+  const driverEntries: HistoricalDriverEntry[] = rawEntries
+    .filter((e) => e.driverId)
+    .map((e) => ({
+      driverId:           e.driverId,
+      licensePoints:      e.licensePoints      ? parseInt(e.licensePoints, 10)    : null,
+      timePenaltySeconds: e.timePenaltySeconds ? parseFloat(e.timePenaltySeconds) : null,
+      warningText:        e.warningText?.trim() || null,
+    }));
+
+  if (driverEntries.length === 0) redirect("/stewards/penalties?error=no-drivers");
+
+  const parts = driverEntries.map((e) => {
+    const chips: string[] = [];
+    if (e.licensePoints)      chips.push(`+${e.licensePoints} pts`);
+    if (e.timePenaltySeconds) chips.push(`+${e.timePenaltySeconds}s`);
+    if (e.warningText)        chips.push("Warning");
+    return chips.length ? chips.join(", ") : "No penalty";
+  });
+  const verdictSummary = (verdictDecision ?? "Historical entry") + (parts.some((p) => p !== "No penalty") ? ` — ${parts.join(" | ")}` : "");
+
+  const input: UpdateHistoricalCaseInput = {
+    season, round, weekendSession, description,
+    verdictDecision, verdictSummary, verdictFullText, driverEntries,
+  };
+  await updateHistoricalCase(caseId, input);
+  revalidatePath("/stewards/penalties");
+  revalidatePath("/stewards/cases");
 }

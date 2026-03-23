@@ -963,6 +963,101 @@ export async function deletePenaltyToServe(penaltyId: string): Promise<boolean> 
   return true;
 }
 
+export type UpdatePenaltyFieldsInput = {
+  penaltyLabel: string;
+  penaltyType: string;
+  penaltyDescription: string;
+  adminNotes: string | null;
+};
+
+export async function updatePenaltyFields(
+  penaltyId: string,
+  fields: UpdatePenaltyFieldsInput,
+): Promise<PenaltyToServe | null> {
+  const store = await readStore();
+  const penalty = store.penaltiesToServe.find((p) => p.id === penaltyId);
+  if (!penalty) return null;
+  penalty.penaltyLabel       = fields.penaltyLabel;
+  penalty.penaltyType        = fields.penaltyType;
+  penalty.penaltyDescription = fields.penaltyDescription;
+  penalty.adminNotes         = fields.adminNotes;
+  penalty.updatedAt          = new Date().toISOString();
+  await writeStore(store);
+  return penalty;
+}
+
+export type UpdateHistoricalCaseInput = {
+  season: string;
+  round: string;
+  weekendSession: WeekendSession;
+  description: string;
+  verdictDecision: VerdictDecision | null;
+  verdictFullText: string;
+  verdictSummary: string;
+  driverEntries: HistoricalDriverEntry[];
+};
+
+export async function updateHistoricalCase(
+  caseId: string,
+  input: UpdateHistoricalCaseInput,
+): Promise<StewardCase | null> {
+  const store = await readStore();
+  const caseItem = store.cases.find((c) => c.id === caseId);
+  const verdict  = store.verdicts.find((v) => v.caseId === caseId);
+  if (!caseItem || !verdict) return null;
+
+  const now = new Date().toISOString();
+  const involvedDriverIds = input.driverEntries.map((e) => e.driverId);
+
+  // Rebuild readable title
+  const driverNames = involvedDriverIds
+    .map((id) => store.users.find((u) => u.id === id)?.name.split(" ")[0] ?? id)
+    .join(", ");
+  caseItem.title           = `${input.season} ${input.round} – ${driverNames} (historical)`;
+  caseItem.season          = input.season.trim();
+  caseItem.round           = input.round.trim();
+  caseItem.weekendSession  = input.weekendSession;
+  caseItem.description     = input.description.trim() || "Historical penalty entry.";
+  caseItem.involvedDriverIds = involvedDriverIds;
+  caseItem.updatedAt       = now;
+
+  verdict.verdict_decision  = input.verdictDecision;
+  verdict.verdict_summary   = input.verdictSummary.trim();
+  verdict.verdict_full_text = input.verdictFullText.trim();
+  verdict.updatedAt         = now;
+
+  // Replace driverVerdicts for this case
+  store.driverVerdicts = store.driverVerdicts.filter((dv) => dv.caseId !== caseId);
+  store.driverVerdicts.push(
+    ...input.driverEntries.map((e) => ({
+      id: `dv_${randomUUID()}`,
+      caseId,
+      driverId: e.driverId,
+      license_points: e.licensePoints,
+      time_penalty_seconds: e.timePenaltySeconds,
+      warning_text: e.warningText,
+      createdAt: now,
+      updatedAt: now,
+    })),
+  );
+
+  await writeStore(store);
+  return caseItem;
+}
+
+/** Returns all historical cases (title contains "(historical)"), newest first. */
+export async function listHistoricalCases() {
+  const store = await readStore();
+  return store.cases
+    .filter((c) => c.title.includes("(historical)"))
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .map((c) => {
+      const verdict = store.verdicts.find((v) => v.caseId === c.id) ?? null;
+      const driverVerdicts = store.driverVerdicts.filter((dv) => dv.caseId === c.id);
+      return { caseItem: c, verdict, driverVerdicts };
+    });
+}
+
 export async function getPendingIndicatorsForUser(user: StewardUser): Promise<PendingIndicator[]> {
   const store = await readStore();
   const indicators: PendingIndicator[] = [];

@@ -6,6 +6,7 @@ import {
 import { fetchThresholdRules } from "@/lib/stewards/penaltyRules";
 import type { PenaltyToServe, PenaltyToServeStatus } from "@/lib/stewards/types";
 import FormActionButton from "@/app/stewards/components/FormActionButton";
+import EditPenaltyModal from "./EditPenaltyModal";
 import {
   addManualPenaltyAction,
   cancelPenaltyAction,
@@ -288,6 +289,9 @@ function PenaltyCard({
         {/* Right — admin actions */}
         {isAdmin && (
           <div className="flex flex-wrap gap-2 shrink-0">
+            {penalty.sourceType === "manual" && (
+              <EditPenaltyModal penalty={penalty} />
+            )}
             {(penalty.status === "awaiting_confirmation") && (
               <>
                 <form action={markPenaltyServedAction} className="inline">
