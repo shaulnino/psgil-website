@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 
 const PUBLIC_STEWARD_ROUTES = new Set(["/stewards/login"]);
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   if (!pathname.startsWith("/stewards")) return NextResponse.next();
   if (PUBLIC_STEWARD_ROUTES.has(pathname)) return NextResponse.next();

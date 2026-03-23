@@ -162,7 +162,9 @@ export async function createComplaintAction(formData: FormData) {
   const round = String(formData.get("round") ?? "").trim();
   const weekendSessionRaw = String(formData.get("weekend_session") ?? "").trim();
   const weekendSession: WeekendSession =
-    weekendSessionRaw === "Qualifying" ? "Qualifying" : "Race";
+    weekendSessionRaw === "Qualifying" ? "Qualifying"
+    : weekendSessionRaw === "Sprint" ? "Sprint"
+    : "Race";
   const lapRaw = String(formData.get("incident_lap_number") ?? "").trim();
   const qualifyingTime = String(formData.get("qualifying_time") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
@@ -177,14 +179,15 @@ export async function createComplaintAction(formData: FormData) {
   const memberIds = new Set(users.filter((u) => u.roles.includes("member")).map((u) => u.id));
   const involvedDriverIds = requestedInvolved.filter((id) => memberIds.has(id));
 
+  const isRaceLike = weekendSession === "Race" || weekendSession === "Sprint";
   const incidentLapNumber =
-    weekendSession === "Race" && lapRaw ? toNumberOrNull(lapRaw) : null;
+    isRaceLike && lapRaw ? toNumberOrNull(lapRaw) : null;
   const hasEvidence = attachmentUrls.length > 0 || evidenceItems.length > 0;
 
   if (!season || !round || !weekendSessionRaw || !description || involvedDriverIds.length === 0) {
     redirect("/stewards/cases?error=missing-fields&view=driver");
   }
-  if (weekendSession === "Race" && (!incidentLapNumber || incidentLapNumber <= 0)) {
+  if (isRaceLike && (!incidentLapNumber || incidentLapNumber <= 0)) {
     redirect("/stewards/cases?error=missing-fields&view=driver");
   }
   if (weekendSession === "Qualifying" && !qualifyingTime) {
@@ -207,7 +210,7 @@ export async function createComplaintAction(formData: FormData) {
     season,
     round,
     weekendSession,
-    incidentLapNumber: weekendSession === "Race" ? (incidentLapNumber as number) : null,
+    incidentLapNumber: isRaceLike ? (incidentLapNumber as number) : null,
     qualifyingTime: weekendSession === "Qualifying" ? qualifyingTime : null,
     complainantId: user.id,
     involvedDriverIds,

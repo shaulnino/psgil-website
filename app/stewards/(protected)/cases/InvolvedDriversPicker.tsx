@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type DriverOption = { id: string; name: string; email: string };
 
@@ -8,6 +8,17 @@ export default function InvolvedDriversPicker({ options }: { options: DriverOpti
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    if (open) document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, [open]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -26,7 +37,7 @@ export default function InvolvedDriversPicker({ options }: { options: DriverOpti
   return (
     <div className="md:col-span-2">
       <span className="mb-1 block text-sm text-white/80">Involved drivers (single or multiple) <span className="text-red-400">*</span></span>
-      <div className="relative">
+      <div className="relative" ref={containerRef}>
         <button type="button" onClick={() => setOpen((v) => !v)} className="flex w-full items-center justify-between rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-left text-sm">
           <span>{selectedIds.length ? `${selectedIds.length} driver${selectedIds.length > 1 ? "s" : ""} selected` : "Choose involved drivers"}</span>
           <span className="text-white/50">{open ? "▲" : "▼"}</span>
