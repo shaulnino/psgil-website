@@ -5,6 +5,8 @@ import { useFormStatus } from "react-dom";
 import { editPenaltyToServeAction } from "@/app/stewards/actions";
 import type { PenaltyToServe } from "@/lib/stewards/types";
 
+type Rule = { id: string; penaltyType: string; penaltyLabel: string; penaltyDescription: string };
+
 const inputCls =
   "w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white/90 focus:border-[#D4AF37]/50 focus:outline-none transition";
 
@@ -21,8 +23,14 @@ function SaveBtn() {
   );
 }
 
-export default function EditPenaltyModal({ penalty }: { penalty: PenaltyToServe }) {
+export default function EditPenaltyModal({ penalty, rules }: { penalty: PenaltyToServe; rules: Rule[] }) {
   const [open, setOpen] = useState(false);
+
+  // Find if current label matches a known rule
+  const matchedRule = rules.find((r) => r.penaltyLabel === penalty.penaltyLabel || r.penaltyType === penalty.penaltyType);
+  const [selected, setSelected] = useState<string>(matchedRule?.id ?? "__custom__");
+  const isCustom = selected === "__custom__";
+  const chosenRule = rules.find((r) => r.id === selected);
 
   return (
     <>
@@ -62,20 +70,46 @@ export default function EditPenaltyModal({ penalty }: { penalty: PenaltyToServe 
             >
               <input type="hidden" name="penalty_id" value={penalty.id} />
 
-              <label className="block">
-                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">Penalty label *</span>
-                <input name="penalty_label" required defaultValue={penalty.penaltyLabel} className={inputCls} />
-              </label>
+              {/* Penalty type — dropdown from rules, or custom */}
+              <div>
+                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">Penalty type *</span>
+                <select value={selected} onChange={(e) => setSelected(e.target.value)} required className={inputCls}>
+                  <option value="">Select penalty…</option>
+                  {rules.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.penaltyLabel}{r.penaltyDescription ? ` — ${r.penaltyDescription}` : ""}
+                    </option>
+                  ))}
+                  <option value="__custom__">Custom / Other…</option>
+                </select>
+              </div>
 
-              <label className="block">
-                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">Type (internal key)</span>
-                <input name="penalty_type" defaultValue={penalty.penaltyType} placeholder="e.g. qualifying_ban" className={inputCls} />
-              </label>
+              {/* Auto-fill hidden fields from selected rule */}
+              {!isCustom && chosenRule && (
+                <>
+                  <input type="hidden" name="penalty_label"       value={chosenRule.penaltyLabel} />
+                  <input type="hidden" name="penalty_type"        value={chosenRule.penaltyType} />
+                  <input type="hidden" name="penalty_description" value={chosenRule.penaltyDescription} />
+                </>
+              )}
 
-              <label className="block">
-                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">Description</span>
-                <input name="penalty_description" defaultValue={penalty.penaltyDescription} placeholder="Brief explanation" className={inputCls} />
-              </label>
+              {/* Custom free-text fallback */}
+              {isCustom && (
+                <>
+                  <label className="block">
+                    <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">Penalty label *</span>
+                    <input name="penalty_label" required defaultValue={penalty.penaltyLabel} className={inputCls} />
+                  </label>
+                  <label className="block">
+                    <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">Type (internal key)</span>
+                    <input name="penalty_type" defaultValue={penalty.penaltyType} placeholder="e.g. qualifying_ban" className={inputCls} />
+                  </label>
+                  <label className="block">
+                    <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">Description</span>
+                    <input name="penalty_description" defaultValue={penalty.penaltyDescription} placeholder="Brief explanation" className={inputCls} />
+                  </label>
+                </>
+              )}
 
               <label className="block">
                 <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">Admin notes</span>

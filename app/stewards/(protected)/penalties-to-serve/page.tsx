@@ -7,6 +7,7 @@ import { fetchThresholdRules } from "@/lib/stewards/penaltyRules";
 import type { PenaltyToServe, PenaltyToServeStatus } from "@/lib/stewards/types";
 import FormActionButton from "@/app/stewards/components/FormActionButton";
 import EditPenaltyModal from "./EditPenaltyModal";
+import PenaltyRuleSelect from "./PenaltyRuleSelect";
 import {
   addManualPenaltyAction,
   cancelPenaltyAction,
@@ -84,6 +85,7 @@ export default async function PenaltiesToServePage({ searchParams }: { searchPar
                 driverName={driverName(p.driverId)}
                 isAdmin={isAdmin}
                 variant="alert"
+                rules={rules}
               />
             ))}
           </div>
@@ -111,6 +113,7 @@ export default async function PenaltiesToServePage({ searchParams }: { searchPar
                 driverName={driverName(p.driverId)}
                 isAdmin={isAdmin}
                 variant="active"
+                rules={rules}
               />
             ))}
           </div>
@@ -136,31 +139,13 @@ export default async function PenaltiesToServePage({ searchParams }: { searchPar
               </select>
             </label>
             <label className="block">
-              <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-white/60">Penalty label *</span>
-              <input name="penalty_label" required placeholder="e.g. Qualifying Ban" className={inputCls} />
-            </label>
-            <label className="block">
-              <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-white/60">Type (internal key)</span>
-              <input name="penalty_type" placeholder="e.g. qualifying_ban" className={inputCls} />
-            </label>
-            <label className="block">
-              <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-white/60">Description</span>
-              <input name="penalty_description" placeholder="Brief explanation" className={inputCls} />
-            </label>
-            <label className="block">
               <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-white/60">
                 Quantity
                 <span className="ml-1 font-normal normal-case tracking-normal text-white/35">(consecutive penalties)</span>
               </span>
-              <input
-                name="quantity"
-                type="number"
-                min={1}
-                max={10}
-                defaultValue={1}
-                className={inputCls}
-              />
+              <input name="quantity" type="number" min={1} max={10} defaultValue={1} className={inputCls} />
             </label>
+            <PenaltyRuleSelect rules={rules} />
             <label className="block md:col-span-2">
               <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-white/60">Admin notes</span>
               <input name="admin_notes" placeholder="Reason for manual assignment…" className={inputCls} />
@@ -188,6 +173,7 @@ export default async function PenaltiesToServePage({ searchParams }: { searchPar
                 driverName={driverName(p.driverId)}
                 isAdmin={isAdmin}
                 variant="history"
+                rules={rules}
               />
             ))}
           </div>
@@ -221,16 +207,20 @@ const STATUS_LABEL: Record<PenaltyToServeStatus, string> = {
   cancelled:              "Cancelled",
 };
 
+type RuleOption = { id: string; penaltyType: string; penaltyLabel: string; penaltyDescription: string };
+
 function PenaltyCard({
   penalty,
   driverName,
   isAdmin,
   variant,
+  rules,
 }: {
   penalty: PenaltyToServe;
   driverName: string;
   isAdmin: boolean;
   variant: "active" | "alert" | "history";
+  rules: RuleOption[];
 }) {
   const borderCls = variant === "alert"
     ? "border-amber-500/40 bg-amber-500/8"
@@ -290,7 +280,7 @@ function PenaltyCard({
         {isAdmin && (
           <div className="flex flex-wrap gap-2 shrink-0">
             {penalty.sourceType === "manual" && (
-              <EditPenaltyModal penalty={penalty} />
+              <EditPenaltyModal penalty={penalty} rules={rules} />
             )}
             {(penalty.status === "awaiting_confirmation") && (
               <>
