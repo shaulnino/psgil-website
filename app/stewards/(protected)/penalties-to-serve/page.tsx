@@ -2,7 +2,6 @@ import { requireStewardUser } from "@/lib/stewards/auth";
 import {
   listPenaltiesToServe,
   listUsers,
-  getNextMainLeagueRace,
 } from "@/lib/stewards/repository";
 import { fetchThresholdRules } from "@/lib/stewards/penaltyRules";
 import type { PenaltyToServe, PenaltyToServeStatus } from "@/lib/stewards/types";
@@ -22,10 +21,9 @@ export default async function PenaltiesToServePage({ searchParams }: { searchPar
   const isAdmin = user.roles.includes("admin");
   const params = await searchParams;
 
-  const [penalties, users, nextRace, rules] = await Promise.all([
+  const [penalties, users, rules] = await Promise.all([
     listPenaltiesToServe(),
     listUsers(),
-    isAdmin ? getNextMainLeagueRace() : Promise.resolve(null),
     isAdmin ? fetchThresholdRules() : Promise.resolve([]),
   ]);
 
@@ -123,11 +121,9 @@ export default async function PenaltiesToServePage({ searchParams }: { searchPar
         <section className="steward-panel rounded-2xl p-5">
           <h3 className="text-base font-semibold">Add Penalty Manually</h3>
           <p className="mt-0.5 text-xs text-white/50">Directly assign a penalty-to-serve without a threshold trigger.</p>
-          {nextRace && (
-            <p className="mt-2 text-xs text-[#D4AF37]/70">
-              Will be assigned to: <strong className="text-[#f4d98a]">{nextRace.label}</strong>
-            </p>
-          )}
+          <p className="mt-2 text-xs text-[#D4AF37]/70">
+            Will be queued after any existing active penalties for that driver.
+          </p>
           <form action={addManualPenaltyAction} className="mt-4 grid gap-3 md:grid-cols-2">
             <label className="block">
               <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-white/60">Driver *</span>

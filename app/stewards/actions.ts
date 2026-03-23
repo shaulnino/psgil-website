@@ -26,7 +26,7 @@ import {
   deleteCaseById,
   deletePenaltyToServe,
   getCaseById,
-  getNextMainLeagueRace,
+
   getUserByEmail,
   listUsers,
   publishVerdict,
@@ -445,13 +445,9 @@ export async function addManualPenaltyAction(formData: FormData) {
   const adminNotes     = String(formData.get("admin_notes")     ?? "").trim() || null;
   if (!driverId || !penaltyLabel) redirect("/stewards/penalties-to-serve?error=missing-fields");
 
-  const raceSlot = await getNextMainLeagueRace();
   await addManualPenalty({
     driverId, penaltyType, penaltyLabel, penaltyDescription: penaltyDesc,
     adminNotes, createdBy: admin.id,
-    assignedRaceId: raceSlot?.id ?? null,
-    assignedRaceLabel: raceSlot?.label ?? null,
-    assignedRaceStartTime: raceSlot?.startTime ?? null,
   });
   revalidatePath("/stewards/penalties-to-serve");
 }

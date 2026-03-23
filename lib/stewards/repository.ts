@@ -598,17 +598,18 @@ export async function aggregateDriverPenalties(): Promise<DriverPenaltyRow[]> {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Next Main League Race helper                                        */
+/*  Main League Race schedule helpers                                   */
 /* ------------------------------------------------------------------ */
 
 type RaceSlot = { id: string; label: string; startTime: string };
 
-export async function getNextMainLeagueRace(): Promise<RaceSlot | null> {
+/** Returns all future Main League races ordered chronologically. */
+async function getFutureMainLeagueRaces(): Promise<RaceSlot[]> {
   try {
     const csv = await fetchCsv(GLOBAL_CSV_URLS.schedule);
     const events = mapRaceEvents(parseCsv<Record<string, string>>(csv));
     const now = Date.now();
-    const future = events
+    return events
       .filter((e) => {
         if ((e.league ?? "").toLowerCase() !== "main") return false;
         const ts = toIsraelTimestamp(e.date, e.start_time ?? undefined);
@@ -618,16 +619,39 @@ export async function getNextMainLeagueRace(): Promise<RaceSlot | null> {
         const ta = toIsraelTimestamp(a.date, a.start_time ?? undefined) ?? 0;
         const tb = toIsraelTimestamp(b.date, b.start_time ?? undefined) ?? 0;
         return ta - tb;
+      })
+      .map((e) => {
+        const raceNo = (e.race_number ?? "").trim().padStart(2, "0");
+        const label = `${e.season} R${raceNo}${e.race_name ? ` – ${e.race_name}` : ""} (Main)`;
+        const ts = toIsraelTimestamp(e.date, e.start_time ?? undefined)!;
+        return { id: e.event_id, label, startTime: new Date(ts).toISOString() };
       });
-    if (!future.length) return null;
-    const e = future[0];
-    const raceNo = (e.race_number ?? "").trim().padStart(2, "0");
-    const label = `${e.season} R${raceNo}${e.race_name ? ` – ${e.race_name}` : ""} (Main)`;
-    const ts = toIsraelTimestamp(e.date, e.start_time ?? undefined)!;
-    return { id: e.event_id, label, startTime: new Date(ts).toISOString() };
   } catch {
-    return null;
+    return [];
   }
+}
+
+/** Convenience: just the first upcoming Main League race. */
+export async function getNextMainLeagueRace(): Promise<RaceSlot | null> {
+  const races = await getFutureMainLeagueRaces();
+  return races[0] ?? null;
+}
+
+/**
+ * Returns the latest assignedRaceStartTime (ms) among a driver's
+ * active (non-terminal) penalties-to-serve. Returns 0 if none.
+ */
+function driverLatestQueuedRaceMs(store: StewardStore, driverId: string): number {
+  const ACTIVE_STATUSES: PenaltyToServeStatus[] = ["pending", "assigned", "awaiting_confirmation"];
+  let latest = 0;
+  for (const p of store.penaltiesToServe) {
+    if (p.driverId !== driverId) continue;
+    if (!ACTIVE_STATUSES.includes(p.status)) continue;
+    if (!p.assignedRaceStartTime) continue;
+    const ms = new Date(p.assignedRaceStartTime).getTime();
+    if (ms > latest) latest = ms;
+  }
+  return latest;
 }
 
 /* ------------------------------------------------------------------ */
@@ -652,10 +676,27 @@ function computeDriverPoints(store: StewardStore): Map<string, number> {
 }
 
 /**
+ * Severity sort for generated penalties:
+ * Race bans are served FIRST (they are more impactful), then qualifying bans,
+ * then others — all ties broken by threshold points ascending.
+ */
+function penaltySortKey(penaltyType: string, thresholdPts: number): number {
+  const typeOrder = penaltyType === "race_ban" ? 0 : penaltyType === "qualifying_ban" ? 1 : 2;
+  return typeOrder * 1000 + thresholdPts;
+}
+
+/**
  * After a verdict is saved/published, check whether any driver has crossed
- * a threshold and generate PenaltyToServe records as needed.
- * Deduplication: a threshold penalty for (driverId, thresholdPoints) is only
- * created if no non-cancelled record already exists for that combination.
+ * one or more thresholds and generate PenaltyToServe records as needed.
+ *
+ * Multi-threshold logic:
+ *   - All newly-crossed thresholds are collected per driver in one pass.
+ *   - They are sorted: race bans first, then qualifying bans, then others.
+ *   - Each penalty is assigned to a SUCCESSIVE future Main League race,
+ *     starting AFTER any races already occupied by that driver's pending penalties.
+ *
+ * Deduplication: (driverId, thresholdPoints) pairs that already have a
+ * non-cancelled threshold record are skipped.
  */
 export async function checkAndGeneratePenalties(triggeringCaseId: string): Promise<void> {
   const rules = await fetchThresholdRules();
@@ -665,14 +706,14 @@ export async function checkAndGeneratePenalties(triggeringCaseId: string): Promi
   const driverPoints = computeDriverPoints(store);
   if (!driverPoints.size) return;
 
-  const raceSlot = await getNextMainLeagueRace();
+  const futureRaces = await getFutureMainLeagueRaces();
   const now = new Date().toISOString();
   let changed = false;
 
   for (const [driverId, total] of driverPoints) {
-    for (const rule of rules) {
-      if (total < rule.thresholdLicensePoints) continue;
-      // Dedup: skip if a non-cancelled record already exists for this driver + threshold
+    // Collect only the newly-triggered thresholds for this driver
+    const newRules = rules.filter((rule) => {
+      if (total < rule.thresholdLicensePoints) return false;
       const existing = store.penaltiesToServe.find(
         (p) =>
           p.driverId === driverId &&
@@ -680,7 +721,25 @@ export async function checkAndGeneratePenalties(triggeringCaseId: string): Promi
           p.sourceType === "threshold" &&
           p.status !== "cancelled",
       );
-      if (existing) continue;
+      return !existing;
+    });
+    if (!newRules.length) continue;
+
+    // Sort: race bans first, then qualifying bans, then by threshold points asc
+    newRules.sort((a, b) =>
+      penaltySortKey(a.penaltyType, a.thresholdLicensePoints) -
+      penaltySortKey(b.penaltyType, b.thresholdLicensePoints),
+    );
+
+    // Find the starting point: first future race after the driver's last queued penalty
+    let assignAfterMs = driverLatestQueuedRaceMs(store, driverId);
+    const driver = store.users.find((u) => u.id === driverId);
+
+    for (const rule of newRules) {
+      // Find the first future race strictly after assignAfterMs
+      const slot = futureRaces.find(
+        (r) => new Date(r.startTime).getTime() > assignAfterMs,
+      ) ?? null;
 
       const penalty: PenaltyToServe = {
         id: `pts_${randomUUID()}`,
@@ -691,10 +750,10 @@ export async function checkAndGeneratePenalties(triggeringCaseId: string): Promi
         penaltyType: rule.penaltyType,
         penaltyLabel: rule.penaltyLabel,
         penaltyDescription: rule.penaltyDescription,
-        assignedRaceId: raceSlot?.id ?? null,
-        assignedRaceLabel: raceSlot?.label ?? null,
-        assignedRaceStartTime: raceSlot?.startTime ?? null,
-        status: raceSlot ? "assigned" : "pending",
+        assignedRaceId: slot?.id ?? null,
+        assignedRaceLabel: slot?.label ?? null,
+        assignedRaceStartTime: slot?.startTime ?? null,
+        status: slot ? "assigned" : "pending",
         servedAt: null,
         adminNotes: null,
         createdBy: "system",
@@ -706,8 +765,12 @@ export async function checkAndGeneratePenalties(triggeringCaseId: string): Promi
       store.penaltiesToServe.push(penalty);
       changed = true;
 
+      // Advance the pointer so the next penalty uses the race AFTER this one
+      if (slot) {
+        assignAfterMs = new Date(slot.startTime).getTime();
+      }
+
       // Email the driver (fire-and-forget, non-fatal)
-      const driver = store.users.find((u) => u.id === driverId);
       if (driver) {
         import("@/lib/stewards/notifications")
           .then(({ notifyPenaltyAssigned }) => notifyPenaltyAssigned(penalty, driver))
@@ -750,14 +813,25 @@ export type ManualPenaltyInput = {
   penaltyDescription: string;
   adminNotes: string | null;
   createdBy: string;
-  assignedRaceId: string | null;
-  assignedRaceLabel: string | null;
-  assignedRaceStartTime: string | null;
 };
 
+/**
+ * Manually add a penalty-to-serve for a driver.
+ * Automatically assigns it to the first future Main League race that comes
+ * AFTER any races already occupied by the driver's active pending penalties,
+ * so it is always queued BEHIND any existing ones.
+ */
 export async function addManualPenalty(input: ManualPenaltyInput): Promise<PenaltyToServe> {
   const store = await readStore();
+  const futureRaces = await getFutureMainLeagueRaces();
   const now = new Date().toISOString();
+
+  // Chain after the latest already-queued race for this driver
+  const assignAfterMs = driverLatestQueuedRaceMs(store, input.driverId);
+  const slot = futureRaces.find(
+    (r) => new Date(r.startTime).getTime() > assignAfterMs,
+  ) ?? null;
+
   const penalty: PenaltyToServe = {
     id: `pts_${randomUUID()}`,
     driverId: input.driverId,
@@ -767,10 +841,10 @@ export async function addManualPenalty(input: ManualPenaltyInput): Promise<Penal
     penaltyType: input.penaltyType,
     penaltyLabel: input.penaltyLabel,
     penaltyDescription: input.penaltyDescription,
-    assignedRaceId: input.assignedRaceId,
-    assignedRaceLabel: input.assignedRaceLabel,
-    assignedRaceStartTime: input.assignedRaceStartTime,
-    status: input.assignedRaceId ? "assigned" : "pending",
+    assignedRaceId: slot?.id ?? null,
+    assignedRaceLabel: slot?.label ?? null,
+    assignedRaceStartTime: slot?.startTime ?? null,
+    status: slot ? "assigned" : "pending",
     servedAt: null,
     adminNotes: input.adminNotes,
     createdBy: input.createdBy,
