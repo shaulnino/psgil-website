@@ -1,5 +1,5 @@
 import nodemailer from "nodemailer";
-import type { StewardCase, StewardUser, Verdict } from "@/lib/stewards/types";
+import type { Appeal, AppealVerdict, PenaltyToServe, StewardCase, StewardUser, Verdict } from "@/lib/stewards/types";
 
 // ---------------------------------------------------------------------------
 // Config
@@ -142,14 +142,20 @@ type EmailParams = {
   title: string;
   intro: string;
   summary?: CaseSummaryFields;
-  action?: string;
+  action?: string | { title: string; body: string };
   cta: { label: string; url: string; color?: string };
   note?: string;
+  /** Raw HTML injected after the summary card (use for custom content blocks) */
+  customHtml?: string;
 };
 
 function buildEmail(p: EmailParams): { html: string; text: string } {
   const summaryHtml  = p.summary ? caseSummaryCard(p.summary) : "";
-  const actionHtml   = p.action  ? actionNeededBlock(p.action)  : "";
+  const actionText   = typeof p.action === "object"
+    ? `<strong>${esc(p.action.title)}</strong><br>${p.action.body}`
+    : p.action ? esc(p.action) : "";
+  const actionHtml   = actionText ? actionNeededBlock(actionText) : "";
+  const extraHtml    = p.customHtml ?? "";
   const noteHtml     = p.note
     ? `<p style="margin:20px 0 0;font-size:11px;color:rgba(255,255,255,.28);line-height:1.6">${esc(p.note)}</p>`
     : "";
@@ -192,6 +198,7 @@ function buildEmail(p: EmailParams): { html: string; text: string } {
       <p style="margin:0;font-size:14px;color:rgba(255,255,255,.6);line-height:1.65">${esc(p.intro)}</p>
       ${summaryHtml}
       ${actionHtml}
+      ${extraHtml}
       ${ctaButton(p.cta.label, p.cta.url, p.cta.color ?? "#7020B0")}
       ${noteHtml}
     </td>
@@ -430,4 +437,158 @@ export async function notifyVerdictPublished(caseItem: StewardCase, verdict: Ver
     });
     await send(`[PSGiL Stewards] Verdict issued — ${caseItem.title}`, html, text, [driver.email]);
   }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Penalties to Serve notifications                                    */
+/* ------------------------------------------------------------------ */
+
+const penaltiesUrl = () => `${SITE_URL}/stewards/penalties-to-serve`;
+
+function penaltySummaryBlock(p: PenaltyToServe): string {
+  const rows = [
+    ["Penalty",      esc(p.penaltyLabel)],
+    ["Assigned race", esc(p.assignedRaceLabel ?? "To be confirmed")],
+    ["Status",        esc(p.status.replace(/_/g, " "))],
+    ...(p.penaltyDescription ? [["Details", esc(p.penaltyDescription)]] : []),
+  ];
+  const rowsHtml = rows
+    .map(([k, v]) => `<tr><td style="padding:4px 10px 4px 0;color:#9ca3af;font-size:12px;white-space:nowrap">${k}</td><td style="padding:4px 0;color:#f4d98a;font-size:13px;font-weight:600">${v}</td></tr>`)
+    .join("");
+  return `<table style="margin-top:12px;border-collapse:collapse">${rowsHtml}</table>`;
+}
+
+/** Notify driver when a new penalty-to-serve is first assigned */
+export async function notifyPenaltyAssigned(penalty: PenaltyToServe, driver: StewardUser) {
+  const { html, text } = buildEmail({
+    eyebrow: "Disciplinary Notice",
+    title: "You have a penalty to serve",
+    intro: `A disciplinary penalty has been assigned to you and must be served in an upcoming PSGiL Main League race.`,
+    action: {
+      title: "Action Required",
+      body: `You are required to serve a <strong>${esc(penalty.penaltyLabel)}</strong> in <strong>${esc(penalty.assignedRaceLabel ?? "the next Main League race")}</strong>. Please ensure you are available for that race.`,
+    },
+    customHtml: penaltySummaryBlock(penalty),
+    cta: { label: "View Penalty Details", url: penaltiesUrl() },
+    note: "If you believe this penalty was issued in error, contact the PSGiL stewards.",
+  });
+  await send(
+    `[PSGiL Stewards] Penalty to serve — ${penalty.penaltyLabel}`,
+    html,
+    text,
+    [driver.email],
+  );
+}
+
+/** Notify driver when their penalty is rolled forward to the next race */
+export async function notifyPenaltyRolledForward(penalty: PenaltyToServe, driver: StewardUser) {
+  const { html, text } = buildEmail({
+    eyebrow: "Penalty Update",
+    title: "Your penalty has been moved to the next race",
+    intro: `Your ${esc(penalty.penaltyLabel)} was not confirmed as served in the previous race and has been carried forward.`,
+    action: {
+      title: "Updated Assignment",
+      body: `Your penalty is now assigned to <strong>${esc(penalty.assignedRaceLabel ?? "the next Main League race")}</strong>. It must be served in that race.`,
+    },
+    customHtml: penaltySummaryBlock(penalty),
+    cta: { label: "View Penalty Details", url: penaltiesUrl() },
+    note: "If you have questions about this decision, contact the PSGiL stewards.",
+  });
+  await send(
+    `[PSGiL Stewards] Penalty carried forward — ${penalty.penaltyLabel}`,
+    html,
+    text,
+    [driver.email],
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Appeal notifications                                                */
+/* ------------------------------------------------------------------ */
+
+function appealUrl(appealId: string) {
+  return `${SITE_URL}/stewards/appeals/${appealId}`;
+}
+
+export async function notifyAppealSubmitted(
+  appeal: Appeal,
+  originalCase: StewardCase,
+  submittedBy: StewardUser,
+  recipients: StewardUser[],
+) {
+  const { html, text } = buildEmail({
+    eyebrow: "Appeal Filed",
+    title: "An appeal has been submitted",
+    intro: `${esc(submittedBy.name)} has filed an appeal against the verdict in Case #${originalCase.caseNumber ?? "–"}.`,
+    summary: {
+      caseNumber: originalCase.caseNumber,
+      title: originalCase.title,
+      season: originalCase.season,
+      round: originalCase.round,
+      weekendSession: originalCase.weekendSession,
+      complainantName: submittedBy.name,
+      involvedNames: [],
+      status: "Appeal Submitted",
+    },
+    customHtml: `
+<table width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0">
+  <tr>
+    <td style="background:rgba(212,175,55,.06);border:1px solid rgba(212,175,55,.18);border-radius:10px;padding:14px 16px">
+      <p style="margin:0 0 6px;font-size:11px;font-weight:700;color:rgba(212,175,55,.7);letter-spacing:.08em;text-transform:uppercase">Appeal Reason</p>
+      <p style="margin:0;font-size:13px;color:rgba(255,255,255,.75);line-height:1.55">${esc(appeal.description.substring(0, 300))}${appeal.description.length > 300 ? "…" : ""}</p>
+    </td>
+  </tr>
+</table>`,
+    action: "The appeal is now under steward review. Stewards will evaluate the submission and issue an appeal verdict.",
+    cta: { label: "View Appeal", url: appealUrl(appeal.id), color: "#7020B0" },
+    note: "This is an automated notification from the PSGiL Steward System.",
+  });
+  await send(
+    `[PSGiL Stewards] Appeal filed — Case #${originalCase.caseNumber ?? "–"}: ${originalCase.title}`,
+    html, text,
+    dedupe(recipients.map((r) => r.email)),
+  );
+}
+
+export async function notifyAppealVerdictPublished(
+  appeal: Appeal,
+  appealVerdict: AppealVerdict,
+  originalCase: StewardCase,
+  recipients: StewardUser[],
+) {
+  const changed = appealVerdict.outcomeType === "changed_decision";
+  const outcomeLabel = changed ? "Decision Changed" : "Original Decision Upheld";
+  const { html, text } = buildEmail({
+    eyebrow: "Appeal Verdict",
+    title: `Appeal verdict: ${outcomeLabel}`,
+    intro: changed
+      ? `The stewards have reviewed the appeal for Case #${originalCase.caseNumber ?? "–"} and have decided to change the original decision.`
+      : `The stewards have reviewed the appeal for Case #${originalCase.caseNumber ?? "–"} and have upheld the original decision.`,
+    summary: {
+      caseNumber: originalCase.caseNumber,
+      title: originalCase.title,
+      season: originalCase.season,
+      round: originalCase.round,
+      weekendSession: originalCase.weekendSession,
+      complainantName: "",
+      involvedNames: [],
+      status: changed ? "Decision Changed" : "Original Decision Upheld",
+    },
+    customHtml: appealVerdict.verdict_summary ? `
+<table width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0">
+  <tr>
+    <td style="background:${changed ? "rgba(112,32,176,.12)" : "rgba(16,185,129,.08)"};border:1px solid ${changed ? "rgba(112,32,176,.35)" : "rgba(16,185,129,.3)"};border-radius:10px;padding:14px 16px">
+      <p style="margin:0 0 6px;font-size:11px;font-weight:700;color:${changed ? "#d8b4fe" : "#6ee7b7"};letter-spacing:.08em;text-transform:uppercase">Appeal Verdict Summary</p>
+      <p style="margin:0;font-size:13px;color:rgba(255,255,255,.82);line-height:1.55">${esc(appealVerdict.verdict_summary)}</p>
+    </td>
+  </tr>
+</table>` : undefined,
+    cta: { label: "View Full Verdict", url: appealUrl(appeal.id), color: changed ? "#7020B0" : "#059669" },
+    note: "If you have questions about this decision, contact the PSGiL stewards.",
+  });
+  await send(
+    `[PSGiL Stewards] Appeal verdict — Case #${originalCase.caseNumber ?? "–"}: ${outcomeLabel}`,
+    html, text,
+    dedupe(recipients.map((r) => r.email)),
+  );
 }

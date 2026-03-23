@@ -71,6 +71,7 @@ const GID = {
   schedule: "2105913561",
   raceResults: "1960669750",
   rewards: "206883001",
+  penaltyRules: "696729647",
 } as const;
 
 export const SEASONS_CONFIG_CSV_URL = sheetUrl(GID.seasonsConfig);
@@ -93,6 +94,9 @@ export const GLOBAL_CSV_URLS = {
 
   /* Rewards dataset (optional override via env) */
   rewards: process.env.REWARDS_SHEET_URL?.trim() || sheetUrl(GID.rewards),
+
+  /* Steward penalty threshold rules */
+  penaltyRules: sheetUrl(GID.penaltyRules),
 };
 
 /* ------------------------------------------------------------------ */

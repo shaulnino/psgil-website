@@ -69,6 +69,17 @@ export async function getCurrentStewardUser() {
 export async function requireStewardUser(): Promise<StewardUser> {
   const user = await getCurrentStewardUser();
   if (!user || !user.isActive) redirect("/stewards/login");
+  if (user.mustChangePassword) redirect("/stewards/change-password");
+  return user;
+}
+
+/**
+ * Like requireStewardUser but does NOT redirect for mustChangePassword.
+ * Used exclusively by the change-password page itself so it can render.
+ */
+export async function requireStewardUserForPasswordChange(): Promise<StewardUser> {
+  const user = await getCurrentStewardUser();
+  if (!user || !user.isActive) redirect("/stewards/login");
   return user;
 }
 

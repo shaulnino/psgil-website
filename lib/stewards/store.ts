@@ -40,6 +40,21 @@ async function readFromBlob(): Promise<StewardStore> {
     return initial;
   }
   if (!data.driverVerdicts) data.driverVerdicts = [];
+  if (!data.penaltiesToServe) data.penaltiesToServe = [];
+  // Backfill new fields on existing penalty records
+  for (const p of data.penaltiesToServe) {
+    if (!("sourceRuleId" in p)) (p as Record<string, unknown>).sourceRuleId = null;
+    if (!("sourceRuleIndex" in p)) (p as Record<string, unknown>).sourceRuleIndex = 1;
+  }
+  // Backfill mustChangePassword on existing users
+  for (const u of data.users) {
+    if (!("mustChangePassword" in u)) (u as Record<string, unknown>).mustChangePassword = false;
+  }
+  // Backfill appeal collections
+  if (!data.appeals)                data.appeals                = [];
+  if (!data.appealVerdicts)         data.appealVerdicts         = [];
+  if (!data.appealDriverVerdicts)   data.appealDriverVerdicts   = [];
+  if (!data.appealInternalComments) data.appealInternalComments = [];
   return data;
 }
 
@@ -65,6 +80,18 @@ async function readFromFile(): Promise<StewardStore> {
     const raw = await readFile(STORE_PATH, "utf8");
     const store = JSON.parse(raw) as StewardStore;
     if (!store.driverVerdicts) store.driverVerdicts = [];
+    if (!store.penaltiesToServe) store.penaltiesToServe = [];
+    for (const p of store.penaltiesToServe) {
+      if (!("sourceRuleId" in p)) (p as Record<string, unknown>).sourceRuleId = null;
+      if (!("sourceRuleIndex" in p)) (p as Record<string, unknown>).sourceRuleIndex = 1;
+    }
+    for (const u of store.users) {
+      if (!("mustChangePassword" in u)) (u as Record<string, unknown>).mustChangePassword = false;
+    }
+    if (!store.appeals)                store.appeals                = [];
+    if (!store.appealVerdicts)         store.appealVerdicts         = [];
+    if (!store.appealDriverVerdicts)   store.appealDriverVerdicts   = [];
+    if (!store.appealInternalComments) store.appealInternalComments = [];
     return store;
   } catch {
     const initial = buildDefaultStore();

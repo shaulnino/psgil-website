@@ -44,7 +44,13 @@ export default function ContactSection() {
     };
     const payload =
       mode === "signup"
-        ? { ...base, type: "signup" as const }
+        ? {
+            ...base,
+            type: "signup" as const,
+            birthdate: fd.get("birthdate") as string,
+            platform: fd.get("platform") as string,
+            experience: fd.get("experience") as string,
+          }
         : {
             ...base,
             type: "question" as const,
@@ -78,6 +84,8 @@ export default function ContactSection() {
 
   const inputCls =
     "w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-[#7020B0]/60 focus:ring-1 focus:ring-[#7020B0]/30";
+  const selectCls =
+    `${inputCls} [&>option]:bg-[#18181f] [&>option]:text-white`;
   const labelCls =
     "mb-1.5 block text-xs font-medium uppercase tracking-wider text-white/50";
 
@@ -191,6 +199,50 @@ export default function ContactSection() {
             />
           </div>
         </div>
+
+        {/* Sign-up extra fields */}
+        {mode === "signup" && (
+          <>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div>
+                <label htmlFor="contact-birthdate" className={labelCls}>
+                  Date of Birth <span className="text-red-400">*</span>
+                </label>
+                <input
+                  id="contact-birthdate"
+                  name="birthdate"
+                  type="date"
+                  required
+                  className={inputCls}
+                  style={{ colorScheme: "dark" }}
+                />
+              </div>
+              <div>
+                <label htmlFor="contact-platform" className={labelCls}>
+                  Platform <span className="text-red-400">*</span>
+                </label>
+                <select id="contact-platform" name="platform" required defaultValue="" className={selectCls}>
+                  <option value="" disabled>Select…</option>
+                  <option value="PC">PC</option>
+                  <option value="PS5">PS5</option>
+                  <option value="Xbox">Xbox</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="contact-experience" className={labelCls}>
+                  Sim Racing Experience <span className="text-red-400">*</span>
+                </label>
+                <select id="contact-experience" name="experience" required defaultValue="" className={selectCls}>
+                  <option value="" disabled>Select…</option>
+                  <option value="0–4 months">0–4 months</option>
+                  <option value="4 months–1 year">4 months–1 year</option>
+                  <option value="1–2 years">1–2 years</option>
+                  <option value="Above 2 years">Above 2 years</option>
+                </select>
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Subject + Message (questions only) */}
         {mode === "question" && (

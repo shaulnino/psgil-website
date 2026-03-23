@@ -12,28 +12,47 @@ import {
   createStewardSession,
   requireRole,
   requireStewardUser,
+  requireStewardUserForPasswordChange,
   setStewardSessionCookie,
 } from "@/lib/stewards/auth";
 import { hashPassword, verifyPassword } from "@/lib/stewards/crypto";
 import {
+  addAppealInternalComment,
   addCaseResponse,
   addInternalComment,
   addHistoricalCase,
+  addManualPenalty,
+  checkAndGeneratePenalties,
+  createAppeal,
   createCase,
   createUser,
+  deleteAppeal,
   deleteCaseById,
+  deletePenaltyToServe,
   getCaseById,
+  getAppealByOriginalCaseId,
+  getAppealById,
   getUserByEmail,
+  isAppealWindowOpen,
   listUsers,
+  publishAppealVerdict,
   publishVerdict,
   removeUserById,
+  rollForwardPenalty,
+  updateAppealStatus,
   updateCaseStatus,
+  updateHistoricalCase,
+  updatePenaltyFields,
+  updatePenaltyStatus,
   updateUser,
   updateUserRoles,
+  upsertAppealVerdict,
   upsertVerdict,
 } from "@/lib/stewards/repository";
-import type { HistoricalDriverEntry } from "@/lib/stewards/repository";
+import type { HistoricalDriverEntry, UpdateHistoricalCaseInput, UpsertAppealVerdictInput } from "@/lib/stewards/repository";
 import {
+  notifyAppealSubmitted,
+  notifyAppealVerdictPublished,
   notifyAllResponsesSubmitted,
   notifyCaseSubmitted,
   notifyInternalDiscussion,
@@ -100,6 +119,8 @@ export async function loginStewardAction(formData: FormData) {
   }
   const token = await createStewardSession(user);
   await setStewardSessionCookie(token);
+  // Force password change before entering the module
+  if (user.mustChangePassword) redirect("/stewards/change-password");
   redirect("/stewards");
 }
 
@@ -278,6 +299,9 @@ export async function upsertVerdictAction(formData: FormData) {
   }
   revalidatePath(`/stewards/cases/${caseId}`);
   revalidatePath("/stewards/penalties");
+  revalidatePath("/stewards/penalties-to-serve");
+  // Auto-generate penalties-to-serve if thresholds crossed
+  await checkAndGeneratePenalties(caseId).catch(() => {});
 }
 
 export async function publishVerdictAction(formData: FormData) {
@@ -291,10 +315,13 @@ export async function publishVerdictAction(formData: FormData) {
       const users = await listUsers();
       await notifyVerdictPublished(caseData.caseItem, caseData.verdict, users);
     }
+    // Auto-generate penalties-to-serve if thresholds crossed
+    await checkAndGeneratePenalties(caseId).catch(() => {});
   }
   revalidatePath(`/stewards/cases/${caseId}`);
   revalidatePath("/stewards/cases");
   revalidatePath("/stewards/penalties");
+  revalidatePath("/stewards/penalties-to-serve");
   redirect(`/stewards/cases/${caseId}?view=steward`);
 }
 
@@ -341,10 +368,51 @@ export async function editUserAction(formData: FormData) {
   const email    = String(formData.get("email")     ?? "").trim();
   const password = String(formData.get("password")  ?? "").trim();
   if (!userId || !name || !email) redirect("/stewards/admin?error=invalid-user");
-  const fields: { name: string; email: string; passwordHash?: string } = { name, email };
-  if (password) fields.passwordHash = hashPassword(password);
+  const fields: { name: string; email: string; passwordHash?: string; mustChangePassword?: boolean } = { name, email };
+  if (password) {
+    fields.passwordHash = hashPassword(password);
+    // Admin resetting a password forces the user to change it on next login
+    fields.mustChangePassword = true;
+  }
   await updateUser(userId, fields);
   revalidatePath("/stewards/admin");
+}
+
+/**
+ * Forced change — called from /stewards/change-password (no current-password check).
+ * Only allowed when the session user has mustChangePassword = true.
+ */
+export async function forcedChangePasswordAction(formData: FormData) {
+  const user = await requireStewardUserForPasswordChange();
+  if (!user.mustChangePassword) redirect("/stewards");
+
+  const newPw  = String(formData.get("new_password")     ?? "").trim();
+  const confirm = String(formData.get("confirm_password") ?? "").trim();
+
+  if (!newPw || newPw.length < 8)         redirect("/stewards/change-password?error=too-short");
+  if (newPw !== confirm)                   redirect("/stewards/change-password?error=mismatch");
+
+  await updateUser(user.id, { passwordHash: hashPassword(newPw), mustChangePassword: false });
+  redirect("/stewards");
+}
+
+/**
+ * Voluntary change — user is already inside the module and wants to update their password.
+ * Requires current password verification.
+ */
+export async function selfChangePasswordAction(formData: FormData): Promise<{ error?: string }> {
+  const user = await requireStewardUser();
+
+  const currentPw = String(formData.get("current_password") ?? "").trim();
+  const newPw     = String(formData.get("new_password")     ?? "").trim();
+  const confirm   = String(formData.get("confirm_password") ?? "").trim();
+
+  if (!verifyPassword(currentPw, user.passwordHash)) return { error: "current-incorrect" };
+  if (!newPw || newPw.length < 8)                    return { error: "too-short" };
+  if (newPw !== confirm)                              return { error: "mismatch" };
+
+  await updateUser(user.id, { passwordHash: hashPassword(newPw) });
+  return {};
 }
 
 export async function addHistoricalPenaltyAction(formData: FormData) {
@@ -418,4 +486,330 @@ export async function removeCaseAction(formData: FormData) {
   revalidatePath("/stewards/cases");
   revalidatePath("/stewards/penalties");
   redirect(redirectTo);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Penalties to Serve — admin actions                                  */
+/* ------------------------------------------------------------------ */
+
+export async function addManualPenaltyAction(formData: FormData) {
+  const admin = await requireRole(["admin"]);
+  const driverId       = String(formData.get("driver_id")       ?? "").trim();
+  const penaltyType    = String(formData.get("penalty_type")    ?? "").trim() || "manual";
+  const penaltyLabel   = String(formData.get("penalty_label")   ?? "").trim();
+  const penaltyDesc    = String(formData.get("penalty_description") ?? "").trim();
+  const adminNotes     = String(formData.get("admin_notes")     ?? "").trim() || null;
+  const quantityRaw    = parseInt(String(formData.get("quantity") ?? "1").trim(), 10);
+  const quantity       = isNaN(quantityRaw) || quantityRaw < 1 ? 1 : quantityRaw;
+  if (!driverId || !penaltyLabel) redirect("/stewards/penalties-to-serve?error=missing-fields");
+
+  await addManualPenalty({
+    driverId, penaltyType, penaltyLabel, penaltyDescription: penaltyDesc,
+    adminNotes, createdBy: admin.id, quantity,
+  });
+  revalidatePath("/stewards/penalties-to-serve");
+}
+
+export async function markPenaltyServedAction(formData: FormData) {
+  await requireRole(["admin"]);
+  const id    = String(formData.get("penalty_id") ?? "").trim();
+  const notes = String(formData.get("admin_notes") ?? "").trim() || undefined;
+  if (!id) redirect("/stewards/penalties-to-serve");
+  await updatePenaltyStatus({ penaltyId: id, status: "served", adminNotes: notes });
+  revalidatePath("/stewards/penalties-to-serve");
+}
+
+export async function markPenaltyNotServedAction(formData: FormData) {
+  await requireRole(["admin"]);
+  const id    = String(formData.get("penalty_id") ?? "").trim();
+  const notes = String(formData.get("admin_notes") ?? "").trim() || "";
+  if (!id) redirect("/stewards/penalties-to-serve");
+  const newPenalty = await rollForwardPenalty(id, notes);
+  if (newPenalty) {
+    // Email notification for roll-forward
+    try {
+      const { notifyPenaltyRolledForward } = await import("@/lib/stewards/notifications");
+      const { listUsers: listU } = await import("@/lib/stewards/repository");
+      const users = await listU();
+      const driver = users.find((u) => u.id === newPenalty.driverId);
+      if (driver) await notifyPenaltyRolledForward(newPenalty, driver);
+    } catch { /* non-fatal */ }
+  }
+  revalidatePath("/stewards/penalties-to-serve");
+}
+
+export async function cancelPenaltyAction(formData: FormData) {
+  await requireRole(["admin"]);
+  const id    = String(formData.get("penalty_id") ?? "").trim();
+  const notes = String(formData.get("admin_notes") ?? "").trim() || undefined;
+  if (!id) redirect("/stewards/penalties-to-serve");
+  await updatePenaltyStatus({ penaltyId: id, status: "cancelled", adminNotes: notes });
+  revalidatePath("/stewards/penalties-to-serve");
+}
+
+export async function deletePenaltyAction(formData: FormData) {
+  await requireRole(["admin"]);
+  const id = String(formData.get("penalty_id") ?? "").trim();
+  if (!id) redirect("/stewards/penalties-to-serve");
+  await deletePenaltyToServe(id);
+  revalidatePath("/stewards/penalties-to-serve");
+}
+
+export async function editPenaltyToServeAction(formData: FormData) {
+  await requireRole(["admin"]);
+  const id          = String(formData.get("penalty_id")          ?? "").trim();
+  const label       = String(formData.get("penalty_label")       ?? "").trim();
+  const type        = String(formData.get("penalty_type")        ?? "").trim() || "manual";
+  const description = String(formData.get("penalty_description") ?? "").trim();
+  const notes       = String(formData.get("admin_notes")         ?? "").trim() || null;
+  if (!id || !label) redirect("/stewards/penalties-to-serve?error=missing-fields");
+  await updatePenaltyFields(id, { penaltyLabel: label, penaltyType: type, penaltyDescription: description, adminNotes: notes });
+  revalidatePath("/stewards/penalties-to-serve");
+}
+
+export async function editHistoricalCaseAction(formData: FormData) {
+  await requireRole(["admin"]);
+  const VALID_DECISIONS: VerdictDecision[] = ["Racing Incident", "No Further Action", "Penalty Imposed", "Driver Reprimand", "Other"];
+  const caseId          = String(formData.get("case_id")           ?? "").trim();
+  const season          = String(formData.get("season")            ?? "").trim();
+  const round           = String(formData.get("round")             ?? "").trim();
+  const weekendSession  = String(formData.get("weekendSession")    ?? "Race") as WeekendSession;
+  const description     = String(formData.get("description")       ?? "").trim();
+  const decisionRaw     = String(formData.get("verdict_decision")  ?? "").trim() as VerdictDecision;
+  const verdictDecision = VALID_DECISIONS.includes(decisionRaw) ? decisionRaw : null;
+  const verdictFullText = String(formData.get("verdict_full_text") ?? "").trim();
+  const entriesJson     = String(formData.get("driver_entries_json") ?? "[]");
+  if (!caseId || !season || !round) redirect("/stewards/penalties?error=missing-fields");
+
+  let rawEntries: { driverId: string; licensePoints: string; timePenaltySeconds: string; warningText: string }[] = [];
+  try { rawEntries = JSON.parse(entriesJson); } catch { /* ignore */ }
+
+  const driverEntries: HistoricalDriverEntry[] = rawEntries
+    .filter((e) => e.driverId)
+    .map((e) => ({
+      driverId:           e.driverId,
+      licensePoints:      e.licensePoints      ? parseInt(e.licensePoints, 10)    : null,
+      timePenaltySeconds: e.timePenaltySeconds ? parseFloat(e.timePenaltySeconds) : null,
+      warningText:        e.warningText?.trim() || null,
+    }));
+
+  if (driverEntries.length === 0) redirect("/stewards/penalties?error=no-drivers");
+
+  const parts = driverEntries.map((e) => {
+    const chips: string[] = [];
+    if (e.licensePoints)      chips.push(`+${e.licensePoints} pts`);
+    if (e.timePenaltySeconds) chips.push(`+${e.timePenaltySeconds}s`);
+    if (e.warningText)        chips.push("Warning");
+    return chips.length ? chips.join(", ") : "No penalty";
+  });
+  const verdictSummary = (verdictDecision ?? "Historical entry") + (parts.some((p) => p !== "No penalty") ? ` — ${parts.join(" | ")}` : "");
+
+  const input: UpdateHistoricalCaseInput = {
+    season, round, weekendSession, description,
+    verdictDecision, verdictSummary, verdictFullText, driverEntries,
+  };
+  await updateHistoricalCase(caseId, input);
+  revalidatePath("/stewards/penalties");
+  revalidatePath("/stewards/cases");
+}
+
+/* ─────────────────────────────────────────────────────────────────── */
+/*  APPEAL ACTIONS                                                      */
+/* ─────────────────────────────────────────────────────────────────── */
+
+export async function submitAppealAction(formData: FormData) {
+  const user = await requireStewardUser();
+  const caseId = String(formData.get("case_id") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim();
+
+  if (!caseId || !description) redirect("/stewards/cases?error=appeal-missing-fields");
+
+  const data = await getCaseById(caseId);
+  if (!data) redirect("/stewards/cases");
+  const { caseItem } = data;
+
+  // Eligibility checks
+  const isEligible =
+    caseItem.complainantId === user.id || caseItem.involvedDriverIds.includes(user.id);
+  if (!isEligible) redirect(`/stewards/cases/${caseId}?error=not-eligible`);
+  if (caseItem.status !== "Closed") redirect(`/stewards/cases/${caseId}?error=not-closed`);
+  const caseVerdict = data.verdict;
+  if (!isAppealWindowOpen(caseItem.closedAt, caseVerdict?.published_at)) redirect(`/stewards/cases/${caseId}?error=window-expired`);
+
+  const existing = await getAppealByOriginalCaseId(caseId);
+  if (existing) redirect(`/stewards/cases/${caseId}?error=appeal-exists`);
+
+  // Handle evidence uploads
+  const evidenceItems = parseLines(formData.get("evidence_items"));
+  const uploadedFiles = formData
+    .getAll("attachment_files")
+    .filter((f): f is File => f instanceof File);
+  const pastedFiles = formData
+    .getAll("pasted_files")
+    .filter((f): f is File => f instanceof File);
+  const allFiles = [...uploadedFiles, ...pastedFiles];
+  const uploadedUrls = await saveUploadedFiles(allFiles);
+  const attachments: { name: string; url: string }[] = allFiles.map((f, i) => ({
+    name: f.name || `evidence-${i + 1}`,
+    url: uploadedUrls[i],
+  }));
+  const links = evidenceItems;
+
+  // At least one piece of evidence required
+  if (attachments.length === 0 && links.length === 0) {
+    redirect(`/stewards/cases/${caseId}?error=appeal-no-evidence`);
+  }
+
+  const appeal = await createAppeal({
+    originalCaseId: caseId,
+    submittedByUserId: user.id,
+    description,
+    attachments,
+    links,
+    closedAt: caseItem.closedAt ?? caseVerdict?.published_at ?? new Date().toISOString(),
+  });
+
+  // Notify all parties
+  const allUsers = await listUsers();
+  const involvedUsers = allUsers.filter(
+    (u) =>
+      u.id === caseItem.complainantId ||
+      caseItem.involvedDriverIds.includes(u.id) ||
+      u.roles.includes("steward") ||
+      u.roles.includes("admin"),
+  );
+  try {
+    await notifyAppealSubmitted(appeal, caseItem, user, involvedUsers);
+  } catch { /* non-fatal */ }
+
+  revalidatePath(`/stewards/cases/${caseId}`);
+  revalidatePath("/stewards/cases");
+  revalidatePath("/stewards/appeals");
+  redirect(`/stewards/appeals/${appeal.id}?submitted=1`);
+}
+
+export async function addAppealInternalCommentAction(formData: FormData) {
+  const user = await requireStewardUser();
+  if (!canCommentInternally(user.roles)) redirect("/stewards");
+  const appealId = String(formData.get("appeal_id") ?? "").trim();
+  const text = String(formData.get("text") ?? "").trim();
+  if (!appealId || !text) return;
+  await addAppealInternalComment(appealId, user.id, text);
+  revalidatePath(`/stewards/appeals/${appealId}`);
+}
+
+export async function upsertAppealVerdictAction(formData: FormData) {
+  const user = await requireStewardUser();
+  if (!user.roles.includes("steward") && !user.roles.includes("admin")) redirect("/stewards");
+
+  const appealId       = String(formData.get("appeal_id")        ?? "").trim();
+  const outcomeRaw     = String(formData.get("outcome_type")      ?? "").trim();
+  const summaryRaw     = String(formData.get("verdict_summary")   ?? "").trim();
+  const fullTextRaw    = String(formData.get("verdict_full_text") ?? "").trim();
+  const isPublished    = formData.get("is_published") === "true";
+  const entriesJson    = String(formData.get("driver_entries_json") ?? "[]");
+
+  if (!appealId) redirect("/stewards/appeals");
+
+  const outcomeType = (outcomeRaw === "no_change" || outcomeRaw === "changed_decision")
+    ? outcomeRaw
+    : null;
+
+  type RawEntry = { driverId: string; licensePoints: string; timePenaltySeconds: string; warningText: string };
+  const rawEntries: RawEntry[] = JSON.parse(entriesJson);
+  const driverEntries = rawEntries.map((e) => ({
+    driverId: e.driverId,
+    license_points: e.licensePoints ? parseInt(e.licensePoints, 10) : null,
+    time_penalty_seconds: e.timePenaltySeconds ? parseFloat(e.timePenaltySeconds) : null,
+    warning_text: e.warningText?.trim() || null,
+  }));
+
+  const input: UpsertAppealVerdictInput = {
+    appealId,
+    outcomeType,
+    verdict_summary: summaryRaw,
+    verdict_full_text: fullTextRaw,
+    is_published: isPublished,
+    updatedBy: user.id,
+    driverEntries,
+  };
+  await upsertAppealVerdict(input);
+
+  if (isPublished) {
+    // Re-run penalty generation since effective verdicts may have changed
+    const appealData = await getAppealById(appealId);
+    if (appealData?.originalCase) {
+      try { await checkAndGeneratePenalties(appealData.originalCase.id); } catch { /* non-fatal */ }
+    }
+    // Notify involved parties
+    if (appealData) {
+      const allUsers = await listUsers();
+      const { appeal, originalCase, verdict } = appealData;
+      if (originalCase && verdict) {
+        const recipients = allUsers.filter(
+          (u) =>
+            u.id === originalCase.complainantId ||
+            originalCase.involvedDriverIds.includes(u.id),
+        );
+        try {
+          await notifyAppealVerdictPublished(appeal, verdict, originalCase, recipients);
+        } catch { /* non-fatal */ }
+      }
+    }
+  }
+
+  revalidatePath(`/stewards/appeals/${appealId}`);
+  revalidatePath("/stewards/cases");
+  revalidatePath("/stewards/penalties");
+}
+
+export async function publishAppealVerdictAction(formData: FormData) {
+  const user = await requireStewardUser();
+  if (!user.roles.includes("steward") && !user.roles.includes("admin")) redirect("/stewards");
+  const appealId = String(formData.get("appeal_id") ?? "").trim();
+  if (!appealId) redirect("/stewards/appeals");
+
+  await publishAppealVerdict(appealId, user.id);
+
+  const appealData = await getAppealById(appealId);
+  if (appealData?.originalCase) {
+    try { await checkAndGeneratePenalties(appealData.originalCase.id); } catch { /* non-fatal */ }
+  }
+  if (appealData?.originalCase && appealData.verdict) {
+    const allUsers = await listUsers();
+    const recipients = allUsers.filter(
+      (u) =>
+        u.id === appealData.originalCase!.complainantId ||
+        appealData.originalCase!.involvedDriverIds.includes(u.id),
+    );
+    try {
+      await notifyAppealVerdictPublished(appealData.appeal, appealData.verdict, appealData.originalCase, recipients);
+    } catch { /* non-fatal */ }
+  }
+
+  revalidatePath(`/stewards/appeals/${appealId}`);
+  revalidatePath("/stewards/cases");
+  revalidatePath("/stewards/penalties");
+}
+
+export async function updateAppealStatusAction(formData: FormData) {
+  const user = await requireStewardUser();
+  if (!user.roles.includes("steward") && !user.roles.includes("admin")) redirect("/stewards");
+  const appealId = String(formData.get("appeal_id") ?? "").trim();
+  const status = String(formData.get("status") ?? "").trim();
+  const VALID = ["Submitted", "Under Review", "Verdict Ready", "Closed"];
+  if (!appealId || !VALID.includes(status)) return;
+  await updateAppealStatus(appealId, status as import("@/lib/stewards/types").AppealStatus);
+  revalidatePath(`/stewards/appeals/${appealId}`);
+  revalidatePath("/stewards/appeals");
+}
+
+export async function deleteAppealAction(formData: FormData) {
+  await requireRole(["admin"]);
+  const appealId = String(formData.get("appeal_id") ?? "").trim();
+  if (!appealId) return;
+  await deleteAppeal(appealId);
+  revalidatePath("/stewards/appeals");
+  revalidatePath("/stewards/cases");
+  redirect("/stewards/appeals");
 }

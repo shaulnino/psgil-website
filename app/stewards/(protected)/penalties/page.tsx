@@ -1,16 +1,63 @@
 import FormActionButton from "@/app/stewards/components/FormActionButton";
 import { requireStewardUser } from "@/lib/stewards/auth";
-import { aggregateDriverPenalties } from "@/lib/stewards/repository";
+import { aggregateDriverPenalties, listHistoricalCases, listUsers } from "@/lib/stewards/repository";
+import HistoricalPenaltyForm from "@/app/stewards/(protected)/admin/HistoricalPenaltyForm";
+import EditHistoricalCaseModal from "./EditHistoricalCaseModal";
+import { fetchCsv, parseCsv } from "@/lib/csv";
+import { GLOBAL_CSV_URLS } from "@/lib/seasonConfig";
+import { mapRaceEvents } from "@/lib/scheduleData";
+
+export type SeasonRoundOption = {
+  value: string;
+  label: string;
+  rounds: { value: string; label: string }[];
+};
+
+async function getAllSeasonRoundOptions(): Promise<SeasonRoundOption[]> {
+  try {
+    const csv = await fetchCsv(GLOBAL_CSV_URLS.schedule);
+    const events = mapRaceEvents(parseCsv<Record<string, string>>(csv));
+    const bySeason = new Map<string, { value: string; label: string }[]>();
+    for (const e of events) {
+      const season = (e.season ?? "").trim();
+      if (!season) continue;
+      const raceNo = (e.race_number ?? "").trim().padStart(2, "0");
+      const label = `Race ${raceNo}${e.race_name ? ` - ${e.race_name}` : ""}${e.league ? ` (${e.league})` : ""}`;
+      const curr = bySeason.get(season) ?? [];
+      if (!curr.some((x) => x.value === label)) curr.push({ value: label, label });
+      bySeason.set(season, curr);
+    }
+    return [...bySeason.entries()]
+      .sort((a, b) => (parseInt(b[0].replace(/\D/g, ""), 10) || 0) - (parseInt(a[0].replace(/\D/g, ""), 10) || 0))
+      .map(([season, rounds]) => ({ value: season, label: `Season ${season.replace(/^S/i, "")}`, rounds }));
+  } catch {
+    return [];
+  }
+}
 
 type SearchParams = Promise<{ season?: string; driver?: string; sort?: "points" | "seconds" | "warnings" | "cases" }>;
 
 export default async function StewardPenaltiesPage({ searchParams }: { searchParams: SearchParams }) {
-  await requireStewardUser();
+  const user = await requireStewardUser();
+  const isAdmin = user.roles.includes("admin");
   const params = await searchParams;
   const seasonFilter = (params.season ?? "").trim().toLowerCase();
   const driverFilter = (params.driver ?? "").trim().toLowerCase();
   const sort = params.sort ?? "points";
-  const rows = await aggregateDriverPenalties();
+  const [rows, allUsers, historicalCases, seasonRoundOptions] = await Promise.all([
+    aggregateDriverPenalties(),
+    isAdmin ? listUsers() : Promise.resolve([]),
+    isAdmin ? listHistoricalCases() : Promise.resolve([]),
+    isAdmin ? getAllSeasonRoundOptions() : Promise.resolve([]),
+  ]);
+  const memberDrivers = allUsers.filter((u) => u.roles.includes("member"));
+
+  // Distinct seasons and drivers from actual data for dropdown options
+  const seasonOptions = [...new Set(rows.map((r) => r.season))]
+    .sort((a, b) => (parseInt(b.replace(/\D/g, ""), 10) || 0) - (parseInt(a.replace(/\D/g, ""), 10) || 0));
+  const driverOptions = [...new Map(rows.map((r) => [r.driverId, r.driverName])).entries()]
+    .sort((a, b) => a[1].localeCompare(b[1]));
+
   const filtered = rows
     .filter((r) => (!seasonFilter || r.season.toLowerCase().includes(seasonFilter)) && (!driverFilter || r.driverName.toLowerCase().includes(driverFilter)))
     .sort((a, b) => {
@@ -26,8 +73,24 @@ export default async function StewardPenaltiesPage({ searchParams }: { searchPar
         <h2 className="font-display text-2xl font-semibold">Penalty Tracking</h2>
         <p className="mt-1 text-white/70">Aggregated from published verdicts with composable penalties.</p>
         <form className="mt-4 grid gap-3 md:grid-cols-4">
-          <label className="block"><span className="mb-1 block text-sm text-white/80">Season filter</span><input name="season" defaultValue={params.season ?? ""} className="w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2" /></label>
-          <label className="block"><span className="mb-1 block text-sm text-white/80">Driver filter</span><input name="driver" defaultValue={params.driver ?? ""} className="w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2" /></label>
+          <label className="block">
+            <span className="mb-1 block text-sm text-white/80">Season</span>
+            <select name="season" defaultValue={params.season ?? ""} className="w-full rounded-lg border border-white/15 bg-[#13131f] px-3 py-2 text-sm text-white">
+              <option value="">All seasons</option>
+              {seasonOptions.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-sm text-white/80">Driver</span>
+            <select name="driver" defaultValue={params.driver ?? ""} className="w-full rounded-lg border border-white/15 bg-[#13131f] px-3 py-2 text-sm text-white">
+              <option value="">All drivers</option>
+              {driverOptions.map(([id, name]) => (
+                <option key={id} value={name}>{name}</option>
+              ))}
+            </select>
+          </label>
           <label className="block"><span className="mb-1 block text-sm text-white/80">Sort by</span><select name="sort" defaultValue={sort} className="w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2"><option value="points">License points</option><option value="seconds">Time penalties</option><option value="warnings">Warnings</option><option value="cases">Cases</option></select></label>
           <div className="flex items-end"><FormActionButton idleLabel="Apply" loadingLabel="Applying..." className="rounded-full bg-[#7020B0] px-5 py-2.5 text-sm font-semibold" /></div>
         </form>
@@ -47,6 +110,65 @@ export default async function StewardPenaltiesPage({ searchParams }: { searchPar
           </table>
         </div>
       </section>
+
+      {isAdmin && historicalCases.length > 0 && (
+        <section className="steward-panel overflow-hidden rounded-2xl">
+          <div className="px-5 py-4 border-b border-white/10">
+            <h3 className="text-base font-semibold">Historical Entries</h3>
+            <p className="mt-0.5 text-xs text-white/50">Manually recorded historical penalties. Click Edit to update.</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="steward-table min-w-full text-left text-sm">
+              <thead className="bg-white/5 text-white/80">
+                <tr>
+                  <th className="px-4 py-3">Case</th>
+                  <th className="px-4 py-3">Season</th>
+                  <th className="px-4 py-3">Round</th>
+                  <th className="px-4 py-3">Session</th>
+                  <th className="px-4 py-3">Drivers</th>
+                  <th className="px-4 py-3">Decision</th>
+                  <th className="px-4 py-3"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {historicalCases.map(({ caseItem, verdict, driverVerdicts }) => (
+                  <tr key={caseItem.id} className="border-t border-white/10">
+                    <td className="px-4 py-3 text-white/80 max-w-[200px] truncate">{caseItem.title}</td>
+                    <td className="px-4 py-3">{caseItem.season}</td>
+                    <td className="px-4 py-3">{caseItem.round}</td>
+                    <td className="px-4 py-3">{caseItem.weekendSession}</td>
+                    <td className="px-4 py-3 text-white/60 text-xs">
+                      {driverVerdicts.map((dv) => {
+                        const name = allUsers.find((u) => u.id === dv.driverId)?.name ?? dv.driverId;
+                        const chips = [
+                          dv.license_points ? `${dv.license_points}pts` : null,
+                          dv.time_penalty_seconds ? `${dv.time_penalty_seconds}s` : null,
+                          dv.warning_text ? "warn" : null,
+                        ].filter(Boolean).join(", ");
+                        return (
+                          <div key={dv.id}>{name}{chips ? ` — ${chips}` : ""}</div>
+                        );
+                      })}
+                    </td>
+                    <td className="px-4 py-3 text-white/50 text-xs">{verdict?.verdict_decision ?? "—"}</td>
+                    <td className="px-4 py-3">
+                      <EditHistoricalCaseModal
+                        caseItem={caseItem}
+                        verdict={verdict}
+                        driverVerdicts={driverVerdicts}
+                        drivers={memberDrivers}
+                        seasonRoundOptions={seasonRoundOptions}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      {isAdmin && <HistoricalPenaltyForm drivers={memberDrivers} seasonRoundOptions={seasonRoundOptions} />}
     </div>
   );
 }
