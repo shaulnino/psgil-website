@@ -443,11 +443,13 @@ export async function addManualPenaltyAction(formData: FormData) {
   const penaltyLabel   = String(formData.get("penalty_label")   ?? "").trim();
   const penaltyDesc    = String(formData.get("penalty_description") ?? "").trim();
   const adminNotes     = String(formData.get("admin_notes")     ?? "").trim() || null;
+  const quantityRaw    = parseInt(String(formData.get("quantity") ?? "1").trim(), 10);
+  const quantity       = isNaN(quantityRaw) || quantityRaw < 1 ? 1 : quantityRaw;
   if (!driverId || !penaltyLabel) redirect("/stewards/penalties-to-serve?error=missing-fields");
 
   await addManualPenalty({
     driverId, penaltyType, penaltyLabel, penaltyDescription: penaltyDesc,
-    adminNotes, createdBy: admin.id,
+    adminNotes, createdBy: admin.id, quantity,
   });
   revalidatePath("/stewards/penalties-to-serve");
 }

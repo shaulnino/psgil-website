@@ -18,6 +18,13 @@ export type ThresholdRule = {
   penaltyDescription: string;
   appliesTo: string;
   notes: string;
+  /**
+   * How many individual penalties this rule generates when triggered.
+   * Defaults to 1. Set to 2 in the sheet if the rule should produce two
+   * consecutive penalties (e.g. two race bans) each on separate races.
+   * Column name: quantity
+   */
+  quantity: number;
 };
 
 function mapRow(row: Record<string, string>): ThresholdRule | null {
@@ -25,6 +32,7 @@ function mapRow(row: Record<string, string>): ThresholdRule | null {
   if (!id) return null;
   const pts = parseInt((row.threshold_license_points ?? "").trim(), 10);
   if (isNaN(pts) || pts <= 0) return null;
+  const qty = parseInt((row.quantity ?? "1").trim(), 10);
   return {
     id,
     active: (row.active ?? "").trim().toLowerCase() === "true",
@@ -34,6 +42,7 @@ function mapRow(row: Record<string, string>): ThresholdRule | null {
     penaltyDescription: (row.penalty_description ?? "").trim(),
     appliesTo:          (row.applies_to          ?? "").trim() || "main_league",
     notes:              (row.notes               ?? "").trim(),
+    quantity:           isNaN(qty) || qty < 1 ? 1 : qty,
   };
 }
 

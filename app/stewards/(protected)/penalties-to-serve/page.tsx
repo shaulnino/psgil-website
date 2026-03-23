@@ -146,6 +146,20 @@ export default async function PenaltiesToServePage({ searchParams }: { searchPar
               <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-white/60">Description</span>
               <input name="penalty_description" placeholder="Brief explanation" className={inputCls} />
             </label>
+            <label className="block">
+              <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-white/60">
+                Quantity
+                <span className="ml-1 font-normal normal-case tracking-normal text-white/35">(consecutive penalties)</span>
+              </span>
+              <input
+                name="quantity"
+                type="number"
+                min={1}
+                max={10}
+                defaultValue={1}
+                className={inputCls}
+              />
+            </label>
             <label className="block md:col-span-2">
               <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-white/60">Admin notes</span>
               <input name="admin_notes" placeholder="Reason for manual assignment…" className={inputCls} />

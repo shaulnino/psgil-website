@@ -123,6 +123,10 @@ export type PenaltyToServe = {
   sourceType: "threshold" | "manual";
   /** The license-point threshold that triggered this (null for manual) */
   sourceThresholdPoints: number | null;
+  /** The Google Sheets rule ID that generated this penalty (used for deduplication) */
+  sourceRuleId: string | null;
+  /** When a rule has quantity > 1, this is the 1-based index of this instance */
+  sourceRuleIndex: number;
   /** Case IDs whose verdicts pushed the driver over the threshold */
   sourceCaseIds: string[];
   penaltyType: string;        // e.g. "qualifying_ban"

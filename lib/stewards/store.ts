@@ -41,6 +41,11 @@ async function readFromBlob(): Promise<StewardStore> {
   }
   if (!data.driverVerdicts) data.driverVerdicts = [];
   if (!data.penaltiesToServe) data.penaltiesToServe = [];
+  // Backfill new fields on existing penalty records
+  for (const p of data.penaltiesToServe) {
+    if (!("sourceRuleId" in p)) (p as Record<string, unknown>).sourceRuleId = null;
+    if (!("sourceRuleIndex" in p)) (p as Record<string, unknown>).sourceRuleIndex = 1;
+  }
   return data;
 }
 
@@ -67,6 +72,10 @@ async function readFromFile(): Promise<StewardStore> {
     const store = JSON.parse(raw) as StewardStore;
     if (!store.driverVerdicts) store.driverVerdicts = [];
     if (!store.penaltiesToServe) store.penaltiesToServe = [];
+    for (const p of store.penaltiesToServe) {
+      if (!("sourceRuleId" in p)) (p as Record<string, unknown>).sourceRuleId = null;
+      if (!("sourceRuleIndex" in p)) (p as Record<string, unknown>).sourceRuleIndex = 1;
+    }
     return store;
   } catch {
     const initial = buildDefaultStore();
