@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { canCommentInternally, requireStewardUser } from "@/lib/stewards/auth";
 import {
   addAppealInternalCommentAction,
-  deleteAppealAction,
   publishAppealVerdictAction,
   updateAppealStatusAction,
 } from "@/app/stewards/actions";
@@ -11,6 +10,7 @@ import FormActionButton from "@/app/stewards/components/FormActionButton";
 import { getAppealById, listUsers } from "@/lib/stewards/repository";
 import type { AppealStatus, AttachmentRef } from "@/lib/stewards/types";
 import AppealVerdictForm from "./AppealVerdictForm";
+import DeleteAppealForm from "./DeleteAppealForm";
 
 const APPEAL_STATUSES: AppealStatus[] = ["Submitted", "Under Review", "Verdict Ready", "Closed"];
 
@@ -87,14 +87,7 @@ export default async function AppealDetailPage({
               )}
             </div>
           </div>
-          {canAdmin && (
-            <form action={deleteAppealAction}
-              onSubmit={(e) => { if (!confirm("Delete this appeal? This cannot be undone.")) e.preventDefault(); }}>
-              <input type="hidden" name="appeal_id" value={appeal.id} />
-              <FormActionButton idleLabel="Delete Appeal" loadingLabel="Deleting…"
-                className="rounded-full border border-red-500/50 px-3 py-1.5 text-xs text-red-200 hover:bg-red-500/15" />
-            </form>
-          )}
+          {canAdmin && <DeleteAppealForm appealId={appeal.id} />}
         </div>
       </div>
 
