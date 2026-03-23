@@ -648,10 +648,10 @@ export async function submitAppealAction(formData: FormData) {
     .getAll("pasted_files")
     .filter((f): f is File => f instanceof File);
   const allFiles = [...uploadedFiles, ...pastedFiles];
-  const uploadedUrls = await saveUploadedFiles(allFiles);
+  const attachmentUrls = await saveAttachments(allFiles);
   const attachments: { name: string; url: string }[] = allFiles.map((f, i) => ({
     name: f.name || `evidence-${i + 1}`,
-    url: uploadedUrls[i],
+    url: attachmentUrls[i],
   }));
   const links = evidenceItems;
 
