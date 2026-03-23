@@ -69,6 +69,13 @@ async function readFromBlob(): Promise<StewardStore> {
   if (!data.appealVerdicts)         data.appealVerdicts         = [];
   if (!data.appealDriverVerdicts)   data.appealDriverVerdicts   = [];
   if (!data.appealInternalComments) data.appealInternalComments = [];
+  // Backfill attachments/links on appeals
+  for (const a of data.appeals) {
+    if (!Array.isArray((a as Record<string, unknown>).attachments))
+      (a as Record<string, unknown>).attachments = [];
+    if (!Array.isArray((a as Record<string, unknown>).links))
+      (a as Record<string, unknown>).links = [];
+  }
   return data;
 }
 
@@ -118,6 +125,12 @@ async function readFromFile(): Promise<StewardStore> {
     if (!store.appealVerdicts)         store.appealVerdicts         = [];
     if (!store.appealDriverVerdicts)   store.appealDriverVerdicts   = [];
     if (!store.appealInternalComments) store.appealInternalComments = [];
+    for (const a of store.appeals) {
+      if (!Array.isArray((a as Record<string, unknown>).attachments))
+        (a as Record<string, unknown>).attachments = [];
+      if (!Array.isArray((a as Record<string, unknown>).links))
+        (a as Record<string, unknown>).links = [];
+    }
     return store;
   } catch {
     const initial = buildDefaultStore();
