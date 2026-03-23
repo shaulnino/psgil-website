@@ -77,7 +77,6 @@ export default function EvidencePasteBox() {
         className="hidden"
         aria-hidden="true"
         tabIndex={-1}
-        readOnly
       />
 
       <div
