@@ -8,7 +8,7 @@ export type CaseStatus =
   | "Closed"
   | "Archived";
 
-export type WeekendSession = "Qualifying" | "Race";
+export type WeekendSession = "Qualifying" | "Race" | "Sprint";
 
 export type AttachmentRef = {
   name: string;

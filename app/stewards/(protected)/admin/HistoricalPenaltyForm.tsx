@@ -15,7 +15,7 @@ type DriverEntry = {
 };
 
 const DECISIONS = ["Racing Incident", "No Further Action", "Penalty Imposed", "Driver Reprimand", "Other"] as const;
-const SESSIONS  = ["Race", "Qualifying"] as const;
+const SESSIONS  = ["Race", "Sprint", "Qualifying"] as const;
 
 const inputCls =
   "w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white/90 focus:border-[#D4AF37]/50 focus:outline-none transition";
