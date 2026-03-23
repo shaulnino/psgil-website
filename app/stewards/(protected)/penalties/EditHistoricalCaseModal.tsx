@@ -14,6 +14,7 @@ const inputCls =
   "w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white/90 focus:border-[#D4AF37]/50 focus:outline-none transition";
 
 type Driver = { id: string; name: string };
+type SeasonRoundOption = { value: string; label: string; rounds: { value: string; label: string }[] };
 type Entry = { driverId: string; licensePoints: string; timePenaltySeconds: string; warningText: string };
 
 function SaveBtn() {
@@ -27,15 +28,18 @@ function SaveBtn() {
 }
 
 export default function EditHistoricalCaseModal({
-  caseItem, verdict, driverVerdicts, drivers,
+  caseItem, verdict, driverVerdicts, drivers, seasonRoundOptions = [],
 }: {
   caseItem: StewardCase;
   verdict: Verdict | null;
   driverVerdicts: DriverVerdict[];
   drivers: Driver[];
+  seasonRoundOptions?: SeasonRoundOption[];
 }) {
   const [open, setOpen] = useState(false);
   const [decision, setDecision] = useState<string>(verdict?.verdict_decision ?? "");
+  const [selectedSeason, setSelectedSeason] = useState(caseItem.season);
+  const roundOptions = seasonRoundOptions.find((s) => s.value === selectedSeason)?.rounds ?? [];
   const [entries, setEntries] = useState<Entry[]>(
     driverVerdicts.length > 0
       ? driverVerdicts.map((dv) => ({
@@ -90,11 +94,31 @@ export default function EditHistoricalCaseModal({
               <div className="grid gap-3 md:grid-cols-3">
                 <label className="block">
                   <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-white/60">Season *</span>
-                  <input name="season" required defaultValue={caseItem.season} className={inputCls} />
+                  {seasonRoundOptions.length > 0 ? (
+                    <select name="season" required value={selectedSeason}
+                      onChange={(e) => setSelectedSeason(e.target.value)} className={inputCls}>
+                      <option value="">Select season…</option>
+                      {seasonRoundOptions.map((s) => (
+                        <option key={s.value} value={s.value}>{s.label}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input name="season" required defaultValue={caseItem.season} className={inputCls} />
+                  )}
                 </label>
                 <label className="block">
                   <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-white/60">Round *</span>
-                  <input name="round" required defaultValue={caseItem.round} className={inputCls} />
+                  {seasonRoundOptions.length > 0 ? (
+                    <select name="round" required disabled={!selectedSeason} className={inputCls}
+                      defaultValue={caseItem.round}>
+                      <option value="">{selectedSeason ? "Select round…" : "Select season first"}</option>
+                      {roundOptions.map((r) => (
+                        <option key={r.value} value={r.value}>{r.label}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input name="round" required defaultValue={caseItem.round} className={inputCls} />
+                  )}
                 </label>
                 <label className="block">
                   <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-white/60">Session</span>

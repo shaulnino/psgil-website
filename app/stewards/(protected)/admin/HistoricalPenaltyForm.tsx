@@ -5,6 +5,7 @@ import { useFormStatus } from "react-dom";
 import { addHistoricalPenaltyAction } from "@/app/stewards/actions";
 
 type Driver = { id: string; name: string; email: string };
+type SeasonRoundOption = { value: string; label: string; rounds: { value: string; label: string }[] };
 
 type DriverEntry = {
   driverId: string;
@@ -19,10 +20,19 @@ const SESSIONS  = ["Race", "Qualifying"] as const;
 const inputCls =
   "w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white/90 focus:border-[#D4AF37]/50 focus:outline-none transition";
 
-export default function HistoricalPenaltyForm({ drivers }: { drivers: Driver[] }) {
+export default function HistoricalPenaltyForm({
+  drivers,
+  seasonRoundOptions = [],
+}: {
+  drivers: Driver[];
+  seasonRoundOptions?: SeasonRoundOption[];
+}) {
   const [open, setOpen] = useState(false);
   const [entries, setEntries] = useState<DriverEntry[]>([{ driverId: "", licensePoints: "", timePenaltySeconds: "", warningText: "" }]);
   const [decision, setDecision] = useState("");
+  const [selectedSeason, setSelectedSeason] = useState("");
+
+  const roundOptions = seasonRoundOptions.find((s) => s.value === selectedSeason)?.rounds ?? [];
 
   const addEntry = () => setEntries((prev) => [...prev, { driverId: "", licensePoints: "", timePenaltySeconds: "", warningText: "" }]);
   const removeEntry = (i: number) => setEntries((prev) => prev.filter((_, idx) => idx !== i));
@@ -35,6 +45,7 @@ export default function HistoricalPenaltyForm({ drivers }: { drivers: Driver[] }
     await addHistoricalPenaltyAction(fd);
     setEntries([{ driverId: "", licensePoints: "", timePenaltySeconds: "", warningText: "" }]);
     setDecision("");
+    setSelectedSeason("");
     setOpen(false);
   };
 
@@ -62,11 +73,35 @@ export default function HistoricalPenaltyForm({ drivers }: { drivers: Driver[] }
           <div className="grid gap-3 md:grid-cols-3">
             <label className="block">
               <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">Season <span className="text-red-400">*</span></span>
-              <input name="season" required placeholder="e.g. S6" className={inputCls} />
+              {seasonRoundOptions.length > 0 ? (
+                <select
+                  name="season"
+                  required
+                  value={selectedSeason}
+                  onChange={(e) => setSelectedSeason(e.target.value)}
+                  className={inputCls}
+                >
+                  <option value="">Select season…</option>
+                  {seasonRoundOptions.map((s) => (
+                    <option key={s.value} value={s.value}>{s.label}</option>
+                  ))}
+                </select>
+              ) : (
+                <input name="season" required placeholder="e.g. S6" className={inputCls} />
+              )}
             </label>
             <label className="block">
               <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">Round <span className="text-red-400">*</span></span>
-              <input name="round" required placeholder="e.g. Race 03 – Monaco" className={inputCls} />
+              {seasonRoundOptions.length > 0 ? (
+                <select name="round" required disabled={!selectedSeason} className={inputCls}>
+                  <option value="">{selectedSeason ? "Select round…" : "Select season first"}</option>
+                  {roundOptions.map((r) => (
+                    <option key={r.value} value={r.value}>{r.label}</option>
+                  ))}
+                </select>
+              ) : (
+                <input name="round" required placeholder="e.g. Race 03 – Monaco" className={inputCls} />
+              )}
             </label>
             <label className="block">
               <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">Session</span>

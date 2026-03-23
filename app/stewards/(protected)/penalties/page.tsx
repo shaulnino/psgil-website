@@ -3,6 +3,37 @@ import { requireStewardUser } from "@/lib/stewards/auth";
 import { aggregateDriverPenalties, listHistoricalCases, listUsers } from "@/lib/stewards/repository";
 import HistoricalPenaltyForm from "@/app/stewards/(protected)/admin/HistoricalPenaltyForm";
 import EditHistoricalCaseModal from "./EditHistoricalCaseModal";
+import { fetchCsv, parseCsv } from "@/lib/csv";
+import { GLOBAL_CSV_URLS } from "@/lib/seasonConfig";
+import { mapRaceEvents } from "@/lib/scheduleData";
+
+export type SeasonRoundOption = {
+  value: string;
+  label: string;
+  rounds: { value: string; label: string }[];
+};
+
+async function getAllSeasonRoundOptions(): Promise<SeasonRoundOption[]> {
+  try {
+    const csv = await fetchCsv(GLOBAL_CSV_URLS.schedule);
+    const events = mapRaceEvents(parseCsv<Record<string, string>>(csv));
+    const bySeason = new Map<string, { value: string; label: string }[]>();
+    for (const e of events) {
+      const season = (e.season ?? "").trim();
+      if (!season) continue;
+      const raceNo = (e.race_number ?? "").trim().padStart(2, "0");
+      const label = `Race ${raceNo}${e.race_name ? ` - ${e.race_name}` : ""}${e.league ? ` (${e.league})` : ""}`;
+      const curr = bySeason.get(season) ?? [];
+      if (!curr.some((x) => x.value === label)) curr.push({ value: label, label });
+      bySeason.set(season, curr);
+    }
+    return [...bySeason.entries()]
+      .sort((a, b) => (parseInt(b[0].replace(/\D/g, ""), 10) || 0) - (parseInt(a[0].replace(/\D/g, ""), 10) || 0))
+      .map(([season, rounds]) => ({ value: season, label: `Season ${season.replace(/^S/i, "")}`, rounds }));
+  } catch {
+    return [];
+  }
+}
 
 type SearchParams = Promise<{ season?: string; driver?: string; sort?: "points" | "seconds" | "warnings" | "cases" }>;
 
@@ -13,10 +44,11 @@ export default async function StewardPenaltiesPage({ searchParams }: { searchPar
   const seasonFilter = (params.season ?? "").trim().toLowerCase();
   const driverFilter = (params.driver ?? "").trim().toLowerCase();
   const sort = params.sort ?? "points";
-  const [rows, allUsers, historicalCases] = await Promise.all([
+  const [rows, allUsers, historicalCases, seasonRoundOptions] = await Promise.all([
     aggregateDriverPenalties(),
     isAdmin ? listUsers() : Promise.resolve([]),
     isAdmin ? listHistoricalCases() : Promise.resolve([]),
+    isAdmin ? getAllSeasonRoundOptions() : Promise.resolve([]),
   ]);
   const memberDrivers = allUsers.filter((u) => u.roles.includes("member"));
   const filtered = rows
@@ -102,6 +134,7 @@ export default async function StewardPenaltiesPage({ searchParams }: { searchPar
                         verdict={verdict}
                         driverVerdicts={driverVerdicts}
                         drivers={memberDrivers}
+                        seasonRoundOptions={seasonRoundOptions}
                       />
                     </td>
                   </tr>
@@ -112,7 +145,7 @@ export default async function StewardPenaltiesPage({ searchParams }: { searchPar
         </section>
       )}
 
-      {isAdmin && <HistoricalPenaltyForm drivers={memberDrivers} />}
+      {isAdmin && <HistoricalPenaltyForm drivers={memberDrivers} seasonRoundOptions={seasonRoundOptions} />}
     </div>
   );
 }
