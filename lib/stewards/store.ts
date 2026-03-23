@@ -50,6 +50,20 @@ async function readFromBlob(): Promise<StewardStore> {
   for (const u of data.users) {
     if (!("mustChangePassword" in u)) (u as Record<string, unknown>).mustChangePassword = false;
   }
+  // Backfill attachments/links on case responses that predate the field
+  for (const r of data.responses ?? []) {
+    if (!Array.isArray((r as Record<string, unknown>).attachments))
+      (r as Record<string, unknown>).attachments = [];
+    if (!Array.isArray((r as Record<string, unknown>).links))
+      (r as Record<string, unknown>).links = [];
+  }
+  // Backfill attachments/links on cases
+  for (const c of data.cases ?? []) {
+    if (!Array.isArray((c as Record<string, unknown>).attachments))
+      (c as Record<string, unknown>).attachments = [];
+    if (!Array.isArray((c as Record<string, unknown>).links))
+      (c as Record<string, unknown>).links = [];
+  }
   // Backfill appeal collections
   if (!data.appeals)                data.appeals                = [];
   if (!data.appealVerdicts)         data.appealVerdicts         = [];
@@ -87,6 +101,18 @@ async function readFromFile(): Promise<StewardStore> {
     }
     for (const u of store.users) {
       if (!("mustChangePassword" in u)) (u as Record<string, unknown>).mustChangePassword = false;
+    }
+    for (const r of store.responses ?? []) {
+      if (!Array.isArray((r as Record<string, unknown>).attachments))
+        (r as Record<string, unknown>).attachments = [];
+      if (!Array.isArray((r as Record<string, unknown>).links))
+        (r as Record<string, unknown>).links = [];
+    }
+    for (const c of store.cases ?? []) {
+      if (!Array.isArray((c as Record<string, unknown>).attachments))
+        (c as Record<string, unknown>).attachments = [];
+      if (!Array.isArray((c as Record<string, unknown>).links))
+        (c as Record<string, unknown>).links = [];
     }
     if (!store.appeals)                store.appeals                = [];
     if (!store.appealVerdicts)         store.appealVerdicts         = [];

@@ -52,8 +52,18 @@ export default function StewardsError({
           </button>
         </div>
 
-        {error?.digest && (
-          <p className="mt-4 font-mono text-[10px] text-white/25">Error ID: {error.digest}</p>
+        {(error?.message || error?.digest) && (
+          <details className="mt-4 text-left">
+            <summary className="cursor-pointer font-mono text-[10px] text-white/25 hover:text-white/40">
+              Debug info
+            </summary>
+            <div className="mt-1 rounded-lg border border-white/10 bg-black/40 p-3 font-mono text-[10px] text-white/40 break-all space-y-1">
+              {error.digest && <p>Digest: {error.digest}</p>}
+              {error.message && error.message !== "An error occurred in the Server Components render." && (
+                <p>Message: {error.message}</p>
+              )}
+            </div>
+          </details>
         )}
       </div>
     </div>
