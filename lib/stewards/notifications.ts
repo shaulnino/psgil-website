@@ -1,5 +1,5 @@
 import nodemailer from "nodemailer";
-import type { PenaltyToServe, StewardCase, StewardUser, Verdict } from "@/lib/stewards/types";
+import type { Appeal, AppealVerdict, PenaltyToServe, StewardCase, StewardUser, Verdict } from "@/lib/stewards/types";
 
 // ---------------------------------------------------------------------------
 // Config
@@ -499,5 +499,96 @@ export async function notifyPenaltyRolledForward(penalty: PenaltyToServe, driver
     html,
     text,
     [driver.email],
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Appeal notifications                                                */
+/* ------------------------------------------------------------------ */
+
+function appealUrl(appealId: string) {
+  return `${SITE_URL}/stewards/appeals/${appealId}`;
+}
+
+export async function notifyAppealSubmitted(
+  appeal: Appeal,
+  originalCase: StewardCase,
+  submittedBy: StewardUser,
+  recipients: StewardUser[],
+) {
+  const { html, text } = buildEmail({
+    eyebrow: "Appeal Filed",
+    title: "An appeal has been submitted",
+    intro: `${esc(submittedBy.name)} has filed an appeal against the verdict in Case #${originalCase.caseNumber ?? "–"}.`,
+    summary: {
+      caseNumber: originalCase.caseNumber,
+      title: originalCase.title,
+      season: originalCase.season,
+      round: originalCase.round,
+      weekendSession: originalCase.weekendSession,
+      complainantName: submittedBy.name,
+      involvedNames: [],
+      status: "Appeal Submitted",
+    },
+    customHtml: `
+<table width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0">
+  <tr>
+    <td style="background:rgba(212,175,55,.06);border:1px solid rgba(212,175,55,.18);border-radius:10px;padding:14px 16px">
+      <p style="margin:0 0 6px;font-size:11px;font-weight:700;color:rgba(212,175,55,.7);letter-spacing:.08em;text-transform:uppercase">Appeal Reason</p>
+      <p style="margin:0;font-size:13px;color:rgba(255,255,255,.75);line-height:1.55">${esc(appeal.description.substring(0, 300))}${appeal.description.length > 300 ? "…" : ""}</p>
+    </td>
+  </tr>
+</table>`,
+    action: "The appeal is now under steward review. Stewards will evaluate the submission and issue an appeal verdict.",
+    cta: { label: "View Appeal", url: appealUrl(appeal.id), color: "#7020B0" },
+    note: "This is an automated notification from the PSGiL Steward System.",
+  });
+  await send(
+    `[PSGiL Stewards] Appeal filed — Case #${originalCase.caseNumber ?? "–"}: ${originalCase.title}`,
+    html, text,
+    dedupe(recipients.map((r) => r.email)),
+  );
+}
+
+export async function notifyAppealVerdictPublished(
+  appeal: Appeal,
+  appealVerdict: AppealVerdict,
+  originalCase: StewardCase,
+  recipients: StewardUser[],
+) {
+  const changed = appealVerdict.outcomeType === "changed_decision";
+  const outcomeLabel = changed ? "Decision Changed" : "Original Decision Upheld";
+  const { html, text } = buildEmail({
+    eyebrow: "Appeal Verdict",
+    title: `Appeal verdict: ${outcomeLabel}`,
+    intro: changed
+      ? `The stewards have reviewed the appeal for Case #${originalCase.caseNumber ?? "–"} and have decided to change the original decision.`
+      : `The stewards have reviewed the appeal for Case #${originalCase.caseNumber ?? "–"} and have upheld the original decision.`,
+    summary: {
+      caseNumber: originalCase.caseNumber,
+      title: originalCase.title,
+      season: originalCase.season,
+      round: originalCase.round,
+      weekendSession: originalCase.weekendSession,
+      complainantName: "",
+      involvedNames: [],
+      status: changed ? "Decision Changed" : "Original Decision Upheld",
+    },
+    customHtml: appealVerdict.verdict_summary ? `
+<table width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0">
+  <tr>
+    <td style="background:${changed ? "rgba(112,32,176,.12)" : "rgba(16,185,129,.08)"};border:1px solid ${changed ? "rgba(112,32,176,.35)" : "rgba(16,185,129,.3)"};border-radius:10px;padding:14px 16px">
+      <p style="margin:0 0 6px;font-size:11px;font-weight:700;color:${changed ? "#d8b4fe" : "#6ee7b7"};letter-spacing:.08em;text-transform:uppercase">Appeal Verdict Summary</p>
+      <p style="margin:0;font-size:13px;color:rgba(255,255,255,.82);line-height:1.55">${esc(appealVerdict.verdict_summary)}</p>
+    </td>
+  </tr>
+</table>` : undefined,
+    cta: { label: "View Full Verdict", url: appealUrl(appeal.id), color: changed ? "#7020B0" : "#059669" },
+    note: "If you have questions about this decision, contact the PSGiL stewards.",
+  });
+  await send(
+    `[PSGiL Stewards] Appeal verdict — Case #${originalCase.caseNumber ?? "–"}: ${outcomeLabel}`,
+    html, text,
+    dedupe(recipients.map((r) => r.email)),
   );
 }

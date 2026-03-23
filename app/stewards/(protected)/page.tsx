@@ -1,14 +1,15 @@
 import Link from "next/link";
 import { requireStewardUser } from "@/lib/stewards/auth";
-import { listCases, listPenaltiesToServe } from "@/lib/stewards/repository";
+import { listCases, listPenaltiesToServe, listUsers } from "@/lib/stewards/repository";
 
 export default async function StewardDashboardPage() {
   const user = await requireStewardUser();
   const isAdmin = user.roles.includes("admin");
 
-  const [cases, penaltiesToServe] = await Promise.all([
+  const [cases, penaltiesToServe, allUsers] = await Promise.all([
     listCases(),
     listPenaltiesToServe(),
+    listUsers(),
   ]);
 
   const total = cases.length;
@@ -63,12 +64,19 @@ export default async function StewardDashboardPage() {
             </Link>
           </div>
           <div className="mt-3 space-y-1.5">
-            {activePenalties.slice(0, 3).map((p) => (
-              <div key={p.id} className="flex items-center justify-between rounded-lg border border-white/8 bg-white/3 px-3 py-2">
-                <span className="text-sm text-white/80">{p.penaltyLabel}</span>
-                <span className="text-xs text-[#f4d98a]/80">{p.assignedRaceLabel ?? "Unassigned"}</span>
-              </div>
-            ))}
+            {activePenalties.slice(0, 3).map((p) => {
+              const driver = allUsers.find((u) => u.id === p.driverId);
+              return (
+                <div key={p.id} className="flex items-center justify-between gap-3 rounded-lg border border-white/8 bg-white/3 px-3 py-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-sm text-white/80 shrink-0">{p.penaltyLabel}</span>
+                    <span className="text-xs text-white/40">·</span>
+                    <span className="text-xs font-medium text-white/60 truncate">{driver?.name ?? p.driverId}</span>
+                  </div>
+                  <span className="text-xs text-[#f4d98a]/80 shrink-0">{p.assignedRaceLabel ?? "Unassigned"}</span>
+                </div>
+              );
+            })}
           </div>
         </section>
       )}

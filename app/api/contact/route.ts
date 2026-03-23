@@ -36,13 +36,16 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { type, name, email, subject, message, _hp } = body as {
+    const { type, name, email, subject, message, _hp, birthdate, platform, experience } = body as {
       type?: "signup" | "question";
       name: string;
       email: string;
       subject?: string;
       message?: string;
       _hp?: string;
+      birthdate?: string;
+      platform?: string;
+      experience?: string;
     };
 
     // Honeypot — if the hidden field has a value it's a bot
@@ -63,6 +66,13 @@ export async function POST(req: NextRequest) {
     if (!isSignup && !message?.trim()) {
       return NextResponse.json(
         { error: "Message is required." },
+        { status: 400 },
+      );
+    }
+
+    if (isSignup && (!birthdate?.trim() || !platform?.trim() || !experience?.trim())) {
+      return NextResponse.json(
+        { error: "Birth date, platform, and experience are required." },
         { status: 400 },
       );
     }
@@ -92,8 +102,15 @@ export async function POST(req: NextRequest) {
         replyTo: `"${safeName}" <${safeEmail}>`,
         to: LEAGUE_EMAIL,
         subject: `[PSGiL Sign-Up] ${safeName}`,
-        text: `New sign-up interest:\nName: ${name}\nEmail: ${email}`,
-        html: adminSignupHtml(name, email),
+        text: [
+          `New sign-up interest:`,
+          `Name: ${name}`,
+          `Email: ${email}`,
+          `Date of Birth: ${birthdate ?? "—"}`,
+          `Platform: ${platform ?? "—"}`,
+          `Experience: ${experience ?? "—"}`,
+        ].join("\n"),
+        html: adminSignupHtml(name, email, birthdate, platform, experience),
       });
     } else {
       await transporter.sendMail({
@@ -276,15 +293,34 @@ function autoReplyQuestionHtml(name: string): string {
 // ---------------------------------------------------------------------------
 // Admin notification templates
 // ---------------------------------------------------------------------------
-function adminSignupHtml(name: string, email: string): string {
-  return `
-    <div style="font-family:sans-serif;max-width:600px">
-      <h2 style="color:#7020B0;margin-bottom:16px">New Sign-Up Interest</h2>
-      <table style="border-collapse:collapse;width:100%">
-        <tr><td style="padding:8px 12px;font-weight:bold;color:#555;width:80px">Name</td><td style="padding:8px 12px">${escapeHtml(name)}</td></tr>
-        <tr><td style="padding:8px 12px;font-weight:bold;color:#555">Email</td><td style="padding:8px 12px"><a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a></td></tr>
-      </table>
-    </div>`;
+function adminSignupHtml(
+  name: string,
+  email: string,
+  birthdate?: string,
+  platform?: string,
+  experience?: string,
+): string {
+  const row = (label: string, value: string) =>
+    `<tr style="border-bottom:1px solid rgba(255,255,255,0.06)">
+      <td style="padding:10px 14px;font-size:12px;font-weight:600;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;width:130px">${label}</td>
+      <td style="padding:10px 14px;font-size:14px;color:#fff">${value}</td>
+    </tr>`;
+
+  const platformBadge = platform
+    ? `<span style="display:inline-block;padding:2px 10px;border-radius:99px;font-size:12px;font-weight:700;background:${platform === "PC" ? "#1a3a5c" : platform === "PS5" ? "#00439c" : "#107c10"};color:#fff">${escapeHtml(platform)}</span>`
+    : "—";
+
+  return emailShell(`
+    <h1 style="margin:0 0 4px;font-size:20px;color:#fff">New Sign-Up Interest 🏁</h1>
+    <p style="margin:0 0 20px;font-size:12px;color:rgba(255,255,255,0.35)">Someone wants to join PSGiL</p>
+    <table style="border-collapse:collapse;width:100%;background:rgba(255,255,255,0.03);border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.08)">
+      ${row("Name", escapeHtml(name))}
+      ${row("Email", `<a href="mailto:${escapeHtml(email)}" style="color:#7020B0;text-decoration:none">${escapeHtml(email)}</a>`)}
+      ${row("Date of Birth", birthdate ? escapeHtml(birthdate) : "—")}
+      ${row("Platform", platformBadge)}
+      ${row("Experience", experience ? escapeHtml(experience) : "—")}
+    </table>
+  `);
 }
 
 function adminQuestionHtml(

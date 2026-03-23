@@ -12,6 +12,7 @@ export function buildDefaultStore(): StewardStore {
         roles: ["member", "steward", "admin"],
         passwordHash: hashPassword("change-me-admin"),
         isActive: true,
+        mustChangePassword: true,
         createdAt: now,
         updatedAt: now,
       },
@@ -22,6 +23,7 @@ export function buildDefaultStore(): StewardStore {
         roles: ["member", "steward"],
         passwordHash: hashPassword("change-me-steward"),
         isActive: true,
+        mustChangePassword: true,
         createdAt: now,
         updatedAt: now,
       },
@@ -32,6 +34,7 @@ export function buildDefaultStore(): StewardStore {
         roles: ["member"],
         passwordHash: hashPassword("change-me-member"),
         isActive: true,
+        mustChangePassword: true,
         createdAt: now,
         updatedAt: now,
       },
@@ -42,5 +45,9 @@ export function buildDefaultStore(): StewardStore {
     verdicts: [],
     driverVerdicts: [],
     penaltiesToServe: [],
+    appeals: [],
+    appealVerdicts: [],
+    appealDriverVerdicts: [],
+    appealInternalComments: [],
   };
 }

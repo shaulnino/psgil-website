@@ -81,7 +81,16 @@ export default async function StewardAdminPage({ searchParams }: { searchParams:
             <tbody>
               {users.map((user) => (
                 <tr key={user.id} className="border-t border-white/10">
-                  <td className="px-4 py-3">{user.name}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {user.name}
+                      {user.mustChangePassword && (
+                        <span className="rounded-full bg-amber-500/15 border border-amber-500/35 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-300/80">
+                          pw reset
+                        </span>
+                      )}
+                    </div>
+                  </td>
                   <td className="px-4 py-3">{user.email}</td>
                   <td className="px-4 py-3">{user.roles.join(", ")}</td>
                   <td className="px-4 py-3">
@@ -97,7 +106,7 @@ export default async function StewardAdminPage({ searchParams }: { searchParams:
                     </form>
                   </td>
                   <td className="px-4 py-3">
-                    <EditUserPanel user={{ id: user.id, name: user.name, email: user.email }} />
+                    <EditUserPanel user={{ id: user.id, name: user.name, email: user.email, mustChangePassword: user.mustChangePassword }} />
                   </td>
                   <td className="px-4 py-3">
                     <form action={removeUserAction}>

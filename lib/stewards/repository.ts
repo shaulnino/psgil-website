@@ -1,6 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { readStore, writeStore } from "@/lib/stewards/store";
 import type {
+  Appeal,
+  AppealDriverVerdict,
+  AppealInternalComment,
+  AppealOutcome,
+  AppealStatus,
+  AppealVerdict,
+  AttachmentRef,
   CaseResponse,
   CaseStatus,
   DriverVerdict,
@@ -43,6 +50,8 @@ type NewUserInput = {
   email: string;
   passwordHash: string;
   roles: StewardRole[];
+  /** Defaults to true — new accounts must change password on first login. */
+  mustChangePassword?: boolean;
 };
 
 type NewCaseInput = {
@@ -132,6 +141,7 @@ export async function createUser(input: NewUserInput) {
     roles: normalizeRoles(input.roles),
     passwordHash: input.passwordHash,
     isActive: true,
+    mustChangePassword: input.mustChangePassword ?? true,
     createdAt: now,
     updatedAt: now,
   };
@@ -142,14 +152,15 @@ export async function createUser(input: NewUserInput) {
 
 export async function updateUser(
   userId: string,
-  fields: { name?: string; email?: string; passwordHash?: string },
+  fields: { name?: string; email?: string; passwordHash?: string; mustChangePassword?: boolean },
 ) {
   const store = await readStore();
   const user = store.users.find((u) => u.id === userId);
   if (!user) return false;
-  if (fields.name)         user.name         = fields.name.trim();
-  if (fields.email)        user.email        = fields.email.trim().toLowerCase();
-  if (fields.passwordHash) user.passwordHash = fields.passwordHash;
+  if (fields.name !== undefined)                user.name              = fields.name.trim();
+  if (fields.email !== undefined)               user.email             = fields.email.trim().toLowerCase();
+  if (fields.passwordHash !== undefined)        user.passwordHash      = fields.passwordHash;
+  if (fields.mustChangePassword !== undefined)  user.mustChangePassword = fields.mustChangePassword;
   user.updatedAt = new Date().toISOString();
   await writeStore(store);
   return true;
@@ -542,9 +553,20 @@ export async function aggregateDriverPenalties(): Promise<DriverPenaltyRow[]> {
     store.verdicts.filter((v) => v.is_published).map((v) => v.caseId),
   );
 
-  // Aggregate from per-driver verdict entries
+  // Build a map: caseId → published appeal verdict (changed_decision only)
+  // When an appeal overrides a case, we use appeal driver verdicts instead.
+  const appealOverrideByCaseId = new Map<string, string>(); // caseId → appealId
+  for (const av of (store.appealVerdicts ?? [])) {
+    if (!av.is_published || av.outcomeType !== "changed_decision") continue;
+    const appeal = (store.appeals ?? []).find((a) => a.id === av.appealId);
+    if (appeal) appealOverrideByCaseId.set(appeal.originalCaseId, appeal.id);
+  }
+
+  // Aggregate from per-driver verdict entries (use appeal override if present)
   for (const dv of store.driverVerdicts) {
     if (!publishedCaseIds.has(dv.caseId)) continue;
+    // Skip cases where appeal has changed the decision — handled below
+    if (appealOverrideByCaseId.has(dv.caseId)) continue;
     const caseItem = store.cases.find((c) => c.id === dv.caseId);
     if (!caseItem) continue;
     const driver = store.users.find((u) => u.id === dv.driverId);
@@ -565,15 +587,40 @@ export async function aggregateDriverPenalties(): Promise<DriverPenaltyRow[]> {
     rows.set(key, row);
   }
 
+  // Use appeal driver verdicts for overridden cases
+  for (const [caseId, appealId] of appealOverrideByCaseId) {
+    const caseItem = store.cases.find((c) => c.id === caseId);
+    if (!caseItem) continue;
+    const appealDvs = (store.appealDriverVerdicts ?? []).filter((adv) => adv.appealId === appealId);
+    for (const adv of appealDvs) {
+      const driver = store.users.find((u) => u.id === adv.driverId);
+      const key = `${adv.driverId}:${caseItem.season}`;
+      const row = rows.get(key) ?? {
+        driverId: adv.driverId,
+        driverName: driver?.name ?? adv.driverId,
+        season: caseItem.season,
+        totalLicensePoints: 0,
+        totalTimePenaltySeconds: 0,
+        totalWarningsCount: 0,
+        totalCases: 0,
+      };
+      if (adv.license_points != null) row.totalLicensePoints += adv.license_points;
+      if (adv.time_penalty_seconds != null) row.totalTimePenaltySeconds += adv.time_penalty_seconds;
+      if (adv.warning_text?.trim()) row.totalWarningsCount += 1;
+      row.totalCases += 1;
+      rows.set(key, row);
+    }
+  }
+
   // Fallback: handle legacy verdicts that still carry per-case penalty fields
-  // (before the per-driver migration) for involved drivers with no driverVerdict entries
   for (const verdict of store.verdicts) {
     if (!verdict.is_published) continue;
     if (verdict.license_points == null && verdict.time_penalty_seconds == null && !verdict.warning_text) continue;
+    if (appealOverrideByCaseId.has(verdict.caseId)) continue;
     const caseItem = store.cases.find((c) => c.id === verdict.caseId);
     if (!caseItem) continue;
     const alreadyMigrated = store.driverVerdicts.some((dv) => dv.caseId === verdict.caseId);
-    if (alreadyMigrated) continue; // already handled above
+    if (alreadyMigrated) continue;
     for (const driverId of caseItem.involvedDriverIds) {
       const driver = store.users.find((u) => u.id === driverId);
       const key = `${driverId}:${caseItem.season}`;
@@ -1104,5 +1151,240 @@ export async function getPendingIndicatorsForUser(user: StewardUser): Promise<Pe
       });
     }
   }
+  // Appeals needing steward review
+  if (user.roles.includes("steward") || user.roles.includes("admin")) {
+    const pendingAppeals = (store.appeals ?? []).filter(
+      (a) => a.status === "Submitted" || a.status === "Under Review",
+    ).length;
+    if (pendingAppeals > 0) {
+      indicators.push({
+        id: "appeals-review",
+        label: "Appeals requiring steward review",
+        count: pendingAppeals,
+        href: "/stewards/appeals",
+      });
+    }
+  }
   return indicators;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Appeal helpers                                                      */
+/* ------------------------------------------------------------------ */
+
+export const APPEAL_WINDOW_HOURS = 36;
+
+export function appealWindowDeadline(closedAt: string): string {
+  return new Date(new Date(closedAt).getTime() + APPEAL_WINDOW_HOURS * 60 * 60 * 1000).toISOString();
+}
+
+/**
+ * Returns true if the 36-hour appeal window is still open.
+ * Falls back to verdictPublishedAt if closedAt is null (handles legacy cases
+ * that were closed before closedAt was reliably tracked).
+ */
+export function isAppealWindowOpen(
+  closedAt: string | null,
+  verdictPublishedAt?: string | null,
+): boolean {
+  const anchor = closedAt ?? verdictPublishedAt ?? null;
+  if (!anchor) return false;
+  return Date.now() < new Date(appealWindowDeadline(anchor)).getTime();
+}
+
+/* ── Appeal with relations ─────────────────────────────────── */
+
+export type AppealWithRelations = {
+  appeal: Appeal;
+  originalCase: StewardCase | null;
+  submittedBy: StewardUser | null;
+  internalComments: (AppealInternalComment & { author: StewardUser | null })[];
+  verdict: AppealVerdict | null;
+  driverVerdicts: (AppealDriverVerdict & { driver: StewardUser | null })[];
+};
+
+export async function getAppealById(id: string): Promise<AppealWithRelations | null> {
+  const store = await readStore();
+  const appeal = (store.appeals ?? []).find((a) => a.id === id);
+  if (!appeal) return null;
+  const originalCase = store.cases.find((c) => c.id === appeal.originalCaseId) ?? null;
+  const submittedBy = store.users.find((u) => u.id === appeal.submittedByUserId) ?? null;
+  const comments = (store.appealInternalComments ?? [])
+    .filter((c) => c.appealId === id)
+    .map((c) => ({ ...c, author: store.users.find((u) => u.id === c.authorId) ?? null }));
+  const verdict = appeal.verdictId
+    ? ((store.appealVerdicts ?? []).find((v) => v.id === appeal.verdictId) ?? null)
+    : null;
+  const dvs = (store.appealDriverVerdicts ?? [])
+    .filter((dv) => dv.appealId === id)
+    .map((dv) => ({ ...dv, driver: store.users.find((u) => u.id === dv.driverId) ?? null }));
+  return { appeal, originalCase, submittedBy, internalComments: comments, verdict, driverVerdicts: dvs };
+}
+
+export async function getAppealByOriginalCaseId(caseId: string): Promise<Appeal | null> {
+  const store = await readStore();
+  return (store.appeals ?? []).find(
+    (a) => a.originalCaseId === caseId && a.status !== "Closed",
+  ) ?? (store.appeals ?? []).find((a) => a.originalCaseId === caseId) ?? null;
+}
+
+export async function listAppeals(): Promise<AppealWithRelations[]> {
+  const store = await readStore();
+  return Promise.all((store.appeals ?? []).map(async (a) => {
+    const data = await getAppealById(a.id);
+    return data!;
+  }));
+}
+
+export async function createAppeal(input: {
+  originalCaseId: string;
+  submittedByUserId: string;
+  description: string;
+  attachments: AttachmentRef[];
+  links: string[];
+  closedAt: string;
+}): Promise<Appeal> {
+  const store = await readStore();
+  const now = new Date().toISOString();
+  const appeal: Appeal = {
+    id: `appeal_${randomUUID()}`,
+    originalCaseId: input.originalCaseId,
+    submittedByUserId: input.submittedByUserId,
+    submittedAt: now,
+    description: input.description.trim(),
+    attachments: input.attachments,
+    links: input.links,
+    status: "Submitted",
+    appealWindowDeadline: appealWindowDeadline(input.closedAt),
+    verdictId: null,
+    internalCommentIds: [],
+    createdAt: now,
+    updatedAt: now,
+  };
+  (store.appeals ?? (store.appeals = [])).push(appeal);
+  await writeStore(store);
+  return appeal;
+}
+
+export async function addAppealInternalComment(appealId: string, authorId: string, text: string) {
+  const store = await readStore();
+  const appeal = (store.appeals ?? []).find((a) => a.id === appealId);
+  if (!appeal) return;
+  const now = new Date().toISOString();
+  const id = `aic_${randomUUID()}`;
+  const comment: AppealInternalComment = {
+    id, appealId, authorId, text: text.trim(), stewardOnly: true, createdAt: now, updatedAt: now,
+  };
+  (store.appealInternalComments ?? (store.appealInternalComments = [])).push(comment);
+  appeal.internalCommentIds.push(id);
+  // Promote to Under Review if still Submitted
+  if (appeal.status === "Submitted") { appeal.status = "Under Review"; }
+  appeal.updatedAt = now;
+  await writeStore(store);
+}
+
+export type UpsertAppealVerdictInput = {
+  appealId: string;
+  outcomeType: AppealOutcome | null;
+  verdict_summary: string;
+  verdict_full_text: string;
+  is_published: boolean;
+  updatedBy: string;
+  driverEntries: { driverId: string; license_points: number | null; time_penalty_seconds: number | null; warning_text: string | null }[];
+};
+
+export async function upsertAppealVerdict(input: UpsertAppealVerdictInput) {
+  const store = await readStore();
+  const appeal = (store.appeals ?? []).find((a) => a.id === input.appealId);
+  if (!appeal) return;
+  const now = new Date().toISOString();
+
+  const existing = (store.appealVerdicts ?? []).find((v) => v.id === appeal.verdictId);
+  if (existing) {
+    existing.outcomeType = input.outcomeType;
+    existing.verdict_summary = input.verdict_summary.trim();
+    existing.verdict_full_text = input.verdict_full_text.trim();
+    existing.is_published = input.is_published;
+    existing.published_at = input.is_published ? existing.published_at ?? now : null;
+    existing.updatedBy = input.updatedBy;
+    existing.updatedAt = now;
+  } else {
+    const verdict: AppealVerdict = {
+      id: `av_${randomUUID()}`,
+      appealId: input.appealId,
+      outcomeType: input.outcomeType,
+      verdict_summary: input.verdict_summary.trim(),
+      verdict_full_text: input.verdict_full_text.trim(),
+      is_published: input.is_published,
+      published_at: input.is_published ? now : null,
+      updatedBy: input.updatedBy,
+      createdAt: now,
+      updatedAt: now,
+    };
+    (store.appealVerdicts ?? (store.appealVerdicts = [])).push(verdict);
+    appeal.verdictId = verdict.id;
+  }
+
+  // Replace driver verdict overrides (only meaningful for changed_decision)
+  store.appealDriverVerdicts = (store.appealDriverVerdicts ?? []).filter(
+    (dv) => dv.appealId !== input.appealId,
+  );
+  if (input.outcomeType === "changed_decision") {
+    for (const entry of input.driverEntries) {
+      if (!entry.driverId) continue;
+      (store.appealDriverVerdicts ?? (store.appealDriverVerdicts = [])).push({
+        id: `adv_${randomUUID()}`,
+        appealId: input.appealId,
+        driverId: entry.driverId,
+        license_points: entry.license_points,
+        time_penalty_seconds: entry.time_penalty_seconds,
+        warning_text: entry.warning_text,
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+  }
+
+  // Update appeal status
+  if (input.is_published) {
+    appeal.status = "Closed";
+  } else {
+    appeal.status = "Verdict Ready";
+  }
+  appeal.updatedAt = now;
+  await writeStore(store);
+}
+
+export async function publishAppealVerdict(appealId: string, updatedBy: string): Promise<boolean> {
+  const store = await readStore();
+  const appeal = (store.appeals ?? []).find((a) => a.id === appealId);
+  const verdict = (store.appealVerdicts ?? []).find((v) => v.id === appeal?.verdictId);
+  if (!appeal || !verdict) return false;
+  const now = new Date().toISOString();
+  verdict.is_published = true;
+  verdict.published_at = verdict.published_at ?? now;
+  verdict.updatedBy = updatedBy;
+  verdict.updatedAt = now;
+  appeal.status = "Closed";
+  appeal.updatedAt = now;
+  await writeStore(store);
+  return true;
+}
+
+export async function updateAppealStatus(appealId: string, status: AppealStatus) {
+  const store = await readStore();
+  const appeal = (store.appeals ?? []).find((a) => a.id === appealId);
+  if (!appeal) return;
+  appeal.status = status;
+  appeal.updatedAt = new Date().toISOString();
+  await writeStore(store);
+}
+
+export async function deleteAppeal(appealId: string) {
+  const store = await readStore();
+  store.appeals = (store.appeals ?? []).filter((a) => a.id !== appealId);
+  store.appealVerdicts = (store.appealVerdicts ?? []).filter((v) => v.appealId !== appealId);
+  store.appealDriverVerdicts = (store.appealDriverVerdicts ?? []).filter((dv) => dv.appealId !== appealId);
+  store.appealInternalComments = (store.appealInternalComments ?? []).filter((c) => c.appealId !== appealId);
+  await writeStore(store);
 }

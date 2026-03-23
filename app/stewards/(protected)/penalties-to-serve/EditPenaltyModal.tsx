@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
 import { editPenaltyToServeAction } from "@/app/stewards/actions";
+import Modal from "@/app/stewards/components/Modal";
 import type { PenaltyToServe } from "@/lib/stewards/types";
 
 type Rule = { id: string; penaltyType: string; penaltyLabel: string; penaltyDescription: string };
@@ -42,9 +43,8 @@ export default function EditPenaltyModal({ penalty, rules }: { penalty: PenaltyT
         Edit
       </button>
 
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-[#D4AF37]/30 bg-[#13131f] shadow-[0_24px_60px_rgba(0,0,0,0.6)] overflow-hidden max-h-[90vh] flex flex-col">
+      <Modal open={open} onClose={() => setOpen(false)}>
+          <div className="w-full max-w-md rounded-2xl border border-[#D4AF37]/30 bg-[#13131f] shadow-[0_24px_60px_rgba(0,0,0,0.6)] flex flex-col">
             {/* Header */}
             <div className="border-b border-white/10 px-6 py-4 flex items-center justify-between shrink-0">
               <div>
@@ -66,7 +66,7 @@ export default function EditPenaltyModal({ penalty, rules }: { penalty: PenaltyT
                 await editPenaltyToServeAction(fd);
                 setOpen(false);
               }}
-              className="overflow-y-auto px-6 py-5 space-y-4"
+              className="px-6 py-5 space-y-4"
             >
               <input type="hidden" name="penalty_id" value={penalty.id} />
 
@@ -128,8 +128,7 @@ export default function EditPenaltyModal({ penalty, rules }: { penalty: PenaltyT
               </div>
             </form>
           </div>
-        </div>
-      )}
+      </Modal>
     </>
   );
 }

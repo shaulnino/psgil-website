@@ -22,6 +22,8 @@ export type StewardUser = {
   roles: StewardRole[];
   passwordHash: string;
   isActive: boolean;
+  /** Forces the user into the change-password flow on next login. */
+  mustChangePassword: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -150,6 +152,73 @@ export type PenaltyToServe = {
   cycleNumber: number;
 };
 
+/* ── APPEALS ──────────────────────────────────────────────── */
+
+export type AppealStatus =
+  | "Submitted"
+  | "Under Review"
+  | "Verdict Ready"
+  | "Closed";
+
+export type AppealOutcome = "no_change" | "changed_decision";
+
+export type Appeal = {
+  id: string;
+  /** The original Closed case this appeal contests. */
+  originalCaseId: string;
+  submittedByUserId: string;
+  submittedAt: string;
+  description: string;
+  attachments: AttachmentRef[];
+  links: string[];
+  status: AppealStatus;
+  /** ISO deadline — 36 h after the original case was closed. */
+  appealWindowDeadline: string;
+  /** ID of the AppealVerdict record once a verdict is drafted/published. */
+  verdictId: string | null;
+  internalCommentIds: string[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type AppealVerdict = {
+  id: string;
+  appealId: string;
+  /** Explicit outcome once published; null while drafting. */
+  outcomeType: AppealOutcome | null;
+  verdict_summary: string;
+  verdict_full_text: string;
+  is_published: boolean;
+  published_at: string | null;
+  updatedBy: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+/** Per-driver penalty override when appeal outcome is "changed_decision". */
+export type AppealDriverVerdict = {
+  id: string;
+  appealId: string;
+  driverId: string;
+  license_points: number | null;
+  time_penalty_seconds: number | null;
+  warning_text: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type AppealInternalComment = {
+  id: string;
+  appealId: string;
+  authorId: string;
+  text: string;
+  stewardOnly: true;
+  createdAt: string;
+  updatedAt: string;
+};
+
+/* ── STORE ──────────────────────────────────────────────────── */
+
 export type StewardStore = {
   users: StewardUser[];
   cases: StewardCase[];
@@ -158,4 +227,8 @@ export type StewardStore = {
   verdicts: Verdict[];
   driverVerdicts: DriverVerdict[];
   penaltiesToServe: PenaltyToServe[];
+  appeals: Appeal[];
+  appealVerdicts: AppealVerdict[];
+  appealDriverVerdicts: AppealDriverVerdict[];
+  appealInternalComments: AppealInternalComment[];
 };

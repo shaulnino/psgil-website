@@ -14,7 +14,8 @@ import SubmissionToast from "@/app/stewards/(protected)/cases/SubmissionToast";
 import ViewToggle from "@/app/stewards/(protected)/cases/ViewToggle";
 import VerdictForm from "@/app/stewards/(protected)/cases/[id]/VerdictForm";
 import { canCommentInternally, requireStewardUser } from "@/lib/stewards/auth";
-import { getCaseById, listUsers } from "@/lib/stewards/repository";
+import { getCaseById, getAppealByOriginalCaseId, isAppealWindowOpen, listUsers } from "@/lib/stewards/repository";
+import AppealSubmitModal from "@/app/stewards/components/AppealSubmitModal";
 import type { AttachmentRef, CaseStatus, VerdictDecision } from "@/lib/stewards/types";
 
 const STATUSES: CaseStatus[] = [
@@ -45,7 +46,21 @@ export default async function StewardCaseDetailPage({
   if (!data) notFound();
 
   const { caseItem, complainant, involvedDrivers, responses, internalComments, verdict, driverVerdicts } = data;
-  const allUsers = await listUsers();
+  const [allUsers, existingAppeal] = await Promise.all([
+    listUsers(),
+    getAppealByOriginalCaseId(id),
+  ]);
+  const appealWindowOpen = isAppealWindowOpen(caseItem.closedAt, verdict?.published_at);
+  const appealAnchor = caseItem.closedAt ?? verdict?.published_at ?? null;
+  const appealHoursRemaining = appealAnchor
+    ? Math.max(0, Math.ceil((new Date(appealAnchor).getTime() + 36 * 60 * 60 * 1000 - Date.now()) / (60 * 60 * 1000)))
+    : 0;
+  const canAppeal =
+    verdict?.is_published &&
+    caseItem.status === "Closed" &&
+    appealWindowOpen &&
+    !existingAppeal &&
+    (caseItem.complainantId === user.id || caseItem.involvedDriverIds.includes(user.id));
   // Only involved drivers submit statements — complainant's side is already the complaint itself
   const participantIds = [...new Set(caseItem.involvedDriverIds)];
   const isInvolved = caseItem.involvedDriverIds.includes(user.id);
@@ -362,6 +377,31 @@ export default async function StewardCaseDetailPage({
                 <p className="text-xs text-white/40">
                   Published {verdict.published_at ? new Date(verdict.published_at).toLocaleString() : "–"}
                 </p>
+
+                {/* ── Appeal entry point ── */}
+                <div className="border-t border-white/10 pt-4">
+                  {existingAppeal ? (
+                    <Link
+                      href={`/stewards/appeals/${existingAppeal.id}`}
+                      className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/40 bg-[#D4AF37]/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-[#f4d98a] transition hover:border-[#D4AF37]/70 hover:bg-[#D4AF37]/20"
+                    >
+                      {existingAppeal.status === "Closed" ? "View Appeal Result →" : `Appeal ${existingAppeal.status} →`}
+                    </Link>
+                  ) : canAppeal ? (
+                    <div className="flex flex-wrap items-center gap-3">
+                      <AppealSubmitModal
+                        caseId={caseItem.id}
+                        caseTitle={caseItem.title}
+                        hoursRemaining={appealHoursRemaining}
+                      />
+                      <span className="text-xs text-white/40">
+                        Appeal window closes in ~{appealHoursRemaining}h
+                      </span>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-white/30 italic">Appeal window closed.</p>
+                  )}
+                </div>
               </div>
             ) : (
               <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/3 px-4 py-4">
@@ -501,6 +541,45 @@ export default async function StewardCaseDetailPage({
                   existingVerdict={verdict}
                   existingDriverVerdicts={driverVerdicts}
                 />
+              </div>
+            )}
+
+            {/* ── Appeal status / submit ───────────────────────────── */}
+            {verdict?.is_published && (
+              <div className="mt-5 border-t border-white/10 pt-5">
+                {/* Existing appeal */}
+                {existingAppeal && (
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span className="text-xs text-white/50">Appeal:</span>
+                    <Link
+                      href={`/stewards/appeals/${existingAppeal.id}`}
+                      className="rounded-full border border-[#D4AF37]/40 bg-[#D4AF37]/10 px-3 py-1 text-xs font-semibold text-[#f4d98a] transition hover:border-[#D4AF37]/70 hover:bg-[#D4AF37]/20"
+                    >
+                      {existingAppeal.status === "Closed"
+                        ? "View Appeal Result →"
+                        : `Appeal ${existingAppeal.status} →`}
+                    </Link>
+                  </div>
+                )}
+
+                {/* Eligible to appeal */}
+                {canAppeal && (
+                  <div className="flex flex-wrap items-center gap-3">
+                    <AppealSubmitModal
+                      caseId={caseItem.id}
+                      caseTitle={caseItem.title}
+                      hoursRemaining={appealHoursRemaining}
+                    />
+                    <span className="text-xs text-white/40">
+                      Appeal window: ~{appealHoursRemaining}h remaining
+                    </span>
+                  </div>
+                )}
+
+                {/* Window expired, no appeal */}
+                {!existingAppeal && !appealWindowOpen && verdict?.is_published && (
+                  <p className="text-xs text-white/30 italic">Appeal window closed.</p>
+                )}
               </div>
             )}
           </section>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
 import { editHistoricalCaseAction } from "@/app/stewards/actions";
+import Modal from "@/app/stewards/components/Modal";
 import type { DriverVerdict, StewardCase, VerdictDecision, Verdict } from "@/lib/stewards/types";
 
 const DECISIONS: VerdictDecision[] = [
@@ -73,9 +74,8 @@ export default function EditHistoricalCaseModal({
         Edit
       </button>
 
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-2xl border border-[#D4AF37]/30 bg-[#13131f] shadow-[0_24px_60px_rgba(0,0,0,0.6)] overflow-hidden max-h-[90vh] flex flex-col">
+      <Modal open={open} onClose={() => setOpen(false)}>
+          <div className="w-full max-w-lg rounded-2xl border border-[#D4AF37]/30 bg-[#13131f] shadow-[0_24px_60px_rgba(0,0,0,0.6)] flex flex-col">
             {/* Header */}
             <div className="border-b border-white/10 px-6 py-4 flex items-center justify-between shrink-0">
               <div>
@@ -87,7 +87,7 @@ export default function EditHistoricalCaseModal({
             </div>
 
             {/* Form */}
-            <form action={handleSubmit} className="overflow-y-auto px-6 py-5 space-y-4">
+            <form action={handleSubmit} className="px-6 py-5 space-y-4">
               <input type="hidden" name="case_id" value={caseItem.id} />
 
               {/* Context */}
@@ -223,8 +223,7 @@ export default function EditHistoricalCaseModal({
               </div>
             </form>
           </div>
-        </div>
-      )}
+      </Modal>
     </>
   );
 }

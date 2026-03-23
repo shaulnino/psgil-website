@@ -3,9 +3,10 @@
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
 import { editUserAction } from "@/app/stewards/actions";
+import Modal from "@/app/stewards/components/Modal";
 
 type Props = {
-  user: { id: string; name: string; email: string };
+  user: { id: string; name: string; email: string; mustChangePassword: boolean };
 };
 
 export default function EditUserPanel({ user }: Props) {
@@ -25,14 +26,20 @@ export default function EditUserPanel({ user }: Props) {
         Edit
       </button>
 
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-[#D4AF37]/30 bg-[#13131f] shadow-[0_24px_60px_rgba(0,0,0,0.6)] overflow-hidden max-h-[90vh] flex flex-col">
+      <Modal open={open} onClose={() => setOpen(false)}>
+          <div className="w-full max-w-md rounded-2xl border border-[#D4AF37]/30 bg-[#13131f] shadow-[0_24px_60px_rgba(0,0,0,0.6)] flex flex-col">
             {/* header */}
             <div className="border-b border-white/10 px-6 py-4 flex items-center justify-between">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37]/70">Edit User</p>
-                <p className="mt-0.5 text-sm font-semibold text-white/90">{user.name}</p>
+                <div className="mt-0.5 flex items-center gap-2">
+                  <p className="text-sm font-semibold text-white/90">{user.name}</p>
+                  {user.mustChangePassword && (
+                    <span className="rounded-full bg-amber-500/15 border border-amber-500/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-300">
+                      Must change password
+                    </span>
+                  )}
+                </div>
               </div>
               <button
                 type="button"
@@ -49,7 +56,7 @@ export default function EditUserPanel({ user }: Props) {
                 await editUserAction(fd);
                 setOpen(false);
               }}
-              className="overflow-y-auto px-6 py-5 space-y-4"
+              className="px-6 py-5 space-y-4"
             >
               <input type="hidden" name="user_id" value={user.id} />
 
@@ -66,10 +73,13 @@ export default function EditUserPanel({ user }: Props) {
               <div>
                 <div className="mb-1.5 flex items-center justify-between">
                   <span className="text-xs font-semibold uppercase tracking-wider text-white/60">
-                    New password
+                    Reset password
                   </span>
                   <span className="text-[10px] text-white/35">(leave blank to keep current)</span>
                 </div>
+                <p className="mb-2 text-[11px] text-amber-300/70">
+                  Setting a new password will force the user to change it on next login.
+                </p>
                 <div className="relative">
                   <input
                     name="password"
@@ -104,8 +114,7 @@ export default function EditUserPanel({ user }: Props) {
               </div>
             </form>
           </div>
-        </div>
-      )}
+      </Modal>
     </>
   );
 }

@@ -51,6 +51,13 @@ export default async function StewardPenaltiesPage({ searchParams }: { searchPar
     isAdmin ? getAllSeasonRoundOptions() : Promise.resolve([]),
   ]);
   const memberDrivers = allUsers.filter((u) => u.roles.includes("member"));
+
+  // Distinct seasons and drivers from actual data for dropdown options
+  const seasonOptions = [...new Set(rows.map((r) => r.season))]
+    .sort((a, b) => (parseInt(b.replace(/\D/g, ""), 10) || 0) - (parseInt(a.replace(/\D/g, ""), 10) || 0));
+  const driverOptions = [...new Map(rows.map((r) => [r.driverId, r.driverName])).entries()]
+    .sort((a, b) => a[1].localeCompare(b[1]));
+
   const filtered = rows
     .filter((r) => (!seasonFilter || r.season.toLowerCase().includes(seasonFilter)) && (!driverFilter || r.driverName.toLowerCase().includes(driverFilter)))
     .sort((a, b) => {
@@ -66,8 +73,24 @@ export default async function StewardPenaltiesPage({ searchParams }: { searchPar
         <h2 className="font-display text-2xl font-semibold">Penalty Tracking</h2>
         <p className="mt-1 text-white/70">Aggregated from published verdicts with composable penalties.</p>
         <form className="mt-4 grid gap-3 md:grid-cols-4">
-          <label className="block"><span className="mb-1 block text-sm text-white/80">Season filter</span><input name="season" defaultValue={params.season ?? ""} className="w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2" /></label>
-          <label className="block"><span className="mb-1 block text-sm text-white/80">Driver filter</span><input name="driver" defaultValue={params.driver ?? ""} className="w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2" /></label>
+          <label className="block">
+            <span className="mb-1 block text-sm text-white/80">Season</span>
+            <select name="season" defaultValue={params.season ?? ""} className="w-full rounded-lg border border-white/15 bg-[#13131f] px-3 py-2 text-sm text-white">
+              <option value="">All seasons</option>
+              {seasonOptions.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-sm text-white/80">Driver</span>
+            <select name="driver" defaultValue={params.driver ?? ""} className="w-full rounded-lg border border-white/15 bg-[#13131f] px-3 py-2 text-sm text-white">
+              <option value="">All drivers</option>
+              {driverOptions.map(([id, name]) => (
+                <option key={id} value={name}>{name}</option>
+              ))}
+            </select>
+          </label>
           <label className="block"><span className="mb-1 block text-sm text-white/80">Sort by</span><select name="sort" defaultValue={sort} className="w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2"><option value="points">License points</option><option value="seconds">Time penalties</option><option value="warnings">Warnings</option><option value="cases">Cases</option></select></label>
           <div className="flex items-end"><FormActionButton idleLabel="Apply" loadingLabel="Applying..." className="rounded-full bg-[#7020B0] px-5 py-2.5 text-sm font-semibold" /></div>
         </form>
