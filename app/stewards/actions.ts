@@ -110,7 +110,7 @@ async function saveAttachments(files: File[]): Promise<string[]> {
     for (const file of validFiles) {
       const ext = path.extname(file.name || "").toLowerCase();
       const key = `${Date.now()}-${randomUUID()}${ext && ext.length < 12 ? ext : ""}`;
-      const buffer = Buffer.from(await file.arrayBuffer());
+      const buffer = await file.arrayBuffer();
       await blobStore.set(key, buffer, {
         metadata: {
           name: file.name || key,
