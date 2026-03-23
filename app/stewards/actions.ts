@@ -97,17 +97,42 @@ const shortRaceLabel = (season: string, round: string) => {
 };
 
 async function saveAttachments(files: File[]): Promise<string[]> {
-  const dir = path.join(process.cwd(), "public", "uploads", "stewards");
-  await mkdir(dir, { recursive: true });
-  const urls: string[] = [];
-  for (const file of files) {
-    if (!file || file.size === 0) continue;
-    const ext = path.extname(file.name || "").toLowerCase();
-    const filename = `${Date.now()}-${randomUUID()}${ext && ext.length < 12 ? ext : ""}`;
-    await writeFile(path.join(dir, filename), Buffer.from(await file.arrayBuffer()));
-    urls.push(`/uploads/stewards/${filename}`);
+  const validFiles = files.filter((f) => f && f.size > 0);
+  if (validFiles.length === 0) return [];
+
+  const isNetlify = !!(process.env.NETLIFY_BLOBS_CONTEXT || process.env.NETLIFY_DEV);
+
+  if (isNetlify) {
+    // Netlify filesystem is read-only — store files in Netlify Blobs instead.
+    const { getStore } = await import("@netlify/blobs");
+    const blobStore = getStore("steward-files");
+    const urls: string[] = [];
+    for (const file of validFiles) {
+      const ext = path.extname(file.name || "").toLowerCase();
+      const key = `${Date.now()}-${randomUUID()}${ext && ext.length < 12 ? ext : ""}`;
+      const buffer = Buffer.from(await file.arrayBuffer());
+      await blobStore.set(key, buffer, {
+        metadata: {
+          name: file.name || key,
+          type: file.type || "application/octet-stream",
+        },
+      });
+      urls.push(`/api/stewards/attachment?key=${encodeURIComponent(key)}`);
+    }
+    return urls;
+  } else {
+    // Local dev: write to public/uploads/stewards (filesystem is writable).
+    const dir = path.join(process.cwd(), "public", "uploads", "stewards");
+    await mkdir(dir, { recursive: true });
+    const urls: string[] = [];
+    for (const file of validFiles) {
+      const ext = path.extname(file.name || "").toLowerCase();
+      const filename = `${Date.now()}-${randomUUID()}${ext && ext.length < 12 ? ext : ""}`;
+      await writeFile(path.join(dir, filename), Buffer.from(await file.arrayBuffer()));
+      urls.push(`/uploads/stewards/${filename}`);
+    }
+    return urls;
   }
-  return urls;
 }
 
 export async function loginStewardAction(formData: FormData) {

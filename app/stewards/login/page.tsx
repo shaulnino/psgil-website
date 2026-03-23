@@ -10,8 +10,8 @@ export default async function StewardLoginPage({ searchParams }: { searchParams:
   return (
     <main className="stewards-ui min-h-[70vh] bg-[#0B0B0E] px-6 py-16 text-white">
       <div className="steward-panel mx-auto w-full max-w-md rounded-2xl p-6">
-        <h1 className="font-display text-3xl font-semibold">Steward Login</h1>
-        <p className="mt-2 text-sm text-white/70">Access is limited to steward-system users only.</p>
+        <h1 className="font-display text-3xl font-semibold text-white">Steward Login</h1>
+        <p className="mt-2 text-sm text-white/60">Access is limited to steward-system users only.</p>
 
         {params.error && (
           <div className="mt-4 rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
@@ -26,7 +26,7 @@ export default async function StewardLoginPage({ searchParams }: { searchParams:
               type="email"
               name="email"
               required
-              className="w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 focus:border-[#D4AF37]/50 focus:outline-none transition"
+              className="w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white placeholder:text-white/30 focus:border-[#D4AF37]/50 focus:ring-1 focus:ring-[#D4AF37]/20 focus:outline-none transition"
             />
           </label>
           <label className="block">
@@ -35,7 +35,7 @@ export default async function StewardLoginPage({ searchParams }: { searchParams:
               type="password"
               name="password"
               required
-              className="w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 focus:border-[#D4AF37]/50 focus:outline-none transition"
+              className="w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white placeholder:text-white/30 focus:border-[#D4AF37]/50 focus:ring-1 focus:ring-[#D4AF37]/20 focus:outline-none transition"
             />
           </label>
           <FormActionButton
