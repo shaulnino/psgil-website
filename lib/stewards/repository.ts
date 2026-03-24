@@ -839,22 +839,40 @@ export async function checkAndGeneratePenalties(triggeringCaseId: string): Promi
 /*  Penalties to Serve — CRUD                                           */
 /* ------------------------------------------------------------------ */
 
+const HOURS_48_MS = 48 * 60 * 60 * 1000;
+
 export async function listPenaltiesToServe(): Promise<PenaltyToServe[]> {
   const store = await readStore();
-  // Lazily promote "assigned" penalties whose race has passed to "awaiting_confirmation"
   const now = Date.now();
   const GRACE_MS = 2 * 60 * 60 * 1000; // 2 hours after race start
   let changed = false;
+
   for (const p of store.penaltiesToServe) {
-    if (p.status === "assigned" && p.assignedRaceStartTime) {
-      const raceTs = new Date(p.assignedRaceStartTime).getTime();
-      if (now >= raceTs + GRACE_MS) {
-        p.status = "awaiting_confirmation";
-        p.updatedAt = new Date().toISOString();
-        changed = true;
+    if (p.status !== "assigned" || !p.assignedRaceStartTime) continue;
+    const raceTs = new Date(p.assignedRaceStartTime).getTime();
+
+    // Promote to awaiting_confirmation once the race has passed
+    if (now >= raceTs + GRACE_MS) {
+      p.status = "awaiting_confirmation";
+      p.updatedAt = new Date().toISOString();
+      changed = true;
+      continue;
+    }
+
+    // Send 48-hour reminder (fire-and-forget, same pattern as notifyPenaltyAssigned)
+    if (!p.reminderSentAt && now >= raceTs - HOURS_48_MS) {
+      p.reminderSentAt = new Date().toISOString();
+      p.updatedAt = p.reminderSentAt;
+      changed = true;
+      const driver = store.users.find((u) => u.id === p.driverId);
+      if (driver) {
+        import("@/lib/stewards/notifications")
+          .then(({ notifyPenaltyReminder }) => notifyPenaltyReminder(p, driver))
+          .catch(() => {});
       }
     }
   }
+
   if (changed) await writeStore(store);
   return [...store.penaltiesToServe].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
