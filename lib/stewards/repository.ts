@@ -1291,11 +1291,27 @@ export async function getAppealById(id: string): Promise<AppealWithRelations | n
   return { appeal, originalCase, submittedBy, internalComments: comments, verdict, driverVerdicts: dvs };
 }
 
-export async function getAppealByOriginalCaseId(caseId: string): Promise<Appeal | null> {
+/** All appeals filed against this case, newest first. */
+export async function listAppealsForOriginalCase(caseId: string): Promise<Appeal[]> {
   const store = await readStore();
-  return (store.appeals ?? []).find(
-    (a) => a.originalCaseId === caseId && a.status !== "Closed",
-  ) ?? (store.appeals ?? []).find((a) => a.originalCaseId === caseId) ?? null;
+  return (store.appeals ?? [])
+    .filter((a) => a.originalCaseId === caseId)
+    .sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));
+}
+
+/** This user's appeal for this case (any status), or null if they have not filed one. */
+export async function getAppealByCaseAndUser(caseId: string, userId: string): Promise<Appeal | null> {
+  const list = await listAppealsForOriginalCase(caseId);
+  return list.find((a) => a.submittedByUserId === userId) ?? null;
+}
+
+/**
+ * @deprecated Prefer getAppealByCaseAndUser or listAppealsForOriginalCase.
+ * Most recent appeal on this case (any submitter), or null.
+ */
+export async function getAppealByOriginalCaseId(caseId: string): Promise<Appeal | null> {
+  const list = await listAppealsForOriginalCase(caseId);
+  return list[0] ?? null;
 }
 
 export async function listAppeals(): Promise<AppealWithRelations[]> {
@@ -1313,8 +1329,13 @@ export async function createAppeal(input: {
   attachments: AttachmentRef[];
   links: string[];
   closedAt: string;
-}): Promise<Appeal> {
+}): Promise<{ appeal: Appeal; created: boolean }> {
   const store = await readStore();
+  const dup = (store.appeals ?? []).find(
+    (a) => a.originalCaseId === input.originalCaseId && a.submittedByUserId === input.submittedByUserId,
+  );
+  if (dup) return { appeal: dup, created: false };
+
   const now = new Date().toISOString();
   const appeal: Appeal = {
     id: `appeal_${randomUUID()}`,
@@ -1333,7 +1354,7 @@ export async function createAppeal(input: {
   };
   (store.appeals ?? (store.appeals = [])).push(appeal);
   await writeStore(store);
-  return appeal;
+  return { appeal, created: true };
 }
 
 export async function addAppealInternalComment(appealId: string, authorId: string, text: string) {

@@ -86,8 +86,8 @@ export default async function StewardCasesPage({ searchParams }: { searchParams:
               <span className="mb-1 block text-sm text-white/80">Description <span className="text-red-400">*</span></span>
               <textarea name="description" required rows={5} lang="he" dir="rtl" className="w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-right" />
             </label>
-            <div className="md:col-span-2 rounded-xl border border-[#D4AF37]/25 bg-black/20 p-4">
-              <h4 className="text-sm font-semibold uppercase tracking-wide text-[#D4AF37]">Evidence <span className="text-red-400">*</span></h4>
+            <div className="md:col-span-2 rounded-xl border border-steward-gold/25 bg-black/20 p-4">
+              <h4 className="text-sm font-semibold uppercase tracking-wide text-steward-gold">Evidence <span className="text-red-400">*</span></h4>
               <p className="mt-1 text-xs text-white/60">Attach files, paste screenshots, or add links/notes. At least one item is required.</p>
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 {/* screenshot paste + drag-drop zone */}
@@ -123,17 +123,17 @@ export default async function StewardCasesPage({ searchParams }: { searchParams:
           <h3 className="text-lg font-semibold">My Open Cases</h3>
           {openDetails.length === 0 && <div className="steward-soft rounded-lg px-4 py-3 text-sm text-white/60">No open cases currently involve you.</div>}
           {openDetails.map((entry) => entry && (
-            <Link key={entry.caseItem.id} href={`/stewards/cases/${entry.caseItem.id}?view=driver`} className="steward-soft group flex items-center justify-between gap-3 rounded-xl px-4 py-3 transition hover:border-[#D4AF37]/50">
+            <Link key={entry.caseItem.id} href={`/stewards/cases/${entry.caseItem.id}?view=driver`} className="steward-soft group flex items-center justify-between gap-3 rounded-xl px-4 py-3 transition hover:border-steward-gold/50">
               <div>
                 <p className="font-semibold text-white/90 group-hover:text-white">
-                  <span className="mr-2 font-mono text-[#D4AF37]/70">#{entry.caseItem.caseNumber ?? "–"}</span>
+                  <span className="mr-2 font-mono text-steward-gold/70">#{entry.caseItem.caseNumber ?? "–"}</span>
                   {entry.caseItem.title}
                 </p>
                 <p className="mt-0.5 text-xs text-white/50">{entry.caseItem.season} · {entry.caseItem.round} · {entry.caseItem.weekendSession}</p>
               </div>
               <div className="flex items-center gap-3">
                 <StatusChip status={entry.caseItem.status} />
-                <span className="text-xs text-[#D4AF37]/70 group-hover:text-[#D4AF37]">Open →</span>
+                <span className="text-xs text-steward-gold/70 group-hover:text-steward-gold">Open →</span>
               </div>
             </Link>
           ))}
@@ -143,10 +143,10 @@ export default async function StewardCasesPage({ searchParams }: { searchParams:
           </div>
           {otherDetails.length === 0 && <div className="steward-soft rounded-lg px-4 py-3 text-sm text-white/60">No closed cases found.</div>}
           {otherDetails.map((entry) => entry && (
-            <Link key={entry.caseItem.id} href={`/stewards/cases/${entry.caseItem.id}?view=driver`} className="steward-soft group flex items-center justify-between gap-3 rounded-xl px-4 py-3 transition hover:border-[#D4AF37]/50">
+            <Link key={entry.caseItem.id} href={`/stewards/cases/${entry.caseItem.id}?view=driver`} className="steward-soft group flex items-center justify-between gap-3 rounded-xl px-4 py-3 transition hover:border-steward-gold/50">
               <div>
                 <p className="font-semibold text-white/70 group-hover:text-white/90">
-                  <span className="mr-2 font-mono text-[#D4AF37]/50">#{entry.caseItem.caseNumber ?? "–"}</span>
+                  <span className="mr-2 font-mono text-steward-gold/50">#{entry.caseItem.caseNumber ?? "–"}</span>
                   {entry.caseItem.title}
                 </p>
                 <p className="mt-0.5 text-xs text-white/40">{entry.caseItem.season} · {entry.caseItem.round} · {entry.caseItem.weekendSession}</p>
@@ -165,10 +165,10 @@ export default async function StewardCasesPage({ searchParams }: { searchParams:
                 <p className="text-xs text-white/50">Cases you are not directly involved in</p>
               </div>
               {allOtherDetails.map((entry) => entry && (
-                <Link key={entry.caseItem.id} href={`/stewards/cases/${entry.caseItem.id}?view=driver`} className="steward-soft group flex items-center justify-between gap-3 rounded-xl px-4 py-3 opacity-80 transition hover:border-[#D4AF37]/40 hover:opacity-100">
+                <Link key={entry.caseItem.id} href={`/stewards/cases/${entry.caseItem.id}?view=driver`} className="steward-soft group flex items-center justify-between gap-3 rounded-xl px-4 py-3 opacity-80 transition hover:border-steward-gold/40 hover:opacity-100">
                   <div>
                     <p className="font-semibold text-white/65 group-hover:text-white/90">
-                      <span className="mr-2 font-mono text-[#D4AF37]/45">#{entry.caseItem.caseNumber ?? "–"}</span>
+                      <span className="mr-2 font-mono text-steward-gold/45">#{entry.caseItem.caseNumber ?? "–"}</span>
                       {entry.caseItem.title}
                     </p>
                     <p className="mt-0.5 text-xs text-white/35">{entry.caseItem.season} · {entry.caseItem.round} · {entry.caseItem.weekendSession}</p>
@@ -213,7 +213,7 @@ export default async function StewardCasesPage({ searchParams }: { searchParams:
                       : "border-t border-white/10";
                   return (
                   <tr key={item.id} className={rowCls}>
-                    <td className="px-4 py-3 text-center font-mono text-sm text-[#D4AF37]/60 w-12">
+                    <td className="px-4 py-3 text-center font-mono text-sm text-steward-gold/60 w-12">
                       {item.caseNumber ?? "–"}
                     </td>
                     <td className="px-4 py-3">

@@ -32,11 +32,11 @@ export default function ViewToggle({
 
   return (
     <div className="flex items-center">
-      <div className="relative flex items-center rounded-full border border-[#D4AF37]/40 bg-black/40 p-0.5 backdrop-blur-sm">
+      <div className="relative flex items-center rounded-full border border-steward-gold/40 bg-black/40 p-0.5 backdrop-blur-sm">
         {/* animated gold slider */}
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute left-0 top-0.5 h-[calc(100%-4px)] rounded-full bg-gradient-to-r from-[#D4AF37] to-[#f3d98a] shadow-[0_0_12px_rgba(212,175,55,0.6)] transition-[width,transform] duration-300 ease-in-out"
+          className="pointer-events-none absolute left-0 top-0.5 h-[calc(100%-4px)] rounded-full bg-gradient-to-r from-steward-gold to-steward-cream shadow-[0_0_10px_rgba(143,132,112,0.22)] transition-[width,transform] duration-300 ease-in-out"
           style={sliderStyle}
         />
         <Link

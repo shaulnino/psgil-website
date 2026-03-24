@@ -25,8 +25,8 @@ export default function StewardNav({ items }: { items: NavItem[] }) {
               href={href}
               className={`rounded-full px-3 py-1.5 font-medium transition ${
                 isActive
-                  ? "bg-[#D4AF37]/15 text-[#f4d98a] border border-[#D4AF37]/40"
-                  : "text-white/70 hover:bg-[#D4AF37]/10 hover:text-[#f3d98a]"
+                  ? "bg-steward-gold/15 text-steward-cream border border-steward-gold/40"
+                  : "text-white/70 hover:bg-steward-gold/10 hover:text-steward-cream"
               }`}
             >
               {label}

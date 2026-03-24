@@ -12,6 +12,9 @@
   --color-muted: var(--muted);
   --font-sans: var(--font-inter);
   --font-display: var(--font-rajdhani);
+  /* Steward module — muted bronze / sand (less saturated than legacy #D4AF37) */
+  --color-steward-gold: #8f8470;
+  --color-steward-cream: #b8b0a0;
 }
 
 html {
@@ -21,7 +24,7 @@ html {
 body {
   background:
     radial-gradient(ellipse 80% 60% at 5% 95%, rgba(112, 32, 176, 0.06), transparent 60%),
-    radial-gradient(ellipse 70% 50% at 95% 10%, rgba(212, 175, 55, 0.04), transparent 55%),
+    radial-gradient(ellipse 70% 50% at 95% 10%, rgba(143, 132, 112, 0.035), transparent 55%),
     repeating-linear-gradient(
       135deg,
       rgba(255, 255, 255, 0.025) 0,
@@ -158,13 +161,13 @@ body {
 .stewards-ui .steward-panel {
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(212, 175, 55, 0.42);
+  border: 1px solid rgba(143, 132, 112, 0.32);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.012)),
-    radial-gradient(circle at 12% 0%, rgba(212, 175, 55, 0.16), transparent 48%),
+    radial-gradient(circle at 12% 0%, rgba(143, 132, 112, 0.09), transparent 48%),
     #13131b;
   box-shadow:
-    0 0 0 1px rgba(212, 175, 55, 0.12) inset,
+    0 0 0 1px rgba(143, 132, 112, 0.08) inset,
     0 10px 26px rgba(0, 0, 0, 0.22);
   transition:
     transform 220ms ease,
@@ -181,8 +184,8 @@ body {
   left: 0;
   width: 48%;
   height: 2px;
-  background: linear-gradient(90deg, rgba(212, 175, 55, 1), rgba(212, 175, 55, 0.15), transparent);
-  opacity: 0.95;
+  background: linear-gradient(90deg, rgba(143, 132, 112, 0.75), rgba(143, 132, 112, 0.12), transparent);
+  opacity: 0.9;
 }
 
 .stewards-ui .steward-panel::before {
@@ -193,7 +196,7 @@ body {
   background: linear-gradient(
     105deg,
     transparent 36%,
-    rgba(212, 175, 55, 0.2) 48%,
+    rgba(143, 132, 112, 0.1) 48%,
     transparent 64%
   );
   transform: translateX(-120%);
@@ -201,11 +204,11 @@ body {
 
 .stewards-ui .steward-panel:hover {
   transform: translateY(-2px);
-  border-color: rgba(212, 175, 55, 0.45);
+  border-color: rgba(143, 132, 112, 0.38);
   box-shadow:
     0 16px 34px rgba(0, 0, 0, 0.25),
-    0 0 0 1px rgba(212, 175, 55, 0.12) inset,
-    0 0 22px rgba(212, 175, 55, 0.12);
+    0 0 0 1px rgba(143, 132, 112, 0.08) inset,
+    0 0 20px rgba(143, 132, 112, 0.08);
 }
 
 .stewards-ui .steward-panel:hover::before {
@@ -213,13 +216,13 @@ body {
 }
 
 .stewards-ui .steward-soft {
-  border: 1px solid rgba(212, 175, 55, 0.34);
-  background: linear-gradient(180deg, rgba(212, 175, 55, 0.08), rgba(0, 0, 0, 0.24));
+  border: 1px solid rgba(143, 132, 112, 0.26);
+  background: linear-gradient(180deg, rgba(143, 132, 112, 0.05), rgba(0, 0, 0, 0.24));
   transition: border-color 180ms ease, background-color 180ms ease;
 }
 
 .stewards-ui .steward-soft:hover {
-  border-color: rgba(212, 175, 55, 0.42);
+  border-color: rgba(143, 132, 112, 0.34);
   background: rgba(0, 0, 0, 0.3);
 }
 
@@ -228,7 +231,7 @@ body {
 }
 
 .stewards-ui details.steward-expand[open] > summary {
-  background: linear-gradient(90deg, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0.05));
+  background: linear-gradient(90deg, rgba(143, 132, 112, 0.12), rgba(143, 132, 112, 0.04));
 }
 
 .stewards-ui .steward-table tbody tr {
@@ -236,18 +239,18 @@ body {
 }
 
 .stewards-ui .steward-table tbody tr:hover {
-  background: rgba(212, 175, 55, 0.14);
+  background: rgba(143, 132, 112, 0.09);
 }
 
 .stewards-ui .steward-panel h2,
 .stewards-ui .steward-panel h3,
 .stewards-ui .steward-panel h4 {
-  color: #f4d98a;
-  text-shadow: 0 0 12px rgba(212, 175, 55, 0.16);
+  color: #b8b0a0;
+  text-shadow: none;
 }
 
 .stewards-ui .steward-panel thead {
-  background: linear-gradient(90deg, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0.06));
+  background: linear-gradient(90deg, rgba(143, 132, 112, 0.12), rgba(143, 132, 112, 0.04));
 }
 
 @media (prefers-reduced-motion: reduce) {

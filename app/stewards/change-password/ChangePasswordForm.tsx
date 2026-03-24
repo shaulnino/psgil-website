@@ -6,7 +6,7 @@ import { useFormStatus } from "react-dom";
 const MIN_LENGTH = 8;
 
 const inputCls =
-  "w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2.5 text-sm text-white/90 focus:border-[#D4AF37]/50 focus:outline-none transition placeholder:text-white/25";
+  "w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2.5 text-sm text-white/90 focus:border-steward-gold/50 focus:outline-none transition placeholder:text-white/25";
 
 function ShowHideInput({
   name,
@@ -34,7 +34,7 @@ function ShowHideInput({
           type="button"
           tabIndex={-1}
           onClick={() => setShow((v) => !v)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold tracking-widest text-[#D4AF37]/60 hover:text-[#D4AF37] transition"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold tracking-widest text-steward-gold/60 hover:text-steward-gold transition"
         >
           {show ? "HIDE" : "SHOW"}
         </button>

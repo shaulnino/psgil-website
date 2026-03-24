@@ -36,7 +36,7 @@ export default async function PenaltiesToServePage({ searchParams }: { searchPar
   const awaiting     = penalties.filter((p) => p.status === "awaiting_confirmation");
   const history      = penalties.filter((p) => ["served", "not_served", "rolled_forward", "cancelled"].includes(p.status));
 
-  const inputCls = "w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white/85 focus:border-[#D4AF37]/50 focus:outline-none transition";
+  const inputCls = "w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white/85 focus:border-steward-gold/50 focus:outline-none transition";
 
   return (
     <div className="space-y-8">
@@ -56,7 +56,7 @@ export default async function PenaltiesToServePage({ searchParams }: { searchPar
         {rules.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-2">
             {rules.map((r) => (
-              <span key={r.id} className="rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/8 px-3 py-1 text-xs text-[#f4d98a]">
+              <span key={r.id} className="rounded-full border border-steward-gold/30 bg-steward-gold/8 px-3 py-1 text-xs text-steward-cream">
                 {r.thresholdLicensePoints} pts → {r.penaltyLabel}
               </span>
             ))}
@@ -125,7 +125,7 @@ export default async function PenaltiesToServePage({ searchParams }: { searchPar
         <section className="steward-panel rounded-2xl p-5">
           <h3 className="text-base font-semibold">Add Penalty Manually</h3>
           <p className="mt-0.5 text-xs text-white/50">Directly assign a penalty-to-serve without a threshold trigger.</p>
-          <p className="mt-2 text-xs text-[#D4AF37]/70">
+          <p className="mt-2 text-xs text-steward-gold/70">
             Will be queued after any existing active penalties for that driver.
           </p>
           <form action={addManualPenaltyAction} className="mt-4 grid gap-3 md:grid-cols-2">
@@ -249,7 +249,7 @@ function PenaltyCard({
           </div>
 
           <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
-            <span className="text-sm font-semibold text-[#f4d98a]">{penalty.penaltyLabel}</span>
+            <span className="text-sm font-semibold text-steward-cream">{penalty.penaltyLabel}</span>
             {penalty.assignedRaceLabel && (
               <span className="text-sm text-white/55">→ {penalty.assignedRaceLabel}</span>
             )}

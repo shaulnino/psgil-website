@@ -73,7 +73,7 @@ export default async function StewardDashboardPage() {
                     <span className="text-xs text-white/40">·</span>
                     <span className="text-xs font-medium text-white/60 truncate">{driver?.name ?? p.driverId}</span>
                   </div>
-                  <span className="text-xs text-[#f4d98a]/80 shrink-0">{p.assignedRaceLabel ?? "Unassigned"}</span>
+                  <span className="text-xs text-steward-cream/80 shrink-0">{p.assignedRaceLabel ?? "Unassigned"}</span>
                 </div>
               );
             })}
@@ -88,7 +88,7 @@ export default async function StewardDashboardPage() {
           {hasRole(user, "member") && (
             <Link
               href="/stewards/cases?open=1"
-              className="rounded-full border border-[#D4AF37]/50 bg-[#D4AF37]/10 px-4 py-2 text-sm font-semibold text-[#f4d98a] transition hover:border-[#D4AF37]/80 hover:bg-[#D4AF37]/20"
+              className="rounded-full border border-steward-gold/50 bg-steward-gold/10 px-4 py-2 text-sm font-semibold text-steward-cream transition hover:border-steward-gold/80 hover:bg-steward-gold/20"
             >
               + Create Complaint
             </Link>

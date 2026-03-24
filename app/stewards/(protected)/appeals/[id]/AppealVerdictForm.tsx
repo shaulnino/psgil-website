@@ -6,7 +6,7 @@ import { upsertAppealVerdictAction } from "@/app/stewards/actions";
 import type { AppealVerdict, AppealDriverVerdict, StewardUser } from "@/lib/stewards/types";
 
 const inputCls =
-  "w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white/90 focus:border-[#D4AF37]/50 focus:outline-none transition";
+  "w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white/90 focus:border-steward-gold/50 focus:outline-none transition";
 
 type Driver = { id: string; name: string };
 type Entry = { driverId: string; licensePoints: string; timePenaltySeconds: string; warningText: string };
@@ -107,7 +107,7 @@ export default function AppealVerdictForm({
             {entries.map((entry, i) => (
               <div key={i} className="rounded-xl border border-white/10 bg-white/3 p-3">
                 <div className="mb-2 flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-widest text-[#D4AF37]/70">Driver {i + 1}</span>
+                  <span className="text-xs font-bold uppercase tracking-widest text-steward-gold/70">Driver {i + 1}</span>
                   {entries.length > 1 && (
                     <button type="button" onClick={() => removeEntry(i)}
                       className="text-xs text-red-400/70 hover:text-red-300 transition">Remove</button>

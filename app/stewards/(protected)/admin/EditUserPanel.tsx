@@ -14,24 +14,24 @@ export default function EditUserPanel({ user }: Props) {
   const [showPw, setShowPw] = useState(false);
 
   const inputCls =
-    "w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white/90 focus:border-[#D4AF37]/50 focus:outline-none transition";
+    "w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white/90 focus:border-steward-gold/50 focus:outline-none transition";
 
   return (
     <>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="rounded-full border border-[#D4AF37]/40 bg-[#D4AF37]/10 px-3 py-1 text-xs font-semibold text-[#f4d98a] transition hover:border-[#D4AF37]/70 hover:bg-[#D4AF37]/20"
+        className="rounded-full border border-steward-gold/40 bg-steward-gold/10 px-3 py-1 text-xs font-semibold text-steward-cream transition hover:border-steward-gold/70 hover:bg-steward-gold/20"
       >
         Edit
       </button>
 
       <Modal open={open} onClose={() => setOpen(false)}>
-          <div className="w-full max-w-md rounded-2xl border border-[#D4AF37]/30 bg-[#13131f] shadow-[0_24px_60px_rgba(0,0,0,0.6)] flex flex-col">
+          <div className="w-full max-w-md rounded-2xl border border-steward-gold/30 bg-[#13131f] shadow-[0_24px_60px_rgba(0,0,0,0.6)] flex flex-col">
             {/* header */}
             <div className="border-b border-white/10 px-6 py-4 flex items-center justify-between">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37]/70">Edit User</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-steward-gold/70">Edit User</p>
                 <div className="mt-0.5 flex items-center gap-2">
                   <p className="text-sm font-semibold text-white/90">{user.name}</p>
                   {user.mustChangePassword && (
@@ -90,7 +90,7 @@ export default function EditUserPanel({ user }: Props) {
                   <button
                     type="button"
                     onClick={() => setShowPw((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-[#D4AF37]/70 hover:text-[#D4AF37] transition"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-steward-gold/70 hover:text-steward-gold transition"
                   >
                     {showPw ? "HIDE" : "SHOW"}
                   </button>

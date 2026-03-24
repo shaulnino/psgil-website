@@ -124,7 +124,7 @@ export default function VerdictForm({
   };
 
   const inputCls =
-    "w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white/90 placeholder:text-white/30 focus:border-[#D4AF37]/50 focus:outline-none transition";
+    "w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white/90 placeholder:text-white/30 focus:border-steward-gold/50 focus:outline-none transition";
 
   return (
     <form ref={formRef} action={upsertVerdictAction} className="space-y-5">
@@ -136,11 +136,11 @@ export default function VerdictForm({
         {entries.map((entry) => (
           <div
             key={entry.key}
-            className="overflow-hidden rounded-xl border border-[#D4AF37]/20 bg-black/20"
+            className="overflow-hidden rounded-xl border border-steward-gold/20 bg-black/20"
           >
             {/* driver header */}
-            <div className="flex items-center justify-between border-b border-white/10 bg-[#D4AF37]/8 px-4 py-2.5">
-              <span className="text-sm font-semibold text-[#f4d98a]">{entry.driverName}</span>
+            <div className="flex items-center justify-between border-b border-white/10 bg-steward-gold/8 px-4 py-2.5">
+              <span className="text-sm font-semibold text-steward-cream">{entry.driverName}</span>
               {entries.length > 1 && (
                 <button
                   type="button"
@@ -240,7 +240,7 @@ export default function VerdictForm({
                 onClick={() => setDecision(decision === d.value ? "" : d.value)}
                 className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
                   decision === d.value
-                    ? "border-[#D4AF37]/70 bg-[#D4AF37]/20 text-[#f4d98a]"
+                    ? "border-steward-gold/70 bg-steward-gold/20 text-steward-cream"
                     : "border-white/15 bg-white/5 text-white/50 hover:border-white/30 hover:text-white/80"
                 }`}
               >
@@ -255,12 +255,12 @@ export default function VerdictForm({
         <div className="md:col-span-2">
           <span className="mb-1.5 block text-xs text-white/70">
             Verdict summary{" "}
-            <span className="ml-1 rounded-full border border-[#D4AF37]/40 bg-[#D4AF37]/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-[#D4AF37]/80">
+            <span className="ml-1 rounded-full border border-steward-gold/40 bg-steward-gold/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-steward-gold/80">
               auto
             </span>
           </span>
-          <div className="flex items-center gap-2 rounded-lg border border-[#D4AF37]/25 bg-[#D4AF37]/5 px-3 py-2.5 text-sm text-white/85">
-            <span className="shrink-0 text-[#D4AF37]/50">⚙</span>
+          <div className="flex items-center gap-2 rounded-lg border border-steward-gold/25 bg-steward-gold/5 px-3 py-2.5 text-sm text-white/85">
+            <span className="shrink-0 text-steward-gold/50">⚙</span>
             <span dir="auto">{autoSummary}</span>
           </div>
           <input type="hidden" name="verdict_summary" value={autoSummary} />

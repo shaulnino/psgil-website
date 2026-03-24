@@ -18,7 +18,7 @@ const DECISIONS = ["Racing Incident", "No Further Action", "Penalty Imposed", "D
 const SESSIONS  = ["Race", "Sprint", "Qualifying"] as const;
 
 const inputCls =
-  "w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white/90 focus:border-[#D4AF37]/50 focus:outline-none transition";
+  "w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white/90 focus:border-steward-gold/50 focus:outline-none transition";
 
 export default function HistoricalPenaltyForm({
   drivers,
@@ -61,7 +61,7 @@ export default function HistoricalPenaltyForm({
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="shrink-0 rounded-full border border-[#D4AF37]/50 bg-[#D4AF37]/10 px-4 py-2 text-sm font-semibold text-[#f4d98a] transition hover:border-[#D4AF37]/80 hover:bg-[#D4AF37]/20"
+          className="shrink-0 rounded-full border border-steward-gold/50 bg-steward-gold/10 px-4 py-2 text-sm font-semibold text-steward-cream transition hover:border-steward-gold/80 hover:bg-steward-gold/20"
         >
           {open ? "Close" : "+ Add Entry"}
         </button>
@@ -127,7 +127,7 @@ export default function HistoricalPenaltyForm({
                   onClick={() => setDecision(decision === d ? "" : d)}
                   className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
                     decision === d
-                      ? "border-[#D4AF37] bg-[#D4AF37]/20 text-[#f4d98a]"
+                      ? "border-steward-gold bg-steward-gold/20 text-steward-cream"
                       : "border-white/15 bg-white/5 text-white/60 hover:border-white/30"
                   }`}
                 >
@@ -149,7 +149,7 @@ export default function HistoricalPenaltyForm({
               {entries.map((entry, i) => (
                 <div key={i} className="rounded-xl border border-white/10 bg-white/3 p-4">
                   <div className="mb-3 flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-widest text-[#D4AF37]/70">Driver {i + 1}</span>
+                    <span className="text-xs font-bold uppercase tracking-widest text-steward-gold/70">Driver {i + 1}</span>
                     {entries.length > 1 && (
                       <button type="button" onClick={() => removeEntry(i)} className="text-xs text-red-400/70 hover:text-red-300 transition">Remove</button>
                     )}
