@@ -1,6 +1,0 @@
-fix: exclude historical cases from threshold penalties; fix threshold dedup; serialize blob writes
-
-- Add StewardCase.historical and set on add/update historical entries; backfill from title in store
-- computeEffectiveDriverPoints skips historical cases so admin backfill does not auto-create penalties to serve
-- thresholdPenaltySlotExists: legacy penalties with null sourceRuleId still dedupe by threshold points + index
-- Serialize all writeStore calls through one queue on Netlify Blobs (same as local file) to reduce lost updates
