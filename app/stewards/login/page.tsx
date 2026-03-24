@@ -31,7 +31,7 @@ export default async function StewardLoginPage({ searchParams }: { searchParams:
               type="email"
               name="email"
               required
-              className="w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white placeholder:text-white/30 focus:border-[#D4AF37]/50 focus:ring-1 focus:ring-[#D4AF37]/20 focus:outline-none transition"
+              className="w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white placeholder:text-white/30 focus:border-steward-gold/50 focus:ring-1 focus:ring-steward-gold/20 focus:outline-none transition"
             />
           </label>
           <label className="block">
@@ -40,7 +40,7 @@ export default async function StewardLoginPage({ searchParams }: { searchParams:
               type="password"
               name="password"
               required
-              className="w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white placeholder:text-white/30 focus:border-[#D4AF37]/50 focus:ring-1 focus:ring-[#D4AF37]/20 focus:outline-none transition"
+              className="w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white placeholder:text-white/30 focus:border-steward-gold/50 focus:ring-1 focus:ring-steward-gold/20 focus:outline-none transition"
             />
           </label>
           <FormActionButton

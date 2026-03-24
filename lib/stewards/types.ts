@@ -89,6 +89,8 @@ export type StewardCase = {
   id: string;
   caseNumber: number;
   title: string;
+  /** Admin-only historical backfill — excluded from automatic penalties-to-serve thresholds. */
+  historical?: boolean;
   season: string;
   round: string;
   weekendSession: WeekendSession;

@@ -20,11 +20,11 @@ export default function ChangePasswordModal() {
       </button>
 
       <Modal open={open} onClose={close}>
-        <div className="w-full max-w-sm rounded-2xl border border-[#D4AF37]/30 bg-[#13131f] shadow-[0_24px_60px_rgba(0,0,0,0.6)]">
+        <div className="w-full max-w-sm rounded-2xl border border-steward-gold/30 bg-[#13131f] shadow-[0_24px_60px_rgba(0,0,0,0.6)]">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37]/70">Account</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-steward-gold/70">Account</p>
               <p className="mt-0.5 text-sm font-semibold text-white/90">Change Password</p>
             </div>
             <button

@@ -51,18 +51,18 @@ export default function EvidencePasteBox() {
   // drag-and-drop support
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    dropZoneRef.current?.classList.remove("border-[#D4AF37]");
+    dropZoneRef.current?.classList.remove("border-steward-gold");
     const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith("image/"));
     for (const f of files) addImageFile(f);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    dropZoneRef.current?.classList.add("border-[#D4AF37]");
+    dropZoneRef.current?.classList.add("border-steward-gold");
   };
 
   const handleDragLeave = () => {
-    dropZoneRef.current?.classList.remove("border-[#D4AF37]");
+    dropZoneRef.current?.classList.remove("border-steward-gold");
   };
 
   return (
@@ -84,11 +84,11 @@ export default function EvidencePasteBox() {
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
-        className="flex min-h-[72px] cursor-default items-center justify-center rounded-xl border border-dashed border-[#D4AF37]/40 bg-black/20 px-4 py-4 text-center transition-colors duration-150"
+        className="flex min-h-[72px] cursor-default items-center justify-center rounded-xl border border-dashed border-steward-gold/40 bg-black/20 px-4 py-4 text-center transition-colors duration-150"
       >
         {images.length === 0 ? (
           <p className="text-sm text-white/50">
-            <span className="font-semibold text-[#D4AF37]">Paste a screenshot</span> anywhere (Ctrl+V) or drop an image here
+            <span className="font-semibold text-steward-gold">Paste a screenshot</span> anywhere (Ctrl+V) or drop an image here
           </p>
         ) : (
           <div className="flex flex-wrap gap-3">
@@ -98,7 +98,7 @@ export default function EvidencePasteBox() {
                 <img
                   src={img.previewUrl}
                   alt={img.file.name}
-                  className="h-20 w-28 rounded-lg border border-[#D4AF37]/30 object-cover shadow-md"
+                  className="h-20 w-28 rounded-lg border border-steward-gold/30 object-cover shadow-md"
                 />
                 <button
                   type="button"
@@ -114,7 +114,7 @@ export default function EvidencePasteBox() {
             <button
               type="button"
               onClick={() => dropZoneRef.current?.dispatchEvent(new Event("click"))}
-              className="flex h-20 w-28 items-center justify-center rounded-lg border border-dashed border-[#D4AF37]/30 text-xs text-white/40 hover:border-[#D4AF37]/70 hover:text-white/70 transition-colors"
+              className="flex h-20 w-28 items-center justify-center rounded-lg border border-dashed border-steward-gold/30 text-xs text-white/40 hover:border-steward-gold/70 hover:text-white/70 transition-colors"
             >
               + Add more
             </button>

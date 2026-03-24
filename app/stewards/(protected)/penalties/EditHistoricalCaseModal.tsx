@@ -12,7 +12,7 @@ const DECISIONS: VerdictDecision[] = [
 const SESSIONS = ["Race", "Sprint", "Qualifying"] as const;
 
 const inputCls =
-  "w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white/90 focus:border-[#D4AF37]/50 focus:outline-none transition";
+  "w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white/90 focus:border-steward-gold/50 focus:outline-none transition";
 
 type Driver = { id: string; name: string };
 type SeasonRoundOption = { value: string; label: string; rounds: { value: string; label: string }[] };
@@ -70,16 +70,16 @@ export default function EditHistoricalCaseModal({
   return (
     <>
       <button type="button" onClick={() => setOpen(true)}
-        className="rounded-full border border-[#D4AF37]/40 bg-[#D4AF37]/10 px-3 py-1 text-xs font-semibold text-[#f4d98a] transition hover:border-[#D4AF37]/70 hover:bg-[#D4AF37]/20">
+        className="rounded-full border border-steward-gold/40 bg-steward-gold/10 px-3 py-1 text-xs font-semibold text-steward-cream transition hover:border-steward-gold/70 hover:bg-steward-gold/20">
         Edit
       </button>
 
       <Modal open={open} onClose={() => setOpen(false)}>
-          <div className="w-full max-w-lg rounded-2xl border border-[#D4AF37]/30 bg-[#13131f] shadow-[0_24px_60px_rgba(0,0,0,0.6)] flex flex-col">
+          <div className="w-full max-w-lg rounded-2xl border border-steward-gold/30 bg-[#13131f] shadow-[0_24px_60px_rgba(0,0,0,0.6)] flex flex-col">
             {/* Header */}
             <div className="border-b border-white/10 px-6 py-4 flex items-center justify-between shrink-0">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37]/70">Edit Historical Entry</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-steward-gold/70">Edit Historical Entry</p>
                 <p className="mt-0.5 text-sm font-semibold text-white/90 truncate max-w-xs">{caseItem.title}</p>
               </div>
               <button type="button" onClick={() => setOpen(false)}
@@ -142,7 +142,7 @@ export default function EditHistoricalCaseModal({
                       onClick={() => setDecision(decision === d ? "" : d)}
                       className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
                         decision === d
-                          ? "border-[#D4AF37] bg-[#D4AF37]/20 text-[#f4d98a]"
+                          ? "border-steward-gold bg-steward-gold/20 text-steward-cream"
                           : "border-white/15 bg-white/5 text-white/60 hover:border-white/30"
                       }`}>
                       {d}
@@ -164,7 +164,7 @@ export default function EditHistoricalCaseModal({
                   {entries.map((entry, i) => (
                     <div key={i} className="rounded-xl border border-white/10 bg-white/3 p-3">
                       <div className="mb-2 flex items-center justify-between">
-                        <span className="text-xs font-bold uppercase tracking-widest text-[#D4AF37]/70">Driver {i + 1}</span>
+                        <span className="text-xs font-bold uppercase tracking-widest text-steward-gold/70">Driver {i + 1}</span>
                         {entries.length > 1 && (
                           <button type="button" onClick={() => removeEntry(i)}
                             className="text-xs text-red-400/70 hover:text-red-300 transition">Remove</button>

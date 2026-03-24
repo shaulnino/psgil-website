@@ -30,7 +30,7 @@ import {
   deleteCaseById,
   deletePenaltyToServe,
   getCaseById,
-  getAppealByOriginalCaseId,
+  getAppealByCaseAndUser,
   getAppealById,
   getUserByEmail,
   isAppealWindowOpen,
@@ -664,8 +664,8 @@ export async function submitAppealAction(formData: FormData) {
   const caseVerdict = data.verdict;
   if (!isAppealWindowOpen(caseItem.closedAt, caseVerdict?.published_at)) redirect(`/stewards/cases/${caseId}?error=window-expired`);
 
-  const existing = await getAppealByOriginalCaseId(caseId);
-  if (existing) redirect(`/stewards/cases/${caseId}?error=appeal-exists`);
+  const existingByUser = await getAppealByCaseAndUser(caseId, user.id);
+  if (existingByUser) redirect(`/stewards/cases/${caseId}?error=appeal-exists`);
 
   // Handle evidence uploads
   const evidenceItems = parseLines(formData.get("evidence_items"));
@@ -688,7 +688,7 @@ export async function submitAppealAction(formData: FormData) {
     redirect(`/stewards/cases/${caseId}?error=appeal-no-evidence`);
   }
 
-  const appeal = await createAppeal({
+  const { appeal, created } = await createAppeal({
     originalCaseId: caseId,
     submittedByUserId: user.id,
     description,
@@ -697,7 +697,9 @@ export async function submitAppealAction(formData: FormData) {
     closedAt: caseItem.closedAt ?? caseVerdict?.published_at ?? new Date().toISOString(),
   });
 
-  // Notify all parties
+  if (!created) redirect(`/stewards/cases/${caseId}?error=appeal-exists`);
+
+  // Notify all parties (only on a genuinely new appeal — avoids duplicate emails on races)
   const allUsers = await listUsers();
   const involvedUsers = allUsers.filter(
     (u) =>

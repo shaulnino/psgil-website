@@ -471,6 +471,7 @@ export async function addHistoricalCase(input: HistoricalCaseInput) {
     id: caseId,
     caseNumber: store.cases.length + 1,
     title,
+    historical: true,
     season: input.season.trim(),
     round: input.round.trim(),
     weekendSession: input.weekendSession,
@@ -705,11 +706,40 @@ function driverLatestQueuedRaceMs(store: StewardStore, driverId: string): number
 /*  Penalties to Serve — auto-generation                               */
 /* ------------------------------------------------------------------ */
 
+/** Historical / admin backfill cases must not count toward threshold penalties-to-serve. */
+function isCaseHistoricalForThresholds(store: StewardStore, caseId: string): boolean {
+  const c = store.cases.find((x) => x.id === caseId);
+  if (!c) return false;
+  if (c.historical === true) return true;
+  return typeof c.title === "string" && c.title.includes("(historical)");
+}
+
+/**
+ * True if this driver already has a non-cancelled threshold penalty for the same rule slot.
+ * Legacy rows may have sourceRuleId null (store backfill) — match by threshold points + index.
+ */
+function thresholdPenaltySlotExists(
+  store: StewardStore,
+  driverId: string,
+  rule: { id: string; thresholdLicensePoints: number },
+  instanceIndex: number,
+): boolean {
+  return store.penaltiesToServe.some((p) => {
+    if (p.driverId !== driverId || p.sourceType !== "threshold" || p.status === "cancelled") return false;
+    if (p.sourceRuleIndex !== instanceIndex) return false;
+    if (p.sourceRuleId != null) return p.sourceRuleId === rule.id;
+    return p.sourceThresholdPoints === rule.thresholdLicensePoints;
+  });
+}
+
 /**
  * Compute total license points per driver from ALL published verdicts,
  * respecting appeal overrides: when an appeal has a published "changed_decision"
  * outcome, that case's original driver verdicts are excluded and the appeal
  * driver verdicts are used instead — matching aggregateDriverPenalties() logic.
+ *
+ * Excludes historical admin backfill cases (they still appear on the Penalties page
+ * via aggregateDriverPenalties but must not trigger automatic penalties to serve).
  * Returns a map of driverId → total license points.
  */
 function computeEffectiveDriverPoints(store: StewardStore): Map<string, number> {
@@ -726,16 +756,18 @@ function computeEffectiveDriverPoints(store: StewardStore): Map<string, number> 
     if (appeal) appealOverrideByCaseId.set(appeal.originalCaseId, appeal.id);
   }
 
-  // Count original driverVerdicts, skipping appeal-overridden cases
+  // Count original driverVerdicts, skipping appeal-overridden and historical cases
   for (const dv of store.driverVerdicts) {
     if (!publishedCaseIds.has(dv.caseId)) continue;
     if (appealOverrideByCaseId.has(dv.caseId)) continue;
+    if (isCaseHistoricalForThresholds(store, dv.caseId)) continue;
     if (dv.license_points == null || dv.license_points === 0) continue;
     totals.set(dv.driverId, (totals.get(dv.driverId) ?? 0) + dv.license_points);
   }
 
-  // Add appeal driver verdicts for overridden cases
-  for (const [, appealId] of appealOverrideByCaseId) {
+  // Add appeal driver verdicts for overridden cases (skip if original case was historical)
+  for (const [caseId, appealId] of appealOverrideByCaseId) {
+    if (isCaseHistoricalForThresholds(store, caseId)) continue;
     const appealDvs = (store.appealDriverVerdicts ?? []).filter((adv) => adv.appealId === appealId);
     for (const adv of appealDvs) {
       if (adv.license_points == null || adv.license_points === 0) continue;
@@ -791,15 +823,7 @@ export async function checkAndGeneratePenalties(triggeringCaseId: string): Promi
     for (const rule of rules) {
       if (total < rule.thresholdLicensePoints) continue;
       for (let i = 1; i <= rule.quantity; i++) {
-        const exists = store.penaltiesToServe.some(
-          (p) =>
-            p.driverId === driverId &&
-            p.sourceRuleId === rule.id &&
-            p.sourceRuleIndex === i &&
-            p.sourceType === "threshold" &&
-            p.status !== "cancelled",
-        );
-        if (!exists) pending.push({ rule, index: i });
+        if (!thresholdPenaltySlotExists(store, driverId, rule, i)) pending.push({ rule, index: i });
       }
     }
     if (!pending.length) continue;
@@ -1106,6 +1130,7 @@ export async function updateHistoricalCase(
     .map((id) => store.users.find((u) => u.id === id)?.name.split(" ")[0] ?? id)
     .join(", ");
   caseItem.title           = `${input.season} ${input.round} – ${driverNames} (historical)`;
+  caseItem.historical      = true;
   caseItem.season          = input.season.trim();
   caseItem.round           = input.round.trim();
   caseItem.weekendSession  = input.weekendSession;
@@ -1137,11 +1162,11 @@ export async function updateHistoricalCase(
   return caseItem;
 }
 
-/** Returns all historical cases (title contains "(historical)"), newest first. */
+/** Returns all historical cases (flag or title marker), newest first. */
 export async function listHistoricalCases() {
   const store = await readStore();
   return store.cases
-    .filter((c) => c.title.includes("(historical)"))
+    .filter((c) => c.historical === true || c.title.includes("(historical)"))
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .map((c) => {
       const verdict = store.verdicts.find((v) => v.caseId === c.id) ?? null;
@@ -1266,11 +1291,27 @@ export async function getAppealById(id: string): Promise<AppealWithRelations | n
   return { appeal, originalCase, submittedBy, internalComments: comments, verdict, driverVerdicts: dvs };
 }
 
-export async function getAppealByOriginalCaseId(caseId: string): Promise<Appeal | null> {
+/** All appeals filed against this case, newest first. */
+export async function listAppealsForOriginalCase(caseId: string): Promise<Appeal[]> {
   const store = await readStore();
-  return (store.appeals ?? []).find(
-    (a) => a.originalCaseId === caseId && a.status !== "Closed",
-  ) ?? (store.appeals ?? []).find((a) => a.originalCaseId === caseId) ?? null;
+  return (store.appeals ?? [])
+    .filter((a) => a.originalCaseId === caseId)
+    .sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));
+}
+
+/** This user's appeal for this case (any status), or null if they have not filed one. */
+export async function getAppealByCaseAndUser(caseId: string, userId: string): Promise<Appeal | null> {
+  const list = await listAppealsForOriginalCase(caseId);
+  return list.find((a) => a.submittedByUserId === userId) ?? null;
+}
+
+/**
+ * @deprecated Prefer getAppealByCaseAndUser or listAppealsForOriginalCase.
+ * Most recent appeal on this case (any submitter), or null.
+ */
+export async function getAppealByOriginalCaseId(caseId: string): Promise<Appeal | null> {
+  const list = await listAppealsForOriginalCase(caseId);
+  return list[0] ?? null;
 }
 
 export async function listAppeals(): Promise<AppealWithRelations[]> {
@@ -1288,8 +1329,13 @@ export async function createAppeal(input: {
   attachments: AttachmentRef[];
   links: string[];
   closedAt: string;
-}): Promise<Appeal> {
+}): Promise<{ appeal: Appeal; created: boolean }> {
   const store = await readStore();
+  const dup = (store.appeals ?? []).find(
+    (a) => a.originalCaseId === input.originalCaseId && a.submittedByUserId === input.submittedByUserId,
+  );
+  if (dup) return { appeal: dup, created: false };
+
   const now = new Date().toISOString();
   const appeal: Appeal = {
     id: `appeal_${randomUUID()}`,
@@ -1308,7 +1354,7 @@ export async function createAppeal(input: {
   };
   (store.appeals ?? (store.appeals = [])).push(appeal);
   await writeStore(store);
-  return appeal;
+  return { appeal, created: true };
 }
 
 export async function addAppealInternalComment(appealId: string, authorId: string, text: string) {

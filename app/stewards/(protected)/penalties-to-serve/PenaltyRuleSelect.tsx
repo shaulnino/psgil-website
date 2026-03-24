@@ -5,7 +5,7 @@ import { useState } from "react";
 type Rule = { id: string; penaltyType: string; penaltyLabel: string; penaltyDescription: string };
 
 const inputCls =
-  "w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white/90 focus:border-[#D4AF37]/50 focus:outline-none transition";
+  "w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white/90 focus:border-steward-gold/50 focus:outline-none transition";
 
 export default function PenaltyRuleSelect({ rules }: { rules: Rule[] }) {
   const [selected, setSelected] = useState<string>("");

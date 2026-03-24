@@ -17,7 +17,7 @@ export default function CreateComplaintPanel({
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="rounded-full bg-[#7020B0] px-4 py-2 text-sm font-semibold text-white transition hover:shadow-[0_0_18px_rgba(212,175,55,0.3)]"
+          className="rounded-full bg-[#7020B0] px-4 py-2 text-sm font-semibold text-white transition hover:shadow-[0_0_14px_rgba(143,132,112,0.12)]"
         >
           {open ? "Close" : "Create Complaint"}
         </button>

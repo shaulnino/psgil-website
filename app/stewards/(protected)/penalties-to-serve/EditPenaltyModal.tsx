@@ -9,7 +9,7 @@ import type { PenaltyToServe } from "@/lib/stewards/types";
 type Rule = { id: string; penaltyType: string; penaltyLabel: string; penaltyDescription: string };
 
 const inputCls =
-  "w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white/90 focus:border-[#D4AF37]/50 focus:outline-none transition";
+  "w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white/90 focus:border-steward-gold/50 focus:outline-none transition";
 
 function SaveBtn() {
   const { pending } = useFormStatus();
@@ -38,17 +38,17 @@ export default function EditPenaltyModal({ penalty, rules }: { penalty: PenaltyT
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="rounded-full border border-[#D4AF37]/40 bg-[#D4AF37]/10 px-3 py-1 text-xs font-semibold text-[#f4d98a] transition hover:border-[#D4AF37]/70 hover:bg-[#D4AF37]/20"
+        className="rounded-full border border-steward-gold/40 bg-steward-gold/10 px-3 py-1 text-xs font-semibold text-steward-cream transition hover:border-steward-gold/70 hover:bg-steward-gold/20"
       >
         Edit
       </button>
 
       <Modal open={open} onClose={() => setOpen(false)}>
-          <div className="w-full max-w-md rounded-2xl border border-[#D4AF37]/30 bg-[#13131f] shadow-[0_24px_60px_rgba(0,0,0,0.6)] flex flex-col">
+          <div className="w-full max-w-md rounded-2xl border border-steward-gold/30 bg-[#13131f] shadow-[0_24px_60px_rgba(0,0,0,0.6)] flex flex-col">
             {/* Header */}
             <div className="border-b border-white/10 px-6 py-4 flex items-center justify-between shrink-0">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37]/70">Edit Penalty</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-steward-gold/70">Edit Penalty</p>
                 <p className="mt-0.5 text-sm font-semibold text-white/90">{penalty.penaltyLabel}</p>
               </div>
               <button

@@ -45,7 +45,7 @@ export default async function AppealsListPage() {
           <div className="divide-y divide-white/8">
             {active.map(({ appeal, originalCase, submittedBy }) => (
               <Link key={appeal.id} href={`/stewards/appeals/${appeal.id}`}
-                className="group flex items-center justify-between gap-4 px-5 py-4 transition hover:bg-[#D4AF37]/5">
+                className="group flex items-center justify-between gap-4 px-5 py-4 transition hover:bg-steward-gold/5">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-semibold text-white/90 group-hover:text-white truncate">
@@ -67,7 +67,7 @@ export default async function AppealsListPage() {
                   <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-widest ${STATUS_STYLE[appeal.status]}`}>
                     {appeal.status}
                   </span>
-                  <span className="text-xs text-[#D4AF37]/60 group-hover:text-[#D4AF37]">Open →</span>
+                  <span className="text-xs text-steward-gold/60 group-hover:text-steward-gold">Open →</span>
                 </div>
               </Link>
             ))}
@@ -86,7 +86,7 @@ export default async function AppealsListPage() {
               const changed = verdict?.outcomeType === "changed_decision";
               return (
                 <Link key={appeal.id} href={`/stewards/appeals/${appeal.id}`}
-                  className="group flex items-center justify-between gap-4 px-5 py-4 opacity-75 transition hover:bg-[#D4AF37]/4 hover:opacity-100">
+                  className="group flex items-center justify-between gap-4 px-5 py-4 opacity-75 transition hover:bg-steward-gold/4 hover:opacity-100">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-semibold text-white/70 group-hover:text-white/90 truncate">

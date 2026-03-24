@@ -21,7 +21,7 @@ export default async function ChangePasswordPage({ searchParams }: { searchParam
       <div className="w-full max-w-md space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
-          <p className="text-xs font-bold uppercase tracking-widest text-[#D4AF37]/70">PSGiL Steward System</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-steward-gold/70">PSGiL Steward System</p>
           <h1 className="font-display text-3xl font-semibold">Set your password</h1>
           <p className="text-sm text-white/60">
             Welcome, <span className="text-white/90 font-medium">{user.name}</span>.
@@ -32,8 +32,8 @@ export default async function ChangePasswordPage({ searchParams }: { searchParam
         {/* Card */}
         <div className="steward-panel rounded-2xl p-6 space-y-5">
           {/* Info banner */}
-          <div className="flex items-start gap-3 rounded-xl border border-[#D4AF37]/25 bg-[#D4AF37]/8 px-4 py-3">
-            <span className="mt-0.5 text-[#D4AF37] text-base">🔒</span>
+          <div className="flex items-start gap-3 rounded-xl border border-steward-gold/25 bg-steward-gold/8 px-4 py-3">
+            <span className="mt-0.5 text-steward-gold text-base">🔒</span>
             <p className="text-sm text-white/70 leading-relaxed">
               Your account was set up with a temporary password. Choose a new password that only you know — admins will not be able to see it.
             </p>

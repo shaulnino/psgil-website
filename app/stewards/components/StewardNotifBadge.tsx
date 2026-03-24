@@ -50,20 +50,20 @@ export default function StewardNotifBadge() {
     <div ref={containerRef} className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 rounded-full border border-[#D4AF37]/50 bg-[#D4AF37]/15 px-2.5 py-1 text-xs font-bold text-[#f4d98a] transition hover:border-[#D4AF37]/80 hover:bg-[#D4AF37]/25"
+        className="flex items-center gap-1.5 rounded-full border border-steward-gold/50 bg-steward-gold/15 px-2.5 py-1 text-xs font-bold text-steward-cream transition hover:border-steward-gold/80 hover:bg-steward-gold/25"
         aria-label={`${total} pending steward action${total > 1 ? "s" : ""}`}
       >
         <span className="relative flex h-2 w-2">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#D4AF37] opacity-60" />
-          <span className="relative inline-flex h-2 w-2 rounded-full bg-[#D4AF37]" />
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-steward-gold opacity-60" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-steward-gold" />
         </span>
         {total}
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-72 overflow-hidden rounded-2xl border border-[#D4AF37]/30 bg-[#111119] shadow-[0_12px_40px_rgba(0,0,0,0.5)]">
+        <div className="absolute right-0 top-full z-50 mt-2 w-72 overflow-hidden rounded-2xl border border-steward-gold/30 bg-[#111119] shadow-[0_12px_40px_rgba(0,0,0,0.5)]">
           <div className="border-b border-white/10 px-4 py-2.5">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37]/80">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-steward-gold/80">
               Pending Actions
             </p>
           </div>
@@ -73,15 +73,15 @@ export default function StewardNotifBadge() {
                 <Link
                   href={item.href}
                   onClick={() => setOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3 transition hover:bg-[#D4AF37]/10"
+                  className="flex items-center gap-3 px-4 py-3 transition hover:bg-steward-gold/10"
                 >
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#D4AF37]/15 text-sm text-[#f4d98a]">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-steward-gold/15 text-sm text-steward-cream">
                     {ICON[item.id] ?? "●"}
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm text-white/90">{item.label}</p>
                   </div>
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#D4AF37]/20 text-[10px] font-bold text-[#f4d98a]">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-steward-gold/20 text-[10px] font-bold text-steward-cream">
                     {item.count}
                   </span>
                 </Link>
@@ -92,7 +92,7 @@ export default function StewardNotifBadge() {
             <Link
               href="/stewards"
               onClick={() => setOpen(false)}
-              className="text-[11px] text-white/40 transition hover:text-[#D4AF37]"
+              className="text-[11px] text-white/40 transition hover:text-steward-gold"
             >
               Open Steward System →
             </Link>
