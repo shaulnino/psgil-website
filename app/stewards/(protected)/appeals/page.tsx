@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireStewardUser } from "@/lib/stewards/auth";
+import { can, requireStewardUser } from "@/lib/stewards/auth";
 import { listAppeals } from "@/lib/stewards/repository";
 import type { AppealStatus } from "@/lib/stewards/types";
 
@@ -12,7 +12,7 @@ const STATUS_STYLE: Record<AppealStatus, string> = {
 
 export default async function AppealsListPage() {
   const user = await requireStewardUser();
-  const canSeeAll = user.roles.includes("steward") || user.roles.includes("admin");
+  const canSeeAll = can(user, "view_internal_discussion");
   const all = await listAppeals();
 
   // Members only see appeals they submitted

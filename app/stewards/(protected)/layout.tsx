@@ -2,7 +2,7 @@ import { logoutStewardAction } from "@/app/stewards/actions";
 import FormActionButton from "@/app/stewards/components/FormActionButton";
 import StewardNav from "@/app/stewards/components/StewardNav";
 import ChangePasswordModal from "@/app/stewards/components/ChangePasswordModal";
-import { requireStewardUser } from "@/lib/stewards/auth";
+import { can, requireStewardUser } from "@/lib/stewards/auth";
 
 export default async function StewardProtectedLayout({
   children,
@@ -36,7 +36,7 @@ export default async function StewardProtectedLayout({
         { href: "/stewards/appeals",            label: "Appeals" },
         { href: "/stewards/penalties",          label: "Penalties" },
         { href: "/stewards/penalties-to-serve", label: "Penalties to Serve" },
-        ...(user.roles.includes("admin") ? [{ href: "/stewards/admin", label: "Admin" }] : []),
+        ...(can(user, "manage_users") ? [{ href: "/stewards/admin", label: "Admin" }] : []),
       ]} />
 
       <div className="mx-auto w-full max-w-6xl px-6 py-8">{children}</div>

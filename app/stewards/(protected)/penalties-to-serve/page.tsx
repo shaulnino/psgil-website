@@ -1,4 +1,4 @@
-import { requireStewardUser } from "@/lib/stewards/auth";
+import { can, requireStewardUser } from "@/lib/stewards/auth";
 import {
   listPenaltiesToServe,
   listUsers,
@@ -20,7 +20,7 @@ type SearchParams = Promise<{ error?: string }>;
 
 export default async function PenaltiesToServePage({ searchParams }: { searchParams: SearchParams }) {
   const user = await requireStewardUser();
-  const isAdmin = user.roles.includes("admin");
+  const isAdmin = can(user, "manage_penalties");
   const params = await searchParams;
 
   const [penalties, users, rules] = await Promise.all([

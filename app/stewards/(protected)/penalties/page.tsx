@@ -1,5 +1,5 @@
 import FormActionButton from "@/app/stewards/components/FormActionButton";
-import { requireStewardUser } from "@/lib/stewards/auth";
+import { can, requireStewardUser } from "@/lib/stewards/auth";
 import { aggregateDriverPenalties, listHistoricalCases, listUsers } from "@/lib/stewards/repository";
 import HistoricalPenaltyForm from "@/app/stewards/(protected)/admin/HistoricalPenaltyForm";
 import EditHistoricalCaseModal from "./EditHistoricalCaseModal";
@@ -39,7 +39,7 @@ type SearchParams = Promise<{ season?: string; driver?: string; sort?: "points" 
 
 export default async function StewardPenaltiesPage({ searchParams }: { searchParams: SearchParams }) {
   const user = await requireStewardUser();
-  const isAdmin = user.roles.includes("admin");
+  const isAdmin = can(user, "manage_penalties");
   const params = await searchParams;
   const seasonFilter = (params.season ?? "").trim().toLowerCase();
   const driverFilter = (params.driver ?? "").trim().toLowerCase();

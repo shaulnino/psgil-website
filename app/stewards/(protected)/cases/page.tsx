@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createComplaintAction } from "@/app/stewards/actions";
-import { canCreateComplaint, requireStewardUser } from "@/lib/stewards/auth";
+import { can, canCreateComplaint, hasRole, requireStewardUser } from "@/lib/stewards/auth";
 import { getCaseById, listCases, listUsers } from "@/lib/stewards/repository";
 import { fetchCsv, parseCsv } from "@/lib/csv";
 import { GLOBAL_CSV_URLS } from "@/lib/seasonConfig";
@@ -21,9 +21,9 @@ export default async function StewardCasesPage({ searchParams }: { searchParams:
   const error = params.error ?? "";
   const forceOpen = params.open === "1";
   const user = await requireStewardUser();
-  const isAdmin = user.roles.includes("admin");
-  const hasDriverRole = user.roles.includes("member");
-  const hasStewardRole = user.roles.includes("steward") || user.roles.includes("admin");
+  const isAdmin = can(user, "manage_users");
+  const hasDriverRole = hasRole(user, "member");
+  const hasStewardRole = can(user, "view_internal_discussion");
   const hasDual = hasDriverRole && hasStewardRole;
   const view: "driver" | "steward" = hasDual
     ? params.view === "driver"
@@ -199,7 +199,7 @@ export default async function StewardCasesPage({ searchParams }: { searchParams:
             <table className="steward-table min-w-full text-left text-sm">
               <thead className="bg-white/5 text-white/80">
                 <tr>
-                  <th className="px-4 py-3">Case</th><th className="px-4 py-3">Season</th><th className="px-4 py-3">Round</th><th className="px-4 py-3">Session</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Created</th>{isAdmin && <th className="px-4 py-3">Actions</th>}
+                  <th className="px-4 py-3 w-12 text-center">#</th><th className="px-4 py-3">Case</th><th className="px-4 py-3">Season</th><th className="px-4 py-3">Round</th><th className="px-4 py-3">Session</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Created</th>{isAdmin && <th className="px-4 py-3">Actions</th>}
                 </tr>
               </thead>
               <tbody>
@@ -213,9 +213,11 @@ export default async function StewardCasesPage({ searchParams }: { searchParams:
                       : "border-t border-white/10";
                   return (
                   <tr key={item.id} className={rowCls}>
+                    <td className="px-4 py-3 text-center font-mono text-sm text-[#D4AF37]/60 w-12">
+                      {item.caseNumber ?? "–"}
+                    </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-mono text-xs text-[#D4AF37]/60">#{item.caseNumber ?? "–"}</span>
                         <Link href={`/stewards/cases/${item.id}?view=steward`} className="text-[#d4afff] hover:text-white">{item.title}</Link>
                         {needsReview && (
                           <span className="inline-flex items-center gap-1 rounded-full bg-purple-500/25 border border-purple-400/60 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-purple-200">
@@ -240,7 +242,7 @@ export default async function StewardCasesPage({ searchParams }: { searchParams:
                   </tr>
                   );
                 })}
-                {cases.length === 0 && <tr><td className="px-4 py-5 text-white/60" colSpan={isAdmin ? 7 : 6}>No cases yet.</td></tr>}
+                {cases.length === 0 && <tr><td className="px-4 py-5 text-white/60" colSpan={isAdmin ? 8 : 7}>No cases yet.</td></tr>}
               </tbody>
             </table>
           </div>

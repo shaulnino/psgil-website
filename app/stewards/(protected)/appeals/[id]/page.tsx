@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { canCommentInternally, requireStewardUser } from "@/lib/stewards/auth";
+import { can, canCommentInternally, requireStewardUser } from "@/lib/stewards/auth";
 import {
   addAppealInternalCommentAction,
   publishAppealVerdictAction,
@@ -39,8 +39,8 @@ export default async function AppealDetailPage({
   const allUsers = await listUsers();
 
   const canInternal = canCommentInternally(user.roles);
-  const canEditVerdict = user.roles.includes("steward") || user.roles.includes("admin");
-  const canAdmin = user.roles.includes("admin");
+  const canEditVerdict = can(user, "edit_verdict");
+  const canAdmin = can(user, "manage_users");
   const isAppealer = user.id === appeal.submittedByUserId;
   const isChanged = verdict?.is_published && verdict.outcomeType === "changed_decision";
   const isUpheld = verdict?.is_published && verdict.outcomeType === "no_change";

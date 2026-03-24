@@ -706,19 +706,43 @@ function driverLatestQueuedRaceMs(store: StewardStore, driverId: string): number
 /* ------------------------------------------------------------------ */
 
 /**
- * Compute total license points per driver from ALL published verdicts.
+ * Compute total license points per driver from ALL published verdicts,
+ * respecting appeal overrides: when an appeal has a published "changed_decision"
+ * outcome, that case's original driver verdicts are excluded and the appeal
+ * driver verdicts are used instead — matching aggregateDriverPenalties() logic.
  * Returns a map of driverId → total license points.
  */
-function computeDriverPoints(store: StewardStore): Map<string, number> {
+function computeEffectiveDriverPoints(store: StewardStore): Map<string, number> {
   const totals = new Map<string, number>();
   const publishedCaseIds = new Set(
     store.verdicts.filter((v) => v.is_published).map((v) => v.caseId),
   );
+
+  // Build appeal override map: caseId → appealId (published changed_decision only)
+  const appealOverrideByCaseId = new Map<string, string>();
+  for (const av of (store.appealVerdicts ?? [])) {
+    if (!av.is_published || av.outcomeType !== "changed_decision") continue;
+    const appeal = (store.appeals ?? []).find((a) => a.id === av.appealId);
+    if (appeal) appealOverrideByCaseId.set(appeal.originalCaseId, appeal.id);
+  }
+
+  // Count original driverVerdicts, skipping appeal-overridden cases
   for (const dv of store.driverVerdicts) {
     if (!publishedCaseIds.has(dv.caseId)) continue;
+    if (appealOverrideByCaseId.has(dv.caseId)) continue;
     if (dv.license_points == null || dv.license_points === 0) continue;
     totals.set(dv.driverId, (totals.get(dv.driverId) ?? 0) + dv.license_points);
   }
+
+  // Add appeal driver verdicts for overridden cases
+  for (const [, appealId] of appealOverrideByCaseId) {
+    const appealDvs = (store.appealDriverVerdicts ?? []).filter((adv) => adv.appealId === appealId);
+    for (const adv of appealDvs) {
+      if (adv.license_points == null || adv.license_points === 0) continue;
+      totals.set(adv.driverId, (totals.get(adv.driverId) ?? 0) + adv.license_points);
+    }
+  }
+
   return totals;
 }
 
@@ -751,7 +775,7 @@ export async function checkAndGeneratePenalties(triggeringCaseId: string): Promi
   if (!rules.length) return;
 
   const store = await readStore();
-  const driverPoints = computeDriverPoints(store);
+  const driverPoints = computeEffectiveDriverPoints(store);
   if (!driverPoints.size) return;
 
   const futureRaces = await getFutureMainLeagueRaces();

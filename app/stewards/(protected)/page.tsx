@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { requireStewardUser } from "@/lib/stewards/auth";
+import { can, hasRole, requireStewardUser } from "@/lib/stewards/auth";
 import { listCases, listPenaltiesToServe, listUsers } from "@/lib/stewards/repository";
 
 export default async function StewardDashboardPage() {
   const user = await requireStewardUser();
-  const isAdmin = user.roles.includes("admin");
+  const isAdmin = can(user, "manage_users");
 
   const [cases, penaltiesToServe, allUsers] = await Promise.all([
     listCases(),
@@ -85,7 +85,7 @@ export default async function StewardDashboardPage() {
         <h3 className="text-lg font-semibold">Quick links</h3>
         <div className="mt-3 flex flex-wrap gap-2">
           <Link href="/stewards/cases" className="rounded-full bg-[#7020B0] px-4 py-2 text-sm">Open Cases</Link>
-          {user.roles.includes("member") && (
+          {hasRole(user, "member") && (
             <Link
               href="/stewards/cases?open=1"
               className="rounded-full border border-[#D4AF37]/50 bg-[#D4AF37]/10 px-4 py-2 text-sm font-semibold text-[#f4d98a] transition hover:border-[#D4AF37]/80 hover:bg-[#D4AF37]/20"
