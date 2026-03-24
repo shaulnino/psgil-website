@@ -1,14 +1,6 @@
-harden: centralized permissions, appeal-aware penalties, auth audit fixes
+fix: exclude historical cases from threshold penalties; fix threshold dedup; serialize blob writes
 
-- Add can/hasRole/hasAnyRole helpers + StewardPermission matrix in auth.ts
-- Replace scattered role.includes() checks across steward pages with named can() calls
-- Fix computeDriverPoints to be appeal-aware (renamed computeEffectiveDriverPoints),
-  aligning threshold penalty generation with aggregateDriverPenalties display logic
-- Consolidate upsertAppealVerdictAction, publishAppealVerdictAction,
-  updateAppealStatusAction to use requireRole() instead of inline checks
-- Fix attachment API: add authentication guard (401 for unauthenticated requests)
-- Fix attachment API: Cache-Control changed from public/immutable to private/no-store
-  to prevent CDN caching of authenticated content on Netlify
-- Add runtime warning when STEWARD_SESSION_SECRET is missing or uses dev fallback
-  in production (surfaces immediately in Netlify function logs)
-- Cases table: move case number into its own # column separate from case title
+- Add StewardCase.historical and set on add/update historical entries; backfill from title in store
+- computeEffectiveDriverPoints skips historical cases so admin backfill does not auto-create penalties to serve
+- thresholdPenaltySlotExists: legacy penalties with null sourceRuleId still dedupe by threshold points + index
+- Serialize all writeStore calls through one queue on Netlify Blobs (same as local file) to reduce lost updates

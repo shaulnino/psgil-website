@@ -36,7 +36,8 @@ async function readFromBlob(): Promise<StewardStore> {
   const data = await blobStore.get(BLOB_KEY, { type: "json" }) as StewardStore | null;
   if (!data) {
     const initial = buildDefaultStore();
-    await writeToBlob(initial);
+    const { getStore } = await import("@netlify/blobs");
+    await getStore(BLOB_STORE_NAME).setJSON(BLOB_KEY, initial);
     return initial;
   }
   if (!data.driverVerdicts)   data.driverVerdicts   = [];
@@ -55,6 +56,10 @@ async function readFromBlob(): Promise<StewardStore> {
     if (!Array.isArray(cr.involvedDriverIds)) cr.involvedDriverIds = [];
     if (!Array.isArray(cr.responseIds))       cr.responseIds       = [];
     if (!Array.isArray(cr.internalCommentIds))cr.internalCommentIds= [];
+    if (!("historical" in cr)) {
+      const title = typeof cr.title === "string" ? cr.title : "";
+      cr.historical = title.includes("(historical)");
+    }
   }
   // ── Case responses ───────────────────────────────────────────
   for (const r of data.responses ?? []) {
@@ -82,12 +87,6 @@ async function readFromBlob(): Promise<StewardStore> {
     if (!Array.isArray(ar.internalCommentIds)) ar.internalCommentIds = [];
   }
   return data;
-}
-
-async function writeToBlob(store: StewardStore): Promise<void> {
-  const { getStore } = await import("@netlify/blobs");
-  const blobStore = getStore(BLOB_STORE_NAME);
-  await blobStore.setJSON(BLOB_KEY, store);
 }
 
 /* ------------------------------------------------------------------ */
@@ -121,6 +120,10 @@ async function readFromFile(): Promise<StewardStore> {
       if (!Array.isArray(cr.involvedDriverIds)) cr.involvedDriverIds = [];
       if (!Array.isArray(cr.responseIds))       cr.responseIds       = [];
       if (!Array.isArray(cr.internalCommentIds))cr.internalCommentIds= [];
+      if (!("historical" in cr)) {
+        const title = typeof cr.title === "string" ? cr.title : "";
+        cr.historical = title.includes("(historical)");
+      }
     }
     // ── Case responses ─────────────────────────────────────────
     for (const r of store.responses ?? []) {
@@ -157,20 +160,6 @@ async function readFromFile(): Promise<StewardStore> {
 
 let _writeQueue = Promise.resolve();
 
-async function writeToFile(store: StewardStore): Promise<void> {
-  const { mkdir, writeFile } = await import("node:fs/promises");
-  const path = await import("node:path");
-  const DATA_DIR   = path.join(process.cwd(), "data", "stewards");
-  const STORE_PATH = path.join(DATA_DIR, "store.json");
-
-  await mkdir(DATA_DIR, { recursive: true });
-
-  _writeQueue = _writeQueue.then(() =>
-    writeFile(STORE_PATH, JSON.stringify(store, null, 2), "utf8"),
-  );
-  await _writeQueue;
-}
-
 /* ------------------------------------------------------------------ */
 /*  Public API                                                          */
 /* ------------------------------------------------------------------ */
@@ -179,6 +168,23 @@ export async function readStore(): Promise<StewardStore> {
   return isNetlifyEnv() ? readFromBlob() : readFromFile();
 }
 
+/**
+ * Serialize all writes (Netlify Blobs + local file) through one queue so
+ * read-modify-write cycles don't clobber each other on the same instance.
+ */
 export async function writeStore(store: StewardStore): Promise<void> {
-  return isNetlifyEnv() ? writeToBlob(store) : writeToFile(store);
+  _writeQueue = _writeQueue.then(async () => {
+    if (isNetlifyEnv()) {
+      const { getStore } = await import("@netlify/blobs");
+      await getStore(BLOB_STORE_NAME).setJSON(BLOB_KEY, store);
+    } else {
+      const { mkdir, writeFile } = await import("node:fs/promises");
+      const path = await import("node:path");
+      const DATA_DIR = path.join(process.cwd(), "data", "stewards");
+      const STORE_PATH = path.join(DATA_DIR, "store.json");
+      await mkdir(DATA_DIR, { recursive: true });
+      await writeFile(STORE_PATH, JSON.stringify(store, null, 2), "utf8");
+    }
+  });
+  return _writeQueue;
 }
