@@ -817,6 +817,7 @@ export async function checkAndGeneratePenalties(triggeringCaseId: string): Promi
         updatedAt: now,
         rolledFromPenaltyId: null,
         cycleNumber: 1,
+        reminderSentAt: null,
       };
       store.penaltiesToServe.push(penalty);
       changed = true;
@@ -911,6 +912,7 @@ export async function addManualPenalty(input: ManualPenaltyInput): Promise<Penal
       updatedAt: now,
       rolledFromPenaltyId: null,
       cycleNumber: 1,
+      reminderSentAt: null,
     };
     store.penaltiesToServe.push(penalty);
     created.push(penalty);
@@ -994,6 +996,7 @@ export async function rollForwardPenalty(
     updatedAt: now,
     rolledFromPenaltyId: original.id,
     cycleNumber: original.cycleNumber + 1,
+    reminderSentAt: null,
   };
 
   store.penaltiesToServe.push(newPenalty);
