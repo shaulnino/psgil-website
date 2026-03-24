@@ -68,6 +68,7 @@ async function readFromBlob(): Promise<StewardStore> {
     if (!("sourceRuleId"    in pr)) pr.sourceRuleId    = null;
     if (!("sourceRuleIndex" in pr)) pr.sourceRuleIndex = 1;
     if (!Array.isArray(pr.sourceCaseIds)) pr.sourceCaseIds = [];
+    if (!("reminderSentAt"  in pr)) pr.reminderSentAt  = null;
   }
   // ── Appeal collections ───────────────────────────────────────
   if (!data.appeals)                data.appeals                = [];
@@ -130,12 +131,13 @@ async function readFromFile(): Promise<StewardStore> {
     // ── Penalties to serve ─────────────────────────────────────
     for (const p of store.penaltiesToServe ?? []) {
       const pr = p as Record<string, unknown>;
-      if (!("sourceRuleId"    in pr)) pr.sourceRuleId    = null;
-      if (!("sourceRuleIndex" in pr)) pr.sourceRuleIndex = 1;
-      if (!Array.isArray(pr.sourceCaseIds)) pr.sourceCaseIds = [];
-    }
-    // ── Appeal collections ─────────────────────────────────────
-    if (!store.appeals)                store.appeals                = [];
+    if (!("sourceRuleId"    in pr)) pr.sourceRuleId    = null;
+    if (!("sourceRuleIndex" in pr)) pr.sourceRuleIndex = 1;
+    if (!Array.isArray(pr.sourceCaseIds)) pr.sourceCaseIds = [];
+    if (!("reminderSentAt"  in pr)) pr.reminderSentAt  = null;
+  }
+  // ── Appeal collections ─────────────────────────────────────
+  if (!store.appeals)                store.appeals                = [];
     if (!store.appealVerdicts)         store.appealVerdicts         = [];
     if (!store.appealDriverVerdicts)   store.appealDriverVerdicts   = [];
     if (!store.appealInternalComments) store.appealInternalComments = [];

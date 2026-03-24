@@ -706,19 +706,43 @@ function driverLatestQueuedRaceMs(store: StewardStore, driverId: string): number
 /* ------------------------------------------------------------------ */
 
 /**
- * Compute total license points per driver from ALL published verdicts.
+ * Compute total license points per driver from ALL published verdicts,
+ * respecting appeal overrides: when an appeal has a published "changed_decision"
+ * outcome, that case's original driver verdicts are excluded and the appeal
+ * driver verdicts are used instead — matching aggregateDriverPenalties() logic.
  * Returns a map of driverId → total license points.
  */
-function computeDriverPoints(store: StewardStore): Map<string, number> {
+function computeEffectiveDriverPoints(store: StewardStore): Map<string, number> {
   const totals = new Map<string, number>();
   const publishedCaseIds = new Set(
     store.verdicts.filter((v) => v.is_published).map((v) => v.caseId),
   );
+
+  // Build appeal override map: caseId → appealId (published changed_decision only)
+  const appealOverrideByCaseId = new Map<string, string>();
+  for (const av of (store.appealVerdicts ?? [])) {
+    if (!av.is_published || av.outcomeType !== "changed_decision") continue;
+    const appeal = (store.appeals ?? []).find((a) => a.id === av.appealId);
+    if (appeal) appealOverrideByCaseId.set(appeal.originalCaseId, appeal.id);
+  }
+
+  // Count original driverVerdicts, skipping appeal-overridden cases
   for (const dv of store.driverVerdicts) {
     if (!publishedCaseIds.has(dv.caseId)) continue;
+    if (appealOverrideByCaseId.has(dv.caseId)) continue;
     if (dv.license_points == null || dv.license_points === 0) continue;
     totals.set(dv.driverId, (totals.get(dv.driverId) ?? 0) + dv.license_points);
   }
+
+  // Add appeal driver verdicts for overridden cases
+  for (const [, appealId] of appealOverrideByCaseId) {
+    const appealDvs = (store.appealDriverVerdicts ?? []).filter((adv) => adv.appealId === appealId);
+    for (const adv of appealDvs) {
+      if (adv.license_points == null || adv.license_points === 0) continue;
+      totals.set(adv.driverId, (totals.get(adv.driverId) ?? 0) + adv.license_points);
+    }
+  }
+
   return totals;
 }
 
@@ -751,7 +775,7 @@ export async function checkAndGeneratePenalties(triggeringCaseId: string): Promi
   if (!rules.length) return;
 
   const store = await readStore();
-  const driverPoints = computeDriverPoints(store);
+  const driverPoints = computeEffectiveDriverPoints(store);
   if (!driverPoints.size) return;
 
   const futureRaces = await getFutureMainLeagueRaces();
@@ -817,6 +841,7 @@ export async function checkAndGeneratePenalties(triggeringCaseId: string): Promi
         updatedAt: now,
         rolledFromPenaltyId: null,
         cycleNumber: 1,
+        reminderSentAt: null,
       };
       store.penaltiesToServe.push(penalty);
       changed = true;
@@ -838,22 +863,40 @@ export async function checkAndGeneratePenalties(triggeringCaseId: string): Promi
 /*  Penalties to Serve — CRUD                                           */
 /* ------------------------------------------------------------------ */
 
+const HOURS_48_MS = 48 * 60 * 60 * 1000;
+
 export async function listPenaltiesToServe(): Promise<PenaltyToServe[]> {
   const store = await readStore();
-  // Lazily promote "assigned" penalties whose race has passed to "awaiting_confirmation"
   const now = Date.now();
   const GRACE_MS = 2 * 60 * 60 * 1000; // 2 hours after race start
   let changed = false;
+
   for (const p of store.penaltiesToServe) {
-    if (p.status === "assigned" && p.assignedRaceStartTime) {
-      const raceTs = new Date(p.assignedRaceStartTime).getTime();
-      if (now >= raceTs + GRACE_MS) {
-        p.status = "awaiting_confirmation";
-        p.updatedAt = new Date().toISOString();
-        changed = true;
+    if (p.status !== "assigned" || !p.assignedRaceStartTime) continue;
+    const raceTs = new Date(p.assignedRaceStartTime).getTime();
+
+    // Promote to awaiting_confirmation once the race has passed
+    if (now >= raceTs + GRACE_MS) {
+      p.status = "awaiting_confirmation";
+      p.updatedAt = new Date().toISOString();
+      changed = true;
+      continue;
+    }
+
+    // Send 48-hour reminder (fire-and-forget, same pattern as notifyPenaltyAssigned)
+    if (!p.reminderSentAt && now >= raceTs - HOURS_48_MS) {
+      p.reminderSentAt = new Date().toISOString();
+      p.updatedAt = p.reminderSentAt;
+      changed = true;
+      const driver = store.users.find((u) => u.id === p.driverId);
+      if (driver) {
+        import("@/lib/stewards/notifications")
+          .then(({ notifyPenaltyReminder }) => notifyPenaltyReminder(p, driver))
+          .catch(() => {});
       }
     }
   }
+
   if (changed) await writeStore(store);
   return [...store.penaltiesToServe].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
@@ -911,6 +954,7 @@ export async function addManualPenalty(input: ManualPenaltyInput): Promise<Penal
       updatedAt: now,
       rolledFromPenaltyId: null,
       cycleNumber: 1,
+      reminderSentAt: null,
     };
     store.penaltiesToServe.push(penalty);
     created.push(penalty);
@@ -994,6 +1038,7 @@ export async function rollForwardPenalty(
     updatedAt: now,
     rolledFromPenaltyId: original.id,
     cycleNumber: original.cycleNumber + 1,
+    reminderSentAt: null,
   };
 
   store.penaltiesToServe.push(newPenalty);

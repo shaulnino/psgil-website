@@ -1,10 +1,15 @@
+import { redirect } from "next/navigation";
 import { loginStewardAction } from "@/app/stewards/actions";
+import { getCurrentStewardUser } from "@/lib/stewards/auth";
 import FormActionButton from "@/app/stewards/components/FormActionButton";
 import ForgotPasswordTip from "./ForgotPasswordTip";
 
-type SearchParams = Promise<{ error?: string }>;
+type SearchParams = Promise<{ error?: string; next?: string }>;
 
 export default async function StewardLoginPage({ searchParams }: { searchParams: SearchParams }) {
+  const user = await getCurrentStewardUser();
+  if (user?.isActive) redirect("/stewards");
+
   const params = await searchParams;
 
   return (

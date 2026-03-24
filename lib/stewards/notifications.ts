@@ -480,6 +480,28 @@ export async function notifyPenaltyAssigned(penalty: PenaltyToServe, driver: Ste
   );
 }
 
+/** 48-hour race reminder — sent automatically before the assigned race */
+export async function notifyPenaltyReminder(penalty: PenaltyToServe, driver: StewardUser) {
+  const { html, text } = buildEmail({
+    eyebrow: "Race Reminder",
+    title: "Reminder: you have a penalty to serve tomorrow",
+    intro: `This is an automated reminder that you have an active penalty assigned to <strong>${esc(penalty.assignedRaceLabel ?? "the next Main League race")}</strong>, which starts in approximately 48 hours.`,
+    action: {
+      title: "Action Required",
+      body: `You must serve your <strong>${esc(penalty.penaltyLabel)}</strong> in <strong>${esc(penalty.assignedRaceLabel ?? "the upcoming race")}</strong>. Make sure you are available and prepared to fulfil this penalty.`,
+    },
+    customHtml: penaltySummaryBlock(penalty),
+    cta: { label: "View Penalty Details", url: penaltiesUrl() },
+    note: "If you are unable to serve this penalty, contact the PSGiL stewards as soon as possible.",
+  });
+  await send(
+    `[PSGiL Stewards] Reminder: penalty to serve — ${penalty.penaltyLabel}`,
+    html,
+    text,
+    [driver.email],
+  );
+}
+
 /** Notify driver when their penalty is rolled forward to the next race */
 export async function notifyPenaltyRolledForward(penalty: PenaltyToServe, driver: StewardUser) {
   const { html, text } = buildEmail({

@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getCurrentStewardUser } from "@/lib/stewards/auth";
 
 export async function GET(req: NextRequest) {
+  const user = await getCurrentStewardUser();
+  if (!user || !user.isActive) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const key = req.nextUrl.searchParams.get("key");
   if (!key) {
     return NextResponse.json({ error: "Missing key" }, { status: 400 });
@@ -28,7 +34,8 @@ export async function GET(req: NextRequest) {
       headers: {
         "Content-Type": contentType,
         "Content-Disposition": `inline; filename="${fileName.replace(/"/g, "")}"`,
-        "Cache-Control": "public, max-age=31536000, immutable",
+        // Must be private — authenticated content must never be cached by a shared CDN.
+        "Cache-Control": "private, no-store",
       },
     });
   } catch (err) {

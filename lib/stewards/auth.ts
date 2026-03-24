@@ -7,6 +7,21 @@ import type { StewardRole, StewardUser } from "@/lib/stewards/types";
 const SESSION_COOKIE = "steward_session";
 const MAX_AGE = 60 * 60 * 12;
 
+const DEV_FALLBACK_SECRET = "dev-steward-secret-change-me";
+
+// Warn loudly in production when the session secret has not been configured.
+// This appears immediately in Netlify function logs on first request.
+if (process.env.NODE_ENV === "production") {
+  const configured = process.env.STEWARD_SESSION_SECRET;
+  if (!configured || configured === DEV_FALLBACK_SECRET) {
+    console.error(
+      "[steward-auth] CRITICAL: STEWARD_SESSION_SECRET is not set (or uses the default dev " +
+      "value). The JWT signing secret is publicly known. Set this environment variable in " +
+      "your Netlify site settings immediately.",
+    );
+  }
+}
+
 type SessionPayload = { sub: string; roles: StewardRole[] };
 
 const normalizeRoles = (input: unknown): StewardRole[] => {
@@ -18,7 +33,7 @@ const normalizeRoles = (input: unknown): StewardRole[] => {
 };
 
 const secret = () =>
-  new TextEncoder().encode(process.env.STEWARD_SESSION_SECRET ?? "dev-steward-secret-change-me");
+  new TextEncoder().encode(process.env.STEWARD_SESSION_SECRET ?? DEV_FALLBACK_SECRET);
 
 export async function createStewardSession(user: StewardUser) {
   return new SignJWT({ roles: user.roles })
@@ -88,6 +103,61 @@ export async function requireRole(required: StewardRole[]) {
   if (!required.some((r) => user.roles.includes(r))) redirect("/stewards");
   return user;
 }
+
+// ----------------------------------------------------------------
+// Role helpers
+// ----------------------------------------------------------------
+
+/** True if the user holds the given role. */
+export const hasRole = (user: StewardUser, role: StewardRole) =>
+  user.roles.includes(role);
+
+/** True if the user holds at least one of the given roles. */
+export const hasAnyRole = (user: StewardUser, roles: StewardRole[]) =>
+  roles.some((r) => user.roles.includes(r));
+
+// ----------------------------------------------------------------
+// Named permission helpers
+// ----------------------------------------------------------------
+
+export type StewardPermission =
+  | "view_steward_area"
+  | "create_complaint"
+  | "submit_response"
+  | "submit_appeal"
+  | "view_internal_discussion"
+  | "comment_internally"
+  | "edit_verdict"
+  | "publish_verdict"
+  | "manage_appeals"
+  | "delete_case"
+  | "manage_users"
+  | "manage_penalties"
+  | "reset_password";
+
+const PERMISSION_MATRIX: Record<StewardPermission, StewardRole[]> = {
+  view_steward_area:        ["member", "steward", "admin"],
+  create_complaint:         ["member", "admin"],
+  submit_response:          ["member", "admin"],
+  submit_appeal:            ["member", "admin"],
+  view_internal_discussion: ["steward", "admin"],
+  comment_internally:       ["steward", "admin"],
+  edit_verdict:             ["steward", "admin"],
+  publish_verdict:          ["steward", "admin"],
+  manage_appeals:           ["steward", "admin"],
+  delete_case:              ["admin"],
+  manage_users:             ["admin"],
+  manage_penalties:         ["admin"],
+  reset_password:           ["admin"],
+};
+
+/** True if the user is allowed to perform the named action. */
+export const can = (user: StewardUser, permission: StewardPermission): boolean =>
+  PERMISSION_MATRIX[permission].some((r) => user.roles.includes(r));
+
+// ----------------------------------------------------------------
+// Legacy role-array helpers (kept for backwards compatibility)
+// ----------------------------------------------------------------
 
 export const canCreateComplaint = (roles: StewardRole[]) =>
   roles.includes("member") || roles.includes("admin");

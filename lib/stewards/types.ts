@@ -150,6 +150,8 @@ export type PenaltyToServe = {
   rolledFromPenaltyId: string | null;
   /** 1 = original issue, 2 = first roll-forward, etc. */
   cycleNumber: number;
+  /** ISO timestamp when the 48-hour race reminder email was sent (null = not yet sent) */
+  reminderSentAt: string | null;
 };
 
 /* ── APPEALS ──────────────────────────────────────────────── */

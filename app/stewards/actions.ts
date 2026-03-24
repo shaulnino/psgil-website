@@ -727,8 +727,7 @@ export async function addAppealInternalCommentAction(formData: FormData) {
 }
 
 export async function upsertAppealVerdictAction(formData: FormData) {
-  const user = await requireStewardUser();
-  if (!user.roles.includes("steward") && !user.roles.includes("admin")) redirect("/stewards");
+  const user = await requireRole(["admin", "steward"]);
 
   const appealId       = String(formData.get("appeal_id")        ?? "").trim();
   const outcomeRaw     = String(formData.get("outcome_type")      ?? "").trim();
@@ -792,8 +791,7 @@ export async function upsertAppealVerdictAction(formData: FormData) {
 }
 
 export async function publishAppealVerdictAction(formData: FormData) {
-  const user = await requireStewardUser();
-  if (!user.roles.includes("steward") && !user.roles.includes("admin")) redirect("/stewards");
+  const user = await requireRole(["admin", "steward"]);
   const appealId = String(formData.get("appeal_id") ?? "").trim();
   if (!appealId) redirect("/stewards/appeals");
 
@@ -821,8 +819,7 @@ export async function publishAppealVerdictAction(formData: FormData) {
 }
 
 export async function updateAppealStatusAction(formData: FormData) {
-  const user = await requireStewardUser();
-  if (!user.roles.includes("steward") && !user.roles.includes("admin")) redirect("/stewards");
+  const user = await requireRole(["admin", "steward"]);
   const appealId = String(formData.get("appeal_id") ?? "").trim();
   const status = String(formData.get("status") ?? "").trim();
   const VALID = ["Submitted", "Under Review", "Verdict Ready", "Closed"];

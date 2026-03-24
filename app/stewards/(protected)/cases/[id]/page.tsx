@@ -13,7 +13,7 @@ import EvidencePasteBox from "@/app/stewards/(protected)/cases/EvidencePasteBox"
 import SubmissionToast from "@/app/stewards/(protected)/cases/SubmissionToast";
 import ViewToggle from "@/app/stewards/(protected)/cases/ViewToggle";
 import VerdictForm from "@/app/stewards/(protected)/cases/[id]/VerdictForm";
-import { canCommentInternally, requireStewardUser } from "@/lib/stewards/auth";
+import { can, canCommentInternally, hasRole, requireStewardUser } from "@/lib/stewards/auth";
 import { getCaseById, getAppealByOriginalCaseId, isAppealWindowOpen, listUsers } from "@/lib/stewards/repository";
 import AppealSubmitModal from "@/app/stewards/components/AppealSubmitModal";
 import type { AttachmentRef, CaseStatus, VerdictDecision } from "@/lib/stewards/types";
@@ -65,16 +65,16 @@ export default async function StewardCaseDetailPage({
   const participantIds = [...new Set(caseItem.involvedDriverIds)];
   const isInvolved = caseItem.involvedDriverIds.includes(user.id);
   const alreadyResponded = responses.some((r) => r.userId === user.id);
-  const hasDriverRole = user.roles.includes("member");
-  const hasStewardRole = user.roles.includes("steward") || user.roles.includes("admin");
+  const hasDriverRole = hasRole(user, "member");
+  const hasStewardRole = can(user, "view_internal_discussion");
   const hasDual = hasDriverRole && hasStewardRole;
   const view: "driver" | "steward" = hasDual
     ? query.view === "driver" ? "driver" : "steward"
     : hasDriverRole ? "driver" : "steward";
 
-  const canInternal   = view === "steward" && canCommentInternally(user.roles);
-  const canEditVerdict = view === "steward" && (user.roles.includes("admin") || user.roles.includes("steward"));
-  const canRemoveCase  = view === "steward" && user.roles.includes("admin");
+  const canInternal    = view === "steward" && canCommentInternally(user.roles);
+  const canEditVerdict = view === "steward" && can(user, "edit_verdict");
+  const canRemoveCase  = view === "steward" && can(user, "delete_case");
 
   const stepDone = (step: 1 | 2 | 3) => {
     if (step === 1) return true;
