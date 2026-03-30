@@ -5,7 +5,15 @@ import NewsCategoryTag from "@/components/NewsCategoryTag";
 import NewsImage from "@/components/NewsImage";
 import NewsArticleActions from "@/components/NewsArticleActions";
 import { fetchCsv, parseCsv } from "@/lib/csv";
-import { mapRaceEvents } from "@/lib/scheduleData";
+import {
+  mapRaceEvents,
+  parseSeasonDigitFromArticleText,
+  parseWildEventDayNumberFromText,
+  resolveRecapRaceGroupForNewsArticle,
+  scheduleWatchLinksForArticleEventIds,
+  youtubeWatchLinksForGroup,
+  type RaceGroup,
+} from "@/lib/scheduleData";
 import { GLOBAL_CSV_URLS } from "@/lib/seasonConfig";
 import {
   fetchAllRaceResults,
@@ -23,22 +31,26 @@ import {
   formatNewsDate,
   renderArticleBody,
 } from "@/lib/newsData";
-import { getYouTubeVideoId } from "@/lib/youtube";
-
 export const revalidate = 300;
 
 type NewsArticlePageProps = {
   params: Promise<{ slug: string }>;
 };
 
-function parseEventIdFromArticleId(articleId: string): string | null {
-  const m = articleId.toLowerCase().match(/(s\d+_r\d+_(?:main|wild))/);
-  return m ? m[1] : null;
-}
-
-function toSeasonKeyFromEventId(eventId: string): string | null {
-  const m = eventId.match(/^s(\d+)_/i);
-  return m ? `S${m[1]}` : null;
+/** All event_id tokens in the article id (same calendar day + league may list multiple rounds). */
+function parseEventIdsFromArticleId(articleId: string): string[] {
+  const re = /s\d+_r\d+_(?:main|wild)/gi;
+  const seen = new Set<string>();
+  const out: string[] = [];
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(articleId)) !== null) {
+    const id = m[0].toLowerCase();
+    if (!seen.has(id)) {
+      seen.add(id);
+      out.push(id);
+    }
+  }
+  return out;
 }
 
 function resolveSiteBaseUrl(): string {
@@ -141,57 +153,97 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
   const articleId = article.id.toLowerCase();
   const isRecap = articleId.includes("recap");
   const isPreview = articleId.includes("preview");
-  const eventId = parseEventIdFromArticleId(article.id);
-  const seasonKey = eventId ? toSeasonKeyFromEventId(eventId) : null;
+  const eventIdsFromArticle = parseEventIdsFromArticleId(article.id);
+  const primaryEventId = eventIdsFromArticle[0] ?? null;
+  const articleCopyBlob = `${article.id} ${article.title}`;
+  const seasonDigitHint =
+    primaryEventId?.match(/^s(\d+)_/i)?.[1] ?? parseSeasonDigitFromArticleText(articleCopyBlob);
+  const seasonKey = seasonDigitHint ? `S${seasonDigitHint}` : null;
+  const wildEventDayHint = parseWildEventDayNumberFromText(articleCopyBlob);
 
-  let watchUrl: string | null = null;
-  let resultsRows: RaceResultRow[] = [];
+  let watchLinks: { label: string; url: string }[] = [];
+  let resultsSections: { raceName: string; rows: RaceResultRow[] }[] = [];
   let seasonStandingsRows: StandingsRow[] = [];
   let constructorsStandingsRows: StandingsRow[] = [];
   let modalDrivers: Driver[] = [];
   let modalTeams: Team[] = [];
-  if (eventId) {
+  let recapRaceGroup: RaceGroup | null = null;
+
+  const shouldLoadSchedule =
+    eventIdsFromArticle.length > 0 ||
+    (isRecap &&
+      (primaryEventId !== null || (wildEventDayHint !== null && seasonDigitHint !== null))) ||
+    (isPreview && seasonKey !== null);
+
+  if (shouldLoadSchedule) {
     try {
       const scheduleCsv = await fetchCsv(GLOBAL_CSV_URLS.schedule).catch(() => "");
       const events = scheduleCsv
         ? mapRaceEvents(parseCsv<Record<string, string>>(scheduleCsv))
         : [];
-      const matchedEvent = events.find((e) => e.event_id.toLowerCase() === eventId.toLowerCase());
-      const candidateWatchUrl = (matchedEvent?.youtube_url ?? "").trim();
-      if (getYouTubeVideoId(candidateWatchUrl)) watchUrl = candidateWatchUrl;
-    } catch {
-      // Best-effort only; CTAs below still work with schedule fallback links.
-    }
-  }
 
-  if (isRecap && eventId) {
-    try {
-      const [allResults, driversCsv, teamsCsv, rewards, allDriversStandings, allConstructorsStandings] = await Promise.all([
-        fetchAllRaceResults(GLOBAL_CSV_URLS.raceResults),
-        fetchCsv(GLOBAL_CSV_URLS.drivers).catch(() => ""),
-        fetchCsv(GLOBAL_CSV_URLS.teams).catch(() => ""),
-        fetchRewards(GLOBAL_CSV_URLS.rewards),
-        seasonKey
-          ? fetchStandings(GLOBAL_CSV_URLS.driversStandingsMain)
-          : Promise.resolve([] as StandingsRow[]),
-        seasonKey
-          ? fetchStandings(GLOBAL_CSV_URLS.constructorsStandingsMain)
-          : Promise.resolve([] as StandingsRow[]),
-      ]);
-      resultsRows = allResults[eventId] ?? [];
-      if (seasonKey) {
-        seasonStandingsRows = filterBySeason(allDriversStandings, seasonKey);
-        constructorsStandingsRows = filterBySeason(allConstructorsStandings, seasonKey);
+      recapRaceGroup = resolveRecapRaceGroupForNewsArticle(events, {
+        articleId: article.id,
+        articleTitle: article.title,
+        parsedEventIds: eventIdsFromArticle,
+      });
+
+      watchLinks = recapRaceGroup
+        ? youtubeWatchLinksForGroup(recapRaceGroup)
+        : scheduleWatchLinksForArticleEventIds(events, eventIdsFromArticle);
+
+      if (isRecap && (recapRaceGroup !== null || primaryEventId !== null)) {
+        const raceGroup = recapRaceGroup;
+
+        const isWildRecap =
+          raceGroup?.league.trim().toLowerCase() === "wild" ||
+          (primaryEventId?.toLowerCase().endsWith("_wild") ?? false) ||
+          wildEventDayHint !== null;
+        const driversStandingsUrl = isWildRecap
+          ? GLOBAL_CSV_URLS.driversStandingsWild
+          : GLOBAL_CSV_URLS.driversStandingsMain;
+        const constructorsStandingsUrl = isWildRecap
+          ? GLOBAL_CSV_URLS.constructorsStandingsWild
+          : GLOBAL_CSV_URLS.constructorsStandingsMain;
+
+        const [allResults, driversCsv, teamsCsv, rewards, allDriversStandings, allConstructorsStandings] =
+          await Promise.all([
+            fetchAllRaceResults(GLOBAL_CSV_URLS.raceResults),
+            fetchCsv(GLOBAL_CSV_URLS.drivers).catch(() => ""),
+            fetchCsv(GLOBAL_CSV_URLS.teams).catch(() => ""),
+            fetchRewards(GLOBAL_CSV_URLS.rewards),
+            seasonKey ? fetchStandings(driversStandingsUrl) : Promise.resolve([] as StandingsRow[]),
+            seasonKey ? fetchStandings(constructorsStandingsUrl) : Promise.resolve([] as StandingsRow[]),
+          ]);
+
+        if (raceGroup) {
+          resultsSections = raceGroup.events.map((e) => ({
+            raceName: e.race_name || `Race #${e.race_number}`,
+            rows: allResults[e.event_id] ?? [],
+          }));
+        } else if (primaryEventId) {
+          resultsSections = [
+            {
+              raceName: "Race",
+              rows: allResults[primaryEventId] ?? [],
+            },
+          ];
+        }
+
+        if (seasonKey) {
+          seasonStandingsRows = filterBySeason(allDriversStandings, seasonKey);
+          constructorsStandingsRows = filterBySeason(allConstructorsStandings, seasonKey);
+        }
+        modalDrivers = driversCsv
+          ? mapDrivers(parseCsv<Record<string, string>>(driversCsv))
+          : [];
+        modalDrivers = attachRewardsToDrivers(modalDrivers, rewards);
+        modalTeams = teamsCsv
+          ? mapTeams(parseCsv<Record<string, string>>(teamsCsv))
+          : [];
       }
-      modalDrivers = driversCsv
-        ? mapDrivers(parseCsv<Record<string, string>>(driversCsv))
-        : [];
-      modalDrivers = attachRewardsToDrivers(modalDrivers, rewards);
-      modalTeams = teamsCsv
-        ? mapTeams(parseCsv<Record<string, string>>(teamsCsv))
-        : [];
     } catch {
-      // Keep no-results fallback state if the data source is temporarily unavailable.
+      // Best-effort: schedule, results, or standings may be unavailable.
     }
   }
 
@@ -205,6 +257,13 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
       // Keep empty state if standings are temporarily unavailable.
     }
   }
+
+  const standingsLeagueLabel =
+    recapRaceGroup?.league.trim().toLowerCase() === "wild" ||
+    (primaryEventId?.toLowerCase().endsWith("_wild") ?? false) ||
+    wildEventDayHint !== null
+      ? "Wild"
+      : "Main";
 
   return (
     <main className="bg-[#0B0B0E] text-white">
@@ -275,20 +334,20 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
             <NewsArticleActions
               isRecap={isRecap}
               isPreview={isPreview}
-              watchUrl={watchUrl}
-              resultsRows={resultsRows}
-              resultsCaption={`${article.title} — Race Results`}
+              watchLinks={watchLinks}
+              resultsSections={resultsSections}
+              articleTitle={article.title}
               seasonStandingsRows={seasonStandingsRows}
               seasonTableCaption={
                 seasonKey
-                  ? `Season ${seasonKey.replace(/^S/i, "")} — Main Drivers Standings`
-                  : "Season — Main Drivers Standings"
+                  ? `Season ${seasonKey.replace(/^S/i, "")} — ${standingsLeagueLabel} Drivers Standings`
+                  : `Season — ${standingsLeagueLabel} Drivers Standings`
               }
               constructorsStandingsRows={constructorsStandingsRows}
               constructorsTableCaption={
                 seasonKey
-                  ? `Season ${seasonKey.replace(/^S/i, "")} — Main Constructors Standings`
-                  : "Season — Main Constructors Standings"
+                  ? `Season ${seasonKey.replace(/^S/i, "")} — ${standingsLeagueLabel} Constructors Standings`
+                  : `Season — ${standingsLeagueLabel} Constructors Standings`
               }
               drivers={modalDrivers}
               teams={modalTeams}
