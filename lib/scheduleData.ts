@@ -2,6 +2,8 @@
 /*  Schedule / Race Events data layer                                  */
 /* ------------------------------------------------------------------ */
 
+import { getYouTubeVideoId } from "@/lib/youtube";
+
 export type RaceEvent = {
   /** Unique ID matching the race_results CSV, e.g. "s6_r01_main". */
   event_id: string;
@@ -55,6 +57,37 @@ function buildEventId(season: string, raceNumber: string, league: string): strin
   return `s${s}_r${r}_${l}`;
 }
 
+/** Normalise CSV header for loose matching (Schedule tab column names vary in Sheets). */
+function normalizeScheduleHeader(value: string): string {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
+}
+
+/**
+ * YouTube / broadcast URL from a Schedule CSV row.
+ * Accepts common header variants (e.g. youtube_url, YouTube, video_url).
+ */
+function pickYoutubeUrlFromScheduleRow(row: Record<string, string>): string | undefined {
+  const aliases = new Set([
+    "youtube_url",
+    "youtube",
+    "video_url",
+    "watch_url",
+    "youtube_link",
+    "broadcast_url",
+    "stream_url",
+  ]);
+  for (const [key, val] of Object.entries(row)) {
+    if (aliases.has(normalizeScheduleHeader(key))) {
+      const v = (val ?? "").trim();
+      if (v) return v;
+    }
+  }
+  return undefined;
+}
+
 /** Map raw CSV rows to typed RaceEvent objects. */
 export function mapRaceEvents(raw: Record<string, string>[]): RaceEvent[] {
   return raw.map((row) => {
@@ -77,7 +110,7 @@ export function mapRaceEvents(raw: Record<string, string>[]): RaceEvent[] {
       country_code: row.country_code ?? "",
       poster_image: sanitizeImagePath(row.poster_image),
       results_image: sanitizeImagePath(row.results_image),
-      youtube_url: row.youtube_url?.trim() || undefined,
+      youtube_url: pickYoutubeUrlFromScheduleRow(row),
       track: (row.track ?? "").trim() || undefined,
       start_time: (row.start_time ?? "").trim() || undefined,
       weather: (row.weather ?? "").trim().toLowerCase() || undefined,
@@ -210,6 +243,172 @@ function buildGroups(events: RaceEvent[]): RaceGroup[] {
     });
   }
   return groups;
+}
+
+/**
+ * Find the race-day group (same calendar date + league) that contains this event_id.
+ */
+export function findRaceGroupContainingEvent(events: RaceEvent[], eventId: string): RaceGroup | null {
+  const needle = (eventId ?? "").trim().toLowerCase();
+  if (!needle) return null;
+  const groups = buildGroups(events);
+  return (
+    groups.find((g) => g.events.some((e) => e.event_id.trim().toLowerCase() === needle)) ?? null
+  );
+}
+
+/**
+ * Resolve a single race-day group from one or more event_ids embedded in an article.
+ * When ids refer to different race days, picks the group that matches the most listed ids.
+ */
+export function resolveRaceGroupForEventIds(events: RaceEvent[], eventIds: string[]): RaceGroup | null {
+  const ids = [...new Set(eventIds.map((id) => id.trim().toLowerCase()).filter(Boolean))];
+  if (ids.length === 0) return null;
+
+  const groupsByKey = new Map<string, RaceGroup>();
+  for (const id of ids) {
+    const g = findRaceGroupContainingEvent(events, id);
+    if (!g) continue;
+    const key = groupKey(g.events[0]);
+    groupsByKey.set(key, g);
+  }
+
+  if (groupsByKey.size === 0) return null;
+  if (groupsByKey.size === 1) return [...groupsByKey.values()][0];
+
+  let best: RaceGroup | null = null;
+  let bestScore = -1;
+  for (const g of groupsByKey.values()) {
+    const idsInGroup = new Set(g.events.map((e) => e.event_id.trim().toLowerCase()));
+    const score = ids.filter((id) => idsInGroup.has(id)).length;
+    if (score > bestScore) {
+      bestScore = score;
+      best = g;
+    }
+  }
+  return best;
+}
+
+/**
+ * Season digit from copy, e.g. "S6 Wild …" → "6".
+ */
+export function parseSeasonDigitFromArticleText(text: string): string | null {
+  const m = (text ?? "").match(/\bS(\d+)\b/i);
+  return m ? m[1] : null;
+}
+
+/**
+ * "Wild Event 2" / wild_event_2 / slug wild-event-2 = the 2nd **Wild event day** (a calendar day
+ * with two Wild races), not "round 2" or the second row on the schedule.
+ */
+export function parseWildEventDayNumberFromText(text: string): number | null {
+  const t = text ?? "";
+  const patterns = [
+    /wild\s*event\s*#?\s*(\d+)/i,
+    /wild_event_(\d+)/i,
+    /wild_event_day_(\d+)/i,
+    /wild\s*event\s*day\s*#?\s*(\d+)/i,
+    /wild-event-(\d+)/i,
+    /wild_event(\d+)/i,
+  ];
+  for (const re of patterns) {
+    const m = t.match(re);
+    if (m) {
+      const n = parseInt(m[1], 10);
+      if (!Number.isNaN(n) && n >= 1) return n;
+    }
+  }
+  return null;
+}
+
+/**
+ * Wild event days with 2+ races the same calendar day (double-headers), in chronological order.
+ * Index 0 = Wild Event 1, index 1 = Wild Event 2, …
+ */
+function normalizeSeasonDigitForMatch(value: string): string {
+  return (value ?? "").trim().replace(/^S/i, "");
+}
+
+export function listWildDoubleHeaderDaysForSeason(events: RaceEvent[], seasonDigit: string): RaceGroup[] {
+  const s = normalizeSeasonDigitForMatch(seasonDigit);
+  if (!s) return [];
+  const groups = buildGroups(events);
+  const wildMulti = groups.filter(
+    (g) =>
+      normalizeSeasonDigitForMatch(g.season) === s &&
+      g.league.trim().toLowerCase() === "wild" &&
+      g.events.length >= 2,
+  );
+  wildMulti.sort((a, b) => groupTimestamp(a) - groupTimestamp(b));
+  return wildMulti;
+}
+
+/**
+ * Resolve which race-day group a recap article refers to.
+ * Prefer explicit "Wild Event N" + season in copy over bare event_ids (which may encode round numbers
+ * and be confused with "event day" numbering).
+ */
+export function resolveRecapRaceGroupForNewsArticle(
+  events: RaceEvent[],
+  opts: { articleId: string; articleTitle: string; parsedEventIds: string[] },
+): RaceGroup | null {
+  const blob = `${opts.articleId} ${opts.articleTitle}`;
+  const wildDay = parseWildEventDayNumberFromText(blob);
+  const seasonDigitFromId = opts.parsedEventIds[0]?.match(/^s(\d+)_/i)?.[1] ?? null;
+  const seasonDigit = seasonDigitFromId ?? parseSeasonDigitFromArticleText(blob);
+
+  if (wildDay !== null && seasonDigit !== null) {
+    const list = listWildDoubleHeaderDaysForSeason(events, seasonDigit);
+    const g = list[wildDay - 1];
+    if (g) return g;
+  }
+
+  if (opts.parsedEventIds.length > 0) {
+    return resolveRaceGroupForEventIds(events, opts.parsedEventIds);
+  }
+
+  return null;
+}
+
+/**
+ * YouTube watch links for a race-day group (double-headers: one button per distinct URL).
+ */
+export function youtubeWatchLinksForGroup(group: RaceGroup): { label: string; url: string }[] {
+  const seen = new Set<string>();
+  const result: { label: string; url: string }[] = [];
+  for (const e of group.events) {
+    const youtubeUrl = (e.youtube_url ?? "").trim();
+    if (getYouTubeVideoId(youtubeUrl) && !seen.has(youtubeUrl)) {
+      seen.add(youtubeUrl);
+      result.push({
+        label: group.events.length > 1 ? `Watch Race #${e.race_number}` : "Watch the Race",
+        url: youtubeUrl,
+      });
+    }
+  }
+  if (result.length === 1) result[0].label = "Watch the Race";
+  return result;
+}
+
+/**
+ * "Watch race" URLs for news articles — always taken from the Schedule CSV rows
+ * for the resolved event(s), never from the news sheet or article body.
+ */
+export function scheduleWatchLinksForArticleEventIds(
+  events: RaceEvent[],
+  eventIds: string[],
+): { label: string; url: string }[] {
+  const ids = eventIds.map((id) => id.trim().toLowerCase()).filter(Boolean);
+  if (ids.length === 0) return [];
+
+  const group = resolveRaceGroupForEventIds(events, ids);
+  if (group) return youtubeWatchLinksForGroup(group);
+
+  const primary = ids[0];
+  const ev = events.find((e) => e.event_id.trim().toLowerCase() === primary);
+  const url = (ev?.youtube_url ?? "").trim();
+  if (!getYouTubeVideoId(url)) return [];
+  return [{ label: "Watch the Race", url }];
 }
 
 /**
