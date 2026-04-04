@@ -89,6 +89,19 @@ export default async function NextRaceWidgetServer() {
       ? toIsraelTimestamp(next.event.date, next.event.end_time)
       : next.ts + DEFAULT_RACE_DURATION_MS;
 
+    // The next race is a championship finale if there are no more races in its league
+    // on a later date (same-day double-headers are still the finale day)
+    const nextLeague = next.event.league.trim().toLowerCase();
+    const nextDate = next.event.date.trim();
+    const moreLaterInSameLeague = upcoming
+      .slice(1)
+      .some(
+        (u) =>
+          u.event.league.trim().toLowerCase() === nextLeague &&
+          u.event.date.trim() !== nextDate,
+      );
+    const isChampionshipFinale = !moreLaterInSameLeague;
+
     const raceData: NextRaceData = {
       eventId: next.event.event_id,
       raceName: next.event.race_name,
@@ -104,6 +117,7 @@ export default async function NextRaceWidgetServer() {
       endTimestamp: endTs ?? next.ts + DEFAULT_RACE_DURATION_MS,
       youtubeUrl: next.event.youtube_url,
       isLive: false,
+      isChampionshipFinale,
     };
 
     return <NextRaceWidget race={raceData} />;

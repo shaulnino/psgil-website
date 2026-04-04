@@ -15,6 +15,21 @@ function esc(str: string): string {
     .replace(/"/g, "&quot;");
 }
 
+/** Strip simple tags/entities from steward email HTML fragments for plain-text fallback */
+function htmlToPlainText(html: string): string {
+  return html
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(p|div|tr)>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 const transporter = () => {
   const pass = process.env.GMAIL_APP_PASSWORD;
   if (!pass) return null;
@@ -77,13 +92,26 @@ function ctaButton(label: string, url: string, bgColor = "#7020B0") {
 </table>`;
 }
 
-function actionNeededBlock(text: string) {
+function actionNeededBlockPlain(plain: string) {
   return `
 <table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0">
   <tr>
     <td style="background:rgba(212,175,55,.1);border-left:3px solid #D4AF37;border-radius:0 8px 8px 0;padding:13px 16px">
       <p style="margin:0 0 3px;font-size:11px;font-weight:700;color:#f4d98a;letter-spacing:.08em;text-transform:uppercase">⚑ Action Required</p>
-      <p style="margin:0;font-size:13px;color:rgba(255,255,255,.75);line-height:1.55">${esc(text)}</p>
+      <p style="margin:0;font-size:13px;color:rgba(255,255,255,.75);line-height:1.55">${esc(plain)}</p>
+    </td>
+  </tr>
+</table>`;
+}
+
+/** Inner HTML only; caller must escape all dynamic values */
+function actionNeededBlockHtml(safeInnerHtml: string) {
+  return `
+<table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0">
+  <tr>
+    <td style="background:rgba(212,175,55,.1);border-left:3px solid #D4AF37;border-radius:0 8px 8px 0;padding:13px 16px">
+      <p style="margin:0 0 3px;font-size:11px;font-weight:700;color:#f4d98a;letter-spacing:.08em;text-transform:uppercase">⚑ Action Required</p>
+      <p style="margin:0;font-size:13px;color:rgba(255,255,255,.75);line-height:1.55">${safeInnerHtml}</p>
     </td>
   </tr>
 </table>`;
@@ -141,6 +169,8 @@ type EmailParams = {
   eyebrow?: string;
   title: string;
   intro: string;
+  /** If set, used for HTML intro paragraph; `intro` remains the plain-text source */
+  introHtml?: string;
   summary?: CaseSummaryFields;
   action?: string | { title: string; body: string };
   cta: { label: string; url: string; color?: string };
@@ -151,10 +181,14 @@ type EmailParams = {
 
 function buildEmail(p: EmailParams): { html: string; text: string } {
   const summaryHtml  = p.summary ? caseSummaryCard(p.summary) : "";
-  const actionText   = typeof p.action === "object"
-    ? `<strong>${esc(p.action.title)}</strong><br>${p.action.body}`
-    : p.action ? esc(p.action) : "";
-  const actionHtml   = actionText ? actionNeededBlock(actionText) : "";
+  const actionHtml =
+    typeof p.action === "object" && p.action
+      ? actionNeededBlockHtml(
+          `<strong>${esc(p.action.title)}</strong><br>${p.action.body}`,
+        )
+      : typeof p.action === "string" && p.action
+        ? actionNeededBlockPlain(p.action)
+        : "";
   const extraHtml    = p.customHtml ?? "";
   const noteHtml     = p.note
     ? `<p style="margin:20px 0 0;font-size:11px;color:rgba(255,255,255,.28);line-height:1.6">${esc(p.note)}</p>`
@@ -195,7 +229,7 @@ function buildEmail(p: EmailParams): { html: string; text: string } {
     <td style="background:#12121e;border:1px solid rgba(255,255,255,.07);border-top:none;border-bottom:none;padding:28px 26px 22px">
       ${p.eyebrow ? `<p style="margin:0 0 7px;font-size:10px;font-weight:700;color:rgba(212,175,55,.58);letter-spacing:.12em;text-transform:uppercase">${esc(p.eyebrow)}</p>` : ""}
       <h1 style="margin:0 0 13px;font-size:21px;font-weight:800;color:#fff;line-height:1.25">${esc(p.title)}</h1>
-      <p style="margin:0;font-size:14px;color:rgba(255,255,255,.6);line-height:1.65">${esc(p.intro)}</p>
+      <p style="margin:0;font-size:14px;color:rgba(255,255,255,.6);line-height:1.65">${p.introHtml ?? esc(p.intro)}</p>
       ${summaryHtml}
       ${actionHtml}
       ${extraHtml}
@@ -238,7 +272,11 @@ function buildEmail(p: EmailParams): { html: string; text: string } {
           "",
         ]
       : []),
-    ...(p.action ? [`ACTION REQUIRED: ${p.action}`, ""] : []),
+    ...(p.action
+      ? typeof p.action === "object"
+        ? [`ACTION REQUIRED: ${p.action.title}`, htmlToPlainText(p.action.body), ""]
+        : [`ACTION REQUIRED: ${p.action}`, ""]
+      : []),
     `${p.cta.label}: ${p.cta.url}`,
     ...(p.note ? ["", p.note] : []),
     "",
@@ -482,10 +520,12 @@ export async function notifyPenaltyAssigned(penalty: PenaltyToServe, driver: Ste
 
 /** 48-hour race reminder — sent automatically before the assigned race */
 export async function notifyPenaltyReminder(penalty: PenaltyToServe, driver: StewardUser) {
+  const raceLabel = penalty.assignedRaceLabel ?? "the next Main League race";
   const { html, text } = buildEmail({
     eyebrow: "Race Reminder",
     title: "Reminder: you have a penalty to serve tomorrow",
-    intro: `This is an automated reminder that you have an active penalty assigned to <strong>${esc(penalty.assignedRaceLabel ?? "the next Main League race")}</strong>, which starts in approximately 48 hours.`,
+    intro: `This is an automated reminder that you have an active penalty assigned to ${raceLabel}, which starts in approximately 48 hours.`,
+    introHtml: `This is an automated reminder that you have an active penalty assigned to <strong>${esc(raceLabel)}</strong>, which starts in approximately 48 hours.`,
     action: {
       title: "Action Required",
       body: `You must serve your <strong>${esc(penalty.penaltyLabel)}</strong> in <strong>${esc(penalty.assignedRaceLabel ?? "the upcoming race")}</strong>. Make sure you are available and prepared to fulfil this penalty.`,

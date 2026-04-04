@@ -27,6 +27,8 @@ export type NextRaceData = {
   youtubeUrl?: string;
   /** Whether the race was already live when the server rendered */
   isLive?: boolean;
+  /** Whether this is the last remaining race of the season (championship finale) */
+  isChampionshipFinale?: boolean;
 };
 
 type Countdown = {
@@ -246,7 +248,14 @@ export default function NextRaceWidget({ race }: { race: NextRaceData | null }) 
           ) : (
             <>
               <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
-              <span className="text-sm font-semibold text-white/80">Next Race</span>
+              {race.isChampionshipFinale ? (
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 shrink-0 text-[#D4AF37]">
+                  <path fillRule="evenodd" d="M10 1a.75.75 0 0 1 .692.462l1.7 3.644 3.945.576a.75.75 0 0 1 .416 1.279l-2.855 2.783.674 3.93a.75.75 0 0 1-1.088.791L10 12.347l-3.484 1.818a.75.75 0 0 1-1.088-.79l.674-3.931L3.247 6.96a.75.75 0 0 1 .416-1.28l3.945-.575L9.308 1.46A.75.75 0 0 1 10 1Z" clipRule="evenodd" />
+                </svg>
+              ) : null}
+              <span className="text-sm font-semibold text-white/80">
+                {race.isChampionshipFinale ? "Season Finale" : "Next Race"}
+              </span>
               {countdown && (
                 <span className="font-display text-sm font-bold tabular-nums text-[#D4AF37]">
                   {countdown.days > 0 && `${countdown.days}d `}
@@ -269,7 +278,9 @@ export default function NextRaceWidget({ race }: { race: NextRaceData | null }) 
         className={`border-t shadow-2xl shadow-black/50 backdrop-blur-md md:rounded-2xl md:border ${
           isLiveNow
             ? "border-2 border-[#D4AF37]/50 bg-[#0e0e14]/95 animate-[live-gold-flash_2s_ease-in-out_infinite]"
-            : "border-[#D4AF37]/20 bg-[#0e0e14]/95 shadow-[0_0_18px_rgba(212,175,55,0.06)]"
+            : race.isChampionshipFinale
+              ? "border-[#D4AF37]/40 bg-[#0e0e14]/95 shadow-[0_0_28px_rgba(212,175,55,0.18)]"
+              : "border-[#D4AF37]/20 bg-[#0e0e14]/95 shadow-[0_0_18px_rgba(212,175,55,0.06)]"
         }`}
       >
         {/* Header bar */}
@@ -289,6 +300,14 @@ export default function NextRaceWidget({ race }: { race: NextRaceData | null }) 
                   Next Race
                 </span>
               </>
+            )}
+            {race.isChampionshipFinale && !isLiveNow && (
+              <span className="inline-flex items-center gap-1 rounded-full border border-[#D4AF37]/40 bg-[#D4AF37]/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.15em] text-[#D4AF37]">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3 shrink-0">
+                  <path fillRule="evenodd" d="M10 1a.75.75 0 0 1 .692.462l1.7 3.644 3.945.576a.75.75 0 0 1 .416 1.279l-2.855 2.783.674 3.93a.75.75 0 0 1-1.088.791L10 12.347l-3.484 1.818a.75.75 0 0 1-1.088-.79l.674-3.931L3.247 6.96a.75.75 0 0 1 .416-1.28l3.945-.575L9.308 1.46A.75.75 0 0 1 10 1Z" clipRule="evenodd" />
+                </svg>
+                Season Finale
+              </span>
             )}
           </div>
           <div className="flex items-center gap-1">
