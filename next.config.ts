@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "20mb",
     },
   },
+  images: {
+    qualities: [100, 75],
+  },
 };
 
 export default nextConfig;

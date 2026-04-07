@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { createComplaintAction } from "@/app/stewards/actions";
 import { can, canCreateComplaint, hasRole, requireStewardUser } from "@/lib/stewards/auth";
 import { getCaseById, listCases, listUsers } from "@/lib/stewards/repository";
@@ -13,6 +12,8 @@ import InvolvedDriversPicker from "@/app/stewards/(protected)/cases/InvolvedDriv
 import SeasonRoundSelectors from "@/app/stewards/(protected)/cases/SeasonRoundSelectors";
 import SubmitComplaintButton from "@/app/stewards/(protected)/cases/SubmitComplaintButton";
 import ViewToggle from "@/app/stewards/(protected)/cases/ViewToggle";
+import { DriverCasesList, StewardCasesTable } from "@/app/stewards/(protected)/cases/CasesListClient";
+import type { CaseRow, StewardCaseRow } from "@/app/stewards/(protected)/cases/CasesListClient";
 
 type SearchParams = Promise<{ error?: string; view?: "driver" | "steward"; open?: string }>;
 
@@ -45,9 +46,35 @@ export default async function StewardCasesPage({ searchParams }: { searchParams:
   const closedMy  = myCases.filter((c) => c.status === "Closed" || c.status === "Archived");
   const otherCases = cases.filter((c) => c.complainantId !== user.id && !c.involvedDriverIds.includes(user.id));
 
-  const openDetails  = await Promise.all(openMy.map((c) => getCaseById(c.id)));
-  const otherDetails = await Promise.all(closedMy.map((c) => getCaseById(c.id)));
+  const openDetails     = await Promise.all(openMy.map((c) => getCaseById(c.id)));
+  const closedDetails   = await Promise.all(closedMy.map((c) => getCaseById(c.id)));
   const allOtherDetails = await Promise.all(otherCases.map((c) => getCaseById(c.id)));
+
+  // Serialise to plain objects for the client components
+  const toRow = (entry: Awaited<ReturnType<typeof getCaseById>>, href: string): CaseRow | null => {
+    if (!entry) return null;
+    const c = entry.caseItem;
+    return { id: c.id, caseNumber: c.caseNumber ?? null, title: c.title, season: c.season, round: c.round, weekendSession: c.weekendSession, status: c.status, createdAt: c.createdAt, href };
+  };
+
+  const openRows   = openDetails.flatMap((e) => { const r = toRow(e, `/stewards/cases/${e?.caseItem.id}?view=driver`); return r ? [r] : []; });
+  const closedRows = closedDetails.flatMap((e) => { const r = toRow(e, `/stewards/cases/${e?.caseItem.id}?view=driver`); return r ? [r] : []; });
+  const otherRows  = allOtherDetails.flatMap((e) => { const r = toRow(e, `/stewards/cases/${e?.caseItem.id}?view=driver`); return r ? [r] : []; });
+
+  const stewardRows: StewardCaseRow[] = cases.map((item) => ({
+    id: item.id,
+    caseNumber: item.caseNumber ?? null,
+    title: item.title,
+    season: item.season,
+    round: item.round,
+    weekendSession: item.weekendSession,
+    status: item.status,
+    createdAt: item.createdAt,
+    href: `/stewards/cases/${item.id}?view=steward`,
+    needsReview: item.status === "Under Review",
+    verdictReady: item.status === "Verdict Ready",
+    isAdmin,
+  }));
 
   return (
     <div className="space-y-6">
@@ -119,69 +146,13 @@ export default async function StewardCasesPage({ searchParams }: { searchParams:
               />
             </div>
           )}
-        <section className="steward-panel space-y-3 rounded-2xl p-5 pt-8">
-          <h3 className="text-lg font-semibold">My Open Cases</h3>
-          {openDetails.length === 0 && <div className="steward-soft rounded-lg px-4 py-3 text-sm text-white/60">No open cases currently involve you.</div>}
-          {openDetails.map((entry) => entry && (
-            <Link key={entry.caseItem.id} href={`/stewards/cases/${entry.caseItem.id}?view=driver`} className="steward-soft group flex items-center justify-between gap-3 rounded-xl px-4 py-3 transition hover:border-steward-gold/50">
-              <div>
-                <p className="font-semibold text-white/90 group-hover:text-white">
-                  <span className="mr-2 font-mono text-steward-gold/70">#{entry.caseItem.caseNumber ?? "–"}</span>
-                  {entry.caseItem.title}
-                </p>
-                <p className="mt-0.5 text-xs text-white/50">{entry.caseItem.season} · {entry.caseItem.round} · {entry.caseItem.weekendSession}</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <StatusChip status={entry.caseItem.status} />
-                <span className="text-xs text-steward-gold/70 group-hover:text-steward-gold">Open →</span>
-              </div>
-            </Link>
-          ))}
-
-          <div className="border-t border-white/10 pt-3">
-            <h3 className="text-lg font-semibold">My Closed Cases</h3>
-          </div>
-          {otherDetails.length === 0 && <div className="steward-soft rounded-lg px-4 py-3 text-sm text-white/60">No closed cases found.</div>}
-          {otherDetails.map((entry) => entry && (
-            <Link key={entry.caseItem.id} href={`/stewards/cases/${entry.caseItem.id}?view=driver`} className="steward-soft group flex items-center justify-between gap-3 rounded-xl px-4 py-3 transition hover:border-steward-gold/50">
-              <div>
-                <p className="font-semibold text-white/70 group-hover:text-white/90">
-                  <span className="mr-2 font-mono text-steward-gold/50">#{entry.caseItem.caseNumber ?? "–"}</span>
-                  {entry.caseItem.title}
-                </p>
-                <p className="mt-0.5 text-xs text-white/40">{entry.caseItem.season} · {entry.caseItem.round} · {entry.caseItem.weekendSession}</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <StatusChip status={entry.caseItem.status} />
-                <span className="text-xs text-white/30 group-hover:text-white/60">Open →</span>
-              </div>
-            </Link>
-          ))}
-
-          {allOtherDetails.length > 0 && (
-            <>
-              <div className="border-t border-white/10 pt-3">
-                <h3 className="text-lg font-semibold">All Cases</h3>
-                <p className="text-xs text-white/50">Cases you are not directly involved in</p>
-              </div>
-              {allOtherDetails.map((entry) => entry && (
-                <Link key={entry.caseItem.id} href={`/stewards/cases/${entry.caseItem.id}?view=driver`} className="steward-soft group flex items-center justify-between gap-3 rounded-xl px-4 py-3 opacity-80 transition hover:border-steward-gold/40 hover:opacity-100">
-                  <div>
-                    <p className="font-semibold text-white/65 group-hover:text-white/90">
-                      <span className="mr-2 font-mono text-steward-gold/45">#{entry.caseItem.caseNumber ?? "–"}</span>
-                      {entry.caseItem.title}
-                    </p>
-                    <p className="mt-0.5 text-xs text-white/35">{entry.caseItem.season} · {entry.caseItem.round} · {entry.caseItem.weekendSession}</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <StatusChip status={entry.caseItem.status} />
-                    <span className="text-xs text-white/25 group-hover:text-white/50">View →</span>
-                  </div>
-                </Link>
-              ))}
-            </>
-          )}
-        </section>
+          <section className="steward-panel rounded-2xl p-5 pt-8">
+            <DriverCasesList
+              openCases={openRows}
+              closedCases={closedRows}
+              otherCases={otherRows}
+            />
+          </section>
         </div>
       ) : (
         <div className="relative">
@@ -194,82 +165,18 @@ export default async function StewardCasesPage({ searchParams }: { searchParams:
               />
             </div>
           )}
-        <section className="steward-panel overflow-hidden rounded-2xl pt-8">
-          <div className="overflow-x-auto">
-            <table className="steward-table min-w-full text-left text-sm">
-              <thead className="bg-white/5 text-white/80">
-                <tr>
-                  <th className="px-4 py-3 w-12 text-center">#</th><th className="px-4 py-3">Case</th><th className="px-4 py-3">Season</th><th className="px-4 py-3">Round</th><th className="px-4 py-3">Session</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Created</th>{isAdmin && <th className="px-4 py-3">Actions</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {cases.map((item) => {
-                  const needsReview   = item.status === "Under Review";
-                  const verdictReady  = item.status === "Verdict Ready";
-                  const rowCls = needsReview
-                    ? "border-t border-purple-500/40 bg-purple-500/10"
-                    : verdictReady
-                      ? "border-t border-emerald-500/30 bg-emerald-500/8"
-                      : "border-t border-white/10";
-                  return (
-                  <tr key={item.id} className={rowCls}>
-                    <td className="px-4 py-3 text-center font-mono text-sm text-steward-gold/60 w-12">
-                      {item.caseNumber ?? "–"}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Link href={`/stewards/cases/${item.id}?view=steward`} className="text-[#d4afff] hover:text-white">{item.title}</Link>
-                        {needsReview && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-purple-500/25 border border-purple-400/60 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-purple-200">
-                            <span className="relative flex h-1.5 w-1.5"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-purple-300 opacity-70" /><span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-purple-300" /></span>
-                            Review Now
-                          </span>
-                        )}
-                        {verdictReady && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 border border-emerald-400/50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-emerald-200">
-                            <span className="relative flex h-1.5 w-1.5"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-300 opacity-70" /><span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-300" /></span>
-                            Publish Verdict
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">{item.season}</td>
-                    <td className="px-4 py-3">{item.round}</td>
-                    <td className="px-4 py-3">{item.weekendSession}</td>
-                    <td className="px-4 py-3"><StatusChip status={item.status} /></td>
-                    <td className="px-4 py-3">{new Date(item.createdAt).toLocaleString()}</td>
-                    {isAdmin && <td className="px-4 py-3"><DeleteCaseForm caseId={item.id} redirectTo="/stewards/cases?view=steward" className="rounded-full border border-red-500/50 px-3 py-1.5 text-xs text-red-200 hover:bg-red-500/15" /></td>}
-                  </tr>
-                  );
-                })}
-                {cases.length === 0 && <tr><td className="px-4 py-5 text-white/60" colSpan={isAdmin ? 8 : 7}>No cases yet.</td></tr>}
-              </tbody>
-            </table>
-          </div>
-        </section>
+          <section className="steward-panel overflow-hidden rounded-2xl pt-8">
+            <StewardCasesTable
+              cases={stewardRows}
+              isAdmin={isAdmin}
+            />
+          </section>
         </div>
       )}
     </div>
   );
 }
 
-
-const STATUS_CHIP: Record<string, string> = {
-  "Open":                 "bg-amber-400/20 text-amber-200 border-amber-400/50",
-  "Waiting for Response": "bg-blue-400/20  text-blue-200  border-blue-400/50",
-  "Under Review":         "bg-purple-400/20 text-purple-200 border-purple-400/50",
-  "Verdict Ready":        "bg-emerald-400/20 text-emerald-200 border-emerald-400/50",
-  "Closed":               "bg-green-500/20 text-green-200 border-green-500/50",
-  "Archived":             "bg-white/10 text-white/50 border-white/20",
-};
-
-function StatusChip({ status }: { status: string }) {
-  return (
-    <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${STATUS_CHIP[status] ?? STATUS_CHIP["Open"]}`}>
-      {status}
-    </span>
-  );
-}
 
 const COMPLAINT_WINDOW_MS = 3 * 24 * 60 * 60 * 1000; // 3 days
 
