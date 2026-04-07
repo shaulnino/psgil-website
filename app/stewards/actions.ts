@@ -219,10 +219,11 @@ export async function createComplaintAction(formData: FormData) {
     links: evidenceItems,
   });
 
-  await notifyCaseSubmitted(created, users);
+  try { await notifyCaseSubmitted(created, users); } catch { /* non-fatal */ }
 
   revalidatePath("/stewards");
   revalidatePath("/stewards/cases");
+  revalidatePath(`/stewards/cases/${created.id}`);
   redirect(`/stewards/cases/${created.id}?submitted=1&view=driver`);
 }
 
@@ -251,8 +252,7 @@ export async function submitCaseResponseAction(formData: FormData) {
   await addCaseResponse({ caseId, userId: user.id, text, attachmentUrls, links: evidenceItems });
   const users = await listUsers();
 
-  // Confirmation to the responding driver only
-  await notifyResponseConfirmation(caseData.caseItem, user, users);
+  try { await notifyResponseConfirmation(caseData.caseItem, user, users); } catch { /* non-fatal */ }
 
   // If all involved drivers have now responded, notify stewards + complainant once
   const updatedCase = await getCaseById(caseId);
@@ -260,11 +260,12 @@ export async function submitCaseResponseAction(formData: FormData) {
     updatedCase.responses.some((r) => r.userId === driverId),
   );
   if (allResponded && updatedCase) {
-    await notifyAllResponsesSubmitted(updatedCase.caseItem, users);
+    try { await notifyAllResponsesSubmitted(updatedCase.caseItem, users); } catch { /* non-fatal */ }
   }
 
   revalidatePath(`/stewards/cases/${caseId}`);
   revalidatePath("/stewards/cases");
+  redirect(`/stewards/cases/${caseId}?view=driver`);
 }
 
 export async function addInternalCommentAction(formData: FormData) {
@@ -277,9 +278,12 @@ export async function addInternalCommentAction(formData: FormData) {
 
   // Notify other stewards about the discussion activity
   const [caseData, users] = await Promise.all([getCaseById(caseId), listUsers()]);
-  if (caseData) await notifyInternalDiscussion(caseData.caseItem, user.name, users);
+  if (caseData) {
+    try { await notifyInternalDiscussion(caseData.caseItem, user.name, users); } catch { /* non-fatal */ }
+  }
 
   revalidatePath(`/stewards/cases/${caseId}`);
+  redirect(`/stewards/cases/${caseId}?view=steward`);
 }
 
 export async function upsertVerdictAction(formData: FormData) {
@@ -322,7 +326,7 @@ export async function upsertVerdictAction(formData: FormData) {
     const caseData = await getCaseById(caseId);
     if (caseData?.verdict) {
       const users = await listUsers();
-      await notifyVerdictPublished(caseData.caseItem, caseData.verdict, users);
+      try { await notifyVerdictPublished(caseData.caseItem, caseData.verdict, users); } catch { /* non-fatal */ }
     }
   }
   revalidatePath(`/stewards/cases/${caseId}`);
@@ -330,6 +334,7 @@ export async function upsertVerdictAction(formData: FormData) {
   revalidatePath("/stewards/penalties-to-serve");
   // Auto-generate penalties-to-serve if thresholds crossed
   await checkAndGeneratePenalties(caseId).catch(() => {});
+  redirect(`/stewards/cases/${caseId}?view=steward`);
 }
 
 export async function publishVerdictAction(formData: FormData) {
@@ -341,7 +346,7 @@ export async function publishVerdictAction(formData: FormData) {
     const caseData = await getCaseById(caseId);
     if (caseData?.verdict) {
       const users = await listUsers();
-      await notifyVerdictPublished(caseData.caseItem, caseData.verdict, users);
+      try { await notifyVerdictPublished(caseData.caseItem, caseData.verdict, users); } catch { /* non-fatal */ }
     }
     // Auto-generate penalties-to-serve if thresholds crossed
     await checkAndGeneratePenalties(caseId).catch(() => {});
@@ -361,6 +366,7 @@ export async function updateCaseStatusAction(formData: FormData) {
   await updateCaseStatus(caseId, status);
   revalidatePath(`/stewards/cases/${caseId}`);
   revalidatePath("/stewards/cases");
+  redirect(`/stewards/cases/${caseId}?view=steward`);
 }
 
 export async function updateUserRoleAction(formData: FormData) {
@@ -372,6 +378,7 @@ export async function updateUserRoleAction(formData: FormData) {
   if (!userId || roles.length === 0) redirect("/stewards/admin");
   await updateUserRoles(userId, roles);
   revalidatePath("/stewards/admin");
+  redirect("/stewards/admin");
 }
 
 export async function createUserAction(formData: FormData) {
@@ -387,6 +394,7 @@ export async function createUserAction(formData: FormData) {
   }
   await createUser({ name, email, passwordHash: hashPassword(password), roles });
   revalidatePath("/stewards/admin");
+  redirect("/stewards/admin");
 }
 
 export async function editUserAction(formData: FormData) {
@@ -404,6 +412,7 @@ export async function editUserAction(formData: FormData) {
   }
   await updateUser(userId, fields);
   revalidatePath("/stewards/admin");
+  redirect("/stewards/admin");
 }
 
 /**
@@ -493,6 +502,7 @@ export async function addHistoricalPenaltyAction(formData: FormData) {
   revalidatePath("/stewards/penalties");
   revalidatePath("/stewards/cases");
   revalidatePath("/stewards/admin");
+  redirect("/stewards/admin");
 }
 
 export async function removeUserAction(formData: FormData) {
@@ -502,6 +512,7 @@ export async function removeUserAction(formData: FormData) {
   const result = await removeUserById(userId, admin.id);
   if (!result.ok) redirect(`/stewards/admin?error=${result.reason}`);
   revalidatePath("/stewards/admin");
+  redirect("/stewards/admin");
 }
 
 export async function removeCaseAction(formData: FormData) {
@@ -536,6 +547,7 @@ export async function addManualPenaltyAction(formData: FormData) {
     adminNotes, createdBy: admin.id, quantity,
   });
   revalidatePath("/stewards/penalties-to-serve");
+  redirect("/stewards/penalties-to-serve");
 }
 
 export async function markPenaltyServedAction(formData: FormData) {
@@ -545,6 +557,7 @@ export async function markPenaltyServedAction(formData: FormData) {
   if (!id) redirect("/stewards/penalties-to-serve");
   await updatePenaltyStatus({ penaltyId: id, status: "served", adminNotes: notes });
   revalidatePath("/stewards/penalties-to-serve");
+  redirect("/stewards/penalties-to-serve");
 }
 
 export async function markPenaltyNotServedAction(formData: FormData) {
@@ -564,6 +577,7 @@ export async function markPenaltyNotServedAction(formData: FormData) {
     } catch { /* non-fatal */ }
   }
   revalidatePath("/stewards/penalties-to-serve");
+  redirect("/stewards/penalties-to-serve");
 }
 
 export async function cancelPenaltyAction(formData: FormData) {
@@ -573,6 +587,7 @@ export async function cancelPenaltyAction(formData: FormData) {
   if (!id) redirect("/stewards/penalties-to-serve");
   await updatePenaltyStatus({ penaltyId: id, status: "cancelled", adminNotes: notes });
   revalidatePath("/stewards/penalties-to-serve");
+  redirect("/stewards/penalties-to-serve");
 }
 
 export async function deletePenaltyAction(formData: FormData) {
@@ -581,6 +596,7 @@ export async function deletePenaltyAction(formData: FormData) {
   if (!id) redirect("/stewards/penalties-to-serve");
   await deletePenaltyToServe(id);
   revalidatePath("/stewards/penalties-to-serve");
+  redirect("/stewards/penalties-to-serve");
 }
 
 export async function editPenaltyToServeAction(formData: FormData) {
@@ -593,6 +609,7 @@ export async function editPenaltyToServeAction(formData: FormData) {
   if (!id || !label) redirect("/stewards/penalties-to-serve?error=missing-fields");
   await updatePenaltyFields(id, { penaltyLabel: label, penaltyType: type, penaltyDescription: description, adminNotes: notes });
   revalidatePath("/stewards/penalties-to-serve");
+  redirect("/stewards/penalties-to-serve");
 }
 
 export async function editHistoricalCaseAction(formData: FormData) {
@@ -639,6 +656,7 @@ export async function editHistoricalCaseAction(formData: FormData) {
   await updateHistoricalCase(caseId, input);
   revalidatePath("/stewards/penalties");
   revalidatePath("/stewards/cases");
+  redirect("/stewards/penalties");
 }
 
 /* ─────────────────────────────────────────────────────────────────── */
@@ -675,7 +693,9 @@ export async function submitAppealAction(formData: FormData) {
   const pastedFiles = formData
     .getAll("pasted_files")
     .filter((f): f is File => f instanceof File);
-  const allFiles = [...uploadedFiles, ...pastedFiles];
+  // Filter to valid (non-empty) files before saving so the URL array index
+  // aligns with the file array index when building attachment metadata.
+  const allFiles = [...uploadedFiles, ...pastedFiles].filter((f) => f && f.size > 0);
   const attachmentUrls = await saveAttachments(allFiles);
   const attachments: { name: string; url: string }[] = allFiles.map((f, i) => ({
     name: f.name || `evidence-${i + 1}`,
@@ -726,6 +746,7 @@ export async function addAppealInternalCommentAction(formData: FormData) {
   if (!appealId || !text) return;
   await addAppealInternalComment(appealId, user.id, text);
   revalidatePath(`/stewards/appeals/${appealId}`);
+  redirect(`/stewards/appeals/${appealId}`);
 }
 
 export async function upsertAppealVerdictAction(formData: FormData) {
@@ -790,6 +811,7 @@ export async function upsertAppealVerdictAction(formData: FormData) {
   revalidatePath(`/stewards/appeals/${appealId}`);
   revalidatePath("/stewards/cases");
   revalidatePath("/stewards/penalties");
+  redirect(`/stewards/appeals/${appealId}`);
 }
 
 export async function publishAppealVerdictAction(formData: FormData) {
@@ -818,6 +840,7 @@ export async function publishAppealVerdictAction(formData: FormData) {
   revalidatePath(`/stewards/appeals/${appealId}`);
   revalidatePath("/stewards/cases");
   revalidatePath("/stewards/penalties");
+  redirect(`/stewards/appeals/${appealId}`);
 }
 
 export async function updateAppealStatusAction(formData: FormData) {
@@ -829,6 +852,7 @@ export async function updateAppealStatusAction(formData: FormData) {
   await updateAppealStatus(appealId, status as import("@/lib/stewards/types").AppealStatus);
   revalidatePath(`/stewards/appeals/${appealId}`);
   revalidatePath("/stewards/appeals");
+  redirect(`/stewards/appeals/${appealId}`);
 }
 
 export async function deleteAppealAction(formData: FormData) {
