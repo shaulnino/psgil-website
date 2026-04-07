@@ -32,12 +32,13 @@ function isNetlifyEnv(): boolean {
 
 async function readFromBlob(): Promise<StewardStore> {
   const { getStore } = await import("@netlify/blobs");
-  const blobStore = getStore(BLOB_STORE_NAME);
+  // Use strong consistency so reads always reflect the latest write, bypassing CDN cache.
+  // This prevents 404s right after case creation and stale UI after any mutation.
+  const blobStore = getStore({ name: BLOB_STORE_NAME, consistency: "strong" });
   const data = await blobStore.get(BLOB_KEY, { type: "json" }) as StewardStore | null;
   if (!data) {
     const initial = buildDefaultStore();
-    const { getStore } = await import("@netlify/blobs");
-    await getStore(BLOB_STORE_NAME).setJSON(BLOB_KEY, initial);
+    await blobStore.setJSON(BLOB_KEY, initial);
     return initial;
   }
   if (!data.driverVerdicts)   data.driverVerdicts   = [];
