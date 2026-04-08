@@ -67,13 +67,13 @@ export default async function StewardDashboardPage() {
             {activePenalties.slice(0, 3).map((p) => {
               const driver = allUsers.find((u) => u.id === p.driverId);
               return (
-                <div key={p.id} className="flex items-center justify-between gap-3 rounded-lg border border-white/8 bg-white/3 px-3 py-2">
+                <div key={p.id} className="flex flex-col gap-0.5 rounded-lg border border-white/8 bg-white/3 px-3 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="text-sm text-white/80 shrink-0">{p.penaltyLabel}</span>
                     <span className="text-xs text-white/40">·</span>
                     <span className="text-xs font-medium text-white/60 truncate">{driver?.name ?? p.driverId}</span>
                   </div>
-                  <span className="text-xs text-steward-cream/80 shrink-0">{p.assignedRaceLabel ?? "Unassigned"}</span>
+                  <span className="text-xs text-steward-cream/70 shrink-0">{p.assignedRaceLabel ?? "Unassigned"}</span>
                 </div>
               );
             })}
