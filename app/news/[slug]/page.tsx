@@ -195,10 +195,7 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
       if (isRecap && (recapRaceGroup !== null || primaryEventId !== null)) {
         const raceGroup = recapRaceGroup;
 
-        const isWildRecap =
-          raceGroup?.league.trim().toLowerCase() === "wild" ||
-          (primaryEventId?.toLowerCase().endsWith("_wild") ?? false) ||
-          wildEventDayHint !== null;
+        const isWildRecap = articleId.includes("wild");
         const driversStandingsUrl = isWildRecap
           ? GLOBAL_CSV_URLS.driversStandingsWild
           : GLOBAL_CSV_URLS.driversStandingsMain;
@@ -249,8 +246,12 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
 
   if (isPreview && seasonKey) {
     try {
+      const isWildPreview = articleId.includes("wild");
+      const previewStandingsUrl = isWildPreview
+        ? GLOBAL_CSV_URLS.driversStandingsWild
+        : GLOBAL_CSV_URLS.driversStandingsMain;
       seasonStandingsRows = filterBySeason(
-        await fetchStandings(GLOBAL_CSV_URLS.driversStandingsMain),
+        await fetchStandings(previewStandingsUrl),
         seasonKey,
       );
     } catch {
@@ -258,12 +259,7 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
     }
   }
 
-  const standingsLeagueLabel =
-    recapRaceGroup?.league.trim().toLowerCase() === "wild" ||
-    (primaryEventId?.toLowerCase().endsWith("_wild") ?? false) ||
-    wildEventDayHint !== null
-      ? "Wild"
-      : "Main";
+  const standingsLeagueLabel = articleId.includes("wild") ? "Wild" : "Main";
 
   return (
     <main className="bg-[#0B0B0E] text-white">
