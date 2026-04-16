@@ -219,6 +219,12 @@ export function normalizeRole(role: string): DriverRole {
   return "main";
 }
 
+/**
+ * Maps raw CSV rows from the csv_drivers tab.
+ * Only the identity columns (driver_id → about) are read here.
+ * All stats, ratings, ranks, and events are computed server-side
+ * via mergeComputedRatings / computeAllScopeRanks / computeCompetitionRanks.
+ */
 export function mapDrivers(raw: Record<string, string>[]): Driver[] {
   return raw.map((row) => ({
     driver_id: row.driver_id ?? "",
@@ -229,69 +235,6 @@ export function mapDrivers(raw: Record<string, string>[]): Driver[] {
     photo_url: row.photo_url || undefined,
     photo_position: row.photo_position || undefined,
     about: row.about || undefined,
-    // All-time stats
-    points: row.points || undefined,
-    wins: row.wins || undefined,
-    podiums: row.podiums || undefined,
-    poles: row.poles || undefined,
-    avg_finish: row.avg_finish || undefined,
-    dnfs: row.dnfs || undefined,
-    avg_grid: row.avg_grid || undefined,
-    avg_points: row.avg_points || undefined,
-    // Season stats
-    season_points: row.season_points || undefined,
-    season_wins: row.season_wins || undefined,
-    season_podiums: row.season_podiums || undefined,
-    season_poles: row.season_poles || undefined,
-    season_avg_finish: row.season_avg_finish || undefined,
-    season_dnfs: row.season_dnfs || undefined,
-    season_avg_grid: row.season_avg_grid || undefined,
-    season_avg_points: row.season_avg_points || undefined,
-    // All-time ratings
-    rating_speed: row.rating_speed || undefined,
-    rating_consistency: row.rating_consistency || undefined,
-    rating_performance: row.rating_performance || undefined,
-    rating_agility: row.rating_agility || undefined,
-    rating_overall: row.rating_overall || undefined,
-    // Season ratings
-    season_rating_speed: row.season_rating_speed || undefined,
-    season_rating_consistency: row.season_rating_consistency || undefined,
-    season_rating_performance: row.season_rating_performance || undefined,
-    season_rating_agility: row.season_rating_agility || undefined,
-    season_rating_overall: row.season_rating_overall || undefined,
-    // All-time stat ranks
-    rank_points: row.rank_points || undefined,
-    rank_wins: row.rank_wins || undefined,
-    rank_podiums: row.rank_podiums || undefined,
-    rank_poles: row.rank_poles || undefined,
-    rank_avg_finish: row.rank_avg_finish || undefined,
-    rank_dnfs: row.rank_dnfs || undefined,
-    rank_avg_grid: row.rank_avg_grid || undefined,
-    rank_avg_points: row.rank_avg_points || undefined,
-    // Season stat ranks
-    season_rank_points: row.season_rank_points || undefined,
-    season_rank_wins: row.season_rank_wins || undefined,
-    season_rank_podiums: row.season_rank_podiums || undefined,
-    season_rank_poles: row.season_rank_poles || undefined,
-    season_rank_avg_finish: row.season_rank_avg_finish || undefined,
-    season_rank_dnfs: row.season_rank_dnfs || undefined,
-    season_rank_avg_grid: row.season_rank_avg_grid || undefined,
-    season_rank_avg_points: row.season_rank_avg_points || undefined,
-    // All-time rating ranks
-    rank_rating_speed: row.rank_rating_speed || undefined,
-    rank_rating_consistency: row.rank_rating_consistency || undefined,
-    rank_rating_performance: row.rank_rating_performance || undefined,
-    rank_rating_agility: row.rank_rating_agility || undefined,
-    rank_rating_overall: row.rank_rating_overall || undefined,
-    // Season rating ranks
-    season_rank_rating_speed: row.season_rank_rating_speed || undefined,
-    season_rank_rating_consistency: row.season_rank_rating_consistency || undefined,
-    season_rank_rating_performance: row.season_rank_rating_performance || undefined,
-    season_rank_rating_agility: row.season_rank_rating_agility || undefined,
-    season_rank_rating_overall: row.season_rank_rating_overall || undefined,
-    // Race events
-    events: row.events || undefined,
-    season_events: row.season_events || undefined,
     rewards: [],
   }));
 }
@@ -436,6 +379,86 @@ export function mergeComputedRatings(
       [`${prefix}rating_agility`]:     r.agility      != null ? String(Math.round(r.agility))     : d[`${prefix}rating_agility` as keyof Driver],
       [`${prefix}rating_overall`]:     r.overall      != null ? String(Math.round(r.overall))     : d[`${prefix}rating_overall` as keyof Driver],
     } as Driver;
+  });
+}
+
+/* ------------------------------------------------------------------ */
+/*  All-scope cross-driver rankings (alltime + season)                 */
+/* ------------------------------------------------------------------ */
+
+const ALL_SCOPE_ASCENDING = new Set(["avg_finish", "avg_grid", "dnfs"]);
+const ALL_SCOPE_STAT_KEYS = ["points", "wins", "podiums", "poles", "avg_finish", "dnfs", "avg_grid", "avg_points"] as const;
+const ALL_SCOPE_RATING_KEYS = ["rating_speed", "rating_consistency", "rating_performance", "rating_agility", "rating_overall"] as const;
+
+/**
+ * Computes cross-driver rank fields (rank_* and season_rank_*) for the "All"
+ * competition scope entirely from race-results-derived data already merged
+ * onto the Driver objects via mergeComputedRatings.
+ * Call this after all mergeComputedRatings calls and before passing drivers
+ * to the page component.
+ */
+export function computeAllScopeRanks(drivers: Driver[]): Driver[] {
+  const patches = new Map<string, Partial<Driver>>();
+  const ensurePatch = (id: string): Partial<Driver> => {
+    if (!patches.has(id)) patches.set(id, {});
+    return patches.get(id)!;
+  };
+
+  // ── All-time ──────────────────────────────────────────────────────
+  for (const key of ALL_SCOPE_STAT_KEYS) {
+    const ascending = ALL_SCOPE_ASCENDING.has(key);
+    const entries: Array<{ id: string; val: number }> = [];
+    for (const d of drivers) {
+      const val = parseFloat((d[key as keyof Driver] as string | undefined) ?? "");
+      if (Number.isFinite(val)) entries.push({ id: d.driver_id, val });
+    }
+    const rankMap = denseRank(entries, ascending);
+    for (const [id, rank] of rankMap) {
+      (ensurePatch(id) as Record<string, string>)[`rank_${key}`] = rank;
+    }
+  }
+  for (const key of ALL_SCOPE_RATING_KEYS) {
+    const entries: Array<{ id: string; val: number }> = [];
+    for (const d of drivers) {
+      const val = parseFloat((d[key as keyof Driver] as string | undefined) ?? "");
+      if (Number.isFinite(val)) entries.push({ id: d.driver_id, val });
+    }
+    const rankMap = denseRank(entries, false);
+    for (const [id, rank] of rankMap) {
+      (ensurePatch(id) as Record<string, string>)[`rank_${key}`] = rank;
+    }
+  }
+
+  // ── Season ────────────────────────────────────────────────────────
+  for (const key of ALL_SCOPE_STAT_KEYS) {
+    const ascending = ALL_SCOPE_ASCENDING.has(key);
+    const seasonKey = `season_${key}` as keyof Driver;
+    const entries: Array<{ id: string; val: number }> = [];
+    for (const d of drivers) {
+      const val = parseFloat((d[seasonKey] as string | undefined) ?? "");
+      if (Number.isFinite(val)) entries.push({ id: d.driver_id, val });
+    }
+    const rankMap = denseRank(entries, ascending);
+    for (const [id, rank] of rankMap) {
+      (ensurePatch(id) as Record<string, string>)[`season_rank_${key}`] = rank;
+    }
+  }
+  for (const key of ALL_SCOPE_RATING_KEYS) {
+    const seasonKey = `season_${key}` as keyof Driver;
+    const entries: Array<{ id: string; val: number }> = [];
+    for (const d of drivers) {
+      const val = parseFloat((d[seasonKey] as string | undefined) ?? "");
+      if (Number.isFinite(val)) entries.push({ id: d.driver_id, val });
+    }
+    const rankMap = denseRank(entries, false);
+    for (const [id, rank] of rankMap) {
+      (ensurePatch(id) as Record<string, string>)[`season_rank_${key}`] = rank;
+    }
+  }
+
+  return drivers.map((d) => {
+    const patch = patches.get(d.driver_id);
+    return patch ? { ...d, ...patch } : d;
   });
 }
 
