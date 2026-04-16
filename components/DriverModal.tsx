@@ -40,7 +40,11 @@ function isRemote(src?: string) {
   return !!src && src.startsWith("http");
 }
 
-function getRankExplanation(mode: StatMode): string {
+function getRankExplanation(mode: StatMode, comp: CompMode): string {
+  if (comp !== "all") {
+    const scope = comp === "main" ? "Main" : "Wild";
+    return `Gold number indicates the driver's rank in this stat among drivers who competed in the ${scope} league${mode === "season" ? " this season" : ""}.`;
+  }
   return mode === "season"
     ? "Gold number indicates the driver\u2019s rank in this stat among active drivers in the current season."
     : "Gold number indicates the driver\u2019s rank in this stat among all-time drivers.";
@@ -116,14 +120,19 @@ function getRatingValue(driver: Driver, key: string, mode: StatMode, comp: CompM
 }
 
 function getStatRank(driver: Driver, key: string, mode: StatMode, comp: CompMode): string | undefined {
-  // Competition split has no ranks (rankings are cross-driver; not stored per-competition)
-  if (comp !== "all") return undefined;
+  if (comp !== "all") {
+    const cs = resolveCompStats(driver, mode, comp);
+    return cs ? (cs as Record<string, string | undefined>)[`rank_${key}`] : undefined;
+  }
   if (mode === "season") return driver[`season_rank_${key}` as keyof Driver] as string | undefined;
   return driver[`rank_${key}` as keyof Driver] as string | undefined;
 }
 
 function getRatingRank(driver: Driver, key: string, mode: StatMode, comp: CompMode): string | undefined {
-  if (comp !== "all") return undefined;
+  if (comp !== "all") {
+    const cs = resolveCompStats(driver, mode, comp);
+    return cs ? (cs as Record<string, string | undefined>)[`rank_${key}`] : undefined;
+  }
   if (mode === "season") return driver[`season_rank_${key}` as keyof Driver] as string | undefined;
   return driver[`rank_${key}` as keyof Driver] as string | undefined;
 }
@@ -643,7 +652,7 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
                       const value = hasCompStats ? getStatValue(driver, stat.key, statMode, compMode) : undefined;
                       const rank = getStatRank(driver, stat.key, statMode, compMode);
                       return (
-                        <Tooltip key={stat.key} text={<><p>{stat.tooltipDesc}</p><p className="mt-1.5 text-white/50">{getRankExplanation(statMode)}</p></>} triggerClassName="block" wide>
+                        <Tooltip key={stat.key} text={<><p>{stat.tooltipDesc}</p><p className="mt-1.5 text-white/50">{getRankExplanation(statMode, compMode)}</p></>} triggerClassName="block" wide>
                           <div
                             className={`relative cursor-help rounded-xl border border-white/10 bg-white/5 px-4 py-3 ${!hasCompStats ? "opacity-40" : ""}`}
                           >

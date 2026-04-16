@@ -19,6 +19,7 @@ export type DriverStats = {
 /** Stats + ratings for a specific competition scope (main / wild). */
 export type CompetitionStats = {
   events?: string;
+  // Quick stats
   points?: string;
   wins?: string;
   podiums?: string;
@@ -27,11 +28,26 @@ export type CompetitionStats = {
   dnfs?: string;
   avg_grid?: string;
   avg_points?: string;
+  // Ratings
   rating_speed?: string;
   rating_consistency?: string;
   rating_performance?: string;
   rating_agility?: string;
   rating_overall?: string;
+  // Cross-driver ranks within this competition scope (computed server-side)
+  rank_points?: string;
+  rank_wins?: string;
+  rank_podiums?: string;
+  rank_poles?: string;
+  rank_avg_finish?: string;
+  rank_dnfs?: string;
+  rank_avg_grid?: string;
+  rank_avg_points?: string;
+  rank_rating_speed?: string;
+  rank_rating_consistency?: string;
+  rank_rating_performance?: string;
+  rank_rating_agility?: string;
+  rank_rating_overall?: string;
 };
 
 export type Driver = {
@@ -420,5 +436,86 @@ export function mergeComputedRatings(
       [`${prefix}rating_agility`]:     r.agility      != null ? String(Math.round(r.agility))     : d[`${prefix}rating_agility` as keyof Driver],
       [`${prefix}rating_overall`]:     r.overall      != null ? String(Math.round(r.overall))     : d[`${prefix}rating_overall` as keyof Driver],
     } as Driver;
+  });
+}
+
+/* ------------------------------------------------------------------ */
+/*  Competition-scoped cross-driver rankings                           */
+/* ------------------------------------------------------------------ */
+
+type CompField = "comp_main" | "comp_wild" | "season_comp_main" | "season_comp_wild";
+
+const COMP_ASCENDING_STATS = new Set(["avg_finish", "avg_grid", "dnfs"]);
+const COMP_STAT_KEYS = ["points", "wins", "podiums", "poles", "avg_finish", "dnfs", "avg_grid", "avg_points"] as const;
+const COMP_RATING_KEYS = ["rating_speed", "rating_consistency", "rating_performance", "rating_agility", "rating_overall"] as const;
+
+function denseRank(entries: Array<{ id: string; val: number }>, ascending: boolean): Map<string, string> {
+  const sorted = [...entries].sort((a, b) => ascending ? a.val - b.val : b.val - a.val);
+  const rankMap = new Map<string, string>();
+  let rank = 1;
+  for (let i = 0; i < sorted.length; i++) {
+    if (i > 0 && sorted[i].val !== sorted[i - 1].val) rank = i + 1;
+    rankMap.set(sorted[i].id, String(rank));
+  }
+  return rankMap;
+}
+
+/**
+ * After all competition-scope stats are merged via mergeComputedRatings,
+ * call this to populate rank_* fields within each CompetitionStats object
+ * so the driver modal can show relative rankings within Main / Wild.
+ */
+export function computeCompetitionRanks(drivers: Driver[]): Driver[] {
+  const FIELDS: CompField[] = ["comp_main", "comp_wild", "season_comp_main", "season_comp_wild"];
+
+  const patches = new Map<string, Partial<Record<CompField, Partial<CompetitionStats>>>>();
+  const ensure = (id: string, field: CompField): Partial<CompetitionStats> => {
+    if (!patches.has(id)) patches.set(id, {});
+    const p = patches.get(id)!;
+    if (!p[field]) p[field] = {};
+    return p[field]!;
+  };
+
+  for (const field of FIELDS) {
+    for (const key of COMP_STAT_KEYS) {
+      const ascending = COMP_ASCENDING_STATS.has(key);
+      const entries: Array<{ id: string; val: number }> = [];
+      for (const d of drivers) {
+        const cs = d[field] as CompetitionStats | undefined;
+        if (!cs) continue;
+        const val = parseFloat((cs as Record<string, string | undefined>)[key] ?? "");
+        if (Number.isFinite(val)) entries.push({ id: d.driver_id, val });
+      }
+      const rankMap = denseRank(entries, ascending);
+      for (const [id, rank] of rankMap) {
+        (ensure(id, field) as Record<string, string>)[`rank_${key}`] = rank;
+      }
+    }
+
+    for (const key of COMP_RATING_KEYS) {
+      const entries: Array<{ id: string; val: number }> = [];
+      for (const d of drivers) {
+        const cs = d[field] as CompetitionStats | undefined;
+        if (!cs) continue;
+        const val = parseFloat((cs as Record<string, string | undefined>)[key] ?? "");
+        if (Number.isFinite(val)) entries.push({ id: d.driver_id, val });
+      }
+      const rankMap = denseRank(entries, false); // ratings: higher = better
+      for (const [id, rank] of rankMap) {
+        (ensure(id, field) as Record<string, string>)[`rank_${key}`] = rank;
+      }
+    }
+  }
+
+  return drivers.map((d) => {
+    const patch = patches.get(d.driver_id);
+    if (!patch) return d;
+    const updated: Driver = { ...d };
+    for (const field of FIELDS) {
+      if (patch[field] && d[field]) {
+        (updated as Record<string, unknown>)[field] = { ...(d[field] as CompetitionStats), ...patch[field] };
+      }
+    }
+    return updated;
   });
 }
