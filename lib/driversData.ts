@@ -1,4 +1,7 @@
 import type { Reward } from "@/lib/rewardsData";
+import type { ComputedDriverRating } from "@/lib/statsComputed";
+import type { StandingsRow } from "@/lib/resultsData";
+import { matchesSeason } from "@/lib/seasonConfig";
 
 export type DriverRole = "main" | "reserve" | "historic";
 
@@ -11,6 +14,24 @@ export type DriverStats = {
   dnfs?: string;
   avg_grid?: string;
   avg_points?: string;
+};
+
+/** Stats + ratings for a specific competition scope (main / wild). */
+export type CompetitionStats = {
+  events?: string;
+  points?: string;
+  wins?: string;
+  podiums?: string;
+  poles?: string;
+  avg_finish?: string;
+  dnfs?: string;
+  avg_grid?: string;
+  avg_points?: string;
+  rating_speed?: string;
+  rating_consistency?: string;
+  rating_performance?: string;
+  rating_agility?: string;
+  rating_overall?: string;
 };
 
 export type Driver = {
@@ -90,6 +111,11 @@ export type Driver = {
   // League standings (injected via applyLeagueStandings)
   league_rank_main?: string;
   league_rank_wild?: string;
+  // Competition-split stats + ratings (all-time and current season)
+  comp_main?: CompetitionStats;
+  comp_wild?: CompetitionStats;
+  season_comp_main?: CompetitionStats;
+  season_comp_wild?: CompetitionStats;
 };
 
 /* ------------------------------------------------------------------ */
@@ -131,6 +157,35 @@ export function applyLeagueStandings(
       league_rank_wild: standing.wild_rank,
     };
   });
+}
+
+/**
+ * Derive LeagueStanding[] from the computed standings tables instead of the
+ * legacy leagueStandings CSV. Filters to the given season and extracts each
+ * driver's position as their league rank.
+ */
+export function leagueStandingsFromTables(
+  mainRows: StandingsRow[],
+  wildRows: StandingsRow[],
+  currentSeasonKey: string,
+): LeagueStanding[] {
+  const mainMap = new Map<string, string>();
+  const wildMap = new Map<string, string>();
+
+  mainRows
+    .filter((r) => r.driver_id && matchesSeason(r.season, currentSeasonKey))
+    .forEach((r) => mainMap.set(r.driver_id, r.position));
+
+  wildRows
+    .filter((r) => r.driver_id && matchesSeason(r.season, currentSeasonKey))
+    .forEach((r) => wildMap.set(r.driver_id, r.position));
+
+  const allIds = new Set([...mainMap.keys(), ...wildMap.keys()]);
+  return Array.from(allIds).map((driver_id) => ({
+    driver_id,
+    main_rank: mainMap.get(driver_id),
+    wild_rank: wildMap.get(driver_id),
+  }));
 }
 
 export type Team = {
@@ -272,4 +327,98 @@ const FALLBACK_TEAM_COLOR = "#7020B0"; // purple accent
 /** Return the primary border color for a given team_key. Falls back to purple. */
 export function getTeamColor(teamKey: string): string {
   return TEAM_COLORS[teamKey] ?? FALLBACK_TEAM_COLOR;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Merge computed ratings into Driver objects                         */
+/* ------------------------------------------------------------------ */
+
+function toStr(v: number | null | undefined): string | undefined {
+  if (v == null) return undefined;
+  return String(Math.round(v * 10) / 10);
+}
+function toStrRound(v: number | null | undefined): string | undefined {
+  if (v == null) return undefined;
+  return String(Math.round(v));
+}
+
+function ratingToCompStats(r: ComputedDriverRating): CompetitionStats {
+  return {
+    events:             String(r.events),
+    points:             String(r.total_points),
+    wins:               String(r.wins),
+    podiums:            String(r.podiums),
+    poles:              String(r.poles),
+    avg_finish:         toStr(r.avg_finish),
+    dnfs:               String(r.dnfs),
+    avg_grid:           toStr(r.avg_grid),
+    avg_points:         toStr(r.avg_points),
+    rating_speed:       toStrRound(r.speed),
+    rating_consistency: toStrRound(r.consistency),
+    rating_performance: toStrRound(r.performance),
+    rating_agility:     toStrRound(r.agility),
+    rating_overall:     toStrRound(r.overall),
+  };
+}
+
+/**
+ * Merge computed ratings into the `Driver` array.
+ *
+ * mode:
+ *   "alltime"      – writes to top-level `rating_*` + `events`
+ *   "season"       – writes to `season_rating_*` + `season_events`
+ *   "main"         – writes to `comp_main` (CompetitionStats)
+ *   "wild"         – writes to `comp_wild`
+ *   "season_main"  – writes to `season_comp_main`
+ *   "season_wild"  – writes to `season_comp_wild`
+ */
+export function mergeComputedRatings(
+  drivers: Driver[],
+  ratings: ComputedDriverRating[],
+  mode: "alltime" | "season" | "main" | "wild" | "season_main" | "season_wild",
+): Driver[] {
+  const ratingMap = new Map(ratings.map((r) => [r.driver_id, r]));
+
+  if (mode === "main" || mode === "wild" || mode === "season_main" || mode === "season_wild") {
+    const field: keyof Driver =
+      mode === "main" ? "comp_main"
+      : mode === "wild" ? "comp_wild"
+      : mode === "season_main" ? "season_comp_main"
+      : "season_comp_wild";
+    return drivers.map((d) => {
+      const r = ratingMap.get(d.driver_id);
+      if (!r || r.events === 0) return d;
+      return { ...d, [field]: ratingToCompStats(r) };
+    });
+  }
+
+  const prefix = mode === "season" ? "season_" : "";
+  const eventsKey = mode === "season" ? "season_events" : "events";
+  return drivers.map((d) => {
+    const r = ratingMap.get(d.driver_id);
+    if (!r || r.events === 0) return d;
+    // Computed stats are used as the source of truth for "All" competition scope.
+    // They override empty/missing CSV values but lose to populated CSV values so that
+    // standings-sourced data (which includes bonus/penalty adjustments) takes priority.
+    const csvKey = <K extends string>(k: K) => d[`${prefix}${k}` as keyof Driver] as string | undefined;
+    const computed = <V>(v: V, csvVal: string | undefined): string =>
+      csvVal != null && csvVal !== "" ? csvVal : String(v ?? "");
+    return {
+      ...d,
+      [eventsKey]:                     String(r.events),
+      [`${prefix}points`]:             computed(r.total_points, csvKey("points")),
+      [`${prefix}wins`]:               computed(r.wins,         csvKey("wins")),
+      [`${prefix}podiums`]:            computed(r.podiums,      csvKey("podiums")),
+      [`${prefix}poles`]:              computed(r.poles,        csvKey("poles")),
+      [`${prefix}avg_finish`]:         r.avg_finish != null ? (csvKey("avg_finish") ?? toStr(r.avg_finish)) : csvKey("avg_finish"),
+      [`${prefix}dnfs`]:               computed(r.dnfs,         csvKey("dnfs")),
+      [`${prefix}avg_grid`]:           r.avg_grid != null ? (csvKey("avg_grid") ?? toStr(r.avg_grid)) : csvKey("avg_grid"),
+      [`${prefix}avg_points`]:         r.avg_points != null ? (csvKey("avg_points") ?? toStr(r.avg_points)) : csvKey("avg_points"),
+      [`${prefix}rating_speed`]:       r.speed        != null ? String(Math.round(r.speed))       : d[`${prefix}rating_speed` as keyof Driver],
+      [`${prefix}rating_consistency`]: r.consistency  != null ? String(Math.round(r.consistency)) : d[`${prefix}rating_consistency` as keyof Driver],
+      [`${prefix}rating_performance`]: r.performance  != null ? String(Math.round(r.performance)) : d[`${prefix}rating_performance` as keyof Driver],
+      [`${prefix}rating_agility`]:     r.agility      != null ? String(Math.round(r.agility))     : d[`${prefix}rating_agility` as keyof Driver],
+      [`${prefix}rating_overall`]:     r.overall      != null ? String(Math.round(r.overall))     : d[`${prefix}rating_overall` as keyof Driver],
+    } as Driver;
+  });
 }

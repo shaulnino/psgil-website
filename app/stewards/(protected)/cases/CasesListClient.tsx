@@ -2,6 +2,8 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { fmtDateTime } from "@/app/stewards/lib/dates";
 import DeleteCaseForm from "@/app/stewards/(protected)/cases/DeleteCaseForm";
 
 /* ------------------------------------------------------------------ */
@@ -450,6 +452,7 @@ export function StewardCasesTable({
   cases: StewardCaseRow[];
   isAdmin: boolean;
 }) {
+  const router = useRouter();
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
 
   const filtered = useMemo(
@@ -494,15 +497,17 @@ export function StewardCasesTable({
                   ? "border-t border-emerald-500/30 bg-emerald-500/8"
                   : "border-t border-white/10";
               return (
-                <tr key={item.id} className={rowCls}>
+                <tr
+                  key={item.id}
+                  className={`${rowCls} cursor-pointer hover:bg-white/5 transition-colors`}
+                  onClick={() => router.push(item.href)}
+                >
                   <td className="px-4 py-3 text-center font-mono text-sm text-steward-gold/60 w-12">
                     {item.caseNumber ?? "–"}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <Link href={item.href} className="text-[#d4afff] hover:text-white">
-                        {item.title}
-                      </Link>
+                      <span className="text-[#d4afff]">{item.title}</span>
                       {item.needsReview && (
                         <span className="inline-flex items-center gap-1 rounded-full bg-purple-500/25 border border-purple-400/60 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-purple-200">
                           <span className="relative flex h-1.5 w-1.5"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-purple-300 opacity-70" /><span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-purple-300" /></span>
@@ -521,9 +526,9 @@ export function StewardCasesTable({
                   <td className="px-4 py-3">{item.round}</td>
                   <td className="px-4 py-3">{item.weekendSession}</td>
                   <td className="px-4 py-3"><StatusChip status={item.status} /></td>
-                  <td className="px-4 py-3">{new Date(item.createdAt).toLocaleString()}</td>
+                  <td className="px-4 py-3">{fmtDateTime(item.createdAt)}</td>
                   {isAdmin && (
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                       <DeleteCaseForm
                         caseId={item.id}
                         redirectTo="/stewards/cases?view=steward"

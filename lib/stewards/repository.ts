@@ -337,6 +337,28 @@ export async function addInternalComment(input: NewInternalCommentInput) {
   await writeStore(store);
 }
 
+export async function deleteInternalComment(commentId: string, caseId: string) {
+  const store = await readStore();
+  const idx = store.internalComments.findIndex((c) => c.id === commentId && c.caseId === caseId);
+  if (idx === -1) return;
+  store.internalComments.splice(idx, 1);
+  const caseItem = store.cases.find((c) => c.id === caseId);
+  if (caseItem) {
+    caseItem.internalCommentIds = caseItem.internalCommentIds.filter((id) => id !== commentId);
+    caseItem.updatedAt = new Date().toISOString();
+  }
+  await writeStore(store);
+}
+
+export async function updateInternalComment(commentId: string, caseId: string, text: string) {
+  const store = await readStore();
+  const comment = store.internalComments.find((c) => c.id === commentId && c.caseId === caseId);
+  if (!comment) return;
+  comment.text = text.trim();
+  comment.updatedAt = new Date().toISOString();
+  await writeStore(store);
+}
+
 export async function upsertVerdict(input: UpsertVerdictInput) {
   const store = await readStore();
   const caseItem = store.cases.find((c) => c.id === input.caseId);

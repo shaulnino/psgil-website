@@ -26,6 +26,8 @@ export default function Header() {
               className="h-full w-full object-contain"
               sizes="(max-width: 768px) 48px, 56px"
               priority
+              /* Serve file as-is — some PNG encodings fail Next/S sharp optimization */
+              unoptimized
             />
           </span>
           <span className="font-display text-xl tracking-wide text-white">

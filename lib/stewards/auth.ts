@@ -4,8 +4,9 @@ import { SignJWT, jwtVerify } from "jose";
 import { getUserById } from "@/lib/stewards/repository";
 import type { StewardRole, StewardUser } from "@/lib/stewards/types";
 
-const SESSION_COOKIE = "steward_session";
-const MAX_AGE = 60 * 60 * 12;
+const SESSION_COOKIE   = "steward_session";
+const MAX_AGE_DEFAULT  = 60 * 60 * 12;            // 12 hours
+const MAX_AGE_REMEMBER = 60 * 60 * 24 * 365 * 10; // 10 years (≈ no limit)
 
 const DEV_FALLBACK_SECRET = "dev-steward-secret-change-me";
 
@@ -35,23 +36,23 @@ const normalizeRoles = (input: unknown): StewardRole[] => {
 const secret = () =>
   new TextEncoder().encode(process.env.STEWARD_SESSION_SECRET ?? DEV_FALLBACK_SECRET);
 
-export async function createStewardSession(user: StewardUser) {
-  return new SignJWT({ roles: user.roles })
+export async function createStewardSession(user: StewardUser, rememberMe = false) {
+  const jwt = new SignJWT({ roles: user.roles })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(user.id)
-    .setIssuedAt()
-    .setExpirationTime(`${MAX_AGE}s`)
-    .sign(secret());
+    .setIssuedAt();
+  if (!rememberMe) jwt.setExpirationTime(`${MAX_AGE_DEFAULT}s`);
+  return jwt.sign(secret());
 }
 
-export async function setStewardSessionCookie(token: string) {
+export async function setStewardSessionCookie(token: string, rememberMe = false) {
   const jar = await cookies();
   jar.set(SESSION_COOKIE, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: MAX_AGE,
+    maxAge: rememberMe ? MAX_AGE_REMEMBER : MAX_AGE_DEFAULT,
   });
 }
 

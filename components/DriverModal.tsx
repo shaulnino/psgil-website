@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect, createContext, useContext } f
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import LoadingLink from "@/components/LoadingLink";
-import type { Driver } from "@/lib/driversData";
+import type { Driver, CompetitionStats } from "@/lib/driversData";
 import { buildAchievements, getAwardIcon } from "@/components/AchievementBadges";
 import type { AwardCode, RewardCompetition } from "@/lib/rewardsData";
 
@@ -16,6 +16,7 @@ type DriverModalProps = {
 };
 
 type StatMode = "alltime" | "season";
+type CompMode = "all" | "main" | "wild";
 
 /* ------------------------------------------------------------------ */
 /*  Tooltip portal context                                             */
@@ -43,6 +44,12 @@ function getRankExplanation(mode: StatMode): string {
   return mode === "season"
     ? "Gold number indicates the driver\u2019s rank in this stat among active drivers in the current season."
     : "Gold number indicates the driver\u2019s rank in this stat among all-time drivers.";
+}
+
+function resolveCompStats(driver: Driver, mode: StatMode, comp: CompMode): CompetitionStats | null {
+  if (comp === "all") return null; // use flat Driver fields
+  if (mode === "alltime") return comp === "main" ? driver.comp_main ?? null : driver.comp_wild ?? null;
+  return comp === "main" ? driver.season_comp_main ?? null : driver.season_comp_wild ?? null;
 }
 
 
@@ -94,32 +101,37 @@ function formatStatValue(value: string | undefined, isDecimal: boolean): string 
   return value;
 }
 
-function getStatValue(driver: Driver, key: string, mode: StatMode): string | undefined {
-  if (mode === "season") {
-    return driver[`season_${key}` as keyof Driver] as string | undefined;
-  }
+function getStatValue(driver: Driver, key: string, mode: StatMode, comp: CompMode): string | undefined {
+  const cs = resolveCompStats(driver, mode, comp);
+  if (cs) return cs[key as keyof CompetitionStats];
+  if (mode === "season") return driver[`season_${key}` as keyof Driver] as string | undefined;
   return driver[key as keyof Driver] as string | undefined;
 }
 
-function getRatingValue(driver: Driver, key: string, mode: StatMode): string | undefined {
-  if (mode === "season") {
-    return driver[`season_${key}` as keyof Driver] as string | undefined;
-  }
+function getRatingValue(driver: Driver, key: string, mode: StatMode, comp: CompMode): string | undefined {
+  const cs = resolveCompStats(driver, mode, comp);
+  if (cs) return cs[key as keyof CompetitionStats];
+  if (mode === "season") return driver[`season_${key}` as keyof Driver] as string | undefined;
   return driver[key as keyof Driver] as string | undefined;
 }
 
-function getStatRank(driver: Driver, key: string, mode: StatMode): string | undefined {
-  if (mode === "season") {
-    return driver[`season_rank_${key}` as keyof Driver] as string | undefined;
-  }
+function getStatRank(driver: Driver, key: string, mode: StatMode, comp: CompMode): string | undefined {
+  // Competition split has no ranks (rankings are cross-driver; not stored per-competition)
+  if (comp !== "all") return undefined;
+  if (mode === "season") return driver[`season_rank_${key}` as keyof Driver] as string | undefined;
   return driver[`rank_${key}` as keyof Driver] as string | undefined;
 }
 
-function getRatingRank(driver: Driver, key: string, mode: StatMode): string | undefined {
-  if (mode === "season") {
-    return driver[`season_rank_${key}` as keyof Driver] as string | undefined;
-  }
+function getRatingRank(driver: Driver, key: string, mode: StatMode, comp: CompMode): string | undefined {
+  if (comp !== "all") return undefined;
+  if (mode === "season") return driver[`season_rank_${key}` as keyof Driver] as string | undefined;
   return driver[`rank_${key}` as keyof Driver] as string | undefined;
+}
+
+function getEventsCount(driver: Driver, mode: StatMode, comp: CompMode): string | undefined {
+  const cs = resolveCompStats(driver, mode, comp);
+  if (cs) return cs.events;
+  return mode === "season" ? driver.season_events : driver.events;
 }
 
 /* ------------------------------------------------------------------ */
@@ -243,6 +255,7 @@ function Tooltip({ text, children, triggerClassName, wide }: { text: React.React
 
 export default function DriverModal({ driver, placeholderSrc, onClose, currentSeasonLabel }: DriverModalProps) {
   const [statMode, setStatMode] = useState<StatMode>("alltime");
+  const [compMode, setCompMode] = useState<CompMode>("all");
   const [portalEl, setPortalEl] = useState<HTMLDivElement | null>(null);
   const [scrollEl, setScrollEl] = useState<HTMLDivElement | null>(null);
   const photoSrc = driver.photo_url || placeholderSrc;
@@ -250,11 +263,18 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
   // Check if driver has any stats / ratings for either mode
   const hasAllTimeStats = statItems.some((stat) => driver[stat.key as keyof Driver]);
   const hasSeasonStats = statItems.some((stat) => driver[`season_${stat.key}` as keyof Driver]);
-  const hasAnyStats = hasAllTimeStats || hasSeasonStats;
+  const hasAnyStats = hasAllTimeStats || hasSeasonStats || !!driver.comp_main || !!driver.comp_wild;
 
   const hasAllTimeRatings = ratingItems.some((rating) => driver[rating.key as keyof Driver]);
   const hasSeasonRatings = ratingItems.some((rating) => driver[`season_${rating.key}` as keyof Driver]);
-  const hasAnyRatings = hasAllTimeRatings || hasSeasonRatings;
+  const hasAnyRatings = hasAllTimeRatings || hasSeasonRatings || !!driver.comp_main || !!driver.comp_wild;
+
+  // Whether data exists for the current combination
+  const hasCompStats = compMode === "all"
+    || (statMode === "alltime" && compMode === "main" && !!driver.comp_main)
+    || (statMode === "alltime" && compMode === "wild" && !!driver.comp_wild)
+    || (statMode === "season" && compMode === "main" && !!driver.season_comp_main)
+    || (statMode === "season" && compMode === "wild" && !!driver.season_comp_wild);
 
   const achievements = buildAchievements(driver);
   const driverRewards = driver.rewards ?? [];
@@ -561,72 +581,71 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
 
             {(hasAnyStats || hasAnyRatings) && (
               <div className="mt-8">
-                <div className="flex flex-wrap items-center justify-between gap-4">
+                {/* ── Toggles row ── */}
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  {/* Left: title + events badge */}
                   <div className="flex items-center gap-4">
                     <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-white/60">
                       Quick stats
                     </h3>
-                    {/* Race Events – inline next to header */}
-                    {(driver.events || driver.season_events) && (
+                    {getEventsCount(driver, statMode, compMode) && (
                       <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-2.5 py-0.5">
                         <Tooltip text="Total number of race events the driver participated in (Regular Races + 25% Races + Sprint Races combined).">
-                          <span className="flex items-center gap-1 cursor-help text-xs text-white/60">
+                          <span className="cursor-help text-xs text-white/60">
                             Race Events
-                            <svg
-                              className="h-3 w-3 text-white/40"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              strokeWidth={2}
-                            >
-                              <circle cx="12" cy="12" r="10" />
-                              <path d="M12 16v-4M12 8h.01" />
-                            </svg>
                           </span>
                         </Tooltip>
                         <span className="font-semibold text-[#D4AF37]">
-                          {(statMode === "season"
-                            ? driver.season_events
-                            : driver.events) || "—"}
+                          {getEventsCount(driver, statMode, compMode) || "—"}
                         </span>
                       </div>
                     )}
                   </div>
-                  <div className="flex rounded-lg border border-white/10 bg-white/5 p-1">
-                    <button
-                      type="button"
-                      onClick={() => setStatMode("alltime")}
-                      className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${
-                        statMode === "alltime"
-                          ? "bg-[#7020B0] text-white"
-                          : "text-white/60 hover:text-white"
-                      }`}
-                    >
-                      All-time
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setStatMode("season")}
-                      className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${
-                        statMode === "season"
-                          ? "bg-[#7020B0] text-white"
-                          : "text-white/60 hover:text-white"
-                      }`}
-                    >
-                      {currentSeasonLabel || "Season"}
-                    </button>
+
+                  {/* Right: two toggle groups */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* Time scope */}
+                    <div className="flex rounded-lg border border-white/10 bg-white/5 p-1">
+                      {(["alltime", "season"] as StatMode[]).map((m) => (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() => setStatMode(m)}
+                          className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${
+                            statMode === m ? "bg-[#7020B0] text-white" : "text-white/60 hover:text-white"
+                          }`}
+                        >
+                          {m === "alltime" ? "All-time" : (currentSeasonLabel || "Season")}
+                        </button>
+                      ))}
+                    </div>
+                    {/* Competition scope */}
+                    <div className="flex rounded-lg border border-white/10 bg-white/5 p-1">
+                      {(["all", "main", "wild"] as CompMode[]).map((c) => (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => setCompMode(c)}
+                          className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${
+                            compMode === c ? "bg-[#7020B0] text-white" : "text-white/60 hover:text-white"
+                          }`}
+                        >
+                          {c === "all" ? "All" : c === "main" ? "Main" : "Wild"}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
                 {hasAnyStats && (
                   <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
                     {statItems.map((stat) => {
-                      const value = getStatValue(driver, stat.key, statMode);
-                      const rank = getStatRank(driver, stat.key, statMode);
+                      const value = hasCompStats ? getStatValue(driver, stat.key, statMode, compMode) : undefined;
+                      const rank = getStatRank(driver, stat.key, statMode, compMode);
                       return (
                         <Tooltip key={stat.key} text={<><p>{stat.tooltipDesc}</p><p className="mt-1.5 text-white/50">{getRankExplanation(statMode)}</p></>} triggerClassName="block" wide>
                           <div
-                            className="relative cursor-help rounded-xl border border-white/10 bg-white/5 px-4 py-3"
+                            className={`relative cursor-help rounded-xl border border-white/10 bg-white/5 px-4 py-3 ${!hasCompStats ? "opacity-40" : ""}`}
                           >
                             {rank && (
                               <span className="absolute right-2 top-2 text-xs font-medium text-[#D4AF37]/80">
@@ -656,8 +675,8 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
                 </h3>
                 <div className="mt-4 space-y-3">
                   {ratingItems.map((rating) => {
-                    const value = getRatingValue(driver, rating.key, statMode);
-                    const rank = getRatingRank(driver, rating.key, statMode);
+                    const value = getRatingValue(driver, rating.key, statMode, compMode);
+                    const rank = getRatingRank(driver, rating.key, statMode, compMode);
                     const parsed = value ? Number(value) : NaN;
                     const numValue = Number.isFinite(parsed) ? parsed : 0;
                     const width = Math.min(100, Math.max(0, numValue));

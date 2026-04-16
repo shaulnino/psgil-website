@@ -43,6 +43,12 @@ export const STATS_CSV_URLS = {
 export type DriverStatRow = {
   /** Driver name (normalised from "Drivers*" or "Drivers") */
   driver_name: string;
+  /**
+   * Driver ID from the race results feed.
+   * Present when the row was produced by lib/statsComputed.ts;
+   * absent when parsed from the legacy stats CSV tabs.
+   */
+  driver_id?: string;
   /** All original columns as string key-value pairs */
   raw: Record<string, string>;
   /** Numeric columns extracted: key → number (NaN excluded) */
@@ -401,13 +407,17 @@ export type MetricCategory = {
  * Order matters — more specific patterns first.
  */
 const CATEGORY_RULES: [string, string, RegExp][] = [
-  ["ratings",       "Driver Ratings",     /^(speed|consistency|performance|agility|driver rating)$/i],
-  ["participation", "Participation",      /particip|events?\s+(on|held)|races?\s+particip|sprints?\s+particip|25%\s+races/i],
-  ["results",       "Race Results",       /wins?|podiums?|top\s+\d|place|finishes|finishing|winning/i],
-  ["points",        "Points",             /points/i],
-  ["positions",     "Positions & Grid",   /position|grid|position changes/i],
-  ["records",       "Records & Awards",   /fastest|pole|driver of the day|driver of the season|championships?|main champion titles|main 2nd titles|main 3rd titles|lower champion titles|lower 2nd titles|lower 3rd titles|wild champion titles|wild 2nd titles|wild 3rd titles|champion titles|reward podiums|best of the rest|cleanest|grid climber|mr\.?\s*consistent|most improved|most valuable|dnf|dns|dsq/i],
-  ["weather",       "Weather",            /dry|rain|changing weather|wet/i],
+  ["ratings",       "Driver Ratings",         /^(speed|consistency|performance|agility|driver rating)$/i],
+  ["participation", "Participation",           /particip|events?\s+(on|held)|races?\s+particip|sprints?\s+particip|25%\s+races/i],
+  ["results",       "Race Results",            /wins?|podiums?|top\s+\d|place|finishes|finishing|winning/i],
+  ["points",        "Points",                  /points/i],
+  ["grid",          "Grid & Qualifying",       /wins?\s+from\s+pole|front\s+row|pole\s+to\s+win|best\s+grid\s+for/i],
+  ["positions",     "Positions & Grid",        /position|grid|position changes/i],
+  ["streaks",       "Streaks & Records",       /streak|best\s+single\s+race|best\s+finish\s+from|p4\s+finish|seasons?\s+competed/i],
+  ["performance",   "Performance Splits",      /over-performance|finish\s+rate|positions?\s+gained|avg\.?\s+points?\s+\(|regular\s+season|playoffs?\)/i],
+  ["records",       "Records & Awards",        /fastest|pole|driver of the day|driver of the season|championships?|main champion titles|main 2nd titles|main 3rd titles|lower champion titles|lower 2nd titles|lower 3rd titles|wild champion titles|wild 2nd titles|wild 3rd titles|champion titles|reward podiums|best of the rest|cleanest|grid climber|mr\.?\s*consistent|most improved|most valuable|dnf|dns|dsq/i],
+  ["weather",       "Weather",                 /dry|rain|changing weather|wet/i],
+  ["racecraft",     "Racecraft & Strategy",    /overtakes?|laps\s+led|pit\s+stops?|steward\s+penalt|game\s+penalt/i],
 ];
 
 /**

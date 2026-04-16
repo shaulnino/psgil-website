@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   addInternalCommentAction,
+  editInternalCommentAction,
   publishVerdictAction,
   submitCaseResponseAction,
   updateCaseStatusAction,
@@ -13,6 +14,7 @@ import EvidencePasteBox from "@/app/stewards/(protected)/cases/EvidencePasteBox"
 import SubmissionToast from "@/app/stewards/(protected)/cases/SubmissionToast";
 import ViewToggle from "@/app/stewards/(protected)/cases/ViewToggle";
 import VerdictForm from "@/app/stewards/(protected)/cases/[id]/VerdictForm";
+import DeleteCommentForm from "@/app/stewards/(protected)/cases/[id]/DeleteCommentForm";
 import { can, canCommentInternally, hasRole, requireStewardUser } from "@/lib/stewards/auth";
 import {
   getCaseById,
@@ -23,6 +25,7 @@ import {
 } from "@/lib/stewards/repository";
 import AppealSubmitModal from "@/app/stewards/components/AppealSubmitModal";
 import type { AttachmentRef, CaseStatus, VerdictDecision } from "@/lib/stewards/types";
+import { fmtDate, fmtDateTime } from "@/app/stewards/lib/dates";
 
 const STATUSES: CaseStatus[] = [
   "Open", "Waiting for Response", "Under Review",
@@ -43,7 +46,7 @@ export default async function StewardCaseDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ submitted?: string; view?: "driver" | "steward"; error?: string }>;
+  searchParams: Promise<{ submitted?: string; view?: "driver" | "steward"; error?: string; edit_comment?: string }>;
 }) {
   const user = await requireStewardUser();
   const { id } = await params;
@@ -89,6 +92,8 @@ export default async function StewardCaseDetailPage({
     if (step === 3) return !!verdict?.is_published;
     return false;
   };
+
+  const editCommentId = query.edit_comment ?? null;
 
   const appealErrorMsg =
     query.error === "appeal-exists"
@@ -137,7 +142,7 @@ export default async function StewardCaseDetailPage({
                 </>
               )}
               <span className="text-white/25">·</span>
-              <span>{new Date(caseItem.createdAt).toLocaleDateString()}</span>
+              <span>{fmtDate(caseItem.createdAt)}</span>
             </div>
 
             {/* status badge row */}
@@ -268,7 +273,7 @@ export default async function StewardCaseDetailPage({
                       </div>
                       {statement ? (
                         <span className="flex items-center gap-1 text-[10px] text-emerald-400/80">
-                          <span>✓</span> Submitted {new Date(statement.createdAt).toLocaleDateString()}
+                          <span>✓</span> Submitted {fmtDate(statement.createdAt)}
                         </span>
                       ) : (
                         <span className="text-[10px] text-white/35">Pending</span>
@@ -392,7 +397,7 @@ export default async function StewardCaseDetailPage({
                   </p>
                 </div>
                 <p className="text-xs text-white/40">
-                  Published {verdict.published_at ? new Date(verdict.published_at).toLocaleString() : "–"}
+                  Published {fmtDateTime(verdict.published_at)}
                 </p>
 
                 {/* ── Appeal entry point ── */}
@@ -477,7 +482,7 @@ export default async function StewardCaseDetailPage({
                         <span className="text-sm font-medium text-white/80">{driverName}</span>
                       </div>
                       {statement
-                        ? <span className="text-[10px] text-emerald-400/70">✓ {new Date(statement.createdAt).toLocaleDateString()}</span>
+                        ? <span className="text-[10px] text-emerald-400/70">✓ {fmtDate(statement.createdAt)}</span>
                         : <span className="text-[10px] text-white/30">Pending</span>}
                     </div>
                     {statement ? (
@@ -630,12 +635,67 @@ export default async function StewardCaseDetailPage({
               <h3 className="text-base font-semibold uppercase tracking-wider text-steward-gold">4 · Internal Discussion</h3>
               <p className="mt-1 text-xs text-white/50">Visible to stewards and admins only.</p>
               <div className="mt-4 space-y-3">
-                {internalComments.map((c) => (
-                  <article key={c.id} className="steward-soft rounded-lg p-3">
-                    <p className="text-xs text-white/55">{c.author?.name ?? c.authorId} · {new Date(c.createdAt).toLocaleString()}</p>
-                    <p className="mt-2 whitespace-pre-wrap text-white/85" dir="auto" lang="he">{c.text}</p>
-                  </article>
-                ))}
+                {internalComments.map((c) => {
+                  const isAuthor = c.authorId === user.id;
+                  const isAdmin = user.roles.includes("admin");
+                  const isEditing = editCommentId === c.id;
+                  return (
+                    <article key={c.id} className="steward-soft rounded-lg p-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-xs text-white/55">
+                          {c.author?.name ?? c.authorId} · {fmtDateTime(c.createdAt)}
+                          {c.updatedAt !== c.createdAt && (
+                            <span className="ml-1.5 text-white/35">(edited)</span>
+                          )}
+                        </p>
+                        <div className="flex shrink-0 items-center gap-1">
+                          {isAuthor && !isEditing && (
+                            <a
+                              href={`/stewards/cases/${caseItem.id}?view=steward&edit_comment=${c.id}`}
+                              className="rounded px-1.5 py-0.5 text-[10px] text-white/40 transition hover:bg-white/8 hover:text-steward-gold"
+                            >
+                              Edit
+                            </a>
+                          )}
+                          {isEditing && (
+                            <a
+                              href={`/stewards/cases/${caseItem.id}?view=steward`}
+                              className="rounded px-1.5 py-0.5 text-[10px] text-white/40 transition hover:bg-white/8 hover:text-white/70"
+                            >
+                              Cancel
+                            </a>
+                          )}
+                          {(isAuthor || isAdmin) && (
+                            <DeleteCommentForm commentId={c.id} caseId={caseItem.id} />
+                          )}
+                        </div>
+                      </div>
+
+                      {isEditing ? (
+                        <form action={editInternalCommentAction} className="mt-2 grid gap-2">
+                          <input type="hidden" name="comment_id" value={c.id} />
+                          <input type="hidden" name="case_id" value={caseItem.id} />
+                          <textarea
+                            name="text"
+                            rows={3}
+                            required
+                            lang="he"
+                            dir="rtl"
+                            defaultValue={c.text}
+                            className="w-full rounded-lg border border-steward-gold/30 bg-black/30 px-3 py-2 text-right text-sm text-white/85 focus:border-steward-gold/60 focus:outline-none transition"
+                          />
+                          <FormActionButton
+                            idleLabel="Save"
+                            loadingLabel="Saving..."
+                            className="w-fit rounded-full border border-steward-gold/40 bg-steward-gold/10 px-4 py-1.5 text-xs font-semibold transition hover:border-steward-gold/70 hover:bg-steward-gold/20 hover:text-steward-cream disabled:opacity-50"
+                          />
+                        </form>
+                      ) : (
+                        <p className="mt-2 whitespace-pre-wrap text-white/85" dir="auto" lang="he">{c.text}</p>
+                      )}
+                    </article>
+                  );
+                })}
                 {internalComments.length === 0 && <p className="text-sm text-white/50">No internal discussion yet.</p>}
               </div>
               <form action={addInternalCommentAction} className="mt-4 grid gap-3">

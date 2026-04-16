@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { fmtDate } from "@/app/stewards/lib/dates";
 import { can, requireStewardUser } from "@/lib/stewards/auth";
 import { listAppeals } from "@/lib/stewards/repository";
 import type { AppealStatus } from "@/lib/stewards/types";
@@ -61,7 +62,7 @@ export default async function AppealsListPage() {
                   <p className="mt-0.5 text-xs text-white/50 truncate">
                     {originalCase?.title} · Appellant: {submittedBy?.name ?? "—"}
                   </p>
-                  <p className="text-xs text-white/35">{new Date(appeal.submittedAt).toLocaleDateString()}</p>
+                  <p className="text-xs text-white/35">{fmtDate(appeal.submittedAt)}</p>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-widest ${STATUS_STYLE[appeal.status]}`}>

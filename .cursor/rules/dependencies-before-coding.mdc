@@ -1,0 +1,15 @@
+---
+description: Check existing dependencies and built-ins before adding packages or coding solutions
+alwaysApply: true
+---
+
+# Dependencies and tooling
+
+Before implementing a feature or fixing a bug:
+
+1. **Inspect the stack** — Read `package.json` (and lockfile if relevant) for libraries already in use. Prefer existing utilities over new dependencies.
+2. **Prefer built-ins** — Use language/runtime and framework APIs when they are sufficient; do not add a package for one-liners unless there is a clear need (security, maintenance, performance).
+3. **Before adding a dependency** — Confirm it fits the project’s license and maintenance expectations; check version compatibility with Node/Next/React as applicable; avoid duplicate libraries that solve the same problem.
+4. **After changing dependencies** — Run install if needed and verify with the project’s usual checks (e.g. `tsc`, lint, tests).
+
+This does not block necessary dependencies; it ensures additions are deliberate and aligned with what the repo already uses.

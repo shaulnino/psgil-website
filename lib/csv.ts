@@ -1,5 +1,12 @@
-export async function fetchCsv(url: string): Promise<string> {
-  const response = await fetch(url, { cache: "no-store" });
+/**
+ * Fetch a CSV from the given URL.
+ *
+ * By default the response is cached for 5 minutes (`next.revalidate = 300`),
+ * matching the ISR revalidation window of the pages that use it.  Pass
+ * `revalidate: 0` to get a fully fresh response (useful for debug routes).
+ */
+export async function fetchCsv(url: string, revalidate = 300): Promise<string> {
+  const response = await fetch(url, { next: { revalidate } });
   if (!response.ok) {
     throw new Error(`Failed to fetch CSV: ${response.status} ${response.statusText}`);
   }

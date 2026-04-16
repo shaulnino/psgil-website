@@ -231,10 +231,26 @@ function ResultsModal({
       >
         {/* Top bar: close + toggle */}
         <div className="mb-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <h3 className="font-display text-sm font-semibold text-white/80 md:text-base">
               {event.race_name}
             </h3>
+            {/* Race format + playoff badges */}
+            {event.race_format === "sprint" && (
+              <span className="inline-flex items-center rounded-full border border-orange-500/30 bg-orange-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-orange-300/90">
+                Sprint
+              </span>
+            )}
+            {event.race_format === "25%" && (
+              <span className="inline-flex items-center rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-300/90">
+                25%
+              </span>
+            )}
+            {event.is_playoff && (
+              <span className="inline-flex items-center rounded-full border border-[#D4AF37]/40 bg-[#D4AF37]/12 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#D4AF37]">
+                Playoff
+              </span>
+            )}
             {/* Toggle between table and image when both exist */}
             {hasTable && hasImage && (
               <button
@@ -451,6 +467,23 @@ function PosterModal({
               >
                 {event.league}
               </span>
+              {/* Race format badge */}
+              {event.race_format === "sprint" && (
+                <span className="inline-flex items-center rounded-full border border-orange-500/30 bg-orange-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-orange-300/90">
+                  Sprint
+                </span>
+              )}
+              {event.race_format === "25%" && (
+                <span className="inline-flex items-center rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-300/90">
+                  25%
+                </span>
+              )}
+              {/* Playoff badge */}
+              {event.is_playoff && (
+                <span className="inline-flex items-center rounded-full border border-[#D4AF37]/40 bg-[#D4AF37]/12 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#D4AF37]">
+                  Playoff
+                </span>
+              )}
               {event.results_status === "provisional" && (
                 <Tooltip text="Provisional results — subject to steward decisions.">
                   <span className="inline-flex items-center rounded-full border border-orange-400/30 bg-orange-400/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-orange-300/90">
@@ -656,12 +689,39 @@ function RaceBadges({ event }: { event: RaceEvent }) {
   const safetyCars = event.safety_cars ?? 0;
   const reverseGrid = event.reverse_grid === "yes";
   const isProvisional = event.results_status === "provisional";
+  const raceFormat = event.race_format;
+  const isPlayoff = event.is_playoff;
 
-  const hasBadges = !!weather || safetyCars > 0 || reverseGrid || isProvisional;
+  const hasBadges = !!weather || safetyCars > 0 || reverseGrid || isProvisional || !!raceFormat || isPlayoff;
   if (!hasBadges) return null;
 
   return (
     <span className="inline-flex flex-wrap items-center gap-1.5">
+      {/* Race format */}
+      {raceFormat === "sprint" && (
+        <Tooltip text="Sprint Race (short format)">
+          <span className="inline-flex items-center gap-1 rounded-md border border-orange-500/30 bg-orange-500/10 px-1.5 py-0.5 text-xs font-bold leading-none text-orange-300/90">
+            Sprint
+          </span>
+        </Tooltip>
+      )}
+      {raceFormat === "25%" && (
+        <Tooltip text="25% Race distance">
+          <span className="inline-flex items-center gap-1 rounded-md border border-amber-400/30 bg-amber-400/10 px-1.5 py-0.5 text-xs font-bold leading-none text-amber-300/90">
+            25%
+          </span>
+        </Tooltip>
+      )}
+
+      {/* Playoff round */}
+      {isPlayoff && (
+        <Tooltip text="Playoff round">
+          <span className="inline-flex items-center gap-1 rounded-md border border-[#D4AF37]/40 bg-[#D4AF37]/12 px-1.5 py-0.5 text-xs font-bold leading-none text-[#D4AF37]">
+            Playoff
+          </span>
+        </Tooltip>
+      )}
+
       {/* Provisional results */}
       {isProvisional && (
         <Tooltip text="Provisional results — subject to steward decisions.">

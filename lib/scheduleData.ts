@@ -4,6 +4,8 @@
 
 import { getYouTubeVideoId } from "@/lib/youtube";
 
+export type RaceFormat = "50%" | "25%" | "sprint";
+
 export type RaceEvent = {
   /** Unique ID matching the race_results CSV, e.g. "s6_r01_main". */
   event_id: string;
@@ -31,6 +33,17 @@ export type RaceEvent = {
   end_time?: string;
   /** "provisional" | "final" or empty — whether race results are pending steward decisions */
   results_status?: string;
+  /**
+   * Race distance/type format.
+   * Populated from the "race_format" column in the schedule CSV.
+   * Defaults to "50%" when the column is absent (safe fallback for existing data).
+   */
+  race_format: RaceFormat;
+  /**
+   * Whether this event is a playoff round.
+   * Populated from the "is_playoff" column (TRUE/FALSE) in the schedule CSV.
+   */
+  is_playoff: boolean;
 };
 
 /**
@@ -88,9 +101,23 @@ function pickYoutubeUrlFromScheduleRow(row: Record<string, string>): string | un
   return undefined;
 }
 
+/**
+ * Normalize a raw CSV row so column headers are always in snake_case.
+ * e.g. "Race Format" → "race_format", "Is Playoff" → "is_playoff"
+ * This makes mapRaceEvents resilient to Google Sheets column name variants.
+ */
+function normalizeRow(row: Record<string, string>): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(row)) {
+    out[normalizeScheduleHeader(k)] = v;
+  }
+  return out;
+}
+
 /** Map raw CSV rows to typed RaceEvent objects. */
 export function mapRaceEvents(raw: Record<string, string>[]): RaceEvent[] {
-  return raw.map((row) => {
+  return raw.map((rawRow) => {
+    const row = normalizeRow(rawRow);
     const season = row.season ?? "";
     const raceNumber = row.race_number ?? "";
     const league = row.league ?? "Main";
@@ -98,6 +125,13 @@ export function mapRaceEvents(raw: Record<string, string>[]): RaceEvent[] {
     const eventId = (row.event_id ?? "").trim() || buildEventId(season, raceNumber, league);
     const scRaw = (row.safety_cars ?? "").trim();
     const scNum = scRaw ? parseInt(scRaw, 10) : 0;
+
+    const raceFormatRaw = (row.race_format ?? "").trim().toLowerCase();
+    // Accept values like "sprint", "sprint race", "25%", "25% race", "50%", "50% race"
+    const raceFormat: RaceFormat =
+      raceFormatRaw.startsWith("sprint") ? "sprint"
+      : raceFormatRaw.startsWith("25%") ? "25%"
+      : "50%"; // default — covers "50%", "50% race", and missing column
 
     return {
       event_id: eventId,
@@ -118,6 +152,8 @@ export function mapRaceEvents(raw: Record<string, string>[]): RaceEvent[] {
       reverse_grid: (row.reverse_grid ?? "").trim().toLowerCase() || undefined,
       end_time: (row.end_time ?? "").trim() || undefined,
       results_status: (row.results_status ?? "").trim().toLowerCase() || undefined,
+      race_format: raceFormat,
+      is_playoff: (row.is_playoff ?? "").trim().toUpperCase() === "TRUE",
     };
   });
 }

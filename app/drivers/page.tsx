@@ -1,4 +1,5 @@
-export const dynamic = "force-dynamic";
+/** Rebuild at most once every 5 minutes; all visitors share the cached page. */
+export const revalidate = 300;
 
 import Section from "@/components/Section";
 import DriversGrid from "@/components/DriversGrid";
@@ -10,7 +11,8 @@ import {
   getReserveDrivers,
   getHistoricDrivers,
   applyLeagueStandings,
-  mapLeagueStandings,
+  leagueStandingsFromTables,
+  mergeComputedRatings,
 } from "@/lib/driversData";
 import { attachRewardsToDrivers, fetchRewards } from "@/lib/rewardsData";
 import {
@@ -18,6 +20,9 @@ import {
   resolveCurrentSeason,
   GLOBAL_CSV_URLS,
 } from "@/lib/seasonConfig";
+import { fetchAllRaceResults, fetchStandings } from "@/lib/resultsData";
+import { mapRaceEvents } from "@/lib/scheduleData";
+import { computeDriverRatingsAll } from "@/lib/statsComputed";
 
 const PLACEHOLDER_PHOTO = "/placeholders/driver.png";
 
@@ -104,10 +109,6 @@ const DEMO_DRIVER = {
 };
 
 export default async function DriversPage() {
-  // Fetch seasons config for current season label
-  const seasonsConfig = await fetchSeasonsConfig();
-  const currentSeason = resolveCurrentSeason(seasonsConfig);
-
   let teams: {
     team_key: string;
     team_name: string;
@@ -116,40 +117,63 @@ export default async function DriversPage() {
   }[] = [];
   let reserves: ReturnType<typeof mapDrivers> = [];
   let historic: ReturnType<typeof mapDrivers> = [];
+  let currentSeasonLabel = "";
 
   try {
-    const csvPromises: [
-      Promise<string>,
-      Promise<string>,
-      Promise<string | null>,
-      Promise<Awaited<ReturnType<typeof fetchRewards>>>,
-    ] = [
+    // All fetches run in parallel — seasonsConfig is no longer pre-fetched in series.
+    const [
+      seasonsConfig,
+      driversCsv,
+      teamsCsv,
+      mainStandings,
+      wildStandings,
+      rewards,
+      raceResultsByEvent,
+      scheduleCsv,
+    ] = await Promise.all([
+      fetchSeasonsConfig(),
       fetchCsv(GLOBAL_CSV_URLS.drivers),
       fetchCsv(GLOBAL_CSV_URLS.teams),
-      fetchCsv(GLOBAL_CSV_URLS.leagueStandings).catch(() => null),
+      fetchStandings(GLOBAL_CSV_URLS.driversStandingsMain),
+      fetchStandings(GLOBAL_CSV_URLS.driversStandingsWild),
       fetchRewards(GLOBAL_CSV_URLS.rewards),
-    ];
+      fetchAllRaceResults(GLOBAL_CSV_URLS.raceResults),
+      fetchCsv(GLOBAL_CSV_URLS.schedule).catch(() => ""),
+    ]);
 
-    const [driversCsv, teamsCsv, standingsCsv, rewards] =
-      await Promise.all(csvPromises);
+    const currentSeason = resolveCurrentSeason(seasonsConfig);
+    currentSeasonLabel = currentSeason.season_label;
 
-    let drivers = mapDrivers(
-      parseCsv<Record<string, string>>(driversCsv),
+    let drivers = mapDrivers(parseCsv<Record<string, string>>(driversCsv));
+
+    // Derive league ranks from the computed standings tables (current season only)
+    const leagueStandings = leagueStandingsFromTables(
+      mainStandings,
+      wildStandings,
+      currentSeason.season_key,
     );
-
-    // Merge league standings when available
-    if (standingsCsv) {
-      const standings = mapLeagueStandings(
-        parseCsv<Record<string, string>>(standingsCsv),
-      );
-      drivers = applyLeagueStandings(drivers, standings);
-    }
+    drivers = applyLeagueStandings(drivers, leagueStandings);
 
     drivers = attachRewardsToDrivers(drivers, rewards);
 
-    const teamsData = mapTeams(
-      parseCsv<Record<string, string>>(teamsCsv),
-    );
+    // Compute all-time and current-season ratings in a single pass (shared eventMap).
+    const allResults = Object.values(raceResultsByEvent).flat();
+    const events = scheduleCsv
+      ? mapRaceEvents(parseCsv<Record<string, string>>(scheduleCsv))
+      : [];
+
+    if (allResults.length > 0 && events.length > 0) {
+      const { allTime, season, allTimeMain, allTimeWild, seasonMain, seasonWild } =
+        computeDriverRatingsAll(allResults, events, currentSeason.season_key);
+      drivers = mergeComputedRatings(drivers, allTime,     "alltime");
+      drivers = mergeComputedRatings(drivers, season,      "season");
+      drivers = mergeComputedRatings(drivers, allTimeMain, "main");
+      drivers = mergeComputedRatings(drivers, allTimeWild, "wild");
+      drivers = mergeComputedRatings(drivers, seasonMain,  "season_main");
+      drivers = mergeComputedRatings(drivers, seasonWild,  "season_wild");
+    }
+
+    const teamsData = mapTeams(parseCsv<Record<string, string>>(teamsCsv));
     teams = groupDriversByTeam(teamsData, drivers);
     reserves = getReserveDrivers(drivers);
     historic = getHistoricDrivers(drivers);
@@ -176,7 +200,7 @@ export default async function DriversPage() {
           reserves={reserves}
           historicDrivers={historic}
           placeholderSrc={PLACEHOLDER_PHOTO}
-          currentSeasonLabel={currentSeason.season_label}
+          currentSeasonLabel={currentSeasonLabel}
         />
       </Section>
     </main>

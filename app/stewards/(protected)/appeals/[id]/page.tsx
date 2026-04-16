@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { fmtDateTime } from "@/app/stewards/lib/dates";
 import { notFound } from "next/navigation";
 import { can, canCommentInternally, requireStewardUser } from "@/lib/stewards/auth";
 import {
@@ -99,7 +100,7 @@ export default async function AppealDetailPage({
         </div>
         <div className="steward-panel rounded-2xl p-4">
           <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Filed</p>
-          <p className="mt-1 text-sm text-white/80">{new Date(appeal.submittedAt).toLocaleString()}</p>
+          <p className="mt-1 text-sm text-white/80">{fmtDateTime(appeal.submittedAt)}</p>
         </div>
         <div className="steward-panel rounded-2xl p-4">
           <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Original Case</p>
@@ -176,7 +177,7 @@ export default async function AppealDetailPage({
             {verdict.verdict_full_text && (
               <p className="whitespace-pre-wrap text-sm text-white/70">{verdict.verdict_full_text}</p>
             )}
-            <p className="text-xs text-white/30">Published {verdict.published_at ? new Date(verdict.published_at).toLocaleString() : ""}</p>
+            <p className="text-xs text-white/30">Published {fmtDateTime(verdict.published_at)}</p>
           </div>
         ) : (
           <>
@@ -230,7 +231,7 @@ export default async function AppealDetailPage({
           <div className="mt-4 space-y-3">
             {internalComments.map((c) => (
               <article key={c.id} className="steward-soft rounded-lg p-3">
-                <p className="text-xs text-white/55">{c.author?.name ?? c.authorId} · {new Date(c.createdAt).toLocaleString()}</p>
+                <p className="text-xs text-white/55">{c.author?.name ?? c.authorId} · {fmtDateTime(c.createdAt)}</p>
                 <p className="mt-2 whitespace-pre-wrap text-white/85">{c.text}</p>
               </article>
             ))}
