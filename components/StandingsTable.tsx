@@ -1,8 +1,22 @@
 "use client";
 
+import { useMemo, type ReactNode } from "react";
 import ResultsTable, { type ColumnDef, type SectionGroup } from "@/components/ResultsTable";
 import type { StandingsRow } from "@/lib/resultsData";
 import { useDriverLookup } from "@/components/DriverLookupProvider";
+
+/** En-dash for empty / zero stats (Points column is exempt — see below). */
+function standingsStatCell(value: string | undefined): ReactNode {
+  const s = (value ?? "").trim();
+  if (s === "" || s === "-" || s === "—") {
+    return <span className="text-white/30">–</span>;
+  }
+  const n = Number(s.replace(/,/g, ""));
+  if (!Number.isNaN(n) && n === 0) {
+    return <span className="text-white/30">–</span>;
+  }
+  return s;
+}
 
 /* ------------------------------------------------------------------ */
 /*  Position-change arrow                                               */
@@ -51,14 +65,14 @@ const pointsAndStats: ColumnDef<StandingsRow>[] = [
   },
   {
     label: "Gain",
-    accessor: "gain",
+    accessor: (row) => standingsStatCell(row.gain),
     align: "center",
     minWidth: 44,
     hideMobile: true,
   },
   {
     label: "Interval",
-    accessor: "interval",
+    accessor: (row) => standingsStatCell(row.interval),
     align: "center",
     mono: true,
     minWidth: 64,
@@ -66,7 +80,7 @@ const pointsAndStats: ColumnDef<StandingsRow>[] = [
   },
   {
     label: "Gap",
-    accessor: "gap",
+    accessor: (row) => standingsStatCell(row.gap),
     align: "center",
     mono: true,
     minWidth: 56,
@@ -74,91 +88,91 @@ const pointsAndStats: ColumnDef<StandingsRow>[] = [
   },
   {
     label: "Wins",
-    accessor: "p1",
+    accessor: (row) => standingsStatCell(row.p1),
     align: "center",
     minWidth: 42,
     hideMobile: true,
   },
   {
     label: "2nd",
-    accessor: "p2",
+    accessor: (row) => standingsStatCell(row.p2),
     align: "center",
     minWidth: 38,
     hideMobile: true,
   },
   {
     label: "3rd",
-    accessor: "p3",
+    accessor: (row) => standingsStatCell(row.p3),
     align: "center",
     minWidth: 38,
     hideMobile: true,
   },
   {
     label: "Top 5",
-    accessor: "top5",
+    accessor: (row) => standingsStatCell(row.top5),
     align: "center",
     minWidth: 44,
     hideMobile: true,
   },
   {
     label: "Top 10",
-    accessor: "top10",
+    accessor: (row) => standingsStatCell(row.top10),
     align: "center",
     minWidth: 48,
     hideMobile: true,
   },
   {
     label: "Best Finish",
-    accessor: "best_finish",
+    accessor: (row) => standingsStatCell(row.best_finish),
     align: "center",
     minWidth: 52,
     hideMobile: true,
   },
   {
     label: "Best Grid",
-    accessor: "best_quali",
+    accessor: (row) => standingsStatCell(row.best_quali),
     align: "center",
     minWidth: 52,
     hideMobile: true,
   },
   {
     label: "Fastest Laps",
-    accessor: "fastest_laps",
+    accessor: (row) => standingsStatCell(row.fastest_laps),
     align: "center",
     minWidth: 52,
     hideMobile: true,
   },
   {
     label: "Poles",
-    accessor: "poles",
+    accessor: (row) => standingsStatCell(row.poles),
     align: "center",
     minWidth: 44,
     hideMobile: true,
   },
   {
     label: "DOTD",
-    accessor: "dotd",
+    accessor: (row) => standingsStatCell(row.dotd),
     align: "center",
     minWidth: 44,
     hideMobile: true,
   },
   {
     label: "Penalty Pts",
-    accessor: "penalty_points",
+    accessor: (row) => standingsStatCell(row.penalty_points),
     align: "center",
     minWidth: 56,
     hideMobile: true,
   },
   {
     label: "DNFs",
-    accessor: "dnfs",
+    accessor: (row) => standingsStatCell(row.dnfs),
     align: "center",
     minWidth: 44,
     hideMobile: true,
   },
   {
     label: "Races",
-    accessor: "races",
+    accessor: (row) => standingsStatCell(row.races),
     align: "center",
     minWidth: 48,
     hideMobile: true,
@@ -267,13 +281,18 @@ export default function StandingsTable({
     return null;
   };
 
+  const columns = useMemo(() => getColumns(type), [type]);
+  const horizontalStickyCount =
+    columns.findIndex((c) => c.label === "Points") + 1;
+
   return (
     <ResultsTable<StandingsRow>
       data={standings}
-      columns={getColumns(type)}
+      columns={columns}
       caption={caption}
       rowHighlight={highlight}
       groups={groups}
+      horizontalStickyCount={horizontalStickyCount}
     />
   );
 }

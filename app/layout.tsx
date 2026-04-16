@@ -43,7 +43,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" data-scroll-behavior="smooth">
       <body className={`${inter.variable} ${rajdhani.variable} antialiased`}>
         {/* ── Google Analytics 4 (production only) ── */}
         {GA_ID && process.env.NODE_ENV === "production" && (

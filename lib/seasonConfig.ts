@@ -36,8 +36,14 @@ export type SeasonConfig = {
   notes: string;
   /** GID of the per-season driver stats tab (e.g. "S6 Driver Stats").
    *  Leave empty in the sheet if no tab exists yet for that season.
-   *  When present, the Stats page will auto-detect and fetch it. */
+   *  When present, the Stats page will auto-detect and fetch it.
+   *  @deprecated Will be removed once statsComputed fully replaces the stats tabs. */
   driver_stats_gid: string;
+  /**
+   * Game version used for this season's races (e.g. "F1 24", "F1 25").
+   * Populated from the "game_version" column in csv_seasons_config.
+   */
+  game_version: string;
 };
 
 /* ------------------------------------------------------------------ */
@@ -172,6 +178,7 @@ export function mapSeasonsConfig(
       ),
       notes: s(row.notes),
       driver_stats_gid: s(row.driver_stats_gid),
+      game_version: s(row.game_version),
     }))
     .filter((c) => !!c.season_key); // skip empty rows
 }
@@ -287,5 +294,6 @@ function createFallbackSeason(): SeasonConfig {
       "/statistics/constructors-wild-champ.png",
     notes: "",
     driver_stats_gid: "1613919890", // S6 Driver Stats
+    game_version: "",
   };
 }

@@ -28,6 +28,7 @@ import {
   createUser,
   deleteAppeal,
   deleteCaseById,
+  deleteInternalComment,
   deletePenaltyToServe,
   getCaseById,
   getAppealByCaseAndUser,
@@ -42,6 +43,7 @@ import {
   updateAppealStatus,
   updateCaseStatus,
   updateHistoricalCase,
+  updateInternalComment,
   updatePenaltyFields,
   updatePenaltyStatus,
   updateUser,
@@ -138,12 +140,13 @@ async function saveAttachments(files: File[]): Promise<string[]> {
 export async function loginStewardAction(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
+  const rememberMe = formData.get("remember_me") === "on";
   const user = await getUserByEmail(email);
   if (!user || !user.isActive || !verifyPassword(password, user.passwordHash)) {
     redirect("/stewards/login?error=1");
   }
-  const token = await createStewardSession(user);
-  await setStewardSessionCookie(token);
+  const token = await createStewardSession(user, rememberMe);
+  await setStewardSessionCookie(token, rememberMe);
   // Force password change before entering the module
   if (user.mustChangePassword) redirect("/stewards/change-password");
   redirect("/stewards");
@@ -282,6 +285,44 @@ export async function addInternalCommentAction(formData: FormData) {
     try { await notifyInternalDiscussion(caseData.caseItem, user.name, users); } catch { /* non-fatal */ }
   }
 
+  revalidatePath(`/stewards/cases/${caseId}`);
+  redirect(`/stewards/cases/${caseId}?view=steward`);
+}
+
+export async function deleteInternalCommentAction(formData: FormData) {
+  const user = await requireStewardUser();
+  const commentId = String(formData.get("comment_id") ?? "").trim();
+  const caseId = String(formData.get("case_id") ?? "").trim();
+  if (!commentId || !caseId) redirect(`/stewards/cases/${caseId}?view=steward`);
+
+  // Fetch comment to check ownership; admins may delete any comment
+  const caseData = await getCaseById(caseId);
+  const comment = caseData?.internalComments.find((c) => c.id === commentId);
+  if (!comment) redirect(`/stewards/cases/${caseId}?view=steward`);
+
+  const isOwner = comment.authorId === user.id;
+  const isAdmin = user.roles.includes("admin");
+  if (!isOwner && !isAdmin) redirect(`/stewards/cases/${caseId}?view=steward`);
+
+  await deleteInternalComment(commentId, caseId);
+  revalidatePath(`/stewards/cases/${caseId}`);
+  redirect(`/stewards/cases/${caseId}?view=steward`);
+}
+
+export async function editInternalCommentAction(formData: FormData) {
+  const user = await requireStewardUser();
+  const commentId = String(formData.get("comment_id") ?? "").trim();
+  const caseId = String(formData.get("case_id") ?? "").trim();
+  const text = String(formData.get("text") ?? "").trim();
+  if (!commentId || !caseId || !text) redirect(`/stewards/cases/${caseId}?view=steward`);
+
+  const caseData = await getCaseById(caseId);
+  const comment = caseData?.internalComments.find((c) => c.id === commentId);
+  if (!comment) redirect(`/stewards/cases/${caseId}?view=steward`);
+
+  if (comment.authorId !== user.id) redirect(`/stewards/cases/${caseId}?view=steward`);
+
+  await updateInternalComment(commentId, caseId, text);
   revalidatePath(`/stewards/cases/${caseId}`);
   redirect(`/stewards/cases/${caseId}?view=steward`);
 }

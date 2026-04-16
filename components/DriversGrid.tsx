@@ -63,7 +63,7 @@ export default function DriversGrid({ teams, reserves, historicDrivers, placehol
                   width={64}
                   height={64}
                   className="h-16 w-16 object-contain"
-                  unoptimized={isRemote(team.logo_url)}
+                  unoptimized={!isRemote(team.logo_url || "/psgil-logo.png")}
                 />
               </div>
               <div className="flex-1 min-w-0">

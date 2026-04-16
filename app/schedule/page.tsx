@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 import Section from "@/components/Section";
 import ScheduleList from "@/components/ScheduleList";

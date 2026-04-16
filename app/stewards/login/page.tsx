@@ -43,6 +43,14 @@ export default async function StewardLoginPage({ searchParams }: { searchParams:
               className="w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white placeholder:text-white/30 focus:border-steward-gold/50 focus:ring-1 focus:ring-steward-gold/20 focus:outline-none transition"
             />
           </label>
+          <label className="flex cursor-pointer items-center gap-2.5 select-none">
+            <input
+              type="checkbox"
+              name="remember_me"
+              className="h-4 w-4 rounded border border-white/20 bg-black/30 accent-[#7020B0] cursor-pointer"
+            />
+            <span className="text-sm text-white/60">Stay signed in</span>
+          </label>
           <FormActionButton
             idleLabel="Sign in"
             loadingLabel="Signing in..."

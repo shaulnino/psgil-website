@@ -79,6 +79,9 @@ export type H2HFilters = {
   seasons?: string[];
   circuits?: string[];
   weather?: string[];
+  format?: string;       // "50%" | "25%" | "sprint"
+  competition?: string;  // "main" | "wild"
+  roundType?: string;    // "regular" | "playoff"
 };
 
 /* ------------------------------------------------------------------ */
@@ -159,6 +162,8 @@ export type EventMeta = {
   season: string;
   circuit: string;
   weather: string;
+  race_format: string;
+  is_playoff: boolean;
 };
 
 export function buildEventMeta(
@@ -175,6 +180,8 @@ export function buildEventMeta(
         : "",
       circuit: e.track || e.race_name || "",
       weather: (e.weather || "").trim().toLowerCase(),
+      race_format: e.race_format || "50%",
+      is_playoff: e.is_playoff ?? false,
     });
   }
   return map;
@@ -237,6 +244,16 @@ export function computeH2H(
     }
     if (filters?.weather && filters.weather.length > 0 && meta) {
       if (!filters.weather.some((w) => w.toLowerCase() === meta.weather.toLowerCase())) continue;
+    }
+    if (filters?.format && meta) {
+      if (meta.race_format !== filters.format) continue;
+    }
+    if (filters?.competition && meta) {
+      if (meta.league.toLowerCase() !== filters.competition.toLowerCase()) continue;
+    }
+    if (filters?.roundType && meta) {
+      if (filters.roundType === "playoff" && !meta.is_playoff) continue;
+      if (filters.roundType === "regular" && meta.is_playoff) continue;
     }
     sharedIds.push(eid);
   }

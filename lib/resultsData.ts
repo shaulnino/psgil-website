@@ -80,30 +80,44 @@ function s(v: string | undefined): string {
   return (v ?? "").trim();
 }
 
+/** Normalise a CSV header to lowercase snake_case for resilient column matching. */
+function normalizeKey(k: string): string {
+  return k.toLowerCase().replace(/[\s\-]+/g, "_").replace(/[^a-z0-9_]/g, "");
+}
+
+function normalizeRow(row: Record<string, string>): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(row)) out[normalizeKey(k)] = v;
+  return out;
+}
+
 export function mapRaceResults(raw: Record<string, string>[]): RaceResultRow[] {
-  return raw.map((row) => ({
-    event_id: s(row.event_id),
-    position: s(row.position),
-    position_change: s(row.position_change),
-    driver_id: s(row.driver_id),
-    driver_name: s(row.driver_name),
-    team: s(row.team),
-    time_or_gap: s(row.time_or_gap),
-    best_lap: s(row.best_lap),
-    laps: s(row.laps),
-    grid: s(row.grid),
-    stops: s(row.stops),
-    kph: s(row.kph),
-    overtakes: s(row.overtakes),
-    laps_led: s(row.laps_led),
-    distance_led: s(row.distance_led),
-    steward_penalty: s(row.steward_penalty),
-    game_penalty: s(row.game_penalty),
-    points: s(row.points),
-    status: s(row.status),
-    fastest_lap: s(row.fastest_lap),
-    dotd: s(row.dotd),
-  }));
+  return raw.map((rawRow) => {
+    const row = normalizeRow(rawRow);
+    return {
+      event_id:        s(row.event_id),
+      position:        s(row.position),
+      position_change: s(row.position_change),
+      driver_id:       s(row.driver_id),
+      driver_name:     s(row.driver_name),
+      team:            s(row.team),
+      time_or_gap:     s(row.time_or_gap),
+      best_lap:        s(row.best_lap),
+      laps:            s(row.laps),
+      grid:            s(row.grid),
+      stops:           s(row.stops),
+      kph:             s(row.kph),
+      overtakes:       s(row.overtakes),
+      laps_led:        s(row.laps_led),
+      distance_led:    s(row.distance_led),
+      steward_penalty: s(row.steward_penalty),
+      game_penalty:    s(row.game_penalty),
+      points:          s(row.points),
+      status:          s(row.status),
+      fastest_lap:     s(row.fastest_lap),
+      dotd:            s(row.dotd),
+    };
+  });
 }
 
 export function mapStandings(raw: Record<string, string>[]): StandingsRow[] {

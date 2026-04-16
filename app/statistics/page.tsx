@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 import TablesPageContent from "@/components/TablesPageContent";
 import { fetchStandings } from "@/lib/resultsData";
@@ -6,8 +6,9 @@ import { fetchCsv, parseCsv } from "@/lib/csv";
 import {
   mapDrivers,
   mapTeams,
-  mapLeagueStandings,
   applyLeagueStandings,
+  leagueStandingsFromTables,
+  mergeComputedRatings,
 } from "@/lib/driversData";
 import { attachRewardsToDrivers, fetchRewards } from "@/lib/rewardsData";
 import {
@@ -15,6 +16,9 @@ import {
   resolveCurrentSeason,
   GLOBAL_CSV_URLS,
 } from "@/lib/seasonConfig";
+import { fetchAllRaceResults } from "@/lib/resultsData";
+import { mapRaceEvents } from "@/lib/scheduleData";
+import { computeDriverRatings } from "@/lib/statsComputed";
 
 const PLACEHOLDER_PHOTO = "/placeholders/driver.png";
 
@@ -38,8 +42,9 @@ export default async function TablesPage() {
     allConstructorsWild,
     driversCsv,
     teamsCsv,
-    standingsCsv,
     rewards,
+    raceResultsByEvent,
+    scheduleCsv,
   ] = await Promise.all([
     fetchStandings(GLOBAL_CSV_URLS.driversStandingsMain),
     fetchStandings(GLOBAL_CSV_URLS.constructorsStandingsMain),
@@ -47,8 +52,9 @@ export default async function TablesPage() {
     fetchStandings(GLOBAL_CSV_URLS.constructorsStandingsWild),
     fetchCsv(GLOBAL_CSV_URLS.drivers).catch(() => ""),
     fetchCsv(GLOBAL_CSV_URLS.teams).catch(() => ""),
-    fetchCsv(GLOBAL_CSV_URLS.leagueStandings).catch(() => ""),
     fetchRewards(GLOBAL_CSV_URLS.rewards),
+    fetchAllRaceResults(GLOBAL_CSV_URLS.raceResults),
+    fetchCsv(GLOBAL_CSV_URLS.schedule).catch(() => ""),
   ]);
 
   // 3. Parse drivers & teams
@@ -59,14 +65,31 @@ export default async function TablesPage() {
     ? mapTeams(parseCsv<Record<string, string>>(teamsCsv))
     : [];
 
-  // Merge league standings if available
-  if (standingsCsv) {
-    const standings = mapLeagueStandings(
-      parseCsv<Record<string, string>>(standingsCsv),
-    );
-    drivers = applyLeagueStandings(drivers, standings);
-  }
+  // Derive league ranks from the already-fetched computed standings tables (current season)
+  drivers = applyLeagueStandings(
+    drivers,
+    leagueStandingsFromTables(allDriversMain, allDriversWild, currentSeason.season_key),
+  );
   drivers = attachRewardsToDrivers(drivers, rewards);
+
+  // Merge live-computed ratings into driver objects for driver modals
+  try {
+    const allResultsFlat = Object.values(raceResultsByEvent).flat();
+    const allEvents = scheduleCsv
+      ? mapRaceEvents(parseCsv<Record<string, string>>(scheduleCsv))
+      : [];
+    if (allResultsFlat.length > 0 && allEvents.length > 0) {
+      const allTimeRatings = computeDriverRatings(allResultsFlat, allEvents);
+      drivers = mergeComputedRatings(drivers, allTimeRatings, "alltime");
+
+      const seasonRatings = computeDriverRatings(allResultsFlat, allEvents, {
+        season: currentSeason.season_key,
+      });
+      drivers = mergeComputedRatings(drivers, seasonRatings, "season");
+    }
+  } catch {
+    // Non-critical; modals still render with CSV-sourced ratings
+  }
 
   return (
     <main className="bg-[#0B0B0E] text-white">

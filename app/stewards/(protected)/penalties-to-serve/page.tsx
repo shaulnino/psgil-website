@@ -1,4 +1,5 @@
 import { can, requireStewardUser } from "@/lib/stewards/auth";
+import { fmtDate } from "@/app/stewards/lib/dates";
 import {
   listPenaltiesToServe,
   listUsers,
@@ -264,9 +265,9 @@ function PenaltyCard({
               <span>Triggered at {penalty.sourceThresholdPoints} pts</span>
             )}
             {penalty.assignedRaceStartTime && (
-              <span>Race: {new Date(penalty.assignedRaceStartTime).toLocaleDateString()}</span>
+              <span>Race: {fmtDate(penalty.assignedRaceStartTime)}</span>
             )}
-            <span>Created: {new Date(penalty.createdAt).toLocaleDateString()}</span>
+            <span>Created: {fmtDate(penalty.createdAt)}</span>
           </div>
 
           {penalty.adminNotes && (

@@ -37,6 +37,10 @@ import {
 } from "@/lib/statsData";
 import type { RaceResultRow } from "@/lib/resultsData";
 import type { RaceEvent } from "@/lib/scheduleData";
+import type { Reward } from "@/lib/rewardsData";
+import type { SeasonConfig } from "@/lib/seasonConfig";
+import { computeDriverStats } from "@/lib/statsComputed";
+import type { StatsFilters } from "@/lib/statsComputed";
 import RaceResultsTable from "@/components/RaceResultsTable";
 import {
   buildDriverIndex,
@@ -62,6 +66,9 @@ type Props = {
   data: StatsData;
   raceResults?: Record<string, RaceResultRow[]>;
   events?: RaceEvent[];
+  /** Passed from server for client-side filter computation */
+  seasons?: SeasonConfig[];
+  rewards?: Reward[];
 };
 
 /* ------------------------------------------------------------------ */
@@ -821,8 +828,6 @@ function DriverCumulativeChart({
   const chartData = useMemo(() => {
     if (driverRaces.length === 0) return [];
     const sliced = raceCount > 0 ? driverRaces.slice(-raceCount) : driverRaces;
-    const before =
-      raceCount > 0 ? driverRaces.slice(0, Math.max(0, driverRaces.length - raceCount)) : [];
 
     const acc = {
       races: 0,
@@ -865,8 +870,6 @@ function DriverCumulativeChart({
         acc.gridCount += 1;
       }
     };
-
-    for (const r of before) consume(r);
 
     return sliced.map((r) => {
       consume(r);
@@ -965,7 +968,7 @@ function DriverCumulativeChart({
         </div>
       ) : (
         <div className="h-72">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height={288}>
             <LineChart data={chartData} margin={{ top: 8, right: 12, bottom: 4, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
               <XAxis
@@ -1232,7 +1235,7 @@ function DriverCompareCumulativeChart({
         </div>
       ) : (
         <div className="h-72">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height={288}>
             <LineChart data={chartData} margin={{ top: 8, right: 12, bottom: 4, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
               <XAxis
@@ -1289,12 +1292,16 @@ function DriversSection({
   raceResults = {},
   events = [],
   initialDriver,
+  seasons,
+  rewards,
 }: {
   allTime: { rows: DriverStatRow[]; headers: string[] };
   bySeason: Record<string, { rows: DriverStatRow[]; headers: string[] }>;
   raceResults?: Record<string, RaceResultRow[]>;
   events?: RaceEvent[];
   initialDriver?: string;
+  seasons?: SeasonConfig[];
+  rewards?: Reward[];
 }) {
   // Derive the default season from bySeason keys (newest first)
   const defaultSeason = useMemo(() => {
@@ -1313,8 +1320,40 @@ function DriversSection({
     initialDriver ? [initialDriver] : [],
   );
 
-  // Pick the correct dataset
-  const dataset = mode === "All-time" ? allTime : (bySeason[season] ?? { rows: [], headers: [] });
+  // ── Format / Competition / Round-type filters ──────────────────────
+  const [formatFilter,      setFormatFilter]      = useState<StatsFilters["format"]>(undefined);
+  const [competitionFilter, setCompetitionFilter] = useState<StatsFilters["competition"]>(undefined);
+  const [roundTypeFilter,   setRoundTypeFilter]   = useState<StatsFilters["roundType"]>(undefined);
+
+  const anyFilterActive = !!(formatFilter || competitionFilter || roundTypeFilter);
+
+  // Flat race-results array for client-side computation
+  const allResultsFlat = useMemo(
+    () => Object.values(raceResults).flat(),
+    [raceResults],
+  );
+
+  // Client-side filtered dataset — only recomputed when a filter changes
+  const filteredDataset = useMemo<{ rows: DriverStatRow[]; headers: string[] } | null>(() => {
+    if (!anyFilterActive) return null;
+    if (!allResultsFlat.length || !events.length) return null;
+    const filters: StatsFilters = {};
+    if (mode === "Season") filters.season = season;
+    if (formatFilter)      filters.format = formatFilter;
+    if (competitionFilter) filters.competition = competitionFilter;
+    if (roundTypeFilter)   filters.roundType = roundTypeFilter;
+    return computeDriverStats(
+      allResultsFlat,
+      events,
+      rewards ?? [],
+      seasons ?? [],
+      filters,
+    );
+  }, [anyFilterActive, allResultsFlat, events, mode, season, formatFilter, competitionFilter, roundTypeFilter, rewards, seasons]);
+
+  // Pick the correct dataset: filtered > server-computed
+  const serverDataset = mode === "All-time" ? allTime : (bySeason[season] ?? { rows: [], headers: [] });
+  const dataset = filteredDataset ?? serverDataset;
   const driverNames = useMemo(
     () => dataset.rows.map((r) => r.driver_name).sort(),
     [dataset.rows],
@@ -1449,6 +1488,8 @@ function DriversSection({
     });
   }, [selectedRows, ratingMetrics]);
 
+  const selectCls = "rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-white/40 outline-none hover:border-white/25 hover:text-white/70 transition";
+
   return (
     <div className="space-y-6">
       {/* Controls */}
@@ -1467,6 +1508,58 @@ function DriversSection({
             ))}
           </select>
         )}
+
+        {/* ── Segmentation filters ─────────────────────────────── */}
+        <select
+          value={formatFilter ?? ""}
+          onChange={(e) => setFormatFilter((e.target.value || undefined) as StatsFilters["format"])}
+          className={selectCls}
+          title="Filter by race format"
+        >
+          <option value="" className="bg-[#1a1a24]">All Formats</option>
+          <option value="50%" className="bg-[#1a1a24]">50% Race</option>
+          <option value="25%" className="bg-[#1a1a24]">25% Race</option>
+          <option value="sprint" className="bg-[#1a1a24]">Sprint</option>
+        </select>
+
+        <select
+          value={competitionFilter ?? ""}
+          onChange={(e) => setCompetitionFilter((e.target.value || undefined) as StatsFilters["competition"])}
+          className={selectCls}
+          title="Filter by competition"
+        >
+          <option value="" className="bg-[#1a1a24]">All Leagues</option>
+          <option value="main" className="bg-[#1a1a24]">Main</option>
+          <option value="wild" className="bg-[#1a1a24]">Wild</option>
+        </select>
+
+        <select
+          value={roundTypeFilter ?? ""}
+          onChange={(e) => setRoundTypeFilter((e.target.value || undefined) as StatsFilters["roundType"])}
+          className={selectCls}
+          title="Filter by round type"
+        >
+          <option value="" className="bg-[#1a1a24]">All Rounds</option>
+          <option value="regular" className="bg-[#1a1a24]">Regular Season</option>
+          <option value="playoff" className="bg-[#1a1a24]">Playoffs</option>
+        </select>
+
+        {anyFilterActive && (
+          <button
+            type="button"
+            onClick={() => {
+              setFormatFilter(undefined);
+              setCompetitionFilter(undefined);
+              setRoundTypeFilter(undefined);
+            }}
+            className="rounded-lg px-2 py-2 text-xs text-white/40 transition hover:text-white/80"
+            title="Clear all filters"
+          >
+            ✕ Clear filters
+          </button>
+        )}
+        {/* ───────────────────────────────────────────────────────── */}
+
         <div className="flex-1" />
         <button
           onClick={() => {
@@ -1518,10 +1611,15 @@ function DriversSection({
       {/* ---- SINGLE DRIVER: All stats in categorised groups ---- */}
       {singleDriver && (
         <div className="space-y-3">
-          {categories.map((cat, catIdx) => (
+          {categories.map((cat, catIdx) => {
+            const visibleMetrics = cat.id === "records"
+              ? cat.metrics.filter((m) => (singleDriver.metrics[m.key] ?? 0) > 0)
+              : cat.metrics;
+            if (visibleMetrics.length === 0) return null;
+            return (
             <CategoryGroup
               key={cat.id}
-              category={cat}
+              category={{ ...cat, metrics: visibleMetrics }}
               defaultOpen={catIdx < DEFAULT_OPEN_CATEGORIES}
               open={openCategoryIds.has(cat.id)}
               onToggle={() =>
@@ -1534,7 +1632,7 @@ function DriversSection({
               }
             >
               <div className="grid grid-cols-1 gap-x-6 sm:grid-cols-2 lg:grid-cols-3">
-                {cat.metrics.map((m) => (
+                {visibleMetrics.map((m) => (
                   <StatRow
                     key={m.key}
                     label={m.label}
@@ -1545,7 +1643,8 @@ function DriversSection({
                 ))}
               </div>
             </CategoryGroup>
-          ))}
+            );
+          })}
           <DriverCumulativeChart
             driverName={singleDriver.driver_name}
             raceResults={raceResults}
@@ -2309,10 +2408,18 @@ function RankingsSection({
   allTime,
   bySeason,
   onSelectDriver,
+  raceResults = {},
+  events = [],
+  rewards,
+  seasons,
 }: {
   allTime: { rows: DriverStatRow[]; headers: string[] };
   bySeason: Record<string, { rows: DriverStatRow[]; headers: string[] }>;
   onSelectDriver?: (driverName: string) => void;
+  raceResults?: Record<string, RaceResultRow[]>;
+  events?: RaceEvent[];
+  rewards?: Reward[];
+  seasons?: SeasonConfig[];
 }) {
   /* ---------- Season helpers ---------- */
   const defaultSeason = useMemo(() => {
@@ -2341,9 +2448,36 @@ function RankingsSection({
   const [season, setSeason] = useState<string>(defaultSeason);
   const [selectedStat, setSelectedStat] = useState<string>("");
   const [sortAsc, setSortAsc] = useState<boolean | null>(null); // null = use default
+  const [formatFilter,      setFormatFilter]      = useState<StatsFilters["format"]>(undefined);
+  const [competitionFilter, setCompetitionFilter] = useState<StatsFilters["competition"]>(undefined);
+  const [roundTypeFilter,   setRoundTypeFilter]   = useState<StatsFilters["roundType"]>(undefined);
+
+  const anyFilterActive = !!(formatFilter || competitionFilter || roundTypeFilter);
+
+  const selectCls = "rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-white/40 outline-none hover:border-white/25 hover:text-white/70 transition";
+
+  /* ---------- Recompute dataset when filters are active ---------- */
+  const allResultsFlat = useMemo(
+    () => Object.values(raceResults).flat(),
+    [raceResults],
+  );
+
+  const filteredDataset = useMemo(() => {
+    if (!anyFilterActive) return null;
+    const filters: StatsFilters = {};
+    if (formatFilter)      filters.format      = formatFilter;
+    if (competitionFilter) filters.competition = competitionFilter;
+    if (roundTypeFilter)   filters.roundType   = roundTypeFilter;
+    if (mode === "Season") filters.season = season;
+    return computeDriverStats(allResultsFlat, events, rewards ?? [], seasons ?? [], filters);
+  }, [anyFilterActive, allResultsFlat, events, mode, season, formatFilter, competitionFilter, roundTypeFilter, rewards, seasons]);
 
   /* ---------- Dataset & metrics ---------- */
-  const dataset = mode === "All-time" ? allTime : (bySeason[season] ?? { rows: [], headers: [] });
+  const baseAllTime  = anyFilterActive ? (filteredDataset ?? allTime)      : allTime;
+  const baseBySeasonEntry = anyFilterActive
+    ? (filteredDataset ?? bySeason[season] ?? { rows: [], headers: [] })
+    : (bySeason[season] ?? { rows: [], headers: [] });
+  const dataset = mode === "All-time" ? baseAllTime : baseBySeasonEntry;
   const metrics = useMemo(() => detectMetrics(dataset.rows), [dataset.rows]);
   const teamCol = useMemo(() => findTeamCol(dataset.headers), [dataset.headers]);
 
@@ -2432,6 +2566,57 @@ function RankingsSection({
             ))}
           </select>
         )}
+
+        {/* ── Segmentation filters ─────────────────────────────── */}
+        <select
+          value={formatFilter ?? ""}
+          onChange={(e) => setFormatFilter((e.target.value || undefined) as StatsFilters["format"])}
+          className={selectCls}
+          title="Filter by race format"
+        >
+          <option value="" className="bg-[#1a1a24]">All Formats</option>
+          <option value="50%" className="bg-[#1a1a24]">50% Race</option>
+          <option value="25%" className="bg-[#1a1a24]">25% Race</option>
+          <option value="sprint" className="bg-[#1a1a24]">Sprint</option>
+        </select>
+
+        <select
+          value={competitionFilter ?? ""}
+          onChange={(e) => setCompetitionFilter((e.target.value || undefined) as StatsFilters["competition"])}
+          className={selectCls}
+          title="Filter by competition"
+        >
+          <option value="" className="bg-[#1a1a24]">All Leagues</option>
+          <option value="main" className="bg-[#1a1a24]">Main</option>
+          <option value="wild" className="bg-[#1a1a24]">Wild</option>
+        </select>
+
+        <select
+          value={roundTypeFilter ?? ""}
+          onChange={(e) => setRoundTypeFilter((e.target.value || undefined) as StatsFilters["roundType"])}
+          className={selectCls}
+          title="Filter by round type"
+        >
+          <option value="" className="bg-[#1a1a24]">All Rounds</option>
+          <option value="regular" className="bg-[#1a1a24]">Regular Season</option>
+          <option value="playoff" className="bg-[#1a1a24]">Playoffs</option>
+        </select>
+
+        {anyFilterActive && (
+          <button
+            type="button"
+            onClick={() => {
+              setFormatFilter(undefined);
+              setCompetitionFilter(undefined);
+              setRoundTypeFilter(undefined);
+            }}
+            className="rounded-lg px-2 py-2 text-xs text-white/40 transition hover:text-white/80"
+            title="Clear all filters"
+          >
+            ✕ Clear filters
+          </button>
+        )}
+        {/* ───────────────────────────────────────────────────────── */}
       </div>
 
       {/* Stat selector + sort toggle */}
@@ -2909,7 +3094,7 @@ function H2HTrendChart({
 
       {selectedMetrics.length > 0 && (
         <div className="h-72">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height={288}>
             <LineChart data={chartData} margin={{ top: 8, right: 12, bottom: 4, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
               <XAxis
@@ -3017,6 +3202,9 @@ function H2HSection({
   const [seasonFilters, setSeasonFilters] = useState<string[]>([]);
   const [circuitFilters, setCircuitFilters] = useState<string[]>([]);
   const [weatherFilters, setWeatherFilters] = useState<string[]>([]);
+  const [formatFilter, setFormatFilter] = useState("");
+  const [competitionFilter, setCompetitionFilter] = useState("");
+  const [roundTypeFilter, setRoundTypeFilter] = useState("");
   const [resultsEventId, setResultsEventId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -3032,8 +3220,11 @@ function H2HSection({
       seasons: seasonFilters.length > 0 ? seasonFilters : undefined,
       circuits: circuitFilters.length > 0 ? circuitFilters : undefined,
       weather: weatherFilters.length > 0 ? weatherFilters : undefined,
+      format: formatFilter || undefined,
+      competition: competitionFilter || undefined,
+      roundType: roundTypeFilter || undefined,
     });
-  }, [driverIndex, driverA, driverB, eventMeta, seasonFilters, circuitFilters, weatherFilters]);
+  }, [driverIndex, driverA, driverB, eventMeta, seasonFilters, circuitFilters, weatherFilters, formatFilter, competitionFilter, roundTypeFilter]);
 
   const optionsA = useMemo(
     () => driverNames.filter((n) => n !== driverB),
@@ -3044,7 +3235,8 @@ function H2HSection({
     [driverNames, driverA],
   );
 
-  const activeFilterCount = seasonFilters.length + circuitFilters.length + weatherFilters.length;
+  const activeFilterCount = seasonFilters.length + circuitFilters.length + weatherFilters.length
+    + (formatFilter ? 1 : 0) + (competitionFilter ? 1 : 0) + (roundTypeFilter ? 1 : 0);
   const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
   const activeFilterLabel = [
     seasonFilters.length > 0 && seasonFilters.map((s) => `S${s.replace("S", "")}`).join(", "),
@@ -3152,9 +3344,46 @@ function H2HSection({
           </div>
         )}
 
+        {/* Format / Competition / Round type */}
+        <div className="w-40">
+          <SearchableSelect
+            options={["All Formats", "50% Race", "25% Race", "Sprint"]}
+            value={formatFilter === "50%" ? "50% Race" : formatFilter === "25%" ? "25% Race" : formatFilter === "sprint" ? "Sprint" : ""}
+            onChange={(v) => {
+              const s = v as string;
+              setFormatFilter(s === "50% Race" ? "50%" : s === "25% Race" ? "25%" : s === "Sprint" ? "sprint" : "");
+            }}
+            placeholder="All Formats"
+          />
+        </div>
+
+        <div className="w-36">
+          <SearchableSelect
+            options={["All Leagues", "Main", "Wild"]}
+            value={competitionFilter === "main" ? "Main" : competitionFilter === "wild" ? "Wild" : ""}
+            onChange={(v) => {
+              const s = v as string;
+              setCompetitionFilter(s === "Main" ? "main" : s === "Wild" ? "wild" : "");
+            }}
+            placeholder="All Leagues"
+          />
+        </div>
+
+        <div className="w-40">
+          <SearchableSelect
+            options={["All Rounds", "Regular Season", "Playoffs"]}
+            value={roundTypeFilter === "regular" ? "Regular Season" : roundTypeFilter === "playoff" ? "Playoffs" : ""}
+            onChange={(v) => {
+              const s = v as string;
+              setRoundTypeFilter(s === "Regular Season" ? "regular" : s === "Playoffs" ? "playoff" : "");
+            }}
+            placeholder="All Rounds"
+          />
+        </div>
+
         {activeFilterCount > 0 && (
           <button
-            onClick={() => { setSeasonFilters([]); setCircuitFilters([]); setWeatherFilters([]); }}
+            onClick={() => { setSeasonFilters([]); setCircuitFilters([]); setWeatherFilters([]); setFormatFilter(""); setCompetitionFilter(""); setRoundTypeFilter(""); }}
             className="flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-medium text-white/40 transition hover:text-white/70"
           >
             Clear all
@@ -3399,7 +3628,7 @@ function H2HSection({
 /*  Main component                                                     */
 /* ------------------------------------------------------------------ */
 
-export default function StatsPageContent({ data, raceResults, events }: Props) {
+export default function StatsPageContent({ data, raceResults, events, seasons, rewards }: Props) {
   const searchParams = useSearchParams();
   const initialDriver = searchParams.get("driver") ?? undefined;
   const initialTab = searchParams.get("tab") ?? undefined;
@@ -3438,6 +3667,8 @@ export default function StatsPageContent({ data, raceResults, events }: Props) {
           raceResults={raceResults ?? {}}
           events={events ?? []}
           initialDriver={effectiveDriver}
+          seasons={seasons}
+          rewards={rewards}
         />
       )}
       {tab === "League" && <LeagueSection league={data.league} />}
@@ -3455,6 +3686,10 @@ export default function StatsPageContent({ data, raceResults, events }: Props) {
           allTime={data.driversAllTime}
           bySeason={data.driversBySeason}
           onSelectDriver={handleSelectDriverFromRanking}
+          raceResults={raceResults}
+          events={events}
+          rewards={rewards}
+          seasons={seasons}
         />
       )}
     </div>
