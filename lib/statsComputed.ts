@@ -1363,6 +1363,45 @@ export function computeCircuitStats(
 }
 
 /* ------------------------------------------------------------------ */
+/*  Home page hero figures (aligned with computeLeagueStats totals)     */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Same definitions as the League stats table built by `computeLeagueStats`:
+ * - **Total events** — schedule rows with status "completed" only.
+ * - **Unique drivers** — distinct `driver_id` values in race results for those events.
+ * - **Unique winners** — distinct `driver_id` with at least one finishing position P1
+ *   (replaces the old Circuits sheet "Winners" name list, but keyed by id).
+ */
+export function computeHomePageSnapshot(
+  results: RaceResultRow[],
+  events: RaceEvent[],
+): {
+  totalRaces: string;
+  totalDrivers: string;
+  uniqueWinners: number;
+} {
+  const completed = events.filter((e) => e.status.toLowerCase().trim() === "completed");
+  const eventIdSet = new Set(completed.map((e) => e.event_id.toLowerCase()));
+  const relevant = results.filter((r) => eventIdSet.has(r.event_id.toLowerCase()));
+
+  const driverIds = new Set<string>();
+  const winners = new Set<string>();
+  for (const r of relevant) {
+    const id = (r.driver_id ?? "").trim();
+    if (!id) continue;
+    driverIds.add(id);
+    if (parsePos(r.position) === 1) winners.add(id);
+  }
+
+  return {
+    totalRaces: String(completed.length),
+    totalDrivers: String(driverIds.size),
+    uniqueWinners: winners.size,
+  };
+}
+
+/* ------------------------------------------------------------------ */
 /*  Public: computeLeagueStats                                          */
 /*  Returns a pivot table: each row = a metric, columns = seasons.     */
 /* ------------------------------------------------------------------ */
