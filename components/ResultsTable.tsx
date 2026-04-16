@@ -181,7 +181,7 @@ export default function ResultsTable<T extends Record<string, unknown>>({
 
       {/* Scrollable wrapper */}
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[640px] border-collapse text-sm">
+        <table className="w-full min-w-max border-collapse text-sm">
           {/* Sticky header */}
           <thead className="bg-[#111118]">
             <tr>

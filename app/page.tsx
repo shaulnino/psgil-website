@@ -33,9 +33,8 @@ import {
   mergeComputedRatings,
   computeAllScopeRanks,
 } from "@/lib/driversData";
-import { computeDriverRatings } from "@/lib/statsComputed";
+import { computeDriverRatings, computeHomePageSnapshot } from "@/lib/statsComputed";
 import { attachRewardsToDrivers, fetchRewards } from "@/lib/rewardsData";
-import { fetchUniqueWinnersCount, fetchLeagueTotals } from "@/lib/statsData";
 import { fetchLatestArticles, formatNewsDate } from "@/lib/newsData";
 import { getYouTubeVideoId } from "@/lib/youtube";
 import {
@@ -69,8 +68,8 @@ export default async function Home() {
   const t = (text: string) =>
     resolveTemplate(text, currentSeasonLabel, seasonCount, templateExtras);
 
-  /* ---- Fetch schedule + race results + drivers/teams + standings + winners count in parallel ---- */
-  const [scheduleCsv, raceResultsByEvent, driversCsv, teamsCsv, mainStandings, wildStandings, rewards, uniqueWinners, leagueTotals, latestNews] =
+  /* ---- Fetch schedule + race results + drivers/teams + standings in parallel ---- */
+  const [scheduleCsv, raceResultsByEvent, driversCsv, teamsCsv, mainStandings, wildStandings, rewards, latestNews] =
     await Promise.all([
       fetchCsv(GLOBAL_CSV_URLS.schedule).catch(() => ""),
       fetchAllRaceResults(GLOBAL_CSV_URLS.raceResults),
@@ -79,15 +78,22 @@ export default async function Home() {
       fetchStandings(GLOBAL_CSV_URLS.driversStandingsMain),
       fetchStandings(GLOBAL_CSV_URLS.driversStandingsWild),
       fetchRewards(GLOBAL_CSV_URLS.rewards),
-      fetchUniqueWinnersCount(),
-      fetchLeagueTotals(),
       fetchLatestArticles(3),
     ]);
 
+  const allResultsFlat = Object.values(raceResultsByEvent).flat();
+  const allEventsGlob = scheduleCsv
+    ? mapRaceEvents(parseCsv<Record<string, string>>(scheduleCsv))
+    : [];
+  const homeSnapshot =
+    allResultsFlat.length > 0 && allEventsGlob.length > 0
+      ? computeHomePageSnapshot(allResultsFlat, allEventsGlob)
+      : { totalRaces: "0", totalDrivers: "0", uniqueWinners: 0 };
+
   templateExtras = {
-    uniqueWinners: uniqueWinners || 0,
-    totalRaces: leagueTotals.totalRaces || "0",
-    totalDrivers: leagueTotals.totalDrivers || "0",
+    uniqueWinners: homeSnapshot.uniqueWinners,
+    totalRaces: homeSnapshot.totalRaces,
+    totalDrivers: homeSnapshot.totalDrivers,
   };
 
   let lastGroup: RaceGroup | null = null;
@@ -95,11 +101,9 @@ export default async function Home() {
   let liveGroup: RaceGroup | null = null;
   let seasonEvents: RaceEvent[] = [];
   try {
-    if (scheduleCsv) {
-      const raw = parseCsv<Record<string, string>>(scheduleCsv);
-      const allEvents = mapRaceEvents(raw);
+    if (allEventsGlob.length > 0) {
       // Filter to current season only
-      const events = allEvents.filter((e) =>
+      const events = allEventsGlob.filter((e) =>
         matchesSeason(e.season, currentSeason.season_key),
       );
       seasonEvents = events;
@@ -124,13 +128,9 @@ export default async function Home() {
 
   // Merge live-computed all-time ratings (home page only needs all-time)
   try {
-    if (scheduleCsv) {
-      const allResultsFlat = Object.values(raceResultsByEvent).flat();
-      const allEvents = mapRaceEvents(parseCsv<Record<string, string>>(scheduleCsv));
-      if (allResultsFlat.length > 0 && allEvents.length > 0) {
-        const allTimeRatings = computeDriverRatings(allResultsFlat, allEvents);
-        allDrivers = mergeComputedRatings(allDrivers, allTimeRatings, "alltime");
-      }
+    if (allResultsFlat.length > 0 && allEventsGlob.length > 0) {
+      const allTimeRatings = computeDriverRatings(allResultsFlat, allEventsGlob);
+      allDrivers = mergeComputedRatings(allDrivers, allTimeRatings, "alltime");
     }
     allDrivers = computeAllScopeRanks(allDrivers);
   } catch {
