@@ -1,5 +1,6 @@
 export const revalidate = 300;
 
+import { Suspense } from "react";
 import Section from "@/components/Section";
 import StatsPageContent from "@/components/StatsPageContent";
 import { fetchSeasonsConfig, GLOBAL_CSV_URLS } from "@/lib/seasonConfig";
@@ -64,13 +65,15 @@ export default async function StatsPage() {
         description="Deep stats for every driver, season, and circuit in PSGiL history."
         pageHeader
       >
-        <StatsPageContent
-          data={data}
-          raceResults={raceResultsByEvent}
-          events={events}
-          seasons={seasons}
-          rewards={rewards}
-        />
+        <Suspense>
+          <StatsPageContent
+            data={data}
+            raceResults={raceResultsByEvent}
+            events={events}
+            seasons={seasons}
+            rewards={rewards}
+          />
+        </Suspense>
       </Section>
     </main>
   );
