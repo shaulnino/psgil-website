@@ -31,6 +31,7 @@ import {
   applyLeagueStandings,
   leagueStandingsFromTables,
   mergeComputedRatings,
+  computeAllScopeRanks,
 } from "@/lib/driversData";
 import { computeDriverRatings } from "@/lib/statsComputed";
 import { attachRewardsToDrivers, fetchRewards } from "@/lib/rewardsData";
@@ -131,6 +132,7 @@ export default async function Home() {
         allDrivers = mergeComputedRatings(allDrivers, allTimeRatings, "alltime");
       }
     }
+    allDrivers = computeAllScopeRanks(allDrivers);
   } catch {
     // Rating merge is non-critical; drivers still display without computed ratings
   }

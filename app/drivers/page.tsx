@@ -13,6 +13,8 @@ import {
   applyLeagueStandings,
   leagueStandingsFromTables,
   mergeComputedRatings,
+  computeAllScopeRanks,
+  computeCompetitionRanks,
 } from "@/lib/driversData";
 import { attachRewardsToDrivers, fetchRewards } from "@/lib/rewardsData";
 import {
@@ -171,6 +173,9 @@ export default async function DriversPage() {
       drivers = mergeComputedRatings(drivers, allTimeWild, "wild");
       drivers = mergeComputedRatings(drivers, seasonMain,  "season_main");
       drivers = mergeComputedRatings(drivers, seasonWild,  "season_wild");
+      // Compute cross-driver rankings for all scopes
+      drivers = computeAllScopeRanks(drivers);
+      drivers = computeCompetitionRanks(drivers);
     }
 
     const teamsData = mapTeams(parseCsv<Record<string, string>>(teamsCsv));

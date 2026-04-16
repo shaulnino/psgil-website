@@ -9,6 +9,7 @@ import {
   applyLeagueStandings,
   leagueStandingsFromTables,
   mergeComputedRatings,
+  computeAllScopeRanks,
 } from "@/lib/driversData";
 import { attachRewardsToDrivers, fetchRewards } from "@/lib/rewardsData";
 import {
@@ -87,6 +88,7 @@ export default async function TablesPage() {
       });
       drivers = mergeComputedRatings(drivers, seasonRatings, "season");
     }
+    drivers = computeAllScopeRanks(drivers);
   } catch {
     // Non-critical; modals still render with CSV-sourced ratings
   }

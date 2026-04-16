@@ -1132,8 +1132,6 @@ export function computeDriverStats(
       } : {}),
       // ── Racecraft & Strategy — S6+ only, only output when season filter is active ──
       ...(f.season ? {
-        [M.OVERTAKES]:          d.overtakes,
-        [M.AVG_OVERTAKES]:      d.events > 0 ? round2(d.overtakes / d.events) : 0,
         [M.LAPS_LED]:           d.laps_led,
         [M.AVG_LAPS_LED]:       d.events > 0 ? round2(d.laps_led / d.events) : 0,
         [M.PIT_STOPS]:          d.pit_stops,
@@ -1497,9 +1495,6 @@ export function computeLeagueStats(
     { name: "Total DNFs",                   fn: countDNFs },
     { name: "DNF Rate %",                   fn: dnfRate },
     { name: "Pole to Win Conversions",      fn: countPoleToWin },
-    // ── S6+ racecraft (shows 0 for pre-S6 seasons) ───────────────────
-    { name: "Total Overtakes",              fn: totalOvertakes },
-    { name: "Avg. Overtakes per Race",      fn: avgOvertakesPerRace },
     { name: "Total Pit Stops",              fn: totalPitStops },
     { name: "Avg. Pit Stops per Race",      fn: avgPitStopsPerRace },
   ];
