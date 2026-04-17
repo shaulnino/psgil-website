@@ -1,7 +1,16 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import StatsFilterPills from "@/components/stats/StatsFilterPills";
+import {
+  DRIVER_STAT_TAB_ORDER,
+  groupMetricsByDriverTab,
+  resolveHeroMetrics,
+  pickMetricKeyForPreset,
+  RANKINGS_QUICK_PRESETS,
+  type DriverStatTabId,
+} from "@/lib/statsMetricRegistry";
 import {
   BarChart,
   Bar,
@@ -440,6 +449,35 @@ function StatRow({
       <span className="text-sm font-semibold text-[#D4AF37] tabular-nums shrink-0">
         {fmtVal(value, isPct)}
       </span>
+    </div>
+  );
+}
+
+function StatHeroCard({
+  label,
+  value,
+  isPct,
+  tooltip,
+}: {
+  label: string;
+  value: number | undefined;
+  isPct: boolean;
+  tooltip?: string;
+}) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-gradient-to-br from-[#7020B0]/25 via-white/[0.04] to-transparent px-4 py-3 shadow-inner">
+      <div className="text-[10px] font-bold uppercase tracking-wider text-white/45">
+        {tooltip ? (
+          <MetricTooltip text={tooltip}>
+            <span>{label}</span>
+          </MetricTooltip>
+        ) : (
+          label
+        )}
+      </div>
+      <div className="mt-1.5 text-xl font-extrabold tabular-nums tracking-tight text-[#D4AF37] sm:text-2xl">
+        {fmtVal(value, isPct)}
+      </div>
     </div>
   );
 }
@@ -1324,8 +1362,51 @@ function DriversSection({
   const [formatFilter,      setFormatFilter]      = useState<StatsFilters["format"]>(undefined);
   const [competitionFilter, setCompetitionFilter] = useState<StatsFilters["competition"]>(undefined);
   const [roundTypeFilter,   setRoundTypeFilter]   = useState<StatsFilters["roundType"]>(undefined);
+  const [driverStatTab, setDriverStatTab] = useState<DriverStatTabId>("championship");
+
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const filterQueryHydrated = useRef(false);
 
   const anyFilterActive = !!(formatFilter || competitionFilter || roundTypeFilter);
+
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams.toString());
+    if (!filterQueryHydrated.current) {
+      const f = next.get("format");
+      if (f === "50%" || f === "25%" || f === "sprint") {
+        setFormatFilter(f as StatsFilters["format"]);
+      }
+      const c = next.get("comp");
+      if (c === "main" || c === "wild") {
+        setCompetitionFilter(c as StatsFilters["competition"]);
+      }
+      const r = next.get("round");
+      if (r === "regular" || r === "playoff") {
+        setRoundTypeFilter(r as StatsFilters["roundType"]);
+      }
+      filterQueryHydrated.current = true;
+      return;
+    }
+    if (formatFilter) next.set("format", formatFilter);
+    else next.delete("format");
+    if (competitionFilter) next.set("comp", competitionFilter);
+    else next.delete("comp");
+    if (roundTypeFilter) next.set("round", roundTypeFilter);
+    else next.delete("round");
+    const qs = next.toString();
+    if (qs !== searchParams.toString()) {
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    }
+  }, [
+    searchParams,
+    formatFilter,
+    competitionFilter,
+    roundTypeFilter,
+    pathname,
+    router,
+  ]);
 
   // Flat race-results array for client-side computation
   const allResultsFlat = useMemo(
@@ -1415,6 +1496,22 @@ function DriversSection({
     [availableKeys],
   );
 
+  const tabMetricGroups = useMemo(
+    () => groupMetricsByDriverTab(metrics, availableKeys),
+    [metrics, availableKeys],
+  );
+  const heroMetricSlots = useMemo(
+    () => resolveHeroMetrics(metrics, availableKeys),
+    [metrics, availableKeys],
+  );
+
+  useEffect(() => {
+    if (tabMetricGroups[driverStatTab].length === 0) {
+      const fb = DRIVER_STAT_TAB_ORDER.find((t) => tabMetricGroups[t.id].length > 0)?.id;
+      if (fb) setDriverStatTab(fb);
+    }
+  }, [driverStatTab, tabMetricGroups]);
+
   // Season keys that actually have data — derived dynamically from bySeason
   const availableSeasons = useMemo(
     () =>
@@ -1488,8 +1585,6 @@ function DriversSection({
     });
   }, [selectedRows, ratingMetrics]);
 
-  const selectCls = "rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-white/40 outline-none hover:border-white/25 hover:text-white/70 transition";
-
   return (
     <div className="space-y-6">
       {/* Controls */}
@@ -1509,57 +1604,6 @@ function DriversSection({
           </select>
         )}
 
-        {/* ── Segmentation filters ─────────────────────────────── */}
-        <select
-          value={formatFilter ?? ""}
-          onChange={(e) => setFormatFilter((e.target.value || undefined) as StatsFilters["format"])}
-          className={selectCls}
-          title="Filter by race format"
-        >
-          <option value="" className="bg-[#1a1a24]">All Formats</option>
-          <option value="50%" className="bg-[#1a1a24]">50% Race</option>
-          <option value="25%" className="bg-[#1a1a24]">25% Race</option>
-          <option value="sprint" className="bg-[#1a1a24]">Sprint</option>
-        </select>
-
-        <select
-          value={competitionFilter ?? ""}
-          onChange={(e) => setCompetitionFilter((e.target.value || undefined) as StatsFilters["competition"])}
-          className={selectCls}
-          title="Filter by competition"
-        >
-          <option value="" className="bg-[#1a1a24]">All Leagues</option>
-          <option value="main" className="bg-[#1a1a24]">Main</option>
-          <option value="wild" className="bg-[#1a1a24]">Wild</option>
-        </select>
-
-        <select
-          value={roundTypeFilter ?? ""}
-          onChange={(e) => setRoundTypeFilter((e.target.value || undefined) as StatsFilters["roundType"])}
-          className={selectCls}
-          title="Filter by round type"
-        >
-          <option value="" className="bg-[#1a1a24]">All Rounds</option>
-          <option value="regular" className="bg-[#1a1a24]">Regular Season</option>
-          <option value="playoff" className="bg-[#1a1a24]">Playoffs</option>
-        </select>
-
-        {anyFilterActive && (
-          <button
-            type="button"
-            onClick={() => {
-              setFormatFilter(undefined);
-              setCompetitionFilter(undefined);
-              setRoundTypeFilter(undefined);
-            }}
-            className="rounded-lg px-2 py-2 text-xs text-white/40 transition hover:text-white/80"
-            title="Clear all filters"
-          >
-            ✕ Clear filters
-          </button>
-        )}
-        {/* ───────────────────────────────────────────────────────── */}
-
         <div className="flex-1" />
         <button
           onClick={() => {
@@ -1578,6 +1622,23 @@ function DriversSection({
         </button>
       </div>
 
+      <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
+        <p className="mb-3 text-[10px] font-bold uppercase tracking-wider text-white/40">Segment results</p>
+        <StatsFilterPills
+          formatFilter={formatFilter}
+          competitionFilter={competitionFilter}
+          roundTypeFilter={roundTypeFilter}
+          onFormat={setFormatFilter}
+          onCompetition={setCompetitionFilter}
+          onRoundType={setRoundTypeFilter}
+          onClearAll={() => {
+            setFormatFilter(undefined);
+            setCompetitionFilter(undefined);
+            setRoundTypeFilter(undefined);
+          }}
+        />
+      </div>
+
       {/* Driver selector */}
       <div className="max-w-sm">
         <SearchableSelect
@@ -1590,7 +1651,7 @@ function DriversSection({
         />
       </div>
 
-      {categories.length > 0 && (
+      {compare && categories.length > 0 && (
         <div className="flex justify-end">
           <button
             type="button"
@@ -1608,31 +1669,64 @@ function DriversSection({
         </div>
       )}
 
-      {/* ---- SINGLE DRIVER: All stats in categorised groups ---- */}
+      {/* ---- SINGLE DRIVER: hero + sub-tabs + detail grid ---- */}
       {singleDriver && (
-        <div className="space-y-3">
-          {categories.map((cat, catIdx) => {
-            const visibleMetrics = cat.id === "records"
-              ? cat.metrics.filter((m) => (singleDriver.metrics[m.key] ?? 0) > 0)
-              : cat.metrics;
-            if (visibleMetrics.length === 0) return null;
-            return (
-            <CategoryGroup
-              key={cat.id}
-              category={{ ...cat, metrics: visibleMetrics }}
-              defaultOpen={catIdx < DEFAULT_OPEN_CATEGORIES}
-              open={openCategoryIds.has(cat.id)}
-              onToggle={() =>
-                setOpenCategoryIds((prev) => {
-                  const next = new Set(prev);
-                  if (next.has(cat.id)) next.delete(cat.id);
-                  else next.add(cat.id);
-                  return next;
+        <div className="space-y-5">
+          <div>
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-white/40">Overview</p>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+              {heroMetricSlots.map(({ info, key }) => (
+                <StatHeroCard
+                  key={key}
+                  label={info.label}
+                  value={singleDriver.metrics[key]}
+                  isPct={info.isPercentage}
+                  tooltip={info.tooltip !== info.key ? info.tooltip : undefined}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-white/40">Explore</p>
+            <div className="flex flex-wrap gap-1.5 rounded-xl border border-white/10 bg-white/[0.03] p-1.5">
+              {DRIVER_STAT_TAB_ORDER.map((t) => {
+                const count = tabMetricGroups[t.id].length;
+                if (count === 0) return null;
+                const active = driverStatTab === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setDriverStatTab(t.id)}
+                    className={`rounded-lg px-3 py-2 text-xs font-semibold transition sm:text-sm ${
+                      active
+                        ? "bg-[#7020B0] text-white shadow"
+                        : "text-white/55 hover:bg-white/5 hover:text-white"
+                    }`}
+                  >
+                    {t.label}
+                    <span
+                      className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] ${
+                        active ? "bg-white/20 text-white/90" : "bg-white/10 text-white/45"
+                      }`}
+                    >
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
+            <div className="grid grid-cols-1 gap-x-6 gap-y-0.5 sm:grid-cols-2 lg:grid-cols-3">
+              {tabMetricGroups[driverStatTab]
+                .filter((m) => {
+                  if (driverStatTab !== "records") return true;
+                  return (singleDriver.metrics[m.key] ?? 0) > 0;
                 })
-              }
-            >
-              <div className="grid grid-cols-1 gap-x-6 sm:grid-cols-2 lg:grid-cols-3">
-                {visibleMetrics.map((m) => (
+                .map((m) => (
                   <StatRow
                     key={m.key}
                     label={m.label}
@@ -1641,10 +1735,9 @@ function DriversSection({
                     tooltip={m.tooltip}
                   />
                 ))}
-              </div>
-            </CategoryGroup>
-            );
-          })}
+            </div>
+          </div>
+
           <DriverCumulativeChart
             driverName={singleDriver.driver_name}
             raceResults={raceResults}
@@ -1955,6 +2048,13 @@ function LeagueSection({ league }: { league: LeagueStatRow[] }) {
     }).filter((r) => Object.keys(r).length > 1);
   }, [league, compare, selectedSeasons]);
 
+  const leagueHighlightDefs = [
+    { metric: "Total Events", short: "Events" },
+    { metric: "# Drivers Participating*", short: "Drivers" },
+    { metric: "Avg. Participation", short: "Avg. participation" },
+    { metric: "DNF Rate %", short: "DNF rate" },
+  ] as const;
+
   return (
     <div className="space-y-6">
       {/* Controls */}
@@ -1973,6 +2073,25 @@ function LeagueSection({ league }: { league: LeagueStatRow[] }) {
           </button>
         )}
       </div>
+
+      {mode === "All-time" && (
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {leagueHighlightDefs.map(({ metric, short }) => {
+            const row = league.find((r) => r.metric === metric);
+            return (
+              <div
+                key={metric}
+                className="rounded-xl border border-white/10 bg-gradient-to-br from-[#7020B0]/25 via-white/[0.04] to-transparent px-4 py-3"
+              >
+                <div className="text-[10px] font-bold uppercase tracking-wider text-white/45">{short}</div>
+                <div className="mt-1 text-xl font-extrabold tabular-nums text-[#D4AF37] sm:text-2xl">
+                  {row?.total ?? "—"}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {compare && mode === "Season" && (
         <div className="max-w-sm">
@@ -2454,7 +2573,47 @@ function RankingsSection({
 
   const anyFilterActive = !!(formatFilter || competitionFilter || roundTypeFilter);
 
-  const selectCls = "rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-white/40 outline-none hover:border-white/25 hover:text-white/70 transition";
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const rankingsUrlHydrated = useRef(false);
+
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams.toString());
+    if (!rankingsUrlHydrated.current) {
+      const f = next.get("format");
+      if (f === "50%" || f === "25%" || f === "sprint") {
+        setFormatFilter(f as StatsFilters["format"]);
+      }
+      const c = next.get("comp");
+      if (c === "main" || c === "wild") {
+        setCompetitionFilter(c as StatsFilters["competition"]);
+      }
+      const r = next.get("round");
+      if (r === "regular" || r === "playoff") {
+        setRoundTypeFilter(r as StatsFilters["roundType"]);
+      }
+      rankingsUrlHydrated.current = true;
+      return;
+    }
+    if (formatFilter) next.set("format", formatFilter);
+    else next.delete("format");
+    if (competitionFilter) next.set("comp", competitionFilter);
+    else next.delete("comp");
+    if (roundTypeFilter) next.set("round", roundTypeFilter);
+    else next.delete("round");
+    const qs = next.toString();
+    if (qs !== searchParams.toString()) {
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    }
+  }, [
+    searchParams,
+    formatFilter,
+    competitionFilter,
+    roundTypeFilter,
+    pathname,
+    router,
+  ]);
 
   /* ---------- Recompute dataset when filters are active ---------- */
   const allResultsFlat = useMemo(
@@ -2531,6 +2690,17 @@ function RankingsSection({
       }));
   }, [dataset.rows, selectedStat, isAscending, teamCol, currentMetric]);
 
+  const leaderboardScale = useMemo(() => {
+    if (ranked.length === 0) {
+      return { min: 0, max: 1, lowerBetter: false };
+    }
+    const nums = ranked.map((r) => Number(r.value)).filter((n) => Number.isFinite(n));
+    const min = Math.min(...nums);
+    const max = Math.max(...nums);
+    const lowerBetter = isLowerBetterMetric(currentMetric?.label ?? selectedStat);
+    return { min, max, lowerBetter };
+  }, [ranked, currentMetric?.label, selectedStat]);
+
   /* ---------- Empty state ---------- */
   if (dataset.rows.length === 0) {
     return (
@@ -2566,57 +2736,45 @@ function RankingsSection({
             ))}
           </select>
         )}
+      </div>
 
-        {/* ── Segmentation filters ─────────────────────────────── */}
-        <select
-          value={formatFilter ?? ""}
-          onChange={(e) => setFormatFilter((e.target.value || undefined) as StatsFilters["format"])}
-          className={selectCls}
-          title="Filter by race format"
-        >
-          <option value="" className="bg-[#1a1a24]">All Formats</option>
-          <option value="50%" className="bg-[#1a1a24]">50% Race</option>
-          <option value="25%" className="bg-[#1a1a24]">25% Race</option>
-          <option value="sprint" className="bg-[#1a1a24]">Sprint</option>
-        </select>
+      <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
+        <p className="mb-3 text-[10px] font-bold uppercase tracking-wider text-white/40">Segment leaderboard</p>
+        <StatsFilterPills
+          formatFilter={formatFilter}
+          competitionFilter={competitionFilter}
+          roundTypeFilter={roundTypeFilter}
+          onFormat={setFormatFilter}
+          onCompetition={setCompetitionFilter}
+          onRoundType={setRoundTypeFilter}
+          onClearAll={() => {
+            setFormatFilter(undefined);
+            setCompetitionFilter(undefined);
+            setRoundTypeFilter(undefined);
+          }}
+        />
+      </div>
 
-        <select
-          value={competitionFilter ?? ""}
-          onChange={(e) => setCompetitionFilter((e.target.value || undefined) as StatsFilters["competition"])}
-          className={selectCls}
-          title="Filter by competition"
-        >
-          <option value="" className="bg-[#1a1a24]">All Leagues</option>
-          <option value="main" className="bg-[#1a1a24]">Main</option>
-          <option value="wild" className="bg-[#1a1a24]">Wild</option>
-        </select>
-
-        <select
-          value={roundTypeFilter ?? ""}
-          onChange={(e) => setRoundTypeFilter((e.target.value || undefined) as StatsFilters["roundType"])}
-          className={selectCls}
-          title="Filter by round type"
-        >
-          <option value="" className="bg-[#1a1a24]">All Rounds</option>
-          <option value="regular" className="bg-[#1a1a24]">Regular Season</option>
-          <option value="playoff" className="bg-[#1a1a24]">Playoffs</option>
-        </select>
-
-        {anyFilterActive && (
+      <div className="flex flex-wrap gap-2">
+        <span className="w-full text-[10px] font-bold uppercase tracking-wider text-white/35 sm:w-auto sm:self-center">
+          Quick picks
+        </span>
+        {RANKINGS_QUICK_PRESETS.map((p) => (
           <button
+            key={p.id}
             type="button"
             onClick={() => {
-              setFormatFilter(undefined);
-              setCompetitionFilter(undefined);
-              setRoundTypeFilter(undefined);
+              const key = pickMetricKeyForPreset(metrics, p.id);
+              if (key) {
+                setSelectedStat(key);
+                setSortAsc(null);
+              }
             }}
-            className="rounded-lg px-2 py-2 text-xs text-white/40 transition hover:text-white/80"
-            title="Clear all filters"
+            className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-white/70 transition hover:border-[#7020B0]/50 hover:text-white"
           >
-            ✕ Clear filters
+            {p.label}
           </button>
-        )}
-        {/* ───────────────────────────────────────────────────────── */}
+        ))}
       </div>
 
       {/* Stat selector + sort toggle */}
@@ -2656,6 +2814,45 @@ function RankingsSection({
         <p className="text-sm text-white/40 -mt-3">{currentMetric.tooltip}</p>
       )}
 
+      {ranked.length >= 3 && (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {ranked.slice(0, 3).map((r, idx) => {
+            const ring =
+              idx === 0
+                ? "border-[#D4AF37]/50 from-[#D4AF37]/15"
+                : idx === 1
+                  ? "border-white/20 from-white/10"
+                  : "border-[#CD7F32]/40 from-[#CD7F32]/12";
+            return (
+              <div
+                key={r.driverName}
+                className={`rounded-xl border bg-gradient-to-br p-4 ${ring} to-transparent`}
+              >
+                <div className="text-[10px] font-bold uppercase tracking-wider text-white/45">
+                  #{r.rank} {idx === 0 ? "Leader" : idx === 1 ? "2nd" : "3rd"}
+                </div>
+                <div className="mt-1 text-lg font-bold text-white">
+                  {onSelectDriver ? (
+                    <button
+                      type="button"
+                      onClick={() => onSelectDriver(r.driverName)}
+                      className="text-left hover:text-[#D4AF37]"
+                    >
+                      {r.driverName}
+                    </button>
+                  ) : (
+                    r.driverName
+                  )}
+                </div>
+                <div className="mt-2 text-2xl font-extrabold tabular-nums text-[#D4AF37]">
+                  {fmtVal(r.value, r.isPct)}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {/* Rankings table */}
       {ranked.length > 0 ? (
         <div className="overflow-x-auto rounded-xl border border-white/10">
@@ -2673,6 +2870,9 @@ function RankingsSection({
                     Team
                   </th>
                 )}
+                <th className="hidden w-36 px-2 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-white/35 sm:table-cell">
+                  vs field
+                </th>
                 <th className="px-4 py-3 text-right text-sm font-semibold uppercase tracking-wider text-[#D4AF37]">
                   {currentMetric?.label ?? selectedStat}
                 </th>
@@ -2683,6 +2883,24 @@ function RankingsSection({
                 const isGold = r.rank === 1;
                 const isSilver = r.rank === 2;
                 const isBronze = r.rank === 3;
+                const v = Number(r.value);
+                let barW = 50;
+                if (
+                  Number.isFinite(v) &&
+                  leaderboardScale.max !== leaderboardScale.min
+                ) {
+                  if (leaderboardScale.lowerBetter) {
+                    barW =
+                      ((leaderboardScale.max - v) /
+                        (leaderboardScale.max - leaderboardScale.min)) *
+                      100;
+                  } else {
+                    barW =
+                      ((v - leaderboardScale.min) /
+                        (leaderboardScale.max - leaderboardScale.min)) *
+                      100;
+                  }
+                }
 
                 return (
                   <tr
@@ -2697,7 +2915,6 @@ function RankingsSection({
                             : ""
                     }`}
                   >
-                    {/* Rank badge */}
                     <td className="px-4 py-2.5 text-center">
                       <span
                         className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold ${
@@ -2714,7 +2931,6 @@ function RankingsSection({
                       </span>
                     </td>
 
-                    {/* Driver name (clickable) */}
                     <td className="px-4 py-2.5">
                       {onSelectDriver ? (
                         <button
@@ -2731,12 +2947,19 @@ function RankingsSection({
                       )}
                     </td>
 
-                    {/* Team */}
                     {r.team !== null && (
                       <td className="px-4 py-2.5 text-white/50">{r.team}</td>
                     )}
 
-                    {/* Stat value */}
+                    <td className="hidden px-3 py-2.5 sm:table-cell">
+                      <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-[#7020B0] to-[#D4AF37]"
+                          style={{ width: `${Math.min(100, Math.max(4, barW))}%` }}
+                        />
+                      </div>
+                    </td>
+
                     <td className="px-4 py-2.5 text-right font-bold tabular-nums text-[#D4AF37]">
                       {fmtVal(r.value, r.isPct)}
                     </td>
@@ -2962,6 +3185,10 @@ function H2HTrendChart({
       const sB = (r.statusB || "").trim().toLowerCase();
       if (["dnf","dsq","dns","retired"].includes(sA)) acc.cumDNFsA++;
       if (["dnf","dsq","dns","retired"].includes(sB)) acc.cumDNFsB++;
+      if (r.fastestLapA) acc.cumFLA++;
+      if (r.fastestLapB) acc.cumFLB++;
+      if (r.dotdA) acc.cumDOTDsA++;
+      if (r.dotdB) acc.cumDOTDsB++;
       if (r.finishA !== null) { acc.finishSumA += r.finishA; acc.finishCountA++; }
       if (r.finishB !== null) { acc.finishSumB += r.finishB; acc.finishCountB++; }
       if (r.gridA !== null) { acc.gridSumA += r.gridA; acc.gridCountA++; }
@@ -2972,11 +3199,6 @@ function H2HTrendChart({
     if (raceCount > 0 && races.length > raceCount) {
       for (const r of races.slice(0, races.length - raceCount)) updateAcc(r);
     }
-
-    // FL / DOTD detection needs the raw status strings from H2HRaceRow
-    // We don't have fastest_lap/dotd in H2HRaceRow, so track them via index
-    // Actually these aren't in H2HRaceRow — we'll skip per-race FL/DOTD cumulative for now
-    // and only include metrics derivable from the race row fields
 
     return sliced.map((r) => {
       updateAcc(r);
@@ -3630,6 +3852,8 @@ function H2HSection({
 
 export default function StatsPageContent({ data, raceResults, events, seasons, rewards }: Props) {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const initialDriver = searchParams.get("driver") ?? undefined;
   const initialTab = searchParams.get("tab") ?? undefined;
 
@@ -3643,10 +3867,29 @@ export default function StatsPageContent({ data, raceResults, events, seasons, r
     undefined,
   );
 
-  const handleSelectDriverFromRanking = useCallback((driverName: string) => {
-    setOverrideDriver(driverName);
-    setTab("Drivers");
-  }, []);
+  const handleSelectDriverFromRanking = useCallback(
+    (driverName: string) => {
+      setOverrideDriver(driverName);
+      setTab("Drivers");
+      const p = new URLSearchParams(searchParams.toString());
+      p.set("tab", "Drivers");
+      p.set("driver", driverName);
+      router.replace(`${pathname}?${p.toString()}`, { scroll: false });
+    },
+    [pathname, router, searchParams],
+  );
+
+  const setTabWithUrl = useCallback(
+    (t: Tab) => {
+      setTab(t);
+      if (t !== "Drivers") setOverrideDriver(undefined);
+      const p = new URLSearchParams(searchParams.toString());
+      p.set("tab", t);
+      if (t !== "Drivers") p.delete("driver");
+      router.replace(`${pathname}?${p.toString()}`, { scroll: false });
+    },
+    [pathname, router, searchParams],
+  );
 
   // Effective initial driver: override takes precedence over URL param
   const effectiveDriver = overrideDriver ?? initialDriver;
@@ -3655,7 +3898,7 @@ export default function StatsPageContent({ data, raceResults, events, seasons, r
     <div className="space-y-8">
       {/* Tab bar */}
       <div className="flex justify-center">
-        <TabBar tabs={TABS} active={tab} onChange={(t) => setTab(t as Tab)} />
+        <TabBar tabs={TABS} active={tab} onChange={(t) => setTabWithUrl(t as Tab)} />
       </div>
 
       {/* Content */}
