@@ -21,12 +21,15 @@ For low-risk refactor phases, use the manual click-through and build gate checkl
 
 Create a `.env.local` file with the following:
 
-| Variable             | Required | Description                                      |
-| -------------------- | -------- | ------------------------------------------------ |
-| `GMAIL_APP_PASSWORD` | Yes      | Gmail App Password for sending emails via SMTP.  |
-| `NEWS_SHEET_URL`     | Yes      | Public Google Sheets CSV URL for the `articles` tab. |
-| `REWARDS_SHEET_URL`  | No       | Public CSV URL for the `rewards` dataset (season awards). |
-| `SITE_BASE_URL`      | No       | Public site base URL used for absolute RSS/OG links (defaults to `https://psgil.com`). |
+| Variable                   | Required     | Description                                                                 |
+| -------------------------- | ------------ | --------------------------------------------------------------------------- |
+| `GMAIL_APP_PASSWORD`       | Yes          | Gmail App Password for sending emails via SMTP.                             |
+| `NEWS_SHEET_URL`           | Yes          | Public Google Sheets CSV URL for the `articles` tab.                        |
+| `STEWARD_SESSION_SECRET`   | Yes (prod)   | Random secret for signing steward JWT sessions. Falls back to a public dev default if unset — **must be set in production**. Generate with: `openssl rand -hex 32` |
+| `REWARDS_SHEET_URL`        | No           | Public CSV URL for the `rewards` dataset (season awards).                   |
+| `NEXT_PUBLIC_SITE_URL`     | No           | Public base URL used in steward email notification links (defaults to `https://psgil.com`). |
+| `SITE_BASE_URL`            | No           | Public site base URL used for absolute RSS/OG links (defaults to `https://psgil.com`). |
+| `NEXT_PUBLIC_GA_ID`        | No           | Google Analytics 4 Measurement ID (e.g. `G-XXXXXXXXXX`).                   |
 
 ### Gmail App Password setup
 
