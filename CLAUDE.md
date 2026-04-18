@@ -310,7 +310,7 @@ All three have `mustChangePassword: true` and will be forced to set a new passwo
 
 ### Route protection
 
-> ⚠️ **Known issue:** The Next.js middleware file is named `proxy.ts` instead of `middleware.ts`. This means **route-level middleware protection is not active**. The steward pages use server-side `requireStewardUser()` redirects for protection, which works correctly, but the edge-level cookie check in `proxy.ts` is silently ignored by Next.js.
+Next.js 16 uses `proxy.ts` (not `middleware.ts`) as the edge middleware convention. The file exports a `proxy` function that redirects unauthenticated users away from `/stewards/*` routes at the edge, before any server component runs. The steward pages also call `requireStewardUser()` server-side as a second layer of protection.
 
 ### Key files
 
@@ -425,8 +425,7 @@ These files exist for development and debugging purposes. Do not expose or enabl
 
 | Issue | Location | Severity | Notes |
 |---|---|---|---|
-| Middleware named `proxy.ts` | `proxy.ts` | Medium | Next.js ignores it; route protection relies on server-side redirects only |
-| `STEWARD_SESSION_SECRET` undocumented in README | `lib/stewards/auth.ts` | High | Must be set in Netlify or JWT is signed with a public default |
+| `STEWARD_SESSION_SECRET` undocumented in README | `lib/stewards/auth.ts` | High | Must be set in Netlify or JWT is signed with a public default — now added to README |
 | `NEXT_PUBLIC_SITE_URL` undocumented in README | `lib/stewards/notifications.ts` | Low | Defaults to `https://psgil.com` |
 | `lib/statsData.ts` legacy file still imported | Multiple | Low | Types still used; fetch functions removed; safe to keep |
 | `driver_stats_gid` field deprecated | `lib/seasonConfig.ts` | Low | Marked `@deprecated`; can be removed when fully migrated |
