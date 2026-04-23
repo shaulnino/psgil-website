@@ -30,7 +30,7 @@ type CacheState = FetchState & {
   expiresAt: number;
 };
 
-const CACHE_TTL_MS = 5 * 60 * 1000;
+const CACHE_TTL_MS = 60 * 1000; // 60 seconds — news should appear quickly after sheet edits
 const DEFAULT_AUTHOR = "PSGiL";
 const NEWS_SHEET_URL = process.env.NEWS_SHEET_URL ?? "";
 const IS_DEV = process.env.NODE_ENV !== "production";
@@ -173,7 +173,7 @@ export async function fetchArticlesWithStatus(): Promise<FetchState> {
   }
 
   try {
-    const csv = await fetchCsv(NEWS_SHEET_URL);
+    const csv = await fetchCsv(NEWS_SHEET_URL, 0); // revalidate:0 — always fetch fresh, no persistent Next.js cache
     const rows = parseCsv<Record<string, string>>(csv);
 
     const articles = rows
