@@ -12,7 +12,7 @@ import {
   type NewsCategory,
 } from "@/lib/newsCategories";
 
-export const revalidate = 300;
+export const revalidate = 60; // 60 seconds — news articles should appear quickly after sheet edits
 
 export default async function NewsPage() {
   const { articles, error } = await fetchArticlesWithStatus();
