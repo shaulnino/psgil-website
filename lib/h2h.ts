@@ -68,6 +68,12 @@ export type H2HRaceRow = {
   statusA: string;
   statusB: string;
   winner: "a" | "b" | "tie" | null;
+  /** Per-race fastest lap (for cumulative H2H trend charts). */
+  fastestLapA: boolean;
+  fastestLapB: boolean;
+  /** Per-race Driver of the Day (for cumulative H2H trend charts). */
+  dotdA: boolean;
+  dotdB: boolean;
 };
 
 export type H2HResult = {
@@ -328,19 +334,23 @@ export function computeH2H(
       else if (gB < gA) gridWinsB++;
     }
 
-    // Fastest lap (value is "yes"/"1"/"true" if driver got FL)
+    // Fastest lap / DOTD (value is "yes"/"1"/"true" when set)
     const flA = (rowA.fastest_lap ?? "").trim().toLowerCase();
     const flB = (rowB.fastest_lap ?? "").trim().toLowerCase();
-    if (flA === "yes" || flA === "1" || flA === "true") fastestLapsA++;
-    if (flB === "yes" || flB === "1" || flB === "true") fastestLapsB++;
+    const hasFlA = flA === "yes" || flA === "1" || flA === "true";
+    const hasFlB = flB === "yes" || flB === "1" || flB === "true";
+    if (hasFlA) fastestLapsA++;
+    if (hasFlB) fastestLapsB++;
 
     if (gA === 1) polesA++;
     if (gB === 1) polesB++;
 
-    const dotdA = (rowA.dotd ?? "").trim().toLowerCase();
-    const dotdB = (rowB.dotd ?? "").trim().toLowerCase();
-    if (dotdA === "yes" || dotdA === "1" || dotdA === "true") dotdsA++;
-    if (dotdB === "yes" || dotdB === "1" || dotdB === "true") dotdsB++;
+    const dotdAS = (rowA.dotd ?? "").trim().toLowerCase();
+    const dotdBS = (rowB.dotd ?? "").trim().toLowerCase();
+    const hasDotdA = dotdAS === "yes" || dotdAS === "1" || dotdAS === "true";
+    const hasDotdB = dotdBS === "yes" || dotdBS === "1" || dotdBS === "true";
+    if (hasDotdA) dotdsA++;
+    if (hasDotdB) dotdsB++;
 
     races.push({
       eventId: eid,
@@ -358,6 +368,10 @@ export function computeH2H(
       statusA: rowA.status ?? "",
       statusB: rowB.status ?? "",
       winner,
+      fastestLapA: hasFlA,
+      fastestLapB: hasFlB,
+      dotdA: hasDotdA,
+      dotdB: hasDotdB,
     });
   }
 
