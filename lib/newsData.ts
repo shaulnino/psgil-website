@@ -173,7 +173,11 @@ export async function fetchArticlesWithStatus(): Promise<FetchState> {
   }
 
   try {
-    const csv = await fetchCsv(NEWS_SHEET_URL, 0); // revalidate:0 — always fetch fresh, no persistent Next.js cache
+    // cache:'no-store' guarantees truly fresh data on every render — revalidate:0
+    // triggers stale-while-revalidate in Next.js Data Cache which can serve old empty results
+    const res = await fetch(NEWS_SHEET_URL, { cache: "no-store" });
+    if (!res.ok) throw new Error(`News fetch failed: ${res.status}`);
+    const csv = await res.text();
     const rows = parseCsv<Record<string, string>>(csv);
 
     const articles = rows
