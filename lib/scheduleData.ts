@@ -120,9 +120,15 @@ export function mapRaceEvents(raw: Record<string, string>[]): RaceEvent[] {
     const row = normalizeRow(rawRow);
     const season = row.season ?? "";
     const raceNumber = row.race_number ?? "";
-    const league = row.league ?? "Main";
+    const explicitEventId = (row.event_id ?? "").trim();
+    // Derive league: prefer the explicit column, fall back to the event_id suffix, then "Main".
+    // Use || instead of ?? so empty-string CSV cells are also caught.
+    const leagueFromEventId = /_(wild)$/i.test(explicitEventId) ? "Wild"
+      : /_(main)$/i.test(explicitEventId) ? "Main"
+      : undefined;
+    const league = (row.league ?? "").trim() || leagueFromEventId || "Main";
     // Use explicit event_id from CSV if present, otherwise construct it
-    const eventId = (row.event_id ?? "").trim() || buildEventId(season, raceNumber, league);
+    const eventId = explicitEventId || buildEventId(season, raceNumber, league);
     const scRaw = (row.safety_cars ?? "").trim();
     const scNum = scRaw ? parseInt(scRaw, 10) : 0;
 
