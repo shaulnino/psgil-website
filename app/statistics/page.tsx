@@ -10,6 +10,7 @@ import {
   leagueStandingsFromTables,
   mergeComputedRatings,
   computeAllScopeRanks,
+  computeCompetitionRanks,
 } from "@/lib/driversData";
 import { attachRewardsToDrivers, fetchRewards } from "@/lib/rewardsData";
 import {
@@ -19,7 +20,7 @@ import {
 } from "@/lib/seasonConfig";
 import { fetchAllRaceResults } from "@/lib/resultsData";
 import { mapRaceEvents } from "@/lib/scheduleData";
-import { computeDriverRatings } from "@/lib/statsComputed";
+import { computeDriverRatingsAll } from "@/lib/statsComputed";
 
 const PLACEHOLDER_PHOTO = "/placeholders/driver.png";
 
@@ -80,15 +81,17 @@ export default async function TablesPage() {
       ? mapRaceEvents(parseCsv<Record<string, string>>(scheduleCsv))
       : [];
     if (allResultsFlat.length > 0 && allEvents.length > 0) {
-      const allTimeRatings = computeDriverRatings(allResultsFlat, allEvents);
-      drivers = mergeComputedRatings(drivers, allTimeRatings, "alltime");
-
-      const seasonRatings = computeDriverRatings(allResultsFlat, allEvents, {
-        season: currentSeason.season_key,
-      });
-      drivers = mergeComputedRatings(drivers, seasonRatings, "season");
+      const { allTime, season, allTimeMain, allTimeWild, seasonMain, seasonWild } =
+        computeDriverRatingsAll(allResultsFlat, allEvents, currentSeason.season_key);
+      drivers = mergeComputedRatings(drivers, allTime,      "alltime");
+      drivers = mergeComputedRatings(drivers, season,       "season");
+      drivers = mergeComputedRatings(drivers, allTimeMain,  "main");
+      drivers = mergeComputedRatings(drivers, allTimeWild,  "wild");
+      drivers = mergeComputedRatings(drivers, seasonMain,   "season_main");
+      drivers = mergeComputedRatings(drivers, seasonWild,   "season_wild");
     }
     drivers = computeAllScopeRanks(drivers);
+    drivers = computeCompetitionRanks(drivers);
   } catch {
     // Non-critical; modals still render with CSV-sourced ratings
   }

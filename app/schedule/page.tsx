@@ -10,6 +10,9 @@ import {
   mapTeams,
   mapLeagueStandings,
   applyLeagueStandings,
+  mergeComputedRatings,
+  computeAllScopeRanks,
+  computeCompetitionRanks,
 } from "@/lib/driversData";
 import { attachRewardsToDrivers, fetchRewards } from "@/lib/rewardsData";
 import {
@@ -17,6 +20,7 @@ import {
   resolveCurrentSeason,
   GLOBAL_CSV_URLS,
 } from "@/lib/seasonConfig";
+import { computeDriverRatingsAll } from "@/lib/statsComputed";
 
 /* ------------------------------------------------------------------ */
 /*  Schedule page – Server Component                                   */
@@ -60,6 +64,25 @@ export default async function SchedulePage() {
     allDrivers = applyLeagueStandings(allDrivers, standings);
   }
   allDrivers = attachRewardsToDrivers(allDrivers, rewards);
+
+  // Merge live-computed ratings into driver objects for driver modals
+  try {
+    const allResultsFlat = Object.values(raceResultsByEvent).flat();
+    if (allResultsFlat.length > 0 && allEvents.length > 0) {
+      const { allTime, season, allTimeMain, allTimeWild, seasonMain, seasonWild } =
+        computeDriverRatingsAll(allResultsFlat, allEvents, currentSeason.season_key);
+      allDrivers = mergeComputedRatings(allDrivers, allTime,     "alltime");
+      allDrivers = mergeComputedRatings(allDrivers, season,      "season");
+      allDrivers = mergeComputedRatings(allDrivers, allTimeMain, "main");
+      allDrivers = mergeComputedRatings(allDrivers, allTimeWild, "wild");
+      allDrivers = mergeComputedRatings(allDrivers, seasonMain,  "season_main");
+      allDrivers = mergeComputedRatings(allDrivers, seasonWild,  "season_wild");
+      allDrivers = computeAllScopeRanks(allDrivers);
+      allDrivers = computeCompetitionRanks(allDrivers);
+    }
+  } catch {
+    // Non-critical; modals still render without computed ratings
+  }
 
   const allTeams = teamsCsv
     ? mapTeams(parseCsv<Record<string, string>>(teamsCsv))
