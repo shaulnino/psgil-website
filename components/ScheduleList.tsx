@@ -564,17 +564,20 @@ function PosterModal({
 
 function StatusBadge({ status }: { status: string }) {
   const isCompleted = status.toLowerCase() === "completed";
+  const isCancelled = status.toLowerCase() === "cancelled";
   return (
     <span
       className={`inline-flex items-center justify-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider md:justify-self-center ${
         isCompleted
           ? "border border-emerald-500/30 bg-emerald-500/15 text-emerald-400"
+          : isCancelled
+          ? "border border-red-500/30 bg-red-500/15 text-red-400"
           : "border border-white/10 bg-white/5 text-white/50"
       }`}
     >
       <span
         className={`h-1.5 w-1.5 shrink-0 rounded-full ${
-          isCompleted ? "bg-emerald-400" : "bg-white/40"
+          isCompleted ? "bg-emerald-400" : isCancelled ? "bg-red-400" : "bg-white/40"
         }`}
       />
       {status}
