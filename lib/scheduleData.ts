@@ -504,8 +504,8 @@ export function getLiveRaceGroup(events: RaceEvent[]): RaceGroup | null {
   const groups = buildGroups(events);
 
   const live = groups.filter((g) => {
-    // If already marked completed in CSV, it's not live
-    if (g.events.some((e) => e.status.toLowerCase() === "completed")) return false;
+    const s = (e: RaceEvent) => e.status.toLowerCase();
+    if (g.events.some((e) => s(e) === "completed" || s(e) === "cancelled")) return false;
     const start = groupTimestamp(g);
     const end = groupEndTimestamp(g);
     return start <= nowUTC && nowUTC < end;
@@ -526,9 +526,9 @@ export function getLastRaceGroup(events: RaceEvent[]): RaceGroup | null {
   const nowUTC = Date.now();
 
   const past = buildGroups(events).filter((g) => {
+    if (g.events.some((e) => e.status.toLowerCase() === "cancelled")) return false;
     const completed = g.events.some((e) => e.status.toLowerCase() === "completed");
     if (completed) return true;
-    // Only count as "last" if the end time has passed
     return groupEndTimestamp(g) <= nowUTC;
   });
   if (past.length === 0) return null;
@@ -552,7 +552,9 @@ export function getLastRaceGroup(events: RaceEvent[]): RaceGroup | null {
 export function getNextRaceGroup(events: RaceEvent[]): RaceGroup | null {
   const nowUTC = Date.now();
 
-  const future = buildGroups(events).filter((g) => groupTimestamp(g) > nowUTC);
+  const future = buildGroups(events).filter(
+    (g) => groupTimestamp(g) > nowUTC && !g.events.some((e) => e.status.toLowerCase() === "cancelled")
+  );
   if (future.length === 0) return null;
 
   future.sort((a, b) => {
