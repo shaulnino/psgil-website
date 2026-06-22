@@ -10,6 +10,7 @@ import Section from "@/components/Section";
 import SnapshotStrip from "@/components/SnapshotStrip";
 import SocialLinks from "@/components/SocialLinks";
 import ContactSection from "@/components/ContactSection";
+import SeasonSignupBadge from "@/components/SeasonSignupBadge";
 import NewsCarousel from "@/components/NewsCarousel";
 import LoadingLink from "@/components/LoadingLink";
 import { siteConfig } from "@/lib/siteConfig";
@@ -266,6 +267,11 @@ export default async function Home() {
         {/* Content */}
         <div className="relative flex min-h-[65vh] flex-col justify-end pb-10 pt-24 md:pt-28">
           <div className="mx-auto w-full max-w-6xl px-6">
+            {/* Season 7 announcement — sits on the hero, above the branding */}
+            <div className="mb-7">
+              <SeasonSignupBadge />
+            </div>
+
             {/* Banner with ambient glow */}
             <div className="relative w-full max-w-4xl">
               <div className="absolute -inset-6 rounded-3xl bg-[#7020B0]/10 blur-2xl" />
@@ -478,6 +484,7 @@ export default async function Home() {
 
       <Section
         id="contact-us"
+        className="scroll-mt-20"
         title="Contact Us"
         description="Get in touch with the league."
         brandTitle

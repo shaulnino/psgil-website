@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import SuccessModal from "./SuccessModal";
 
 const EMAIL = "psgileague@gmail.com";
@@ -22,6 +22,13 @@ export default function ContactSection() {
     setState("idle");
     setErrorMsg("");
     formRef.current?.reset();
+  }, []);
+
+  // The homepage Season 7 badge asks the form to open on the Sign Up tab.
+  useEffect(() => {
+    const openSignup = () => setMode("signup");
+    window.addEventListener("psgil:request-signup", openSignup);
+    return () => window.removeEventListener("psgil:request-signup", openSignup);
   }, []);
 
   const handleCopy = useCallback(() => {
