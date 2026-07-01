@@ -7,7 +7,7 @@ export function buildDefaultStore(): StewardStore {
     users: [
       {
         id: "u_admin",
-        name: "PSGiL Admin",
+        name: "ISL Admin",
         email: "admin@psgil.local",
         roles: ["member", "steward", "admin"],
         passwordHash: hashPassword("change-me-admin"),

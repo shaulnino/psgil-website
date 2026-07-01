@@ -30,7 +30,7 @@ const PLACEHOLDER_PHOTO = "/placeholders/driver.png";
 
 const DEMO_TEAM = {
   team_key: "psgil-demo",
-  team_name: "PSGiL Demo Team",
+  team_name: "ISL Demo Team",
   logo_url: "/psgil-logo.png",
 };
 
@@ -197,7 +197,7 @@ export default async function DriversPage() {
     <main className="bg-[#0B0B0E] text-white">
       <Section
         title="Drivers"
-        description="Official PSGiL roster: teams, drivers, and profiles — updated as the season progresses."
+        description="Official ISL roster: teams, drivers, and profiles — updated as the season progresses."
         pageHeader
       >
         <DriversGrid

@@ -35,12 +35,12 @@ export type SiteConfig = {
 };
 
 export const siteConfig: SiteConfig = {
-  leagueName: "PSGiL",
+  leagueName: "ISL",
   discordUrl: "https://discord.gg/v6zF6QME7J",
   seo: {
-    title: "PSGiL – F1 Sim Racing League (Israel)",
+    title: "ISL – F1 Israeli Super League",
     description:
-      "PSGiL is Israel's premium F1 sim racing league. Competitive clean racing, full season stats, and a community-first Formula 1 league experience.",
+      "ISL is Israel's premier F1 sim racing super league. Competitive clean racing, full season stats, and a community-first Formula 1 league experience.",
   },
   navigation: [
     { label: "Schedule & Results", href: "/schedule" },
@@ -51,7 +51,7 @@ export const siteConfig: SiteConfig = {
     { label: "Stewards", href: "/stewards/login" },
   ],
   hero: {
-    title: "PSGiL – F1 Sim Racing League",
+    title: "ISL – F1 Israeli Super League",
     subtitle:
       "Israel's largest F1 sim racing league, competing primarily on the EA Sports F1 series. Built on competition, respect, and an outstanding community.",
     primaryCtaLabel: "Join Now",
@@ -128,7 +128,7 @@ export const siteConfig: SiteConfig = {
   joinCta: {
     title: "Ready to race with us?",
     description: "Join the community, get onboarded, and compete in organized events.",
-    buttonLabel: "Join PSGiL Discord",
+    buttonLabel: "Join ISL Discord",
     subtext: "New drivers welcome • Quick onboarding",
   },
   socials: [

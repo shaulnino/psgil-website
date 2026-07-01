@@ -92,7 +92,7 @@ export default async function SchedulePage() {
     <main className="bg-[#0B0B0E] text-white">
       <Section
         title="Schedule & Race Results"
-        description="Full race calendar and results for every PSGiL season."
+        description="Full race calendar and results for every ISL season."
         pageHeader
       >
         <ScheduleList

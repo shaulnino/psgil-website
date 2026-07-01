@@ -98,10 +98,10 @@ export async function POST(req: NextRequest) {
     // ------ Admin notification ------
     if (isSignup) {
       await transporter.sendMail({
-        from: `"PSGiL Website" <${LEAGUE_EMAIL}>`,
+        from: `"ISL Website" <${LEAGUE_EMAIL}>`,
         replyTo: `"${safeName}" <${safeEmail}>`,
         to: LEAGUE_EMAIL,
-        subject: `[PSGiL Sign-Up] ${safeName}`,
+        subject: `[ISL Sign-Up] ${safeName}`,
         text: [
           `New sign-up interest:`,
           `Name: ${name}`,
@@ -114,12 +114,12 @@ export async function POST(req: NextRequest) {
       });
     } else {
       await transporter.sendMail({
-        from: `"PSGiL Contact Form" <${LEAGUE_EMAIL}>`,
+        from: `"ISL Contact Form" <${LEAGUE_EMAIL}>`,
         replyTo: `"${safeName}" <${safeEmail}>`,
         to: LEAGUE_EMAIL,
         subject: safeSubject.trim()
-          ? `[PSGiL Contact] ${safeSubject.trim()}`
-          : `[PSGiL Contact] Message from ${safeName}`,
+          ? `[ISL Contact] ${safeSubject.trim()}`
+          : `[ISL Contact] Message from ${safeName}`,
         text: [
           `Name: ${name}`,
           `Email: ${email}`,
@@ -139,16 +139,16 @@ export async function POST(req: NextRequest) {
       await transporter.sendMail(
         isSignup
           ? {
-              from: `"PSGiL" <${LEAGUE_EMAIL}>`,
+              from: `"ISL" <${LEAGUE_EMAIL}>`,
               to: `"${safeName}" <${safeEmail}>`,
-              subject: "PSGiL — Sign up received 🏁",
+              subject: "ISL — Sign up received 🏁",
               text: autoReplySignupText(name),
               html: autoReplySignupHtml(name),
             }
           : {
-              from: `"PSGiL" <${LEAGUE_EMAIL}>`,
+              from: `"ISL" <${LEAGUE_EMAIL}>`,
               to: `"${safeName}" <${safeEmail}>`,
-              subject: "PSGiL — We got your message ✅",
+              subject: "ISL — We got your message ✅",
               text: autoReplyQuestionText(name),
               html: autoReplyQuestionHtml(name),
             },
@@ -204,7 +204,7 @@ function emailShell(content: string): string {
         <tr><td style="padding:0 28px 24px">
           <table width="100%" style="border-top:1px solid rgba(255,255,255,0.06);padding-top:16px">
             <tr><td style="font-size:11px;color:rgba(255,255,255,0.3);line-height:1.5">
-              PSGiL — Premiere Sim Gaming Israeli League<br>
+              ISL — F1 Israeli Super League<br>
               <a href="https://psgil.com" style="color:#7020B0;text-decoration:none">psgil.com</a>
             </td></tr>
           </table>
@@ -223,20 +223,20 @@ function autoReplySignupText(name: string): string {
   return [
     `Hi ${name},`,
     "",
-    "Thanks for signing up for PSGiL! We've got your details.",
+    "Thanks for signing up for ISL! We've got your details.",
     "",
     "We'll reach out to you by email before the next season starts or when a seat opens up.",
     "",
     "In the meantime, check out our latest standings and schedule at psgil.com.",
     "",
     "See you on track!",
-    "— The PSGiL Team",
+    "— The ISL Team",
   ].join("\n");
 }
 
 function autoReplySignupHtml(name: string): string {
   return emailShell(`
-    <h1 style="margin:0 0 8px;font-size:22px;color:#fff">Welcome to PSGiL! 🏁</h1>
+    <h1 style="margin:0 0 8px;font-size:22px;color:#fff">Welcome to ISL! 🏁</h1>
     <p style="margin:0 0 20px;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6">
       Hi ${escapeHtml(name)},
     </p>
@@ -251,7 +251,7 @@ function autoReplySignupHtml(name: string): string {
     </td></tr></table>
     <p style="margin:24px 0 0;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6">
       See you on track!<br>
-      <span style="color:rgba(255,255,255,0.35)">— The PSGiL Team</span>
+      <span style="color:rgba(255,255,255,0.35)">— The ISL Team</span>
     </p>
   `);
 }
@@ -267,7 +267,7 @@ function autoReplyQuestionText(name: string): string {
     "",
     "If your matter is urgent you can also email us directly at psgileague@gmail.com.",
     "",
-    "— The PSGiL Team",
+    "— The ISL Team",
   ].join("\n");
 }
 
@@ -285,7 +285,7 @@ function autoReplyQuestionHtml(name: string): string {
       <a href="mailto:psgileague@gmail.com" style="color:#7020B0;text-decoration:none">psgileague@gmail.com</a>.
     </p>
     <p style="margin:24px 0 0;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6">
-      <span style="color:rgba(255,255,255,0.35)">— The PSGiL Team</span>
+      <span style="color:rgba(255,255,255,0.35)">— The ISL Team</span>
     </p>
   `);
 }
@@ -312,7 +312,7 @@ function adminSignupHtml(
 
   return emailShell(`
     <h1 style="margin:0 0 4px;font-size:20px;color:#fff">New Sign-Up Interest 🏁</h1>
-    <p style="margin:0 0 20px;font-size:12px;color:rgba(255,255,255,0.35)">Someone wants to join PSGiL</p>
+    <p style="margin:0 0 20px;font-size:12px;color:rgba(255,255,255,0.35)">Someone wants to join ISL</p>
     <table style="border-collapse:collapse;width:100%;background:rgba(255,255,255,0.03);border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.08)">
       ${row("Name", escapeHtml(name))}
       ${row("Email", `<a href="mailto:${escapeHtml(email)}" style="color:#7020B0;text-decoration:none">${escapeHtml(email)}</a>`)}

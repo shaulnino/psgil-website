@@ -86,7 +86,7 @@ export default function SocialLinks({ items, variant = "full" }: SocialLinksProp
             href={item.href}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label={`PSGiL on ${item.label}`}
+            aria-label={`ISL on ${item.label}`}
             className={`group/social relative inline-flex items-center justify-center border border-white/[0.06] bg-white/[0.03] transition-all duration-200 hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7020B0]/60 focus-visible:ring-offset-1 focus-visible:ring-offset-[#0B0B0E] ${p.hoverBorder} ${p.hoverGlow} ${
               isCompact
                 ? "h-8 w-8 rounded-lg"

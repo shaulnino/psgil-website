@@ -7,7 +7,7 @@ type HeroLogoProps = {
 
 export default function HeroLogo({
   src = "/psgil-logo.png",
-  alt = "PSGiL league logo",
+  alt = "ISL league logo",
 }: HeroLogoProps) {
   const isLocalPublic = src.startsWith("/") && !src.startsWith("//");
   return (

@@ -52,7 +52,7 @@ export async function GET() {
         baseUrl,
         article.coverImageUrl || DEFAULT_SOCIAL_IMAGE,
       );
-      const caption = `New on PSGiL News: ${article.title}\nRead more on our website.\n${articleUrl}`;
+      const caption = `New on ISL News: ${article.title}\nRead more on our website.\n${articleUrl}`;
       const pubDate = new Date(`${article.date}T00:00:00Z`).toUTCString();
       const tags = article.tags.length ? `Tags: ${article.tags.join(", ")}` : "";
       const description = [article.excerpt, tags].filter(Boolean).join(" | ");
@@ -81,9 +81,9 @@ export async function GET() {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
 <channel>
-  <title>PSGiL News (Instagram)</title>
+  <title>ISL News (Instagram)</title>
   <link>${xmlEscape(`${baseUrl}/news`)}</link>
-  <description>Instagram-ready PSGiL news feed.</description>
+  <description>Instagram-ready ISL news feed.</description>
   <language>en</language>
   <lastBuildDate>${now}</lastBuildDate>
 ${itemsXml}

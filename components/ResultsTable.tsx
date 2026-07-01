@@ -3,7 +3,7 @@
 import React from "react";
 
 /* ------------------------------------------------------------------ */
-/*  Generic reusable data-table with PSGiL dark-theme styling          */
+/*  Generic reusable data-table with ISL dark-theme styling          */
 /*  • Sticky header                                                     */
 /*  • Horizontal scroll on small screens                               */
 /*  • Zebra rows + subtle separators                                   */

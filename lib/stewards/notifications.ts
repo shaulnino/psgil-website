@@ -43,7 +43,7 @@ async function send(subject: string, html: string, text: string, recipients: str
   if (!t || recipients.length === 0) return;
   try {
     await t.sendMail({
-      from: `"PSGiL Steward System" <${LEAGUE_EMAIL}>`,
+      from: `"ISL Steward System" <${LEAGUE_EMAIL}>`,
       to: dedupe(recipients).join(", "),
       subject,
       html,
@@ -208,8 +208,8 @@ function buildEmail(p: EmailParams): { html: string; text: string } {
       <table width="100%" cellpadding="0" cellspacing="0">
         <tr>
           <td>
-            <p style="margin:0;font-size:10px;font-weight:700;color:rgba(212,175,55,.65);letter-spacing:.14em;text-transform:uppercase">PSGiL Steward System</p>
-            <p style="margin:2px 0 0;font-size:11px;color:rgba(255,255,255,.25)">Premiere Sim Gaming Israeli League &mdash; F1 Sim Racing</p>
+            <p style="margin:0;font-size:10px;font-weight:700;color:rgba(212,175,55,.65);letter-spacing:.14em;text-transform:uppercase">ISL Steward System</p>
+            <p style="margin:2px 0 0;font-size:11px;color:rgba(255,255,255,.25)">F1 Israeli Super League &mdash; F1 Sim Racing</p>
           </td>
           <td align="right" style="padding-left:16px">
             <div style="width:34px;height:34px;border-radius:50%;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.28);text-align:center;line-height:34px;font-size:17px">⚖</div>
@@ -242,7 +242,7 @@ function buildEmail(p: EmailParams): { html: string; text: string } {
   <tr>
     <td style="background:#0e0e19;border:1px solid rgba(255,255,255,.07);border-top:1px solid rgba(255,255,255,.05);border-radius:0 0 14px 14px;padding:14px 26px">
       <p style="margin:0;font-size:11px;color:rgba(255,255,255,.22);line-height:1.6">
-        PSGiL &mdash; F1 Sim Racing &nbsp;&middot;&nbsp;
+        ISL &mdash; F1 Israeli Super League &nbsp;&middot;&nbsp;
         <a href="https://psgil.com" style="color:rgba(212,175,55,.45);text-decoration:none">psgil.com</a><br>
         This is an automated message from the Steward System. Please do not reply to this email.
       </p>
@@ -280,7 +280,7 @@ function buildEmail(p: EmailParams): { html: string; text: string } {
     `${p.cta.label}: ${p.cta.url}`,
     ...(p.note ? ["", p.note] : []),
     "",
-    "— PSGiL Steward System · psgil.com",
+    "— ISL Steward System · psgil.com",
   ];
 
   return { html, text: textLines.join("\n") };
@@ -326,7 +326,7 @@ export async function notifyCaseSubmitted(caseItem: StewardCase, users: StewardU
       summary,
       cta: { label: "View Case", url: caseUrl(caseItem.id, "steward"), color: "#555577" },
     });
-    await send(`[PSGiL Stewards] New case: ${caseItem.title}`, html, text, adminRecipients);
+    await send(`[ISL Stewards] New case: ${caseItem.title}`, html, text, adminRecipients);
   }
 
   // Stewards — review required
@@ -339,7 +339,7 @@ export async function notifyCaseSubmitted(caseItem: StewardCase, users: StewardU
       summary,
       cta: { label: "Review Case", url: caseUrl(caseItem.id, "steward"), color: "#7020B0" },
     });
-    await send(`[PSGiL Stewards] New case submitted — ${caseItem.title}`, html, text, stewardRecipients);
+    await send(`[ISL Stewards] New case submitted — ${caseItem.title}`, html, text, stewardRecipients);
   }
 
   // Complainant — confirmation
@@ -348,12 +348,12 @@ export async function notifyCaseSubmitted(caseItem: StewardCase, users: StewardU
     const { html, text } = buildEmail({
       eyebrow: "Complaint Submitted",
       title: "Your complaint has been submitted",
-      intro: "Your complaint has been received and is now in the PSGiL steward review system. The stewards will begin their review once all involved drivers have submitted their responses.",
+      intro: "Your complaint has been received and is now in the ISL steward review system. The stewards will begin their review once all involved drivers have submitted their responses.",
       summary,
       cta: { label: "View Case", url: caseUrl(caseItem.id, "driver") },
       note: "You will receive an email when steward review begins and when a verdict is published.",
     });
-    await send(`[PSGiL Stewards] Case submitted — ${caseItem.title}`, html, text, [comp.email]);
+    await send(`[ISL Stewards] Case submitted — ${caseItem.title}`, html, text, [comp.email]);
   }
 
   // Involved drivers — response required
@@ -361,13 +361,13 @@ export async function notifyCaseSubmitted(caseItem: StewardCase, users: StewardU
     const { html, text } = buildEmail({
       eyebrow: "Action Required",
       title: "You have been named in a steward case",
-      intro: `You have been named as an involved party in a PSGiL steward case. You are required to submit your statement through the case page as soon as possible.`,
+      intro: `You have been named as an involved party in a ISL steward case. You are required to submit your statement through the case page as soon as possible.`,
       summary,
-      action: "Log in to the PSGiL Steward System and submit your statement. Statements are final once submitted and cannot be edited.",
+      action: "Log in to the ISL Steward System and submit your statement. Statements are final once submitted and cannot be edited.",
       cta: { label: "Submit Response", url: caseUrl(caseItem.id, "driver"), color: "#D4AF37" },
       note: "Failure to respond does not prevent the stewards from issuing a verdict.",
     });
-    await send(`[PSGiL Stewards] Response required — ${caseItem.title}`, html, text, [driver.email]);
+    await send(`[ISL Stewards] Response required — ${caseItem.title}`, html, text, [driver.email]);
   }
 }
 
@@ -386,7 +386,7 @@ export async function notifyAllResponsesSubmitted(caseItem: StewardCase, users: 
       action: "Review all statements and prepare the verdict through the case management interface.",
       cta: { label: "Start Review", url: caseUrl(caseItem.id, "steward"), color: "#7020B0" },
     });
-    await send(`[PSGiL Stewards] Case ready for review — ${caseItem.title}`, html, text, stewardRecipients);
+    await send(`[ISL Stewards] Case ready for review — ${caseItem.title}`, html, text, stewardRecipients);
   }
 
   // Complainant — review started
@@ -395,11 +395,11 @@ export async function notifyAllResponsesSubmitted(caseItem: StewardCase, users: 
     const { html, text } = buildEmail({
       eyebrow: "Case Update",
       title: "Steward review has begun",
-      intro: "All driver statements have been submitted. The PSGiL stewards have started their review — you will receive another notification when a verdict is published.",
+      intro: "All driver statements have been submitted. The ISL stewards have started their review — you will receive another notification when a verdict is published.",
       summary,
       cta: { label: "View Case", url: caseUrl(caseItem.id, "driver") },
     });
-    await send(`[PSGiL Stewards] Review started — ${caseItem.title}`, html, text, [comp.email]);
+    await send(`[ISL Stewards] Review started — ${caseItem.title}`, html, text, [comp.email]);
   }
 }
 
@@ -409,12 +409,12 @@ export async function notifyResponseConfirmation(caseItem: StewardCase, driver: 
   const { html, text } = buildEmail({
     eyebrow: "Response Received",
     title: "Your statement has been submitted",
-    intro: "Your response has been received and recorded by the PSGiL Steward System. The stewards will review all statements before issuing a verdict.",
+    intro: "Your response has been received and recorded by the ISL Steward System. The stewards will review all statements before issuing a verdict.",
     summary,
     cta: { label: "View Case", url: caseUrl(caseItem.id, "driver") },
     note: "Statements are final and cannot be modified once submitted.",
   });
-  await send(`[PSGiL Stewards] Response recorded — ${caseItem.title}`, html, text, [driver.email]);
+  await send(`[ISL Stewards] Response recorded — ${caseItem.title}`, html, text, [driver.email]);
 }
 
 /** Trigger 4 — internal discussion comment posted */
@@ -429,7 +429,7 @@ export async function notifyInternalDiscussion(caseItem: StewardCase, authorName
     summary,
     cta: { label: "View Discussion", url: caseUrl(caseItem.id, "steward"), color: "#7020B0" },
   });
-  await send(`[PSGiL Stewards] Discussion update — ${caseItem.title}`, html, text, stewardRecipients);
+  await send(`[ISL Stewards] Discussion update — ${caseItem.title}`, html, text, stewardRecipients);
 }
 
 /** Trigger 5 — verdict published */
@@ -448,7 +448,7 @@ export async function notifyVerdictPublished(caseItem: StewardCase, verdict: Ver
       cta: { label: "View Published Case", url: caseUrl(caseItem.id, "steward") },
       note: decisionLine,
     });
-    await send(`[PSGiL Stewards] Verdict published — ${caseItem.title}`, html, text, stewardRecipients);
+    await send(`[ISL Stewards] Verdict published — ${caseItem.title}`, html, text, stewardRecipients);
   }
 
   // Complainant
@@ -457,11 +457,11 @@ export async function notifyVerdictPublished(caseItem: StewardCase, verdict: Ver
     const { html, text } = buildEmail({
       eyebrow: "Verdict Published",
       title: "A verdict has been issued for your case",
-      intro: "The PSGiL stewards have reached a decision on the following case. The full verdict is now available for review.",
+      intro: "The ISL stewards have reached a decision on the following case. The full verdict is now available for review.",
       summary,
       cta: { label: "View Verdict", url: caseUrl(caseItem.id, "driver") },
     });
-    await send(`[PSGiL Stewards] Verdict issued — ${caseItem.title}`, html, text, [comp.email]);
+    await send(`[ISL Stewards] Verdict issued — ${caseItem.title}`, html, text, [comp.email]);
   }
 
   // Each involved driver
@@ -469,11 +469,11 @@ export async function notifyVerdictPublished(caseItem: StewardCase, verdict: Ver
     const { html, text } = buildEmail({
       eyebrow: "Verdict Published",
       title: "A verdict has been issued for a case involving you",
-      intro: "The PSGiL stewards have reached a final decision on a case you were named in. The full verdict is now available.",
+      intro: "The ISL stewards have reached a final decision on a case you were named in. The full verdict is now available.",
       summary,
       cta: { label: "View Verdict", url: caseUrl(caseItem.id, "driver") },
     });
-    await send(`[PSGiL Stewards] Verdict issued — ${caseItem.title}`, html, text, [driver.email]);
+    await send(`[ISL Stewards] Verdict issued — ${caseItem.title}`, html, text, [driver.email]);
   }
 }
 
@@ -501,17 +501,17 @@ export async function notifyPenaltyAssigned(penalty: PenaltyToServe, driver: Ste
   const { html, text } = buildEmail({
     eyebrow: "Disciplinary Notice",
     title: "You have a penalty to serve",
-    intro: `A disciplinary penalty has been assigned to you and must be served in an upcoming PSGiL Main League race.`,
+    intro: `A disciplinary penalty has been assigned to you and must be served in an upcoming ISL Main League race.`,
     action: {
       title: "Action Required",
       body: `You are required to serve a <strong>${esc(penalty.penaltyLabel)}</strong> in <strong>${esc(penalty.assignedRaceLabel ?? "the next Main League race")}</strong>. Please ensure you are available for that race.`,
     },
     customHtml: penaltySummaryBlock(penalty),
     cta: { label: "View Penalty Details", url: penaltiesUrl() },
-    note: "If you believe this penalty was issued in error, contact the PSGiL stewards.",
+    note: "If you believe this penalty was issued in error, contact the ISL stewards.",
   });
   await send(
-    `[PSGiL Stewards] Penalty to serve — ${penalty.penaltyLabel}`,
+    `[ISL Stewards] Penalty to serve — ${penalty.penaltyLabel}`,
     html,
     text,
     [driver.email],
@@ -532,10 +532,10 @@ export async function notifyPenaltyReminder(penalty: PenaltyToServe, driver: Ste
     },
     customHtml: penaltySummaryBlock(penalty),
     cta: { label: "View Penalty Details", url: penaltiesUrl() },
-    note: "If you are unable to serve this penalty, contact the PSGiL stewards as soon as possible.",
+    note: "If you are unable to serve this penalty, contact the ISL stewards as soon as possible.",
   });
   await send(
-    `[PSGiL Stewards] Reminder: penalty to serve — ${penalty.penaltyLabel}`,
+    `[ISL Stewards] Reminder: penalty to serve — ${penalty.penaltyLabel}`,
     html,
     text,
     [driver.email],
@@ -554,10 +554,10 @@ export async function notifyPenaltyRolledForward(penalty: PenaltyToServe, driver
     },
     customHtml: penaltySummaryBlock(penalty),
     cta: { label: "View Penalty Details", url: penaltiesUrl() },
-    note: "If you have questions about this decision, contact the PSGiL stewards.",
+    note: "If you have questions about this decision, contact the ISL stewards.",
   });
   await send(
-    `[PSGiL Stewards] Penalty carried forward — ${penalty.penaltyLabel}`,
+    `[ISL Stewards] Penalty carried forward — ${penalty.penaltyLabel}`,
     html,
     text,
     [driver.email],
@@ -603,10 +603,10 @@ export async function notifyAppealSubmitted(
 </table>`,
     action: "The appeal is now under steward review. Stewards will evaluate the submission and issue an appeal verdict.",
     cta: { label: "View Appeal", url: appealUrl(appeal.id), color: "#7020B0" },
-    note: "This is an automated notification from the PSGiL Steward System.",
+    note: "This is an automated notification from the ISL Steward System.",
   });
   await send(
-    `[PSGiL Stewards] Appeal filed — Case #${originalCase.caseNumber ?? "–"}: ${originalCase.title}`,
+    `[ISL Stewards] Appeal filed — Case #${originalCase.caseNumber ?? "–"}: ${originalCase.title}`,
     html, text,
     dedupe(recipients.map((r) => r.email)),
   );
@@ -646,10 +646,10 @@ export async function notifyAppealVerdictPublished(
   </tr>
 </table>` : undefined,
     cta: { label: "View Full Verdict", url: appealUrl(appeal.id), color: changed ? "#7020B0" : "#059669" },
-    note: "If you have questions about this decision, contact the PSGiL stewards.",
+    note: "If you have questions about this decision, contact the ISL stewards.",
   });
   await send(
-    `[PSGiL Stewards] Appeal verdict — Case #${originalCase.caseNumber ?? "–"}: ${outcomeLabel}`,
+    `[ISL Stewards] Appeal verdict — Case #${originalCase.caseNumber ?? "–"}: ${outcomeLabel}`,
     html, text,
     dedupe(recipients.map((r) => r.email)),
   );

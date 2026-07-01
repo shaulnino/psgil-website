@@ -103,9 +103,9 @@ function createRssXml(baseUrl: string, itemXml: string): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
 <channel>
-  <title>PSGiL Race Alerts (Instagram)</title>
+  <title>ISL Race Alerts (Instagram)</title>
   <link>${xmlEscape(`${baseUrl}/schedule`)}</link>
-  <description>Instagram-ready race reminder alerts for PSGiL.</description>
+  <description>Instagram-ready race reminder alerts for ISL.</description>
   <language>en</language>
   <lastBuildDate>${now}</lastBuildDate>
 ${itemXml}
@@ -114,10 +114,10 @@ ${itemXml}
 }
 
 function createAlertItemXml(baseUrl: string, event: RaceEvent): string {
-  const title = `PSGiL goes live in 15 minutes! ${event.race_name}`;
+  const title = `ISL goes live in 15 minutes! ${event.race_name}`;
   const link = buildWatchLink(baseUrl, event);
   const guid = `${buildAlertGuid(event)}-instagram`;
-  const caption = `PSGiL goes live in 15 minutes! ${event.race_name}\nWatch on our website:\n${link}`;
+  const caption = `ISL goes live in 15 minutes! ${event.race_name}\nWatch on our website:\n${link}`;
   const description = "Race reminder: the stream starts shortly.";
   const pubDate = new Date().toUTCString();
   const imageUrl = resolveAbsoluteUrl(

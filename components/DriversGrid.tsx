@@ -131,7 +131,7 @@ export default function DriversGrid({ teams, reserves, historicDrivers, placehol
           <div>
             <h2 className="font-display text-2xl font-semibold text-white">Historical Drivers</h2>
             <p className="text-sm text-white/50">
-              Drivers who competed in previous PSGiL seasons.
+              Drivers who competed in previous ISL seasons.
             </p>
           </div>
 

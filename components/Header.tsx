@@ -20,7 +20,7 @@ export default function Header() {
           <span className="flex h-12 w-12 items-center justify-center rounded-full transition md:h-14 md:w-14 group-aria-[busy=true]:animate-pulse">
             <Image
               src="/psgil-logo.png"
-              alt="PSGiL logo"
+              alt="ISL logo"
               width={64}
               height={64}
               className="h-full w-full object-contain"

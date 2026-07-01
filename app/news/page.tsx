@@ -73,7 +73,7 @@ export default async function NewsPage() {
     <main className="bg-[#0B0B0E] text-white">
       <Section
         title="News"
-        description="Race reports, highlights, and league updates from PSGiL."
+        description="Race reports, highlights, and league updates from ISL."
         pageHeader
       >
         {error && (

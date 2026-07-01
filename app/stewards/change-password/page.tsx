@@ -21,7 +21,7 @@ export default async function ChangePasswordPage({ searchParams }: { searchParam
       <div className="w-full max-w-md space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
-          <p className="text-xs font-bold uppercase tracking-widest text-steward-gold/70">PSGiL Steward System</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-steward-gold/70">ISL Steward System</p>
           <h1 className="font-display text-3xl font-semibold">Set your password</h1>
           <p className="text-sm text-white/60">
             Welcome, <span className="text-white/90 font-medium">{user.name}</span>.

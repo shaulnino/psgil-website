@@ -31,7 +31,7 @@ type CacheState = FetchState & {
 };
 
 const CACHE_TTL_MS = 60 * 1000; // 60 seconds — news should appear quickly after sheet edits
-const DEFAULT_AUTHOR = "PSGiL";
+const DEFAULT_AUTHOR = "ISL";
 const NEWS_SHEET_URL = process.env.NEWS_SHEET_URL ?? "";
 const IS_DEV = process.env.NODE_ENV !== "production";
 
@@ -40,10 +40,10 @@ let cache: CacheState | null = null;
 const DEV_FALLBACK_ARTICLES: NewsArticle[] = [
   {
     id: "sample-news-1",
-    title: "PSGiL News Sample",
+    title: "ISL News Sample",
     slug: "psgil-news-sample",
     date: "2026-03-02",
-    author: "PSGiL",
+    author: "ISL",
     excerpt:
       "This is a local development fallback article. Connect NEWS_SHEET_URL to show real Google Sheets content.",
     coverImageUrl: "/psgil-banner.png",

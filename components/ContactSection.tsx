@@ -299,7 +299,7 @@ export default function ContactSection() {
               Sending…
             </>
           ) : mode === "signup" ? (
-            "Join PSGiL"
+            "Join ISL"
           ) : (
             "Send Message"
           )}

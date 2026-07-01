@@ -13,7 +13,7 @@ interface SuccessModalProps {
 
 const COPY = {
   signup: {
-    title: "Welcome to PSGiL! 🏁",
+    title: "Welcome to ISL! 🏁",
     body: "You\u2019re officially on the list. We\u2019ll reach out to you by email soon with the next steps and availability.",
     note: "If you don\u2019t see our email, check your spam/promotions folder.",
     button: "Awesome",

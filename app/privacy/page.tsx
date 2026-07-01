@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Section from "@/components/Section";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | PSGiL",
-  description: "Privacy policy for the PSGiL website.",
+  title: "Privacy Policy | ISL",
+  description: "Privacy policy for the ISL website.",
 };
 
 export default function PrivacyPage() {
@@ -16,7 +16,7 @@ export default function PrivacyPage() {
       >
         <div className="space-y-6 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm leading-7 text-white/80 md:p-8 md:text-base">
           <p>
-            Premiere Sim Gaming Israeli League (PSGiL) respects your privacy.
+            F1 Israeli Super League (ISL) respects your privacy.
             This page explains what information we collect, how we use it, and
             how you can contact us about your data.
           </p>
@@ -59,7 +59,7 @@ export default function PrivacyPage() {
             <p>
               We do not sell personal data. We may use trusted service
               providers for website hosting, email delivery, and social media
-              publishing as needed to run PSGiL services.
+              publishing as needed to run ISL services.
             </p>
           </section>
 

@@ -62,7 +62,7 @@ export default async function StatsPage() {
     <main className="bg-[#0B0B0E] text-white">
       <Section
         title="Stats"
-        description="Deep stats for every driver, season, and circuit in PSGiL history."
+        description="Deep stats for every driver, season, and circuit in ISL history."
         pageHeader
       >
         <Suspense>

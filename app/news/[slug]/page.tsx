@@ -78,19 +78,19 @@ export async function generateMetadata({
 
   if (!article) {
     return {
-      title: "News Article | PSGiL",
-      description: "PSGiL news article.",
+      title: "News Article | ISL",
+      description: "ISL news article.",
       openGraph: {
-        title: "News Article | PSGiL",
-        description: "PSGiL news article.",
+        title: "News Article | ISL",
+        description: "ISL news article.",
         url,
         type: "article",
-        siteName: "PSGiL - Premier Sim Gaming Israeli League",
+        siteName: "ISL - F1 Israeli Super League",
       },
       twitter: {
         card: "summary_large_image",
-        title: "News Article | PSGiL",
-        description: "PSGiL news article.",
+        title: "News Article | ISL",
+        description: "ISL news article.",
       },
     };
   }
@@ -98,7 +98,7 @@ export async function generateMetadata({
   const imageUrl = resolveAbsoluteUrl(baseUrl, article.coverImageUrl);
 
   return {
-    title: `${article.title} | PSGiL News`,
+    title: `${article.title} | ISL News`,
     description: article.excerpt,
     alternates: {
       canonical: url,
@@ -108,7 +108,7 @@ export async function generateMetadata({
       description: article.excerpt,
       url,
       type: "article",
-      siteName: "PSGiL - Premier Sim Gaming Israeli League",
+      siteName: "ISL - F1 Israeli Super League",
       publishedTime: new Date(`${article.date}T00:00:00Z`).toISOString(),
       images: [{ url: imageUrl }],
     },

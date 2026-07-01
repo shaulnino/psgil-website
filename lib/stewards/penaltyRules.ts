@@ -1,5 +1,5 @@
 /**
- * Penalty threshold rules — loaded dynamically from the PSGiL Google Sheet
+ * Penalty threshold rules — loaded dynamically from the ISL Google Sheet
  * (penalty_rules tab, GID 696729647).
  *
  * Sheet columns: id | active | threshold_license_points | penalty_type |

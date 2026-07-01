@@ -233,7 +233,7 @@ export default async function Home() {
           {heroImageExists ? (
             <Image
               src={heroImagePath}
-              alt="PSGiL racing atmosphere"
+              alt="ISL racing atmosphere"
               fill
               priority
               className="object-cover object-center animate-[hero-zoom_14s_ease-out_forwards] group-hover/hero:brightness-110 transition-[filter] duration-700"
@@ -271,7 +271,7 @@ export default async function Home() {
               <div className="absolute -inset-6 rounded-3xl bg-[#7020B0]/10 blur-2xl" />
               <Image
                 src="/psgil-banner.png"
-                alt={`PSGiL ${currentSeasonLabel} banner`}
+                alt={`ISL ${currentSeasonLabel} banner`}
                 width={2000}
                 height={600}
                 priority
@@ -459,7 +459,7 @@ export default async function Home() {
       <Section title="About Us" brandTitle>
         <div className="rounded-2xl border border-white/10 bg-white/5 p-6 md:p-8">
           <p className="text-base text-white/70 md:text-lg">
-            PSGiL is Israel&apos;s largest F1 sim racing league, competing
+            ISL is Israel&apos;s largest F1 sim racing league, competing
             primarily on the EA Sports F1 series, running continuously for
             over three years and currently in its{" "}
             {currentSeasonLabel.toLowerCase()}. Built by drivers, for
@@ -467,7 +467,7 @@ export default async function Home() {
             community, highly competitive grids, and a deep commitment to
             clean, respectful racing—both on and off the track. With
             structured seasons, consistent stewarding, and a culture that
-            values fairness and sportsmanship, PSGiL has grown into a home
+            values fairness and sportsmanship, ISL has grown into a home
             for drivers who are looking for serious competition without
             losing the human side of racing.
           </p>
