@@ -12,7 +12,7 @@ function PlayIcon() {
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
       fill="currentColor"
-      className="h-10 w-10 text-white/70"
+      className="h-10 w-10 text-ink-2"
     >
       <path d="M8 5v14l11-7z" />
     </svg>
@@ -43,12 +43,12 @@ export default function YouTubeEmbed({ youtubeUrl, title }: YouTubeEmbedProps) {
 
   if (!embedUrl || !videoId) {
     return (
-      <div className="relative w-full overflow-hidden rounded-xl border border-white/10 bg-[#0e0e14]">
+      <div className="relative w-full overflow-hidden rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream">
         <div className="aspect-video flex flex-col items-center justify-center gap-3">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/5">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[color:var(--isl-hairline)] bg-paper">
             <PlayIcon />
           </div>
-          <p className="text-sm font-medium text-white/40">
+          <p className="text-sm font-medium text-meta">
             Broadcast link coming soon
           </p>
         </div>
@@ -57,7 +57,7 @@ export default function YouTubeEmbed({ youtubeUrl, title }: YouTubeEmbedProps) {
   }
 
   return (
-    <div className="relative w-full overflow-hidden rounded-xl border border-white/10 bg-black">
+    <div className="relative w-full overflow-hidden rounded-[2px] border border-[color:var(--isl-hairline)] bg-sink">
       <div className="aspect-video">
         <iframe
           src={embedUrl}

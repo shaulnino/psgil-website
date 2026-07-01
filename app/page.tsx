@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import Image from "next/image";
 import path from "node:path";
 import { existsSync } from "node:fs";
-import Button from "@/components/Button";
+import { Button } from "@/components/ui/button";
 import HomeRaceCards from "@/components/HomeRaceCards";
 import WatchLastRaceButton from "@/components/WatchLastRaceButton";
 import Section from "@/components/Section";
@@ -226,110 +226,70 @@ export default async function Home() {
   const featuredNews = latestNews[0] ?? null;
 
   return (
-    <main className="bg-[#0B0B0E] text-white">
-      <section className="group/hero relative min-h-[65vh] overflow-hidden">
-        {/* Background image with slow zoom */}
-        <div className="absolute inset-0">
-          {heroImageExists ? (
-            <Image
-              src={heroImagePath}
-              alt="ISL racing atmosphere"
-              fill
-              priority
-              className="object-cover object-center animate-[hero-zoom_14s_ease-out_forwards] group-hover/hero:brightness-110 transition-[filter] duration-700"
-            />
-          ) : (
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(112,32,176,0.35),_transparent_55%),linear-gradient(160deg,_#151120,_#0B0B0E_55%)]" />
-          )}
-
-          {/* Purple tint overlay */}
-          <div className="absolute inset-0 bg-[#7020B0]/[0.06] mix-blend-overlay" />
-
-          {/* Bottom gradient for text contrast */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/50 to-[#0B0B0E]" />
-
-          {/* Vignette edges */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_50%,_rgba(11,11,14,0.7)_100%)]" />
-
-          {/* Diagonal carbon-fibre texture */}
-          <div className="absolute inset-0 opacity-[0.06] [background-image:repeating-linear-gradient(135deg,_rgba(255,255,255,0.35)_0,_rgba(255,255,255,0.35)_1px,_transparent_1px,_transparent_8px)]" />
-
-          {/* Gliding purple streak */}
-          <div className="absolute left-1/2 top-28 h-px w-[80%] -translate-x-1/2 -rotate-6 bg-gradient-to-r from-transparent via-[#7020B0]/70 to-transparent animate-[hero-glide_10s_linear_infinite]" />
-
-          {/* Watermark league name */}
-          <div className="absolute right-6 top-16 text-[140px] font-display font-semibold tracking-[0.2em] text-white/[0.03] md:text-[220px]">
-            {siteConfig.leagueName}
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="relative flex min-h-[65vh] flex-col justify-end pb-10 pt-24 md:pt-28">
-          <div className="mx-auto w-full max-w-6xl px-6">
-            {/* Banner with ambient glow */}
-            <div className="relative w-full max-w-4xl">
-              <div className="absolute -inset-6 rounded-3xl bg-[#7020B0]/10 blur-2xl" />
+    <main className="bg-bone text-ink-2">
+      {/* ── Hero: editorial masthead — framed (desaturated) race image + ink headline on bone ── */}
+      <section className="isl-speed-lines border-b border-[color:var(--isl-hairline)]">
+        <div className="mx-auto w-full max-w-[1240px] px-5 pb-8 pt-10">
+          {heroImageExists && (
+            <div className="relative aspect-[21/9] w-full overflow-hidden rounded-[2px] border border-[color:var(--isl-hairline)]">
               <Image
-                src="/psgil-banner.png"
-                alt={`ISL ${currentSeasonLabel} banner`}
-                width={2000}
-                height={600}
+                src={heroImagePath}
+                alt="ISL racing atmosphere"
+                fill
                 priority
-                className="relative h-auto w-full drop-shadow-[0_0_40px_rgba(112,32,176,0.2)]"
-                sizes="(max-width: 768px) 100vw, 70vw"
+                sizes="100vw"
+                className="object-cover object-center [filter:grayscale(0.25)_contrast(1.03)]"
               />
             </div>
+          )}
 
-            <div className="mt-8 max-w-3xl">
-              <p className="text-sm uppercase tracking-[0.3em] text-white/60">
-                {currentSeasonLabel}
-              </p>
-              <h1 className="mt-4 font-display text-4xl font-semibold tracking-tight md:text-5xl lg:text-6xl">
-                {siteConfig.hero.title}
-              </h1>
-              <p className="mt-4 max-w-xl text-lg text-white/70 md:text-xl">
-                {siteConfig.hero.subtitle}
-              </p>
-              <div className="mt-8 flex flex-wrap gap-4">
-                <Button href="#contact-us">
-                  {siteConfig.hero.primaryCtaLabel}
-                </Button>
-                <WatchLastRaceButton
-                  links={lastRaceYoutubeLinks}
-                  label={siteConfig.hero.secondaryCtaLabel}
-                />
-              </div>
-              <div className="mt-5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[11px] leading-relaxed tracking-wide">
-                <span className="mr-1 font-semibold uppercase tracking-[0.15em] text-[#D4AF37]/60">
-                  Key facts
+          <div className="mt-8 max-w-3xl">
+            <p className="font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-oxblood">
+              {currentSeasonLabel}
+            </p>
+            <h1 className="mt-3 font-display text-4xl font-bold leading-[1.03] tracking-[0.005em] text-ink md:text-5xl lg:text-6xl">
+              {siteConfig.hero.title}
+            </h1>
+            <p className="mt-4 max-w-xl text-lg text-ink-2 md:text-xl">
+              {siteConfig.hero.subtitle}
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Button href="#contact-us">{siteConfig.hero.primaryCtaLabel}</Button>
+              <WatchLastRaceButton
+                links={lastRaceYoutubeLinks}
+                label={siteConfig.hero.secondaryCtaLabel}
+              />
+            </div>
+            <div className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] leading-relaxed">
+              <span className="me-1 font-isl-body font-semibold uppercase tracking-[0.18em] text-brass-ink">
+                Key facts
+              </span>
+              {trustChips.map((chip, i) => (
+                <span key={chip} className="inline-flex items-center gap-2 select-none">
+                  {i > 0 && (
+                    <span className="h-[3px] w-[3px] shrink-0 rounded-full bg-oxblood/60" />
+                  )}
+                  <span className="font-medium text-ink-2">{chip}</span>
                 </span>
-                {trustChips.map((chip, i) => (
-                  <span key={chip} className="inline-flex items-center gap-1.5 select-none">
-                    {i > 0 && (
-                      <span className="h-[3px] w-[3px] shrink-0 rounded-full bg-[#D4AF37]/50" />
-                    )}
-                    <span className="font-medium text-white/70">{chip}</span>
-                  </span>
-                ))}
-              </div>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
-      <div className="mx-auto mt-4 flex w-full max-w-6xl items-center gap-2 px-6">
-        <span className="text-xs font-semibold uppercase tracking-wider text-[#D4AF37]/60">Follow us</span>
+      <div className="mx-auto mt-4 flex w-full max-w-[1240px] items-center gap-3 px-5">
+        <span className="font-isl-body text-xs font-semibold uppercase tracking-[0.2em] text-meta">Follow us</span>
         <SocialLinks items={siteConfig.socials} variant="compact" />
         <a
           href="#contact-us"
-          className="group/social relative inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/[0.06] bg-white/[0.03] transition-all duration-200 hover:border-white/15 hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7020B0]/60 focus-visible:ring-offset-1 focus-visible:ring-offset-[#0B0B0E]"
+          className="group/social relative inline-flex h-9 w-9 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] text-meta transition-colors hover:border-ink hover:text-ink"
           aria-label="Contact Us"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-[18px] w-[18px] text-[#D4AF37] transition-all duration-200 group-hover/social:drop-shadow-[0_0_6px_rgba(212,175,55,0.4)]">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-[18px] w-[18px]">
             <path d="M3 4a2 2 0 00-2 2v1.161l8.441 4.221a1.25 1.25 0 001.118 0L19 7.162V6a2 2 0 00-2-2H3z" />
             <path d="M19 8.839l-7.77 3.885a2.75 2.75 0 01-2.46 0L1 8.839V14a2 2 0 002 2h14a2 2 0 002-2V8.839z" />
           </svg>
-          <span className="pointer-events-none absolute -top-9 left-1/2 z-50 -translate-x-1/2 whitespace-nowrap rounded-md bg-[#1a1a2e] px-2.5 py-1 text-[11px] font-medium text-white/90 opacity-0 shadow-lg ring-1 ring-white/10 transition-opacity group-hover/social:opacity-100" role="tooltip">
+          <span className="pointer-events-none absolute -top-9 left-1/2 z-50 -translate-x-1/2 whitespace-nowrap rounded-[2px] bg-ink px-2.5 py-1 text-[11px] font-medium text-bone opacity-0 transition-opacity group-hover/social:opacity-100" role="tooltip">
             Contact Us
           </span>
         </a>
@@ -338,11 +298,11 @@ export default async function Home() {
       {featuredNews && (
         <section className="py-4">
           <div className="mx-auto w-full max-w-6xl px-6">
-            <div className="overflow-hidden rounded-2xl border border-[#7020B0]/35 bg-[linear-gradient(135deg,rgba(112,32,176,0.16),rgba(11,11,14,0.98))] shadow-[0_0_32px_rgba(112,32,176,0.16)]">
+            <div className="overflow-hidden rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream">
               <div className="grid gap-0 md:grid-cols-[240px_1fr]">
                 <LoadingLink
                   href={`/news/${encodeURIComponent(featuredNews.slug)}`}
-                  className="group relative block h-44 md:h-full"
+                  className="group relative block h-44 border-b border-[color:var(--isl-hairline)] md:h-full md:border-b-0 md:border-e"
                 >
                   <Image
                     src={featuredNews.coverImageUrl || newsFallbackImage}
@@ -352,46 +312,39 @@ export default async function Home() {
                     sizes="(max-width: 768px) 100vw, 240px"
                     unoptimized={isRemote(featuredNews.coverImageUrl)}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                  <span className="absolute left-3 top-3 inline-flex items-center rounded-full border border-[#D4AF37]/50 bg-[#D4AF37]/12 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#D4AF37]">
+                  <span className="absolute start-3 top-3 inline-flex items-center rounded-[2px] border border-brass bg-bone/85 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-brass-ink">
                     Featured Story
                   </span>
                 </LoadingLink>
 
                 <div className="p-4 md:p-5">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="inline-flex items-center rounded-full border border-[#7020B0]/45 bg-[#7020B0]/18 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#d9bcff]">
+                    <span className="inline-flex items-center rounded-[2px] border border-oxblood px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-oxblood">
                       News Flash
                     </span>
-                    <span className="text-[11px] font-semibold uppercase tracking-[0.13em] text-white/55">
+                    <span className="num text-[11px] font-semibold uppercase tracking-[0.13em] text-meta">
                       {formatNewsDate(featuredNews.date)}
                     </span>
                   </div>
 
                   <LoadingLink
                     href={`/news/${encodeURIComponent(featuredNews.slug)}`}
-                    className="mt-3 block text-base font-semibold leading-tight text-white transition hover:text-[#d7b3ff] md:text-xl"
+                    className="mt-3 block font-display text-base font-bold leading-[1.1] tracking-[0.005em] text-ink transition-colors hover:text-oxblood md:text-xl"
                   >
                     <span className="line-clamp-2">{featuredNews.title}</span>
                   </LoadingLink>
 
-                  <p className="mt-2 line-clamp-2 text-sm text-white/65 md:text-[15px]">
+                  <p className="mt-2 line-clamp-2 text-sm text-ink-2 md:text-[15px]">
                     {featuredNews.excerpt}
                   </p>
 
                   <div className="mt-4 flex items-center gap-2">
-                    <LoadingLink
-                      href={`/news/${encodeURIComponent(featuredNews.slug)}`}
-                      className="inline-flex items-center rounded-full bg-[#7020B0] px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-[#7f2fc0]"
-                    >
+                    <Button href={`/news/${encodeURIComponent(featuredNews.slug)}`} size="sm">
                       Read
-                    </LoadingLink>
-                    <LoadingLink
-                      href="/news"
-                      className="inline-flex items-center rounded-full border border-white/20 px-3.5 py-1.5 text-xs font-semibold text-white/85 transition hover:border-white/35 hover:text-white"
-                    >
+                    </Button>
+                    <Button href="/news" size="sm" variant="secondary">
                       All News
-                    </LoadingLink>
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -411,12 +364,12 @@ export default async function Home() {
           {siteConfig.leagueFormat.map((item) => (
             <div
               key={item.title}
-              className="rounded-2xl border border-white/10 bg-white/5 p-5 text-sm text-white/70"
+              className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-5 text-sm text-ink-2"
             >
-              <h3 className="font-display text-lg font-semibold text-[#D4AF37]">
+              <h3 className="font-display text-lg font-bold tracking-[0.005em] text-ink">
                 {item.title}
               </h3>
-              <p className="mt-2 text-white/60">{item.description}</p>
+              <p className="mt-2 text-ink-2">{item.description}</p>
             </div>
           ))}
         </div>
@@ -427,7 +380,7 @@ export default async function Home() {
         description="Latest action and what is coming up next."
         brandTitle
         headerRight={
-          <Button href="/schedule" size="sm">
+          <Button href="/schedule" size="sm" variant="secondary">
             Full Schedule
           </Button>
         }
@@ -448,7 +401,7 @@ export default async function Home() {
         description="Fresh updates, race stories, and league highlights."
         brandTitle
         headerRight={
-          <Button href="/news" size="sm">
+          <Button href="/news" size="sm" variant="secondary">
             All News
           </Button>
         }
@@ -457,8 +410,8 @@ export default async function Home() {
       </Section>
 
       <Section title="About Us" brandTitle>
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-6 md:p-8">
-          <p className="text-base text-white/70 md:text-lg">
+        <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-6 md:p-8">
+          <p className="text-base text-ink-2 md:text-lg">
             ISL is Israel&apos;s largest F1 sim racing league, competing
             primarily on the EA Sports F1 series, running continuously for
             over three years and currently in its{" "}
