@@ -114,6 +114,48 @@
   unicode-bidi: isolate;
 }
 
+/* ISL font-family utilities (consumed by the primitive library + showcase).
+   Additive: the global body font is unchanged until the Phase 5 flip. */
+.font-isl-display {
+  font-family: var(--font-zilla-slab), Georgia, "Times New Roman", serif;
+}
+.font-isl-body {
+  font-family: var(--font-public-sans), system-ui, sans-serif;
+}
+
+/* Signature "double rule" (thin-over-thick) with a single oxblood tick at the
+   inline-start — the ISL divider identity. */
+.isl-double-rule {
+  border-block-start: 2px solid var(--isl-hairline-strong);
+  position: relative;
+}
+.isl-double-rule::before {
+  content: "";
+  position: absolute;
+  inset-block-start: 3px;
+  inset-inline: 0;
+  border-block-start: 1px solid var(--isl-hairline);
+}
+.isl-double-rule::after {
+  content: "";
+  position: absolute;
+  inset-block-start: -2px;
+  inset-inline-start: 0;
+  width: 32px;
+  border-block-start: 2px solid var(--isl-oxblood);
+}
+
+/* Subtle 115deg gold "speed-lines" — hero / empty-state backdrops only. */
+.isl-speed-lines {
+  background-image: repeating-linear-gradient(
+    115deg,
+    color-mix(in srgb, var(--isl-oxblood) 6%, transparent) 0,
+    color-mix(in srgb, var(--isl-oxblood) 6%, transparent) 1px,
+    transparent 1px,
+    transparent 11px
+  );
+}
+
 /* The four approved keyframes (documentary motion; content lands, that's it). */
 @keyframes f1-rise {
   from {
