@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import confetti from "canvas-confetti";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -12,22 +13,8 @@ interface SuccessModalProps {
   onClose: () => void;
 }
 
-const COPY = {
-  signup: {
-    title: "Welcome to ISL! 🏁",
-    body: "You\u2019re officially on the list. We\u2019ll reach out to you by email soon with the next steps and availability.",
-    note: "If you don\u2019t see our email, check your spam/promotions folder.",
-    button: "Awesome",
-  },
-  question: {
-    title: "Message received \u2705",
-    body: "Thanks \u2014 we got your question. We\u2019ll reply to you by email as soon as possible.",
-    note: null,
-    button: "Got it",
-  },
-} as const;
-
 export default function SuccessModal({ mode, open, onClose }: SuccessModalProps) {
+  const t = useTranslations("forms");
   const dialogRef = useRef<HTMLDialogElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
 
@@ -81,7 +68,7 @@ export default function SuccessModal({ mode, open, onClose }: SuccessModalProps)
     if (e.target === dialogRef.current) onClose();
   };
 
-  const copy = COPY[mode];
+  const hasNote = t.has(`success.${mode}.note`);
 
   return (
     <dialog
@@ -95,16 +82,16 @@ export default function SuccessModal({ mode, open, onClose }: SuccessModalProps)
           id="success-modal-title"
           className="font-display font-bold tracking-[0.005em] leading-[1.05] text-xl text-ink sm:text-2xl"
         >
-          {copy.title}
+          {t(`success.${mode}.title`)}
         </h2>
 
         <p className="max-w-xs text-sm leading-relaxed text-ink-2">
-          {copy.body}
+          {t(`success.${mode}.body`)}
         </p>
 
-        {copy.note && (
+        {hasNote && (
           <p className="max-w-xs text-xs leading-relaxed text-meta">
-            {copy.note}
+            {t(`success.${mode}.note`)}
           </p>
         )}
 
@@ -114,7 +101,7 @@ export default function SuccessModal({ mode, open, onClose }: SuccessModalProps)
           onClick={onClose}
           className={`${buttonVariants({ variant: "primary", size: "md" })} mt-2`}
         >
-          {copy.button}
+          {t(`success.${mode}.button`)}
         </button>
       </div>
     </dialog>

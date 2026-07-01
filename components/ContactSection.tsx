@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import SuccessModal from "./SuccessModal";
 import { Button } from "@/components/ui/button";
 
@@ -11,6 +12,7 @@ type FormState = "idle" | "sending" | "sent" | "error";
 type FormMode = "signup" | "question";
 
 export default function ContactSection() {
+  const t = useTranslations("forms");
   const [mode, setMode] = useState<FormMode>("signup");
   const [state, setState] = useState<FormState>("idle");
   const [errorMsg, setErrorMsg] = useState("");
@@ -69,7 +71,7 @@ export default function ContactSection() {
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Something went wrong.");
+        throw new Error(data.error || t("contact.errors.generic"));
       }
 
       setState("sent");
@@ -79,7 +81,7 @@ export default function ContactSection() {
     } catch (err) {
       setState("error");
       setErrorMsg(
-        err instanceof Error ? err.message : "Failed to send. Please try again.",
+        err instanceof Error ? err.message : t("contact.errors.failed"),
       );
     }
   };
@@ -96,8 +98,7 @@ export default function ContactSection() {
       {/* Info */}
       <div>
         <p className="text-sm text-ink-2 leading-relaxed">
-          Have a question, feedback, or interested in joining the league?
-          Drop us a message and we&apos;ll get back to you.
+          {t("contact.intro")}
         </p>
 
         <div className="mt-6 space-y-3">
@@ -118,7 +119,7 @@ export default function ContactSection() {
               type="button"
               onClick={handleCopy}
               className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream text-meta transition-colors hover:border-ink hover:text-ink"
-              title="Copy email"
+              title={t("contact.copyEmail")}
             >
               {copied ? (
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 text-status-success">
@@ -143,7 +144,7 @@ export default function ContactSection() {
       >
         {/* Honeypot — hidden from real users, attracts bots */}
         <div aria-hidden="true" className="absolute -left-[9999px]">
-          <label htmlFor="contact-hp">Leave empty</label>
+          <label htmlFor="contact-hp">{t("contact.honeypotLabel")}</label>
           <input id="contact-hp" name="_hp" type="text" tabIndex={-1} autoComplete="off" />
         </div>
 
@@ -160,7 +161,7 @@ export default function ContactSection() {
                   : "text-meta hover:text-ink"
               }`}
             >
-              {m === "signup" ? "Sign Up" : "Questions"}
+              {m === "signup" ? t("contact.mode.signup") : t("contact.mode.question")}
             </button>
           ))}
         </div>
@@ -168,7 +169,7 @@ export default function ContactSection() {
         {/* Helper text */}
         {mode === "signup" && (
           <p className="text-xs leading-relaxed text-meta">
-            Leave your details and we&apos;ll reach out before the next season or when a seat opens.
+            {t("contact.signupHelper")}
           </p>
         )}
 
@@ -176,27 +177,27 @@ export default function ContactSection() {
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label htmlFor="contact-name" className={labelCls}>
-              Name <span className="text-oxblood">*</span>
+              {t("contact.labels.name")} <span className="text-oxblood">*</span>
             </label>
             <input
               id="contact-name"
               name="name"
               type="text"
               required
-              placeholder="Your name"
+              placeholder={t("contact.placeholders.name")}
               className={inputCls}
             />
           </div>
           <div>
             <label htmlFor="contact-email" className={labelCls}>
-              Email <span className="text-oxblood">*</span>
+              {t("contact.labels.email")} <span className="text-oxblood">*</span>
             </label>
             <input
               id="contact-email"
               name="email"
               type="email"
               required
-              placeholder="you@example.com"
+              placeholder={t("contact.placeholders.email")}
               className={inputCls}
             />
           </div>
@@ -208,7 +209,7 @@ export default function ContactSection() {
             <div className="grid gap-4 sm:grid-cols-3">
               <div>
                 <label htmlFor="contact-birthdate" className={labelCls}>
-                  Date of Birth <span className="text-oxblood">*</span>
+                  {t("contact.labels.dob")} <span className="text-oxblood">*</span>
                 </label>
                 <input
                   id="contact-birthdate"
@@ -221,25 +222,25 @@ export default function ContactSection() {
               </div>
               <div>
                 <label htmlFor="contact-platform" className={labelCls}>
-                  Platform <span className="text-oxblood">*</span>
+                  {t("contact.labels.platform")} <span className="text-oxblood">*</span>
                 </label>
                 <select id="contact-platform" name="platform" required defaultValue="" className={selectCls}>
-                  <option value="" disabled>Select…</option>
-                  <option value="PC">PC</option>
-                  <option value="PS5">PS5</option>
-                  <option value="Xbox">Xbox</option>
+                  <option value="" disabled>{t("contact.selectPlaceholder")}</option>
+                  <option value="PC">{t("contact.platform.pc")}</option>
+                  <option value="PS5">{t("contact.platform.ps5")}</option>
+                  <option value="Xbox">{t("contact.platform.xbox")}</option>
                 </select>
               </div>
               <div>
                 <label htmlFor="contact-experience" className={labelCls}>
-                  Sim Racing Experience <span className="text-oxblood">*</span>
+                  {t("contact.labels.experience")} <span className="text-oxblood">*</span>
                 </label>
                 <select id="contact-experience" name="experience" required defaultValue="" className={selectCls}>
-                  <option value="" disabled>Select…</option>
-                  <option value="0–4 months">0–4 months</option>
-                  <option value="4 months–1 year">4 months–1 year</option>
-                  <option value="1–2 years">1–2 years</option>
-                  <option value="Above 2 years">Above 2 years</option>
+                  <option value="" disabled>{t("contact.selectPlaceholder")}</option>
+                  <option value="0–4 months">{t("contact.experience.range0to4")}</option>
+                  <option value="4 months–1 year">{t("contact.experience.range4to1y")}</option>
+                  <option value="1–2 years">{t("contact.experience.range1to2y")}</option>
+                  <option value="Above 2 years">{t("contact.experience.above2y")}</option>
                 </select>
               </div>
             </div>
@@ -251,27 +252,27 @@ export default function ContactSection() {
           <>
             <div>
               <label htmlFor="contact-subject" className={labelCls}>
-                Subject
+                {t("contact.labels.subject")}
               </label>
               <input
                 id="contact-subject"
                 name="subject"
                 type="text"
-                placeholder="What is this about?"
+                placeholder={t("contact.placeholders.subject")}
                 className={inputCls}
               />
             </div>
 
             <div>
               <label htmlFor="contact-message" className={labelCls}>
-                Message <span className="text-oxblood">*</span>
+                {t("contact.labels.message")} <span className="text-oxblood">*</span>
               </label>
               <textarea
                 id="contact-message"
                 name="message"
                 required
                 rows={4}
-                placeholder="Your message..."
+                placeholder={t("contact.placeholders.message")}
                 className={`${inputCls} resize-y`}
               />
             </div>
@@ -294,12 +295,12 @@ export default function ContactSection() {
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
-              Sending…
+              {t("contact.submit.sending")}
             </>
           ) : mode === "signup" ? (
-            "Join ISL"
+            t("contact.submit.signup")
           ) : (
-            "Send Message"
+            t("contact.submit.question")
           )}
         </Button>
       </form>
