@@ -4,6 +4,7 @@ import LoadingLink from "@/components/LoadingLink";
 import NewsCategoryTag from "@/components/NewsCategoryTag";
 import NewsImage from "@/components/NewsImage";
 import NewsArticleActions from "@/components/NewsArticleActions";
+import { Button } from "@/components/ui/button";
 import { fetchCsv, parseCsv } from "@/lib/csv";
 import {
   mapRaceEvents,
@@ -129,19 +130,16 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
 
   if (!article) {
     return (
-      <main className="bg-[#0B0B0E] text-white">
+      <main className="bg-bone text-ink">
         <Section title="Article Unavailable" description="We could not find this article." pageHeader>
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-sm text-white/70">
+          <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-6 text-sm text-meta">
             {error
               ? "The news source is temporarily unavailable. Please try again soon."
               : "This article may be unpublished or the URL is incorrect."}
             <div className="mt-5">
-              <LoadingLink
-                href="/news"
-                className="inline-flex items-center rounded-full bg-[#7020B0] px-4 py-2 text-sm font-semibold text-white"
-              >
+              <Button href="/news" variant="secondary" size="md">
                 Back to news
-              </LoadingLink>
+              </Button>
             </div>
           </div>
         </Section>
@@ -263,57 +261,56 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
   const standingsLeagueLabel = articleId.includes("wild") ? "Wild" : "Main";
 
   return (
-    <main className="bg-[#0B0B0E] text-white">
+    <main className="bg-bone text-ink">
       <Section className="pt-8 md:pt-12">
         <LoadingLink
           href="/news"
-          className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-[#D4AF37] transition hover:text-[#f0d27a]"
+          className="mb-6 inline-flex items-center gap-2 border-b border-transparent text-sm font-medium uppercase tracking-[0.08em] text-ink transition-colors hover:border-oxblood hover:text-oxblood-deep"
         >
-          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg className="h-4 w-4 rtl:scale-x-[-1]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 18l-6-6 6-6" />
           </svg>
           Back to news
         </LoadingLink>
 
-        <article className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">
-          <div className="relative h-64 md:h-80">
+        <article className="overflow-hidden rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper">
+          <div className="relative h-64 border-b border-[color:var(--isl-hairline)] md:h-80">
             <NewsImage
               src={article.coverImageUrl}
               alt={article.title}
               loading="eager"
               className="h-full w-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent" />
-            <div className="absolute inset-x-0 bottom-0 p-6 md:p-8">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#D4AF37]/80">
-                {formatNewsDate(article.date)}
-                <span className="mx-2 text-white/45">•</span>
-                {article.author}
-              </p>
-              <div className="mt-3">
-                <NewsCategoryTag category={article.category} />
-              </div>
-              <h1 className="mt-3 font-display text-3xl font-bold tracking-wide text-white md:text-5xl">
-                {article.title}
-              </h1>
-              {article.tags.length > 0 && (
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {article.tags.map((tag) => (
-                    <span
-                      key={`${article.id}-${tag}`}
-                      className="rounded-full border border-white/20 bg-black/35 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-white/85"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              )}
+          </div>
+          <div className="border-b border-[color:var(--isl-hairline)] bg-cream p-6 md:p-8">
+            <p className="num text-xs font-semibold uppercase tracking-[0.16em] text-meta">
+              {formatNewsDate(article.date)}
+              <span className="mx-2 text-faint">•</span>
+              {article.author}
+            </p>
+            <div className="mt-3">
+              <NewsCategoryTag category={article.category} />
             </div>
+            <h1 className="mt-3 font-display text-3xl font-bold tracking-[0.005em] leading-[1.05] text-ink md:text-5xl">
+              {article.title}
+            </h1>
+            {article.tags.length > 0 && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {article.tags.map((tag) => (
+                  <span
+                    key={`${article.id}-${tag}`}
+                    className="rounded-[2px] border border-[color:var(--isl-hairline-strong)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-ink-2"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="p-6 md:p-8">
             {embeddedVideoId && (
-              <div className="mb-6 overflow-hidden rounded-2xl border border-white/10 bg-black">
+              <div className="mb-6 overflow-hidden rounded-[2px] border border-[color:var(--isl-hairline)] bg-sink">
                 <div className="aspect-video w-full">
                   <iframe
                     src={`https://www.youtube.com/embed/${embeddedVideoId}`}

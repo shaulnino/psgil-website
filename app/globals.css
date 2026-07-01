@@ -444,9 +444,10 @@ body {
   }
 }
 
+/* ISL editorial article body (light theme). */
 .news-prose {
-  color: rgba(255, 255, 255, 0.84);
-  line-height: 1.85;
+  color: var(--isl-ink-2);
+  line-height: 1.7;
   font-size: 1rem;
 }
 
@@ -458,10 +459,11 @@ body {
 .news-prose h2,
 .news-prose h3,
 .news-prose h4 {
-  font-family: var(--font-rajdhani), system-ui, sans-serif;
-  color: #ffffff;
-  letter-spacing: 0.01em;
-  line-height: 1.2;
+  font-family: var(--font-zilla-slab), Georgia, "Times New Roman", serif;
+  font-weight: 700;
+  color: var(--isl-ink);
+  letter-spacing: 0.005em;
+  line-height: 1.1;
   margin-top: 1.8rem;
   margin-bottom: 0.75rem;
 }
@@ -479,23 +481,24 @@ body {
 }
 
 .news-prose a {
-  color: #c79eff;
+  color: var(--isl-oxblood);
   text-decoration: underline;
   text-underline-offset: 3px;
+  text-decoration-color: color-mix(in srgb, var(--isl-oxblood) 45%, transparent);
 }
 
 .news-prose a:hover {
-  color: #d8b9ff;
+  color: var(--isl-oxblood-deep);
 }
 
 .news-prose strong {
-  color: #ffffff;
+  color: var(--isl-ink);
   font-weight: 700;
 }
 
 .news-prose ul,
 .news-prose ol {
-  padding-left: 1.2rem;
+  padding-inline-start: 1.2rem;
 }
 
 .news-prose ul {
@@ -507,29 +510,30 @@ body {
 }
 
 .news-prose blockquote {
-  border-left: 3px solid rgba(112, 32, 176, 0.8);
-  background: rgba(112, 32, 176, 0.1);
-  border-radius: 0.5rem;
+  border-inline-start: 2px solid var(--isl-oxblood);
+  background: var(--isl-cream);
+  border-radius: 2px;
   padding: 0.85rem 1rem;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--isl-ink-2);
 }
 
 .news-prose hr {
   border: 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  border-top: 1px solid var(--isl-hairline);
   margin: 1.3rem 0;
 }
 
 .news-prose code {
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 0.35rem;
+  background: var(--isl-sink);
+  border-radius: 2px;
   padding: 0.1rem 0.35rem;
+  color: var(--isl-ink);
 }
 
 .news-prose pre {
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 0.7rem;
-  background: rgba(0, 0, 0, 0.38);
+  border: 1px solid var(--isl-hairline);
+  border-radius: 2px;
+  background: var(--isl-cream);
   overflow-x: auto;
   padding: 0.9rem;
 }

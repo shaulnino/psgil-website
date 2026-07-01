@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 import YouTubeEmbed from "@/components/YouTubeEmbed";
 import RaceResultsTable from "@/components/RaceResultsTable";
 import StandingsTable from "@/components/StandingsTable";
@@ -46,7 +47,7 @@ function ModalShell({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50"
       onClick={onClose}
     >
       <div
@@ -54,12 +55,12 @@ function ModalShell({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="font-display text-base font-semibold text-white/85 md:text-lg">
+          <h3 className="font-display font-bold tracking-[0.005em] leading-[1.05] text-ink text-base md:text-lg">
             {title}
           </h3>
           <button
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/80 transition hover:text-white"
+            className="flex h-8 w-8 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline-strong)] bg-paper text-ink-2 transition-colors hover:border-ink hover:text-ink"
             aria-label="Close modal"
           >
             ×
@@ -116,82 +117,80 @@ export default function NewsArticleActions({
           <>
             {hasWatch ? (
               watchLinks.map((link) => (
-                <button
+                <Button
                   key={`${link.label}-${link.url}`}
                   type="button"
                   onClick={() => setWatchTarget(link)}
-                  className="inline-flex items-center gap-2 rounded-full bg-[#7020B0] px-4 py-2 text-sm font-semibold text-white shadow-[0_0_18px_rgba(112,32,176,0.35)] transition hover:-translate-y-0.5 hover:shadow-[0_0_24px_rgba(112,32,176,0.55)]"
                 >
                   <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
                   </svg>
                   {link.label}
-                </button>
+                </Button>
               ))
             ) : (
-              <button
+              <Button
                 type="button"
                 disabled
                 title="YouTube link not available yet"
-                className="inline-flex cursor-not-allowed items-center gap-2 rounded-full bg-[#7020B0] px-4 py-2 text-sm font-semibold text-white opacity-50 shadow-[0_0_18px_rgba(112,32,176,0.35)]"
               >
                 <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
                 </svg>
                 Watch Race
-              </button>
+              </Button>
             )}
 
-            <button
+            <Button
               type="button"
+              variant="secondary"
               onClick={openResultsModal}
               disabled={!hasResults}
-              className="inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white/90 transition enabled:hover:border-[#7020B0]/55 enabled:hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-6m4 6V7m4 10v-3M5 21h14" />
               </svg>
               Race Results
-            </button>
+            </Button>
 
-            <button
+            <Button
               type="button"
+              variant="secondary"
               onClick={() => setSeasonTableOpen(true)}
               disabled={!hasSeasonTable}
-              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/[0.03] px-4 py-2 text-sm font-semibold text-white/90 transition enabled:hover:border-[#7020B0]/55 enabled:hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 3v18h18M7 14v4m5-8v8m5-12v12" />
               </svg>
               Drivers Championship
-            </button>
+            </Button>
 
-            <button
+            <Button
               type="button"
+              variant="secondary"
               onClick={() => setConstructorsTableOpen(true)}
               disabled={!hasConstructorsTable}
-              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/[0.03] px-4 py-2 text-sm font-semibold text-white/90 transition enabled:hover:border-[#7020B0]/55 enabled:hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
               </svg>
               Constructors Championship
-            </button>
+            </Button>
           </>
         )}
 
         {isPreview && (
-          <button
+          <Button
             type="button"
+            variant="secondary"
             onClick={() => setSeasonTableOpen(true)}
             disabled={!hasSeasonTable}
-            className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/35 bg-[#D4AF37]/10 px-4 py-2 text-sm font-semibold text-[#D4AF37] transition enabled:hover:border-[#D4AF37]/55 enabled:hover:bg-[#D4AF37]/15 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 3v18h18M7 14v4m5-8v8m5-12v12" />
             </svg>
             Season Table
-          </button>
+          </Button>
         )}
       </div>
 
@@ -206,18 +205,18 @@ export default function NewsArticleActions({
 
       {resultsOpen && hasResults && currentResults && (
         <ModalShell title="Race Results" onClose={() => setResultsOpen(false)}>
-          <div className="max-h-[85vh] overflow-auto rounded-2xl border border-white/10 bg-[#0B0B0E] p-3 shadow-[0_0_30px_rgba(0,0,0,0.4)]">
+          <div className="max-h-[85vh] overflow-auto rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-3">
             {showResultsTabs && (
-              <div className="mb-3 flex flex-wrap items-center gap-1 rounded-full border border-white/10 bg-black/60 p-1">
+              <div className="mb-3 flex flex-wrap items-center gap-1 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-1">
                 {resultsSections.map((section, idx) => (
                   <button
                     key={`${section.raceName}-${idx}`}
                     type="button"
                     onClick={() => setActiveResultIdx(idx)}
-                    className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+                    className={`rounded-[2px] px-4 py-1.5 text-xs font-semibold transition-colors ${
                       idx === activeResultIdx
-                        ? "bg-[#7020B0]/80 text-white shadow-[0_0_12px_rgba(112,32,176,0.3)]"
-                        : "text-white/50 hover:text-white/80"
+                        ? "bg-ink text-bone"
+                        : "text-meta hover:text-ink"
                     }`}
                   >
                     {section.raceName}
@@ -233,7 +232,7 @@ export default function NewsArticleActions({
               {currentResults.rows.length > 0 ? (
                 <RaceResultsTable results={currentResults.rows} caption={resultsCaption} />
               ) : (
-                <p className="py-8 text-center text-sm text-white/50">Results are not available for this race yet.</p>
+                <p className="py-8 text-center text-sm text-meta">Results are not available for this race yet.</p>
               )}
             </DriverLookupProvider>
           </div>
@@ -242,7 +241,7 @@ export default function NewsArticleActions({
 
       {seasonTableOpen && hasSeasonTable && (
         <ModalShell title="Drivers Championship" onClose={() => setSeasonTableOpen(false)}>
-          <div className="max-h-[85vh] overflow-auto rounded-2xl border border-white/10 bg-[#0B0B0E] p-3 shadow-[0_0_30px_rgba(0,0,0,0.4)]">
+          <div className="max-h-[85vh] overflow-auto rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-3">
             <DriverLookupProvider
               drivers={drivers}
               teams={teams}
@@ -260,7 +259,7 @@ export default function NewsArticleActions({
 
       {constructorsTableOpen && hasConstructorsTable && (
         <ModalShell title="Constructors Championship" onClose={() => setConstructorsTableOpen(false)}>
-          <div className="max-h-[85vh] overflow-auto rounded-2xl border border-white/10 bg-[#0B0B0E] p-3 shadow-[0_0_30px_rgba(0,0,0,0.4)]">
+          <div className="max-h-[85vh] overflow-auto rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-3">
             <DriverLookupProvider
               drivers={drivers}
               teams={teams}

@@ -28,27 +28,26 @@ export default async function NewsPage() {
         <LoadingLink
           key={article.id}
           href={`/news/${encodeURIComponent(article.slug)}`}
-          className="group overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] transition hover:border-[#7020B0]/45 hover:shadow-[0_0_24px_rgba(112,32,176,0.18)]"
+          className="group overflow-hidden rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream transition-colors hover:border-oxblood"
         >
-          <div className="relative h-44 overflow-hidden">
+          <div className="relative h-44 overflow-hidden border-b border-[color:var(--isl-hairline)]">
             <NewsImage
               src={article.coverImageUrl}
               alt={article.title}
-              className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+              className="h-full w-full object-cover"
             />
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-black/15 to-transparent" />
           </div>
           <div className="p-5">
             <div className="flex flex-wrap items-center gap-2">
-              <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[#D4AF37]/70">
+              <p className="num text-xs font-semibold uppercase tracking-[0.16em] text-meta">
                 {formatNewsDate(article.date)}
               </p>
               <NewsCategoryTag category={category} />
             </div>
-            <h2 className="mt-2 font-display text-2xl font-bold tracking-wide text-white">
+            <h2 className="mt-2 font-display text-2xl font-bold tracking-[0.005em] leading-[1.05] text-ink transition-colors group-hover:text-oxblood">
               {article.title}
             </h2>
-            <p className="mt-2 text-sm leading-6 text-white/70">
+            <p className="mt-2 text-sm leading-6 text-ink-2">
               {article.excerpt}
             </p>
             {article.tags.length > 0 && (
@@ -56,7 +55,7 @@ export default async function NewsPage() {
                 {article.tags.map((tag) => (
                   <span
                     key={`${article.id}-${tag}`}
-                    className="rounded-full border border-[#7020B0]/35 bg-[#7020B0]/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-[#c79eff]"
+                    className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-meta"
                   >
                     {tag}
                   </span>
@@ -70,20 +69,20 @@ export default async function NewsPage() {
   );
 
   return (
-    <main className="bg-[#0B0B0E] text-white">
+    <main className="bg-bone text-ink-2">
       <Section
         title="News"
         description="Race reports, highlights, and league updates from ISL."
         pageHeader
       >
         {error && (
-          <div className="mb-6 rounded-2xl border border-red-400/25 bg-red-500/10 p-4 text-sm text-red-100">
+          <div className="mb-6 rounded-[2px] border border-[color:var(--isl-hairline)] border-s-2 border-s-status-danger bg-paper p-4 text-sm text-ink-2">
             {error} Showing cached or available content.
           </div>
         )}
 
         {articles.length === 0 ? (
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-sm text-white/65">
+          <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-6 text-sm text-meta">
             No published news yet.
           </div>
         ) : (
@@ -91,10 +90,10 @@ export default async function NewsPage() {
             {grouped.map((section) => (
               <section key={section.category} className="space-y-5">
                 <div className="space-y-2">
-                  <h2 className="font-display text-2xl font-bold tracking-wide text-white md:text-3xl">
+                  <h2 className="font-display text-2xl font-bold tracking-[0.005em] leading-[1.05] text-ink md:text-3xl">
                     {section.label}
                   </h2>
-                  <div className="h-[2px] w-24 rounded-full bg-gradient-to-r from-[#7020B0] to-[#D4AF37]" />
+                  <div className="h-[2px] w-24 rounded-[2px] bg-oxblood" />
                 </div>
                 {renderGrid(section.category, section.items)}
               </section>
