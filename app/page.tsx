@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 
+import { getTranslations } from "next-intl/server";
 import Image from "next/image";
 import path from "node:path";
 import { existsSync } from "node:fs";
@@ -55,6 +56,7 @@ function isRemote(src?: string) {
 }
 
 export default async function Home() {
+  const tHome = await getTranslations("home");
   const heroImageExists = existsSync(resolvePublic(heroImagePath));
 
   /* ---- Seasons config ---- */
@@ -262,7 +264,7 @@ export default async function Home() {
             </div>
             <div className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] leading-relaxed">
               <span className="me-1 font-isl-body font-semibold uppercase tracking-[0.18em] text-brass-ink">
-                Key facts
+                {tHome("hero.keyFacts")}
               </span>
               {trustChips.map((chip, i) => (
                 <span key={chip} className="inline-flex items-center gap-2 select-none">
@@ -278,19 +280,19 @@ export default async function Home() {
       </section>
 
       <div className="mx-auto mt-4 flex w-full max-w-[1240px] items-center gap-3 px-5">
-        <span className="font-isl-body text-xs font-semibold uppercase tracking-[0.2em] text-meta">Follow us</span>
+        <span className="font-isl-body text-xs font-semibold uppercase tracking-[0.2em] text-meta">{tHome("hero.followUs")}</span>
         <SocialLinks items={siteConfig.socials} variant="compact" />
         <a
           href="#contact-us"
           className="group/social relative inline-flex h-9 w-9 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] text-meta transition-colors hover:border-ink hover:text-ink"
-          aria-label="Contact Us"
+          aria-label={tHome("hero.contactUs")}
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-[18px] w-[18px]">
             <path d="M3 4a2 2 0 00-2 2v1.161l8.441 4.221a1.25 1.25 0 001.118 0L19 7.162V6a2 2 0 00-2-2H3z" />
             <path d="M19 8.839l-7.77 3.885a2.75 2.75 0 01-2.46 0L1 8.839V14a2 2 0 002 2h14a2 2 0 002-2V8.839z" />
           </svg>
           <span className="pointer-events-none absolute -top-9 left-1/2 z-50 -translate-x-1/2 whitespace-nowrap rounded-[2px] bg-ink px-2.5 py-1 text-[11px] font-medium text-bone opacity-0 transition-opacity group-hover/social:opacity-100" role="tooltip">
-            Contact Us
+            {tHome("hero.contactUs")}
           </span>
         </a>
       </div>
@@ -313,14 +315,14 @@ export default async function Home() {
                     unoptimized={isRemote(featuredNews.coverImageUrl)}
                   />
                   <span className="absolute start-3 top-3 inline-flex items-center rounded-[2px] border border-brass bg-bone/85 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-brass-ink">
-                    Featured Story
+                    {tHome("featured.featuredStory")}
                   </span>
                 </LoadingLink>
 
                 <div className="p-4 md:p-5">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="inline-flex items-center rounded-[2px] border border-oxblood px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-oxblood">
-                      News Flash
+                      {tHome("featured.newsFlash")}
                     </span>
                     <span className="num text-[11px] font-semibold uppercase tracking-[0.13em] text-meta">
                       {formatNewsDate(featuredNews.date)}
@@ -340,10 +342,10 @@ export default async function Home() {
 
                   <div className="mt-4 flex items-center gap-2">
                     <Button href={`/news/${encodeURIComponent(featuredNews.slug)}`} size="sm">
-                      Read
+                      {tHome("featured.read")}
                     </Button>
                     <Button href="/news" size="sm" variant="secondary">
-                      All News
+                      {tHome("featured.allNews")}
                     </Button>
                   </div>
                 </div>
@@ -356,8 +358,8 @@ export default async function Home() {
       <SnapshotStrip stats={snapshotStats} />
 
       <Section
-        title="League Format"
-        description="Structured racing built for consistency and clean results."
+        title={tHome("leagueFormat.title")}
+        description={tHome("leagueFormat.description")}
         brandTitle
       >
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -376,12 +378,12 @@ export default async function Home() {
       </Section>
 
       <Section
-        title="Races"
-        description="Latest action and what is coming up next."
+        title={tHome("races.title")}
+        description={tHome("races.description")}
         brandTitle
         headerRight={
           <Button href="/schedule" size="sm" variant="secondary">
-            Full Schedule
+            {tHome("races.fullSchedule")}
           </Button>
         }
       >
@@ -397,32 +399,22 @@ export default async function Home() {
       </Section>
 
       <Section
-        title="Latest News"
-        description="Fresh updates, race stories, and league highlights."
+        title={tHome("latestNews.title")}
+        description={tHome("latestNews.description")}
         brandTitle
         headerRight={
           <Button href="/news" size="sm" variant="secondary">
-            All News
+            {tHome("latestNews.allNews")}
           </Button>
         }
       >
         <NewsCarousel articles={latestNews} />
       </Section>
 
-      <Section title="About Us" brandTitle>
+      <Section title={tHome("about.title")} brandTitle>
         <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-6 md:p-8">
           <p className="text-base text-ink-2 md:text-lg">
-            ISL is Israel&apos;s largest F1 sim racing league, competing
-            primarily on the EA Sports F1 series, running continuously for
-            over three years and currently in its{" "}
-            {currentSeasonLabel.toLowerCase()}. Built by drivers, for
-            drivers, the league is centered around a strong and supportive
-            community, highly competitive grids, and a deep commitment to
-            clean, respectful racing—both on and off the track. With
-            structured seasons, consistent stewarding, and a culture that
-            values fairness and sportsmanship, ISL has grown into a home
-            for drivers who are looking for serious competition without
-            losing the human side of racing.
+            {tHome("about.body", { season: currentSeasonLabel.toLowerCase() })}
           </p>
         </div>
       </Section>
@@ -431,8 +423,8 @@ export default async function Home() {
 
       <Section
         id="contact-us"
-        title="Contact Us"
-        description="Get in touch with the league."
+        title={tHome("contact.title")}
+        description={tHome("contact.description")}
         brandTitle
       >
         <ContactSection />

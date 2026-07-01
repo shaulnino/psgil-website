@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import YouTubeEmbed from "@/components/YouTubeEmbed";
 import RaceResultsTable from "@/components/RaceResultsTable";
@@ -37,6 +38,7 @@ function ModalShell({
   onClose: () => void;
   children: React.ReactNode;
 }) {
+  const t = useTranslations("news");
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -61,7 +63,7 @@ function ModalShell({
           <button
             onClick={onClose}
             className="flex h-8 w-8 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline-strong)] bg-paper text-ink-2 transition-colors hover:border-ink hover:text-ink"
-            aria-label="Close modal"
+            aria-label={t("actions.closeModal")}
           >
             ×
           </button>
@@ -85,6 +87,7 @@ export default function NewsArticleActions({
   drivers,
   teams,
 }: NewsArticleActionsProps) {
+  const t = useTranslations("news");
   const [watchTarget, setWatchTarget] = useState<{ label: string; url: string } | null>(null);
   const [resultsOpen, setResultsOpen] = useState(false);
   const [activeResultIdx, setActiveResultIdx] = useState(0);
@@ -132,12 +135,12 @@ export default function NewsArticleActions({
               <Button
                 type="button"
                 disabled
-                title="YouTube link not available yet"
+                title={t("actions.watchUnavailableTitle")}
               >
                 <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
                 </svg>
-                Watch Race
+                {t("actions.watchRace")}
               </Button>
             )}
 
@@ -150,7 +153,7 @@ export default function NewsArticleActions({
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-6m4 6V7m4 10v-3M5 21h14" />
               </svg>
-              Race Results
+              {t("actions.raceResults")}
             </Button>
 
             <Button
@@ -162,7 +165,7 @@ export default function NewsArticleActions({
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 3v18h18M7 14v4m5-8v8m5-12v12" />
               </svg>
-              Drivers Championship
+              {t("actions.driversChampionship")}
             </Button>
 
             <Button
@@ -174,7 +177,7 @@ export default function NewsArticleActions({
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
               </svg>
-              Constructors Championship
+              {t("actions.constructorsChampionship")}
             </Button>
           </>
         )}
@@ -189,7 +192,7 @@ export default function NewsArticleActions({
             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 3v18h18M7 14v4m5-8v8m5-12v12" />
             </svg>
-            Season Table
+            {t("actions.seasonTable")}
           </Button>
         )}
       </div>
@@ -198,13 +201,13 @@ export default function NewsArticleActions({
         <ModalShell title={watchTarget.label} onClose={() => setWatchTarget(null)}>
           <YouTubeEmbed
             youtubeUrl={watchTarget.url}
-            title={`${watchTarget.label} — Race Broadcast`}
+            title={t("actions.broadcastTitle", { label: watchTarget.label })}
           />
         </ModalShell>
       )}
 
       {resultsOpen && hasResults && currentResults && (
-        <ModalShell title="Race Results" onClose={() => setResultsOpen(false)}>
+        <ModalShell title={t("actions.raceResults")} onClose={() => setResultsOpen(false)}>
           <div className="max-h-[85vh] overflow-auto rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-3">
             {showResultsTabs && (
               <div className="mb-3 flex flex-wrap items-center gap-1 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-1">
@@ -232,7 +235,7 @@ export default function NewsArticleActions({
               {currentResults.rows.length > 0 ? (
                 <RaceResultsTable results={currentResults.rows} caption={resultsCaption} />
               ) : (
-                <p className="py-8 text-center text-sm text-meta">Results are not available for this race yet.</p>
+                <p className="py-8 text-center text-sm text-meta">{t("actions.resultsUnavailable")}</p>
               )}
             </DriverLookupProvider>
           </div>
@@ -240,7 +243,7 @@ export default function NewsArticleActions({
       )}
 
       {seasonTableOpen && hasSeasonTable && (
-        <ModalShell title="Drivers Championship" onClose={() => setSeasonTableOpen(false)}>
+        <ModalShell title={t("actions.driversChampionship")} onClose={() => setSeasonTableOpen(false)}>
           <div className="max-h-[85vh] overflow-auto rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-3">
             <DriverLookupProvider
               drivers={drivers}
@@ -258,7 +261,7 @@ export default function NewsArticleActions({
       )}
 
       {constructorsTableOpen && hasConstructorsTable && (
-        <ModalShell title="Constructors Championship" onClose={() => setConstructorsTableOpen(false)}>
+        <ModalShell title={t("actions.constructorsChampionship")} onClose={() => setConstructorsTableOpen(false)}>
           <div className="max-h-[85vh] overflow-auto rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-3">
             <DriverLookupProvider
               drivers={drivers}

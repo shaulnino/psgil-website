@@ -2,6 +2,7 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { useState, useRef, useEffect, useCallback, useTransition } from "react";
+import { useTranslations } from "next-intl";
 
 /* ------------------------------------------------------------------ */
 /*  Season dropdown – persists selection in ?season= query param       */
@@ -62,6 +63,7 @@ export default function SeasonSelector({
   seasons,
   selected,
 }: SeasonSelectorProps) {
+  const t = useTranslations("schedule");
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -162,7 +164,7 @@ export default function SeasonSelector({
     >
       {/* -------- Label -------- */}
       <span className="font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-meta">
-        Season
+        {t("seasonSelector.season")}
       </span>
 
       {/* -------- Trigger button -------- */}

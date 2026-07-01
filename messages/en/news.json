@@ -1,0 +1,38 @@
+{
+  "index": {
+    "title": "News",
+    "description": "Race reports, highlights, and league updates from ISL.",
+    "cachedNotice": "Showing cached or available content.",
+    "empty": "No published news yet."
+  },
+  "carousel": {
+    "empty": "No published articles yet.",
+    "storyOf": "Story {current} of {total}",
+    "read": "Read",
+    "prevAria": "Previous article",
+    "nextAria": "Next article",
+    "goToAria": "Go to article {index}"
+  },
+  "article": {
+    "backToNews": "Back to news",
+    "unavailableTitle": "Article Unavailable",
+    "unavailableDescription": "We could not find this article.",
+    "sourceUnavailable": "The news source is temporarily unavailable. Please try again soon.",
+    "notFound": "This article may be unpublished or the URL is incorrect.",
+    "metaFallbackTitle": "News Article | ISL",
+    "metaFallbackDescription": "ISL news article.",
+    "metaSiteName": "ISL - F1 Israeli Super League",
+    "metaTitleSuffix": "{title} | ISL News"
+  },
+  "actions": {
+    "watchRace": "Watch Race",
+    "watchUnavailableTitle": "YouTube link not available yet",
+    "raceResults": "Race Results",
+    "driversChampionship": "Drivers Championship",
+    "constructorsChampionship": "Constructors Championship",
+    "seasonTable": "Season Table",
+    "closeModal": "Close modal",
+    "resultsUnavailable": "Results are not available for this race yet.",
+    "broadcastTitle": "{label} — Race Broadcast"
+  }
+}

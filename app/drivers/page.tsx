@@ -1,6 +1,7 @@
 /** Rebuild at most once every 5 minutes; all visitors share the cached page. */
 export const revalidate = 300;
 
+import { getTranslations } from "next-intl/server";
 import Section from "@/components/Section";
 import DriversGrid from "@/components/DriversGrid";
 import { fetchCsv, parseCsv } from "@/lib/csv";
@@ -111,6 +112,7 @@ const DEMO_DRIVER = {
 };
 
 export default async function DriversPage() {
+  const t = await getTranslations("drivers");
   let teams: {
     team_key: string;
     team_name: string;
@@ -196,8 +198,8 @@ export default async function DriversPage() {
   return (
     <main className="bg-bone text-ink">
       <Section
-        title="Drivers"
-        description="Official ISL roster: teams, drivers, and profiles — updated as the season progresses."
+        title={t("page.title")}
+        description={t("page.description")}
         pageHeader
       >
         <DriversGrid

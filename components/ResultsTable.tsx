@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useTranslations } from "next-intl";
 
 /* ------------------------------------------------------------------ */
 /*  Generic reusable data-table — ISL "Qav Rishon" editorial styling   */
@@ -86,6 +87,7 @@ export default function ResultsTable<T extends Record<string, unknown>>({
   groups,
   horizontalStickyCount,
 }: Props<T>) {
+  const t = useTranslations("schedule");
   const stickyN = Math.max(0, horizontalStickyCount ?? 0);
   const stickyLefts = computeStickyLeftPx(columns, stickyN);
 
@@ -95,7 +97,7 @@ export default function ResultsTable<T extends Record<string, unknown>>({
   if (effectiveRows.length === 0) {
     return (
       <div className="flex items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper py-12">
-        <p className="text-sm text-meta">No data available yet.</p>
+        <p className="text-sm text-meta">{t("resultsTable.noData")}</p>
       </div>
     );
   }

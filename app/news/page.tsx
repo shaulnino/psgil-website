@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import Section from "@/components/Section";
 import LoadingLink from "@/components/LoadingLink";
 import NewsCategoryTag from "@/components/NewsCategoryTag";
@@ -15,6 +16,7 @@ import {
 export const revalidate = 60; // 60 seconds — news articles should appear quickly after sheet edits
 
 export default async function NewsPage() {
+  const t = await getTranslations("news");
   const { articles, error } = await fetchArticlesWithStatus();
   const grouped = NEWS_CATEGORY_ORDER.map((category) => ({
     category,
@@ -71,19 +73,19 @@ export default async function NewsPage() {
   return (
     <main className="bg-bone text-ink-2">
       <Section
-        title="News"
-        description="Race reports, highlights, and league updates from ISL."
+        title={t("index.title")}
+        description={t("index.description")}
         pageHeader
       >
         {error && (
           <div className="mb-6 rounded-[2px] border border-[color:var(--isl-hairline)] border-s-2 border-s-status-danger bg-paper p-4 text-sm text-ink-2">
-            {error} Showing cached or available content.
+            {error} {t("index.cachedNotice")}
           </div>
         )}
 
         {articles.length === 0 ? (
           <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-6 text-sm text-meta">
-            No published news yet.
+            {t("index.empty")}
           </div>
         ) : (
           <div className="space-y-10">

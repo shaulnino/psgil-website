@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import StandingsTable from "@/components/StandingsTable";
 import ZoomableImage from "@/components/ZoomableImage";
 import type { StandingsRow } from "@/lib/resultsData";
@@ -24,6 +25,7 @@ export default function StandingsSection({
   standingsData,
   type,
 }: StandingsSectionProps) {
+  const t = useTranslations("schedule");
   /* ---------- "not applicable" detection ---------- */
   const naRow = standingsData.find(
     (r) => r.competition_status === "not_applicable",
@@ -70,11 +72,11 @@ export default function StandingsSection({
           >
             {showImage ? (
               <>
-                <span>📊</span> Show table
+                <span>📊</span> {t("standingsSection.showTable")}
               </>
             ) : (
               <>
-                <span>🖼️</span> Show image
+                <span>🖼️</span> {t("standingsSection.showImage")}
               </>
             )}
           </button>
@@ -107,7 +109,7 @@ export default function StandingsSection({
       ) : (
         <div className="flex items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream py-12">
           <p className="text-sm text-meta">
-            Results not uploaded yet.
+            {t("standingsSection.resultsNotUploaded")}
           </p>
         </div>
       )}

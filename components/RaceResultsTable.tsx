@@ -1,8 +1,11 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import ResultsTable, { type ColumnDef } from "@/components/ResultsTable";
 import type { RaceResultRow } from "@/lib/resultsData";
 import { useDriverLookup } from "@/components/DriverLookupProvider";
+
+type Translator = (key: string) => string;
 
 /* ------------------------------------------------------------------ */
 /*  Position-change arrow (color + glyph + sign — never colour alone)   */
@@ -23,24 +26,27 @@ const badgeBase =
   "ms-1 inline-flex cursor-default items-center rounded-[2px] border px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wider";
 
 function FastestLapBadge() {
+  const t = useTranslations("schedule");
   return (
-    <span title="Fastest Lap" className={`${badgeBase} border-oxblood text-oxblood`}>
+    <span title={t("raceResultsTable.fastestLap")} className={`${badgeBase} border-oxblood text-oxblood`}>
       FL
     </span>
   );
 }
 
 function DotdBadge() {
+  const t = useTranslations("schedule");
   return (
-    <span title="Driver of the Day" className={`${badgeBase} border-brass text-brass-ink`}>
+    <span title={t("raceResultsTable.driverOfTheDay")} className={`${badgeBase} border-brass text-brass-ink`}>
       DOTD
     </span>
   );
 }
 
 function PoleBadge() {
+  const t = useTranslations("schedule");
   return (
-    <span title="Pole Position" className={`${badgeBase} border-status-info text-status-info`}>
+    <span title={t("raceResultsTable.polePosition")} className={`${badgeBase} border-status-info text-status-info`}>
       POLE
     </span>
   );
@@ -92,26 +98,26 @@ function DriverNameCell({ row }: { row: RaceResultRow }) {
 /*  Column definitions (matches the PNG layout)                         */
 /* ------------------------------------------------------------------ */
 
-const raceResultsColumns: ColumnDef<RaceResultRow>[] = [
-  { label: "Pos", accessor: "position", align: "center", mono: true, minWidth: 40 },
+const buildRaceResultsColumns = (t: Translator): ColumnDef<RaceResultRow>[] => [
+  { label: t("raceResultsTable.pos"), accessor: "position", align: "center", mono: true, minWidth: 40 },
   {
-    label: "+/−",
+    label: t("raceResultsTable.posChange"),
     accessor: (row) => <PosChange value={row.position_change} />,
     align: "center",
     minWidth: 44,
   },
   {
-    label: "Driver",
+    label: t("raceResultsTable.driver"),
     accessor: (row) => <DriverNameCell row={row} />,
     minWidth: 160,
   },
-  { label: "Team", accessor: "team", minWidth: 120, hideMobile: true },
-  { label: "Time / Gap", accessor: "time_or_gap", mono: true, minWidth: 110 },
-  { label: "Best Lap", accessor: "best_lap", mono: true, minWidth: 90, hideMobile: true },
-  { label: "Grid", accessor: "grid", align: "center", mono: true, minWidth: 48, hideMobile: true },
-  { label: "Stops", accessor: "stops", align: "center", mono: true, minWidth: 48, hideMobile: true },
+  { label: t("raceResultsTable.team"), accessor: "team", minWidth: 120, hideMobile: true },
+  { label: t("raceResultsTable.timeOrGap"), accessor: "time_or_gap", mono: true, minWidth: 110 },
+  { label: t("raceResultsTable.bestLap"), accessor: "best_lap", mono: true, minWidth: 90, hideMobile: true },
+  { label: t("raceResultsTable.grid"), accessor: "grid", align: "center", mono: true, minWidth: 48, hideMobile: true },
+  { label: t("raceResultsTable.stops"), accessor: "stops", align: "center", mono: true, minWidth: 48, hideMobile: true },
   {
-    label: "Points",
+    label: t("raceResultsTable.points"),
     accessor: (row) => (
       <span className="num font-semibold text-ink">{row.points || "0"}</span>
     ),
@@ -119,12 +125,12 @@ const raceResultsColumns: ColumnDef<RaceResultRow>[] = [
     minWidth: 44,
   },
   {
-    label: "Status",
+    label: t("raceResultsTable.status"),
     accessor: (row) => {
       const st = row.status.toLowerCase();
       if (st === "dnf" || st === "dns" || st === "dsq")
         return <span className="font-semibold uppercase text-status-danger">{row.status}</span>;
-      return <span className="text-meta">{row.status || "Finished"}</span>;
+      return <span className="text-meta">{row.status || t("raceResultsTable.finished")}</span>;
     },
     align: "center",
     minWidth: 70,
@@ -142,6 +148,8 @@ type RaceResultsTableProps = {
 };
 
 export default function RaceResultsTable({ results, caption }: RaceResultsTableProps) {
+  const t = useTranslations("schedule");
+  const raceResultsColumns = buildRaceResultsColumns(t);
   return (
     <ResultsTable<RaceResultRow>
       data={results}

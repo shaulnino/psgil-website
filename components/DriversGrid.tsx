@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import type { Driver, Team, TeamWithDrivers } from "@/lib/driversData";
 import { getTeamColor } from "@/lib/driversData";
 import DriverCard from "@/components/DriverCard";
@@ -22,6 +23,7 @@ function isRemote(src?: string) {
 }
 
 export default function DriversGrid({ teams, reserves, historicDrivers, placeholderSrc, currentSeasonLabel }: DriversGridProps) {
+  const t = useTranslations("drivers");
   const [selected, setSelected] = useState<{ driver: Driver; team: Team } | null>(null);
   const lastFocused = useRef<HTMLElement | null>(null);
 
@@ -70,7 +72,7 @@ export default function DriversGrid({ teams, reserves, historicDrivers, placehol
               </div>
               <div className="flex-1 min-w-0">
                 <h2 className="font-display text-2xl font-bold tracking-[0.005em] leading-[1.05]" style={{ color: getTeamColor(team.team_key) }}>{team.team_name}</h2>
-                <p className="mt-1 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-meta">Main drivers</p>
+                <p className="mt-1 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-meta">{t("grid.mainDrivers")}</p>
               </div>
             </div>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -87,7 +89,7 @@ export default function DriversGrid({ teams, reserves, historicDrivers, placehol
               ))}
               {team.drivers.length === 0 && (
                 <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-6 text-sm text-meta">
-                  Driver lineup coming soon.
+                  {t("grid.lineupComingSoon")}
                 </div>
               )}
             </div>
@@ -97,8 +99,8 @@ export default function DriversGrid({ teams, reserves, historicDrivers, placehol
 
       <section className="mt-12 space-y-6">
         <div>
-          <h2 className="font-display text-2xl font-bold tracking-[0.005em] leading-[1.05] text-ink">Reserve Drivers</h2>
-          <p className="mt-1 text-sm text-ink-2">Additional drivers available for substitution.</p>
+          <h2 className="font-display text-2xl font-bold tracking-[0.005em] leading-[1.05] text-ink">{t("grid.reserveDrivers")}</h2>
+          <p className="mt-1 text-sm text-ink-2">{t("grid.reserveDescription")}</p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {reserves.map((driver) => {
@@ -121,7 +123,7 @@ export default function DriversGrid({ teams, reserves, historicDrivers, placehol
           })}
           {reserves.length === 0 && (
             <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-6 text-sm text-meta">
-              Reserve roster coming soon.
+              {t("grid.reserveComingSoon")}
             </div>
           )}
         </div>
@@ -131,9 +133,9 @@ export default function DriversGrid({ teams, reserves, historicDrivers, placehol
       {historicDrivers.length > 0 && (
         <section className="mt-12 space-y-4">
           <div>
-            <h2 className="font-display text-2xl font-bold tracking-[0.005em] leading-[1.05] text-ink">Historical Drivers</h2>
+            <h2 className="font-display text-2xl font-bold tracking-[0.005em] leading-[1.05] text-ink">{t("grid.historicalDrivers")}</h2>
             <p className="mt-1 text-sm text-ink-2">
-              Drivers who competed in previous ISL seasons.
+              {t("grid.historicalDescription")}
             </p>
           </div>
 

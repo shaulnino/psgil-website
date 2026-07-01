@@ -1,0 +1,163 @@
+{
+  "page": {
+    "title": "Schedule & Race Results",
+    "description": "Full race calendar and results for every ISL season."
+  },
+  "tables": {
+    "title": "Tables",
+    "description": "Official championship standings, updated after each round."
+  },
+  "watchModal": {
+    "eyebrow": "Race Broadcast",
+    "streamStartsAt": "Stream starts at",
+    "replayAvailable": "Replay available",
+    "liveOrReplay": "Live / Replay",
+    "closeBroadcast": "Close broadcast",
+    "broadcastTitleSuffix": "– Race Broadcast",
+    "openOnYouTube": "Open on YouTube"
+  },
+  "resultsModal": {
+    "sprint": "Sprint",
+    "quarterDistance": "25%",
+    "playoff": "Playoff",
+    "table": "Table",
+    "image": "Image",
+    "closeResults": "Close results",
+    "zoomOut": "Zoom out",
+    "zoomIn": "Zoom in",
+    "reset": "Reset",
+    "resultsCaptionSuffix": "— Race Results",
+    "resultsNotAvailable": "Results not available yet."
+  },
+  "posterModal": {
+    "closePoster": "Close poster",
+    "posterNotAvailable": "Poster not available",
+    "sprint": "Sprint",
+    "quarterDistance": "25%",
+    "playoff": "Playoff",
+    "provisional": "PROV",
+    "provisionalTooltip": "Provisional results — subject to steward decisions.",
+    "season": "Season",
+    "race": "Race #",
+    "seeResult": "See result",
+    "watchLive": "Watch live",
+    "watchTheRace": "Watch the race",
+    "streamStartsAt": "Stream starts at"
+  },
+  "badges": {
+    "sprintTooltip": "Sprint Race (short format)",
+    "quarterDistanceTooltip": "25% Race distance",
+    "playoffTooltip": "Playoff round",
+    "provisionalTooltip": "Provisional results — subject to steward decisions.",
+    "dryTooltip": "Weather: Dry race",
+    "dry": "Dry",
+    "wetTooltip": "Weather: Wet race",
+    "wet": "Wet",
+    "mixedTooltip": "Weather: Mixed conditions (dry & wet)",
+    "mixed": "Mixed",
+    "safetyCarsTooltip": "Safety Cars: {count}",
+    "reverseGridTooltip": "Reverse grid was used for this race"
+  },
+  "status": {
+    "live": "Live",
+    "upcoming": "Upcoming",
+    "completed": "Completed",
+    "postponed": "Postponed",
+    "cancelled": "Cancelled",
+    "scheduled": "Scheduled"
+  },
+  "list": {
+    "headerNumber": "#",
+    "headerRace": "Race",
+    "headerDate": "Date",
+    "headerLeague": "League",
+    "headerStatus": "Status",
+    "headerFlag": "Flag",
+    "open": "Open",
+    "noEventsAvailable": "No race events available yet.",
+    "noEventsForSeason": "No race events available for this season.",
+    "loading": "Loading schedule…"
+  },
+  "standingsTable": {
+    "pos": "Pos",
+    "posChange": "+/−",
+    "driver": "Driver",
+    "team": "Team",
+    "points": "Points",
+    "gain": "Gain",
+    "interval": "Interval",
+    "gap": "Gap",
+    "wins": "Wins",
+    "second": "2nd",
+    "third": "3rd",
+    "top5": "Top 5",
+    "top10": "Top 10",
+    "bestFinish": "Best Finish",
+    "bestGrid": "Best Grid",
+    "fastestLaps": "Fastest Laps",
+    "poles": "Poles",
+    "dotd": "DOTD",
+    "penaltyPts": "Penalty Pts",
+    "dnfs": "DNFs",
+    "races": "Races",
+    "upperBracket": "Upper Bracket",
+    "lowerBracket": "Lower Bracket"
+  },
+  "raceResultsTable": {
+    "pos": "Pos",
+    "posChange": "+/−",
+    "driver": "Driver",
+    "team": "Team",
+    "timeOrGap": "Time / Gap",
+    "bestLap": "Best Lap",
+    "grid": "Grid",
+    "stops": "Stops",
+    "points": "Points",
+    "status": "Status",
+    "finished": "Finished",
+    "fastestLap": "Fastest Lap",
+    "driverOfTheDay": "Driver of the Day",
+    "polePosition": "Pole Position"
+  },
+  "resultsTable": {
+    "noData": "No data available yet."
+  },
+  "standingsSection": {
+    "showTable": "Show table",
+    "showImage": "Show image",
+    "resultsNotUploaded": "Results not uploaded yet."
+  },
+  "tablesContent": {
+    "upperBracket": "Upper Bracket",
+    "lowerBracket": "Lower Bracket",
+    "overall": "Overall",
+    "mainLeague": "Main League",
+    "lowerLeague": "Lower League",
+    "wildLeague": "Wild League",
+    "constructors": "Constructors",
+    "community": "Community",
+    "driversMainBracketTitle": "Drivers Main Championship – {bracket}",
+    "driversMainSubtitleUpper": "Top half of the grid.",
+    "driversMainSubtitleLower": "Bottom half of the grid.",
+    "driversMainSubtitleOverall": "Current points table after the latest round.",
+    "driversMainTitle": "Drivers Main Championship standings",
+    "driversMainSubtitle": "Current points table after the latest round.",
+    "driversMainImageAlt": "Drivers Main Championship standings table",
+    "constructorsMainTitle": "Constructors Main Championship standings",
+    "constructorsMainSubtitle": "Team standings in the Main Championship.",
+    "constructorsMainImageAlt": "Constructors Main Championship standings table",
+    "driversWildTitle": "Drivers Wild Championship standings",
+    "driversWildSubtitle": "Points table for the Wild Championship.",
+    "driversWildImageAlt": "Drivers Wild Championship standings table",
+    "constructorsWildTitle": "Constructors Wild Championship standings",
+    "constructorsWildSubtitle": "Team standings in the Wild Championship.",
+    "constructorsWildImageAlt": "Constructors Wild Championship standings table",
+    "seasonAwardsPrefix": "Season",
+    "seasonAwards": "Awards",
+    "noStandingsForSeason": "No standings data available for this season yet.",
+    "loading": "Loading standings…"
+  },
+  "seasonSelector": {
+    "season": "Season"
+  }
+}

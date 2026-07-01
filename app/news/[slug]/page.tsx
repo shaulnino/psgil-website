@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import Section from "@/components/Section";
 import LoadingLink from "@/components/LoadingLink";
 import NewsCategoryTag from "@/components/NewsCategoryTag";
@@ -73,6 +74,7 @@ function resolveAbsoluteUrl(baseUrl: string, value: string): string {
 export async function generateMetadata({
   params,
 }: NewsArticlePageProps): Promise<Metadata> {
+  const t = await getTranslations("news");
   const baseUrl = resolveSiteBaseUrl();
   const { slug } = await params;
   const article = await fetchArticleBySlug(slug);
@@ -80,19 +82,19 @@ export async function generateMetadata({
 
   if (!article) {
     return {
-      title: "News Article | ISL",
-      description: "ISL news article.",
+      title: t("article.metaFallbackTitle"),
+      description: t("article.metaFallbackDescription"),
       openGraph: {
-        title: "News Article | ISL",
-        description: "ISL news article.",
+        title: t("article.metaFallbackTitle"),
+        description: t("article.metaFallbackDescription"),
         url,
         type: "article",
-        siteName: "ISL - F1 Israeli Super League",
+        siteName: t("article.metaSiteName"),
       },
       twitter: {
         card: "summary_large_image",
-        title: "News Article | ISL",
-        description: "ISL news article.",
+        title: t("article.metaFallbackTitle"),
+        description: t("article.metaFallbackDescription"),
       },
     };
   }
@@ -100,7 +102,7 @@ export async function generateMetadata({
   const imageUrl = resolveAbsoluteUrl(baseUrl, article.coverImageUrl);
 
   return {
-    title: `${article.title} | ISL News`,
+    title: t("article.metaTitleSuffix", { title: article.title }),
     description: article.excerpt,
     alternates: {
       canonical: url,
@@ -110,7 +112,7 @@ export async function generateMetadata({
       description: article.excerpt,
       url,
       type: "article",
-      siteName: "ISL - F1 Israeli Super League",
+      siteName: t("article.metaSiteName"),
       publishedTime: new Date(`${article.date}T00:00:00Z`).toISOString(),
       images: [{ url: imageUrl }],
     },
@@ -124,6 +126,7 @@ export async function generateMetadata({
 }
 
 export default async function NewsArticlePage({ params }: NewsArticlePageProps) {
+  const t = await getTranslations("news");
   const { slug } = await params;
   const { articles, error } = await fetchArticlesWithStatus();
   const article = articles.find((item) => item.slug === slug) ?? null;
@@ -131,14 +134,14 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
   if (!article) {
     return (
       <main className="bg-bone text-ink">
-        <Section title="Article Unavailable" description="We could not find this article." pageHeader>
+        <Section title={t("article.unavailableTitle")} description={t("article.unavailableDescription")} pageHeader>
           <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-6 text-sm text-meta">
             {error
-              ? "The news source is temporarily unavailable. Please try again soon."
-              : "This article may be unpublished or the URL is incorrect."}
+              ? t("article.sourceUnavailable")
+              : t("article.notFound")}
             <div className="mt-5">
               <Button href="/news" variant="secondary" size="md">
-                Back to news
+                {t("article.backToNews")}
               </Button>
             </div>
           </div>
@@ -270,7 +273,7 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
           <svg className="h-4 w-4 rtl:scale-x-[-1]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 18l-6-6 6-6" />
           </svg>
-          Back to news
+          {t("article.backToNews")}
         </LoadingLink>
 
         <article className="overflow-hidden rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper">

@@ -1,5 +1,6 @@
 export const revalidate = 300;
 
+import { getTranslations } from "next-intl/server";
 import Section from "@/components/Section";
 import ScheduleList from "@/components/ScheduleList";
 import { fetchCsv, parseCsv } from "@/lib/csv";
@@ -30,6 +31,8 @@ import { computeDriverRatingsAll } from "@/lib/statsComputed";
 /* ------------------------------------------------------------------ */
 
 export default async function SchedulePage() {
+  const t = await getTranslations("schedule");
+
   // 1. Fetch seasons config
   const seasonsConfig = await fetchSeasonsConfig();
   const currentSeason = resolveCurrentSeason(seasonsConfig);
@@ -91,8 +94,8 @@ export default async function SchedulePage() {
   return (
     <main className="bg-bone text-ink-2">
       <Section
-        title="Schedule & Race Results"
-        description="Full race calendar and results for every ISL season."
+        title={t("page.title")}
+        description={t("page.description")}
         pageHeader
       >
         <ScheduleList

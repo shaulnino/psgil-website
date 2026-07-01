@@ -1,0 +1,41 @@
+{
+  "page": {
+    "title": "Drivers",
+    "description": "Official ISL roster: teams, drivers, and profiles — updated as the season progresses."
+  },
+  "grid": {
+    "mainDrivers": "Main drivers",
+    "lineupComingSoon": "Driver lineup coming soon.",
+    "reserveDrivers": "Reserve Drivers",
+    "reserveDescription": "Additional drivers available for substitution.",
+    "reserveComingSoon": "Reserve roster coming soon.",
+    "historicalDrivers": "Historical Drivers",
+    "historicalDescription": "Drivers who competed in previous ISL seasons."
+  },
+  "modal": {
+    "closeAriaLabel": "Close driver profile",
+    "roleReserve": "Reserve",
+    "roleMain": "Main",
+    "leagueStanding": "League Standing",
+    "leagueMain": "Main",
+    "leagueWild": "Wild",
+    "recordsAndAwards": "Records & Awards",
+    "quickStats": "Quick stats",
+    "raceEvents": "Race Events",
+    "raceEventsTooltip": "Total number of race events the driver participated in (Regular Races + 25% Races + Sprint Races combined).",
+    "scopeAllTime": "All-time",
+    "scopeSeason": "Season",
+    "compAll": "All",
+    "compMain": "Main",
+    "compWild": "Wild",
+    "driverRatings": "Driver Ratings",
+    "fullDriverStats": "Full Driver Stats"
+  },
+  "ratings": {
+    "rating_speed": "Speed",
+    "rating_consistency": "Consistency",
+    "rating_performance": "Performance",
+    "rating_agility": "Agility",
+    "rating_overall": "Driver Rating"
+  }
+}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect, createContext, useContext } from "react";
+import { useTranslations } from "next-intl";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import LoadingLink from "@/components/LoadingLink";
@@ -263,6 +264,7 @@ function Tooltip({ text, children, triggerClassName, wide }: { text: React.React
 /* ------------------------------------------------------------------ */
 
 export default function DriverModal({ driver, placeholderSrc, onClose, currentSeasonLabel }: DriverModalProps) {
+  const t = useTranslations("drivers");
   const [statMode, setStatMode] = useState<StatMode>("alltime");
   const [compMode, setCompMode] = useState<CompMode>("all");
   const [portalEl, setPortalEl] = useState<HTMLDivElement | null>(null);
@@ -469,7 +471,7 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
       >
         <button
           onClick={onClose}
-          aria-label="Close driver profile"
+          aria-label={t("modal.closeAriaLabel")}
           className="absolute end-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper text-xl text-ink-2 transition-colors hover:border-ink hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
         >
           ×
@@ -504,7 +506,7 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
                     </span>
                   )}
                   <span className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-3 py-1 text-xs uppercase tracking-[0.2em] text-meta">
-                    {driver.role === "reserve" ? "Reserve" : "Main"}
+                    {driver.role === "reserve" ? t("modal.roleReserve") : t("modal.roleMain")}
                   </span>
                   {/* ---- Achievement icons ---- */}
                   {achievements.length > 0 && (
@@ -531,17 +533,17 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
                 {(driver.league_rank_main || driver.league_rank_wild) && (
                   <div className="mt-4 flex items-center gap-4">
                     <h4 className="font-isl-body text-xs font-semibold uppercase tracking-[0.2em] text-meta">
-                      League Standing
+                      {t("modal.leagueStanding")}
                     </h4>
                     <div className="flex items-center gap-3">
                       <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-3 py-1.5 text-xs">
-                        <span className="text-meta">Main</span>
+                        <span className="text-meta">{t("modal.leagueMain")}</span>
                         <span className="num font-semibold text-ink">
                           {driver.league_rank_main ? `#${driver.league_rank_main}` : "—"}
                         </span>
                       </span>
                       <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-3 py-1.5 text-xs">
-                        <span className="text-meta">Wild</span>
+                        <span className="text-meta">{t("modal.leagueWild")}</span>
                         <span className="num font-semibold text-ink">
                           {driver.league_rank_wild ? `#${driver.league_rank_wild}` : "—"}
                         </span>
@@ -556,7 +558,7 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
             {earnedRewardStats.length > 0 && (
               <div className="mt-8">
                 <h3 className="font-isl-body text-sm font-semibold uppercase tracking-[0.2em] text-brass-ink">
-                  Records & Awards
+                  {t("modal.recordsAndAwards")}
                 </h3>
                 <div className="mt-3 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-4 py-2">
                   <ul className="divide-y divide-[color:var(--isl-hairline)]">
@@ -595,13 +597,13 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
                   {/* Left: title + events badge */}
                   <div className="flex items-center gap-4">
                     <h3 className="font-isl-body text-sm font-semibold uppercase tracking-[0.2em] text-meta">
-                      Quick stats
+                      {t("modal.quickStats")}
                     </h3>
                     {getEventsCount(driver, statMode, compMode) && (
                       <div className="flex items-center gap-2 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-2.5 py-0.5">
-                        <Tooltip text="Total number of race events the driver participated in (Regular Races + 25% Races + Sprint Races combined).">
+                        <Tooltip text={t("modal.raceEventsTooltip")}>
                           <span className="cursor-help text-xs text-meta">
-                            Race Events
+                            {t("modal.raceEvents")}
                           </span>
                         </Tooltip>
                         <span className="num font-semibold text-ink">
@@ -624,7 +626,7 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
                             statMode === m ? "bg-ink text-bone" : "text-ink-2 hover:text-ink"
                           }`}
                         >
-                          {m === "alltime" ? "All-time" : (currentSeasonLabel || "Season")}
+                          {m === "alltime" ? t("modal.scopeAllTime") : (currentSeasonLabel || t("modal.scopeSeason"))}
                         </button>
                       ))}
                     </div>
@@ -639,7 +641,7 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
                             compMode === c ? "bg-ink text-bone" : "text-ink-2 hover:text-ink"
                           }`}
                         >
-                          {c === "all" ? "All" : c === "main" ? "Main" : "Wild"}
+                          {c === "all" ? t("modal.compAll") : c === "main" ? t("modal.compMain") : t("modal.compWild")}
                         </button>
                       ))}
                     </div>
@@ -680,7 +682,7 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
             {hasAnyRatings && (
               <div className="mt-8">
                 <h3 className="font-isl-body text-sm font-semibold uppercase tracking-[0.2em] text-meta">
-                  Driver Ratings
+                  {t("modal.driverRatings")}
                 </h3>
                 <div className="mt-4 space-y-3">
                   {ratingItems.map((rating) => {
@@ -697,7 +699,7 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
                           <div className="flex items-center gap-2">
                             <Tooltip text={rating.tooltip}>
                               <span className="cursor-help text-ink-2">
-                                {rating.label}
+                                {t(`ratings.${rating.key}`)}
                               </span>
                             </Tooltip>
                             {rank && (
@@ -738,7 +740,7 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
-                Full Driver Stats
+                {t("modal.fullDriverStats")}
               </LoadingLink>
             </div>
           </TooltipPortalContext.Provider>

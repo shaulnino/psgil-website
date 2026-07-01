@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import LoadingLink from "@/components/LoadingLink";
 import NewsCategoryTag from "@/components/NewsCategoryTag";
 import NewsImage from "@/components/NewsImage";
@@ -14,6 +15,7 @@ type NewsCarouselProps = {
 const AUTO_ADVANCE_MS = 6000;
 
 export default function NewsCarousel({ articles }: NewsCarouselProps) {
+  const t = useTranslations("news");
   const [index, setIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
@@ -36,7 +38,7 @@ export default function NewsCarousel({ articles }: NewsCarouselProps) {
   if (total === 0 || !active) {
     return (
       <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-6 text-sm text-ink-2">
-        No published articles yet.
+        {t("carousel.empty")}
       </div>
     );
   }
@@ -75,7 +77,7 @@ export default function NewsCarousel({ articles }: NewsCarouselProps) {
             <div>
               {total > 1 && (
                 <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-meta">
-                  <span className="num">Story {index + 1} of {total}</span>
+                  <span className="num">{t("carousel.storyOf", { current: index + 1, total })}</span>
                 </p>
               )}
               <div className="flex flex-wrap items-center gap-2">
@@ -92,7 +94,7 @@ export default function NewsCarousel({ articles }: NewsCarouselProps) {
               </p>
             </div>
             <span className="mt-6 inline-flex w-fit items-center rounded-[2px] border-b border-transparent text-sm font-medium uppercase tracking-[0.08em] text-ink group-hover:border-oxblood">
-              Read
+              {t("carousel.read")}
             </span>
           </div>
         </div>
@@ -104,7 +106,7 @@ export default function NewsCarousel({ articles }: NewsCarouselProps) {
             type="button"
             onClick={prev}
             className="absolute start-3 top-1/2 -translate-y-1/2 rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-2 text-ink transition-colors hover:border-ink"
-            aria-label="Previous article"
+            aria-label={t("carousel.prevAria")}
           >
             <svg className="h-4 w-4 rtl:scale-x-[-1]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 18l-6-6 6-6" />
@@ -114,7 +116,7 @@ export default function NewsCarousel({ articles }: NewsCarouselProps) {
             type="button"
             onClick={next}
             className="absolute end-3 top-1/2 -translate-y-1/2 rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-2 text-ink transition-colors hover:border-ink"
-            aria-label="Next article"
+            aria-label={t("carousel.nextAria")}
           >
             <svg className="h-4 w-4 rtl:scale-x-[-1]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 6l6 6-6 6" />
@@ -129,7 +131,7 @@ export default function NewsCarousel({ articles }: NewsCarouselProps) {
                 className={`h-2.5 w-2.5 rounded-full transition-colors ${
                   i === index ? "bg-oxblood" : "bg-sink hover:bg-ink-2"
                 }`}
-                aria-label={`Go to article ${i + 1}`}
+                aria-label={t("carousel.goToAria", { index: i + 1 })}
               />
             ))}
           </div>

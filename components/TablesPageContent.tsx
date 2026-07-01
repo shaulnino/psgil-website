@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import SeasonSelector from "@/components/SeasonSelector";
 import StandingsSection from "@/components/StandingsSection";
@@ -49,14 +50,16 @@ export type TablesPageContentProps = {
 /*  Bracket label helper                                               */
 /* ------------------------------------------------------------------ */
 
-function bracketTitle(bracket: string): string {
+type Translator = (key: string) => string;
+
+function bracketTitle(bracket: string, t: Translator): string {
   switch (bracket) {
     case "upper":
-      return "Upper Bracket";
+      return t("tablesContent.upperBracket");
     case "lower":
-      return "Lower Bracket";
+      return t("tablesContent.lowerBracket");
     default:
-      return "Overall";
+      return t("tablesContent.overall");
   }
 }
 
@@ -74,12 +77,12 @@ function canonicalTeamName(value: string): string {
     .trim();
 }
 
-const COMPETITION_LABELS: Record<string, string> = {
-  main: "Main League",
-  lower: "Lower League",
-  wild: "Wild League",
-  constructors: "Constructors",
-  community: "Community",
+const COMPETITION_LABEL_KEYS: Record<string, string> = {
+  main: "tablesContent.mainLeague",
+  lower: "tablesContent.lowerLeague",
+  wild: "tablesContent.wildLeague",
+  constructors: "tablesContent.constructors",
+  community: "tablesContent.community",
 };
 
 /* ------------------------------------------------------------------ */
@@ -95,6 +98,7 @@ function TablesInner({
   rewards,
   placeholderSrc,
 }: TablesPageContentProps) {
+  const t = useTranslations("schedule");
   const searchParams = useSearchParams();
   const selectedSeasonKey =
     searchParams.get("season") || defaultSeasonKey;
@@ -183,11 +187,11 @@ function TablesInner({
       <div className="mb-12 flex flex-wrap items-center justify-between gap-4">
         <div className="max-w-2xl">
           <h1 className="font-display text-4xl font-bold tracking-[0.005em] leading-[1.05] text-ink md:text-5xl">
-            Tables
+            {t("tables.title")}
           </h1>
           <div className="mt-3 h-[2px] w-36 bg-oxblood" />
           <p className="mt-4 text-base text-ink-2 md:text-lg">
-            Official championship standings, updated after each round.
+            {t("tables.description")}
           </p>
         </div>
         <SeasonSelector
@@ -217,13 +221,13 @@ function TablesInner({
           groupByBracket(data.driversMain).map(({ bracket, rows }) => (
             <StandingsSection
               key={bracket}
-              title={`Drivers Main Championship – ${bracketTitle(bracket)}`}
+              title={t("tablesContent.driversMainBracketTitle", { bracket: bracketTitle(bracket, t) })}
               subtitle={
                 bracket === "upper"
-                  ? "Top half of the grid."
+                  ? t("tablesContent.driversMainSubtitleUpper")
                   : bracket === "lower"
-                    ? "Bottom half of the grid."
-                    : "Current points table after the latest round."
+                    ? t("tablesContent.driversMainSubtitleLower")
+                    : t("tablesContent.driversMainSubtitleOverall")
               }
               image={{
                 src:
@@ -233,7 +237,7 @@ function TablesInner({
                     bracket,
                   ) ||
                   (seasonConfig?.fallback_image_drivers_main ?? ""),
-                alt: `Drivers Main Championship – ${bracketTitle(bracket)}`,
+                alt: t("tablesContent.driversMainBracketTitle", { bracket: bracketTitle(bracket, t) }),
               }}
               standingsData={rows}
               type="drivers"
@@ -241,11 +245,11 @@ function TablesInner({
           ))
         ) : (
           <StandingsSection
-            title="Drivers Main Championship standings"
-            subtitle="Current points table after the latest round."
+            title={t("tablesContent.driversMainTitle")}
+            subtitle={t("tablesContent.driversMainSubtitle")}
             image={{
               src: dMainImg,
-              alt: "Drivers Main Championship standings table",
+              alt: t("tablesContent.driversMainImageAlt"),
             }}
             standingsData={data.driversMain}
             type="drivers"
@@ -255,11 +259,11 @@ function TablesInner({
         {/* ============ CONSTRUCTORS MAIN ============ */}
         {showConstructors && (
           <StandingsSection
-            title="Constructors Main Championship standings"
-            subtitle="Team standings in the Main Championship."
+            title={t("tablesContent.constructorsMainTitle")}
+            subtitle={t("tablesContent.constructorsMainSubtitle")}
             image={{
               src: cMainImg,
-              alt: "Constructors Main Championship standings table",
+              alt: t("tablesContent.constructorsMainImageAlt"),
             }}
             standingsData={data.constructorsMain}
             type="constructors"
@@ -270,22 +274,22 @@ function TablesInner({
         {showWild && (
           <>
             <StandingsSection
-              title="Drivers Wild Championship standings"
-              subtitle="Points table for the Wild Championship."
+              title={t("tablesContent.driversWildTitle")}
+              subtitle={t("tablesContent.driversWildSubtitle")}
               image={{
                 src: dWildImg,
-                alt: "Drivers Wild Championship standings table",
+                alt: t("tablesContent.driversWildImageAlt"),
               }}
               standingsData={data.driversWild}
               type="drivers"
             />
             {showConstructors && (
               <StandingsSection
-                title="Constructors Wild Championship standings"
-                subtitle="Team standings in the Wild Championship."
+                title={t("tablesContent.constructorsWildTitle")}
+                subtitle={t("tablesContent.constructorsWildSubtitle")}
                 image={{
                   src: cWildImg,
-                  alt: "Constructors Wild Championship standings table",
+                  alt: t("tablesContent.constructorsWildImageAlt"),
                 }}
                 standingsData={data.constructorsWild}
                 type="constructors"
@@ -298,7 +302,7 @@ function TablesInner({
         {seasonRewards.length > 0 && (
           <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-5">
             <h3 className="font-display text-2xl font-bold tracking-[0.005em] leading-[1.05] text-ink">
-              Season <span className="num">{seasonNumber}</span> Awards
+              {t("tablesContent.seasonAwardsPrefix")} <span className="num">{seasonNumber}</span> {t("tablesContent.seasonAwards")}
             </h3>
             <div className="mt-4 space-y-4">
               {["main", "lower", "wild", "constructors", "community"].map((competition) => {
@@ -308,7 +312,7 @@ function TablesInner({
                 return (
                   <div key={competition}>
                     <p className="mb-2 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-brass-ink">
-                      {COMPETITION_LABELS[competition]}
+                      {t(COMPETITION_LABEL_KEYS[competition])}
                     </p>
                     <div className="overflow-hidden rounded-[2px] border border-[color:var(--isl-hairline)]">
                       {rows.map((reward, idx) => {
@@ -353,7 +357,7 @@ function TablesInner({
           !notes && (
             <div className="flex items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream py-16">
               <p className="text-sm text-meta">
-                No standings data available for this season yet.
+                {t("tablesContent.noStandingsForSeason")}
               </p>
             </div>
           )}
@@ -416,15 +420,18 @@ function RewardRow({
 /*  Exported wrapper (Suspense required for useSearchParams)            */
 /* ------------------------------------------------------------------ */
 
+function TablesFallback() {
+  const t = useTranslations("schedule");
+  return (
+    <div className="flex items-center justify-center py-24">
+      <p className="text-sm text-meta">{t("tablesContent.loading")}</p>
+    </div>
+  );
+}
+
 export default function TablesPageContent(props: TablesPageContentProps) {
   return (
-    <Suspense
-      fallback={
-        <div className="flex items-center justify-center py-24">
-          <p className="text-sm text-meta">Loading standings…</p>
-        </div>
-      }
-    >
+    <Suspense fallback={<TablesFallback />}>
       <TablesInner {...props} />
     </Suspense>
   );

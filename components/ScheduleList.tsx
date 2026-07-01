@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useState, useEffect, useRef, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import type { RaceEvent } from "@/lib/scheduleData";
@@ -88,6 +89,7 @@ function WatchModal({
   event: RaceEvent;
   onClose: () => void;
 }) {
+  const t = useTranslations("schedule");
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -113,7 +115,7 @@ function WatchModal({
           <div className="flex flex-wrap items-center gap-3">
             <span className="font-isl-body inline-flex items-center gap-1.5 text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-oxblood">
               <span className="h-1.5 w-1.5 rounded-full bg-oxblood" />
-              Race Broadcast
+              {t("watchModal.eyebrow")}
             </span>
             <h3 className="font-display font-bold tracking-[0.005em] leading-[1.05] text-base text-ink md:text-lg">
               {event.race_name}
@@ -132,21 +134,21 @@ function WatchModal({
                     clipRule="evenodd"
                   />
                 </svg>
-                Stream starts at <span className="num">{event.start_time}</span>
+                {t("watchModal.streamStartsAt")} <span className="num">{event.start_time}</span>
               </span>
             )}
             {timeState === "started" && (
               <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-oxblood px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-oxblood">
                 <span className="h-1.5 w-1.5 rounded-full bg-oxblood animate-[f1-tick_1s_step-end_infinite]" />
                 {event.status.toLowerCase() === "completed"
-                  ? "Replay available"
-                  : "Live / Replay"}
+                  ? t("watchModal.replayAvailable")
+                  : t("watchModal.liveOrReplay")}
               </span>
             )}
           </div>
           <button
             onClick={onClose}
-            aria-label="Close broadcast"
+            aria-label={t("watchModal.closeBroadcast")}
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper text-xl text-ink-2 transition-colors hover:border-ink hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
           >
             ×
@@ -156,7 +158,7 @@ function WatchModal({
         {/* Embed or placeholder */}
         <YouTubeEmbed
           youtubeUrl={event.youtube_url}
-          title={`${event.race_name} – Race Broadcast`}
+          title={`${event.race_name} ${t("watchModal.broadcastTitleSuffix")}`}
         />
 
         {/* External link fallback */}
@@ -180,7 +182,7 @@ function WatchModal({
                   clipRule="evenodd"
                 />
               </svg>
-              Open on YouTube
+              {t("watchModal.openOnYouTube")}
             </a>
           </div>
         )}
@@ -202,6 +204,7 @@ function ResultsModal({
   tableData: RaceResultRow[];
   onClose: () => void;
 }) {
+  const t = useTranslations("schedule");
   const hasTable = tableData.length > 0;
   const hasImage = !!event.results_image;
   const [showImage, setShowImage] = useState(!hasTable && hasImage);
@@ -240,17 +243,17 @@ function ResultsModal({
             {/* Race format + playoff badges */}
             {event.race_format === "sprint" && (
               <span className="inline-flex items-center rounded-[2px] border border-[color:var(--isl-hairline-strong)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-ink-2">
-                Sprint
+                {t("resultsModal.sprint")}
               </span>
             )}
             {event.race_format === "25%" && (
               <span className="num inline-flex items-center rounded-[2px] border border-[color:var(--isl-hairline-strong)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-ink-2">
-                25%
+                {t("resultsModal.quarterDistance")}
               </span>
             )}
             {event.is_playoff && (
               <span className="inline-flex items-center rounded-[2px] border border-brass px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brass-ink">
-                Playoff
+                {t("resultsModal.playoff")}
               </span>
             )}
             {/* Toggle between table and image when both exist */}
@@ -265,7 +268,7 @@ function ResultsModal({
                     showImage ? "text-ink-2 hover:text-ink" : "bg-ink text-bone"
                   }`}
                 >
-                  Table
+                  {t("resultsModal.table")}
                 </button>
                 <button
                   onClick={() => {
@@ -276,14 +279,14 @@ function ResultsModal({
                     showImage ? "bg-ink text-bone" : "text-ink-2 hover:text-ink"
                   }`}
                 >
-                  Image
+                  {t("resultsModal.image")}
                 </button>
               </span>
             )}
           </div>
           <button
             onClick={onClose}
-            aria-label="Close results"
+            aria-label={t("resultsModal.closeResults")}
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper text-xl text-ink-2 transition-colors hover:border-ink hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
           >
             ×
@@ -295,7 +298,7 @@ function ResultsModal({
           <div className="mb-3 flex items-center gap-2">
             <button
               onClick={() => setZoom((z) => clamp(z - 0.25))}
-              aria-label="Zoom out"
+              aria-label={t("resultsModal.zoomOut")}
               className="flex h-11 w-11 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper text-ink-2 transition-colors hover:border-ink hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
             >
               −
@@ -305,7 +308,7 @@ function ResultsModal({
             </span>
             <button
               onClick={() => setZoom((z) => clamp(z + 0.25))}
-              aria-label="Zoom in"
+              aria-label={t("resultsModal.zoomIn")}
               className="flex h-11 w-11 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper text-ink-2 transition-colors hover:border-ink hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
             >
               +
@@ -314,7 +317,7 @@ function ResultsModal({
               onClick={() => setZoom(1)}
               className="flex h-11 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 text-xs text-ink-2 transition-colors hover:border-ink hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
             >
-              Reset
+              {t("resultsModal.reset")}
             </button>
           </div>
         )}
@@ -374,13 +377,13 @@ function ResultsModal({
           <div className="max-h-[85vh] overflow-auto rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-3">
             <RaceResultsTable
               results={tableData}
-              caption={`${event.race_name} — Race Results`}
+              caption={`${event.race_name} ${t("resultsModal.resultsCaptionSuffix")}`}
             />
           </div>
         ) : (
           <div className="flex items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper py-16">
             <p className="text-sm text-meta">
-              Results not available yet.
+              {t("resultsModal.resultsNotAvailable")}
             </p>
           </div>
         )}
@@ -407,6 +410,7 @@ function PosterModal({
   onShowResults: () => void;
   onWatch: () => void;
 }) {
+  const t = useTranslations("schedule");
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -432,7 +436,7 @@ function PosterModal({
       >
         <button
           onClick={onClose}
-          aria-label="Close poster"
+          aria-label={t("posterModal.closePoster")}
           className="absolute end-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper text-xl text-ink-2 transition-colors hover:border-ink hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
         >
           ×
@@ -454,7 +458,7 @@ function PosterModal({
             ) : (
               <div className="flex items-center justify-center py-20">
                 <span className="text-xs uppercase tracking-[0.2em] text-meta">
-                  Poster not available
+                  {t("posterModal.posterNotAvailable")}
                 </span>
               </div>
             )}
@@ -483,30 +487,30 @@ function PosterModal({
               {/* Race format badge */}
               {event.race_format === "sprint" && (
                 <span className="inline-flex items-center rounded-[2px] border border-[color:var(--isl-hairline-strong)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-ink-2">
-                  Sprint
+                  {t("posterModal.sprint")}
                 </span>
               )}
               {event.race_format === "25%" && (
                 <span className="num inline-flex items-center rounded-[2px] border border-[color:var(--isl-hairline-strong)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-ink-2">
-                  25%
+                  {t("posterModal.quarterDistance")}
                 </span>
               )}
               {/* Playoff badge */}
               {event.is_playoff && (
                 <span className="inline-flex items-center rounded-[2px] border border-brass px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brass-ink">
-                  Playoff
+                  {t("posterModal.playoff")}
                 </span>
               )}
               {event.results_status === "provisional" && (
-                <Tooltip text="Provisional results — subject to steward decisions.">
+                <Tooltip text={t("posterModal.provisionalTooltip")}>
                   <span className="inline-flex items-center rounded-[2px] border border-status-warning px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-status-warning">
-                    PROV
+                    {t("posterModal.provisional")}
                   </span>
                 </Tooltip>
               )}
             </div>
             <p className="mt-1 text-sm text-meta">
-              Season <span className="num">{event.season}</span> · Race #<span className="num">{event.race_number}</span> ·{" "}
+              {t("posterModal.season")} <span className="num">{event.season}</span> · {t("posterModal.race")}<span className="num">{event.race_number}</span> ·{" "}
               <span className="num">{event.date}</span>
               {event.start_time && <> · <span className="num">{event.start_time}</span></>}
             </p>
@@ -517,7 +521,7 @@ function PosterModal({
                 {/* See result — only for completed races */}
                 {isCompleted && hasResults && (
                   <Button variant="secondary" size="md" onClick={onShowResults}>
-                    See result
+                    {t("posterModal.seeResult")}
                   </Button>
                 )}
 
@@ -533,8 +537,8 @@ function PosterModal({
                       <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
                     </svg>
                     {timeState === "upcoming"
-                      ? "Watch live"
-                      : "Watch the race"}
+                      ? t("posterModal.watchLive")
+                      : t("posterModal.watchTheRace")}
                   </Button>
                 )}
 
@@ -553,7 +557,7 @@ function PosterModal({
                         clipRule="evenodd"
                       />
                     </svg>
-                    Stream starts at <span className="num">{event.start_time}</span>
+                    {t("posterModal.streamStartsAt")} <span className="num">{event.start_time}</span>
                   </span>
                 )}
               </div>
@@ -570,11 +574,22 @@ function PosterModal({
 /* ------------------------------------------------------------------ */
 
 function StatusBadge({ status }: { status: string }) {
+  const t = useTranslations("schedule");
   const s = status.toLowerCase();
   const isLive = s === "live";
   const isCompleted = s === "completed";
   const isCancelled = s === "cancelled";
   const isPostponed = s === "postponed";
+
+  const STATUS_LABEL_KEYS: Record<string, string> = {
+    live: "status.live",
+    upcoming: "status.upcoming",
+    completed: "status.completed",
+    postponed: "status.postponed",
+    cancelled: "status.cancelled",
+    scheduled: "status.scheduled",
+  };
+  const statusLabel = STATUS_LABEL_KEYS[s] ? t(STATUS_LABEL_KEYS[s]) : status;
 
   // Live → oxblood accent + ticking dot; others → status hue + shape/label.
   const toneClass = isLive
@@ -604,7 +619,7 @@ function StatusBadge({ status }: { status: string }) {
           }`}
         />
       )}
-      {status}
+      {statusLabel}
     </span>
   );
 }
@@ -712,6 +727,7 @@ function CloudSunRainIcon({ className = "" }: { className?: string }) {
 /* ------------------------------------------------------------------ */
 
 function RaceBadges({ event }: { event: RaceEvent }) {
+  const t = useTranslations("schedule");
   const weather = event.weather;
   const safetyCars = event.safety_cars ?? 0;
   const reverseGrid = event.reverse_grid === "yes";
@@ -726,67 +742,67 @@ function RaceBadges({ event }: { event: RaceEvent }) {
     <span className="inline-flex flex-wrap items-center gap-1.5">
       {/* Race format */}
       {raceFormat === "sprint" && (
-        <Tooltip text="Sprint Race (short format)">
+        <Tooltip text={t("badges.sprintTooltip")}>
           <span className="inline-flex items-center gap-1 rounded-[2px] border border-[color:var(--isl-hairline-strong)] px-1.5 py-0.5 text-xs font-bold leading-none text-ink-2">
-            Sprint
+            {t("resultsModal.sprint")}
           </span>
         </Tooltip>
       )}
       {raceFormat === "25%" && (
-        <Tooltip text="25% Race distance">
+        <Tooltip text={t("badges.quarterDistanceTooltip")}>
           <span className="num inline-flex items-center gap-1 rounded-[2px] border border-[color:var(--isl-hairline-strong)] px-1.5 py-0.5 text-xs font-bold leading-none text-ink-2">
-            25%
+            {t("resultsModal.quarterDistance")}
           </span>
         </Tooltip>
       )}
 
       {/* Playoff round */}
       {isPlayoff && (
-        <Tooltip text="Playoff round">
+        <Tooltip text={t("badges.playoffTooltip")}>
           <span className="inline-flex items-center gap-1 rounded-[2px] border border-brass px-1.5 py-0.5 text-xs font-bold leading-none text-brass-ink">
-            Playoff
+            {t("resultsModal.playoff")}
           </span>
         </Tooltip>
       )}
 
       {/* Provisional results */}
       {isProvisional && (
-        <Tooltip text="Provisional results — subject to steward decisions.">
+        <Tooltip text={t("badges.provisionalTooltip")}>
           <span className="inline-flex items-center gap-1 rounded-[2px] border border-status-warning px-1.5 py-0.5 text-xs font-bold leading-none text-status-warning">
-            PROV
+            {t("posterModal.provisional")}
           </span>
         </Tooltip>
       )}
 
       {/* Weather */}
       {weather === "dry" && (
-        <Tooltip text="Weather: Dry race">
+        <Tooltip text={t("badges.dryTooltip")}>
           <span className="inline-flex items-center gap-1 rounded-[2px] border border-status-warning px-1.5 py-0.5 text-xs font-medium leading-none text-status-warning">
             <SunIcon className="shrink-0" />
-            Dry
+            {t("badges.dry")}
           </span>
         </Tooltip>
       )}
       {weather === "wet" && (
-        <Tooltip text="Weather: Wet race">
+        <Tooltip text={t("badges.wetTooltip")}>
           <span className="inline-flex items-center gap-1 rounded-[2px] border border-status-info px-1.5 py-0.5 text-xs font-medium leading-none text-status-info">
             <CloudRainIcon className="shrink-0" />
-            Wet
+            {t("badges.wet")}
           </span>
         </Tooltip>
       )}
       {weather === "mixed" && (
-        <Tooltip text="Weather: Mixed conditions (dry & wet)">
+        <Tooltip text={t("badges.mixedTooltip")}>
           <span className="inline-flex items-center gap-1 rounded-[2px] border border-[color:var(--isl-hairline-strong)] px-1.5 py-0.5 text-xs font-medium leading-none text-ink-2">
             <CloudSunRainIcon className="shrink-0" />
-            Mixed
+            {t("badges.mixed")}
           </span>
         </Tooltip>
       )}
 
       {/* Safety cars */}
       {safetyCars > 0 && (
-        <Tooltip text={`Safety Cars: ${safetyCars}`}>
+        <Tooltip text={t("badges.safetyCarsTooltip", { count: safetyCars })}>
           <span className="inline-flex items-center gap-1 rounded-[2px] border border-status-warning px-1.5 py-0.5 text-xs font-bold leading-none text-status-warning">
             SC
             <span className="num font-semibold">{safetyCars}</span>
@@ -796,7 +812,7 @@ function RaceBadges({ event }: { event: RaceEvent }) {
 
       {/* Reverse grid */}
       {reverseGrid && (
-        <Tooltip text="Reverse grid was used for this race">
+        <Tooltip text={t("badges.reverseGridTooltip")}>
           <span className="inline-flex items-center gap-1 rounded-[2px] border border-[color:var(--isl-hairline-strong)] px-1.5 py-0.5 text-xs font-medium leading-none text-ink-2">
             RG
           </span>
@@ -848,6 +864,7 @@ function ScheduleListInner({
   allDrivers = [],
   allTeams = [],
 }: ScheduleListProps) {
+  const t = useTranslations("schedule");
   const searchParams = useSearchParams();
   const selectedSeasonKey =
     searchParams.get("season") || defaultSeasonKey;
@@ -908,7 +925,7 @@ function ScheduleListInner({
     return (
       <div className="flex items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream py-16">
         <p className="text-sm text-meta">
-          No race events available yet.
+          {t("list.noEventsAvailable")}
         </p>
       </div>
     );
@@ -928,7 +945,7 @@ function ScheduleListInner({
       {events.length === 0 && (
         <div className="flex items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream py-16">
           <p className="text-sm text-meta">
-            No race events available for this season.
+            {t("list.noEventsForSeason")}
           </p>
         </div>
       )}
@@ -939,12 +956,12 @@ function ScheduleListInner({
             <div className="overflow-hidden rounded-[2px] border border-[color:var(--isl-hairline)]">
               {/* Desktop header */}
               <div className="hidden border-b border-[color:var(--isl-hairline)] bg-sink px-5 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-meta md:grid md:grid-cols-[60px_1fr_120px_100px_100px_90px_36px]">
-                <span>#</span>
-                <span>Race</span>
-                <span className="text-center">Date</span>
-                <span className="text-center">League</span>
-                <span className="text-center">Status</span>
-                <span className="text-center">Flag</span>
+                <span>{t("list.headerNumber")}</span>
+                <span>{t("list.headerRace")}</span>
+                <span className="text-center">{t("list.headerDate")}</span>
+                <span className="text-center">{t("list.headerLeague")}</span>
+                <span className="text-center">{t("list.headerStatus")}</span>
+                <span className="text-center">{t("list.headerFlag")}</span>
                 <span />
               </div>
 
@@ -994,7 +1011,7 @@ function ScheduleListInner({
                     {/* Chevron + Open label */}
                     <span className="hidden items-center justify-end gap-1 md:flex">
                       <span className="text-[10px] font-medium uppercase tracking-wider text-transparent transition-colors group-hover:text-meta group-focus-visible:text-meta">
-                        Open
+                        {t("list.open")}
                       </span>
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -1066,15 +1083,18 @@ function ScheduleListInner({
 /*  Exported wrapper (Suspense required for useSearchParams)            */
 /* ------------------------------------------------------------------ */
 
+function ScheduleListFallback() {
+  const t = useTranslations("schedule");
+  return (
+    <div className="flex items-center justify-center py-16">
+      <p className="text-sm text-meta">{t("list.loading")}</p>
+    </div>
+  );
+}
+
 export default function ScheduleList(props: ScheduleListProps) {
   return (
-    <Suspense
-      fallback={
-        <div className="flex items-center justify-center py-16">
-          <p className="text-sm text-meta">Loading schedule…</p>
-        </div>
-      }
-    >
+    <Suspense fallback={<ScheduleListFallback />}>
       <ScheduleListInner {...props} />
     </Suspense>
   );
