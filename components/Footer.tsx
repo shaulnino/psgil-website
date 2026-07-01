@@ -1,13 +1,7 @@
 "use client";
 
-import type { CSSProperties } from "react";
 import { siteConfig } from "@/lib/siteConfig";
 import LoadingLink from "@/components/LoadingLink";
-
-/** Muted from brand #7020b0 — footer reads calmer against near-black page. */
-const FOOTER_ACCENT = "#3f244f";
-const FOOTER_BG = "#0e0e12";
-const FOOTER_ACCENT_TEXT = "#5a416f";
 
 const footerColumns = [
   {
@@ -63,31 +57,18 @@ function SocialIcon({ icon }: { icon: string }) {
 
 export default function Footer() {
   return (
-    <footer
-      className="border-t-4"
-      style={
-        {
-          borderColor: FOOTER_ACCENT,
-          backgroundColor: FOOTER_BG,
-          ["--footer-accent" as string]: FOOTER_ACCENT,
-        } as CSSProperties
-      }
-    >
-      <div className="mx-auto w-full max-w-6xl px-6 py-12">
-        {/* Main grid: brand | nav columns */}
+    <footer className="border-t border-[color:var(--isl-hairline)] bg-cream">
+      <div className="mx-auto w-full max-w-[1240px] px-5 py-12">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-[2fr_1fr_1fr]">
           {/* Brand */}
           <div>
-            <p className="font-display text-3xl font-bold uppercase tracking-wider text-white">
+            <p className="font-display text-3xl font-bold tracking-[0.01em] text-ink">
               {siteConfig.leagueName}
             </p>
-            <p
-              className="mt-1 text-[11px] font-semibold uppercase tracking-[0.2em]"
-              style={{ color: FOOTER_ACCENT_TEXT }}
-            >
-              F1 Sim Racing League
+            <p className="mt-1 font-isl-body text-[11px] font-semibold uppercase tracking-[0.2em] text-brass-ink">
+              F1 Israeli Super League
             </p>
-            <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/40">
+            <p className="mt-4 max-w-xs font-isl-body text-sm leading-relaxed text-meta">
               {siteConfig.footerNote}. Israel&apos;s competitive Formula 1 simulation racing community.
             </p>
           </div>
@@ -95,7 +76,7 @@ export default function Footer() {
           {/* Nav columns */}
           {footerColumns.map((col) => (
             <div key={col.title}>
-              <h3 className="mb-4 text-[10px] font-bold uppercase tracking-[0.2em] text-white/35">
+              <h3 className="mb-4 font-isl-body text-[10px] font-bold uppercase tracking-[0.2em] text-meta">
                 {col.title}
               </h3>
               <ul className="space-y-2.5">
@@ -103,7 +84,7 @@ export default function Footer() {
                   <li key={link.href}>
                     <LoadingLink
                       href={link.href}
-                      className="text-sm text-white/55 transition-colors hover:text-white"
+                      className="font-isl-body text-sm text-ink-2 transition-colors hover:text-oxblood"
                     >
                       {link.label}
                     </LoadingLink>
@@ -115,9 +96,8 @@ export default function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-10 flex flex-col gap-5 border-t border-white/10 pt-8 md:flex-row md:items-center md:justify-between">
-          {/* Social icons */}
-          <div className="flex items-center gap-2.5">
+        <div className="mt-10 flex flex-col gap-5 border-t border-[color:var(--isl-hairline)] pt-8 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-2">
             {siteConfig.socials.map((s) => (
               <a
                 key={s.label}
@@ -125,16 +105,15 @@ export default function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={s.label}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-white/40 transition hover:text-white hover:[border-color:color-mix(in_srgb,var(--footer-accent)_50%,transparent)]"
+                className="flex h-9 w-9 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] text-meta transition-colors hover:border-ink hover:text-ink"
               >
                 <SocialIcon icon={s.icon} />
               </a>
             ))}
           </div>
 
-          {/* Copyright */}
-          <p className="text-xs text-white/25">
-            © {new Date().getFullYear()} {siteConfig.leagueName} – F1 Sim Racing.
+          <p className="font-isl-body text-xs text-meta">
+            © {new Date().getFullYear()} {siteConfig.leagueName} — F1 Israeli Super League.
             Not affiliated with Formula 1 or FOM.
           </p>
         </div>

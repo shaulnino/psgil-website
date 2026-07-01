@@ -1,20 +1,26 @@
 @import "tailwindcss";
 
+/* ── Phase 5 theme flip: the site now runs the ISL "Qav Rishon" LIGHT theme.
+   The semantic tokens (--background/--foreground/--muted) are repointed to the
+   ISL light palette; fonts swap to Zilla Slab / Public Sans. This is the
+   single-mode light theme (no dark twin). Route/content migration to the new
+   utilities proceeds route-by-route on this branch. ── */
 :root {
-  --background: #0b0b0e;
-  --foreground: #ffffff;
-  --muted: #a0a0a0;
+  --background: #f4efe4; /* bone newsprint */
+  --foreground: #1c1712; /* brown-ink */
+  --muted: #6e6455; /* meta taupe */
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
-  --font-sans: var(--font-inter);
-  --font-display: var(--font-rajdhani);
-  /* Steward module — muted bronze / sand (less saturated than legacy #D4AF37) */
-  --color-steward-gold: #8f8470;
-  --color-steward-cream: #b8b0a0;
+  --font-sans: var(--font-public-sans);
+  --font-display: var(--font-zilla-slab);
+  /* Steward module palette — repointed to the shared ISL gold/cream so steward
+     surfaces move onto the editorial system when that module is migrated. */
+  --color-steward-gold: #9c7a3c;
+  --color-steward-cream: #eae2d0;
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -197,23 +203,25 @@ html {
 }
 
 body {
-  background:
-    radial-gradient(ellipse 80% 60% at 5% 95%, rgba(112, 32, 176, 0.06), transparent 60%),
-    radial-gradient(ellipse 70% 50% at 95% 10%, rgba(143, 132, 112, 0.035), transparent 55%),
-    repeating-linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.025) 0,
-      rgba(255, 255, 255, 0.025) 1px,
-      transparent 1px,
-      transparent 8px
-    ),
-    var(--background);
+  background: var(--background); /* flat bone — no gradient/texture (editorial) */
   color: var(--foreground);
-  font-family: var(--font-inter), system-ui, sans-serif;
+  font-family: var(--font-public-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 .font-display {
-  font-family: var(--font-rajdhani), system-ui, sans-serif;
+  font-family: var(--font-zilla-slab), Georgia, "Times New Roman", serif;
+}
+
+/* Global focus ring + selection — the single oxblood accent expression. */
+:focus-visible {
+  outline: 2px solid var(--isl-oxblood);
+  outline-offset: 2px;
+}
+::selection {
+  background: var(--isl-oxblood);
+  color: var(--isl-bone);
 }
 
 @keyframes hero-zoom {

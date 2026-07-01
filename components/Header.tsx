@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import Button from "@/components/Button";
+import { Button } from "@/components/ui/button";
 import LoadingLink from "@/components/LoadingLink";
 import { siteConfig } from "@/lib/siteConfig";
 import { gaClickJoinNow } from "@/lib/ga";
@@ -14,49 +14,43 @@ export default function Header() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-[#0B0B0E]/80 backdrop-blur">
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-6">
+    <header className="sticky top-0 z-50 border-b border-[color:var(--isl-hairline)] bg-bone">
+      <div className="mx-auto flex h-16 w-full max-w-[1240px] items-center justify-between px-5">
         <LoadingLink href="/" hideSpinner className="group flex items-center gap-3">
-          <span className="flex h-12 w-12 items-center justify-center rounded-full transition md:h-14 md:w-14 group-aria-[busy=true]:animate-pulse">
+          <span className="flex h-11 w-11 items-center justify-center transition group-aria-[busy=true]:opacity-60 md:h-12 md:w-12">
             <Image
               src="/psgil-logo.png"
               alt="ISL logo"
               width={64}
               height={64}
               className="h-full w-full object-contain"
-              sizes="(max-width: 768px) 48px, 56px"
+              sizes="(max-width: 768px) 44px, 48px"
               priority
-              /* Serve file as-is — some PNG encodings fail Next/S sharp optimization */
               unoptimized
             />
           </span>
-          <span className="font-display text-xl tracking-wide text-white">
+          <span className="font-display text-2xl font-bold tracking-[0.01em] text-ink">
             {siteConfig.leagueName}
           </span>
         </LoadingLink>
 
-        <nav className="hidden items-center gap-2 md:flex">
+        <nav className="hidden items-center gap-1 md:flex">
           {siteConfig.navigation.map((link) => {
-            const isComingSoon = link.label === "Articles";
             const isStewards = link.label === "Stewards";
-            const active = pathname === link.href || (isStewards && pathname.startsWith("/stewards"));
+            const active =
+              pathname === link.href || (isStewards && pathname.startsWith("/stewards"));
             return (
               <div key={link.href} className="relative flex items-center gap-1.5">
                 <LoadingLink
                   href={link.href}
-                  className={`rounded-lg border px-3 py-1.5 text-sm font-semibold transition ${
+                  className={`border-b-2 px-3 py-2 font-isl-body text-sm font-medium transition-colors ${
                     active
-                      ? "border-[#7020B0]/70 bg-[#7020B0]/25 text-white shadow-[0_0_16px_rgba(112,32,176,0.25)]"
-                      : "border-transparent text-white/65 hover:border-white/10 hover:bg-white/5 hover:text-white"
+                      ? "border-oxblood text-ink"
+                      : "border-transparent text-meta hover:text-ink"
                   }`}
                 >
                   {link.label}
                 </LoadingLink>
-                {isComingSoon && (
-                  <span className="rounded-[4px] bg-red-700/90 px-1.5 py-0.5 text-[11px] font-medium leading-none text-white">
-                    Coming soon
-                  </span>
-                )}
                 {isStewards && <StewardNotifBadge />}
               </div>
             );
@@ -64,12 +58,14 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <Button href="/#contact-us" size="sm" onClick={gaClickJoinNow}>
-            Join Now
-          </Button>
+          <div className="hidden sm:block">
+            <Button href="/#contact-us" size="sm" onClick={gaClickJoinNow}>
+              Join Now
+            </Button>
+          </div>
           <button
             onClick={() => setIsOpen((open) => !open)}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/80 transition hover:text-white md:hidden"
+            className="flex h-11 w-11 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] text-ink-2 transition-colors hover:border-ink hover:text-ink md:hidden"
             aria-label="Toggle navigation"
             aria-expanded={isOpen}
           >
@@ -83,32 +79,30 @@ export default function Header() {
       </div>
 
       {isOpen && (
-        <div className="border-t border-white/10 bg-[#0B0B0E] md:hidden">
-          <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-6 py-4">
+        <div className="border-t border-[color:var(--isl-hairline)] bg-paper md:hidden">
+          <div className="mx-auto flex w-full max-w-[1240px] flex-col gap-1 px-5 py-4">
             {siteConfig.navigation.map((link) => {
-              const isComingSoon = link.label === "Articles";
               const active = pathname === link.href;
               return (
-                <div key={link.href} className="flex items-center gap-2">
-                  <LoadingLink
-                    href={link.href}
-                    onClick={() => setIsOpen(false)}
-                    className={`w-full rounded-lg border px-3 py-2 text-base font-semibold transition ${
-                      active
-                        ? "border-[#7020B0]/70 bg-[#7020B0]/25 text-white"
-                        : "border-white/10 bg-white/5 text-white/75 hover:bg-white/10 hover:text-white"
-                    }`}
-                  >
-                    {link.label}
-                  </LoadingLink>
-                  {isComingSoon && (
-                    <span className="rounded-[4px] bg-red-700/90 px-1.5 py-0.5 text-[11px] font-medium leading-none text-white">
-                      Coming soon
-                    </span>
-                  )}
-                </div>
+                <LoadingLink
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setIsOpen(false)}
+                  className={`rounded-[2px] border-s-2 px-3 py-2.5 font-isl-body text-base font-medium transition-colors ${
+                    active
+                      ? "border-oxblood bg-cream text-ink"
+                      : "border-transparent text-ink-2 hover:bg-cream hover:text-ink"
+                  }`}
+                >
+                  {link.label}
+                </LoadingLink>
               );
             })}
+            <div className="pt-2">
+              <Button href="/#contact-us" size="sm" onClick={gaClickJoinNow} className="w-full">
+                Join Now
+              </Button>
+            </div>
           </div>
         </div>
       )}
