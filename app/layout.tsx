@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { NextIntlClientProvider } from "next-intl";
-import { getMessages } from "next-intl/server";
+import { getMessages, getTranslations } from "next-intl/server";
 import Script from "next/script";
 import {
   Inter,
@@ -17,7 +17,6 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import NextRaceWidgetServer from "@/components/NextRaceWidgetServer";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
-import { siteConfig } from "@/lib/siteConfig";
 import { GA_ID } from "@/lib/ga";
 
 const inter = Inter({
@@ -65,19 +64,22 @@ const assistant = Assistant({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: siteConfig.seo.title,
-  description: siteConfig.seo.description,
-  icons: {
-    icon: [
-      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
-      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
-    ],
-    shortcut: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
-  },
-  manifest: "/site.webmanifest",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("common");
+  return {
+    title: t("seo.title"),
+    description: t("seo.description"),
+    icons: {
+      icon: [
+        { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+        { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      ],
+      shortcut: "/favicon.ico",
+      apple: "/apple-touch-icon.png",
+    },
+    manifest: "/site.webmanifest",
+  };
+}
 
 export default async function RootLayout({
   children,

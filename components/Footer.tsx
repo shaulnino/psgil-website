@@ -6,19 +6,19 @@ import LoadingLink from "@/components/LoadingLink";
 
 const footerColumns = [
   {
-    title: "League",
+    titleKey: "league",
     links: [
-      { label: "Home", href: "/" },
-      { label: "Drivers", href: "/drivers" },
-      { label: "Schedule & Results", href: "/schedule" },
+      { id: "home", href: "/" },
+      { id: "drivers", href: "/drivers" },
+      { id: "schedule", href: "/schedule" },
     ],
   },
   {
-    title: "Data",
+    titleKey: "data",
     links: [
-      { label: "Tables", href: "/statistics" },
-      { label: "Stats", href: "/stats" },
-      { label: "News", href: "/news" },
+      { id: "tables", href: "/statistics" },
+      { id: "stats", href: "/stats" },
+      { id: "news", href: "/news" },
     ],
   },
 ];
@@ -65,21 +65,21 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <p className="font-display text-3xl font-bold tracking-[0.01em] text-ink">
-              {siteConfig.leagueName}
+              {t("leagueShort")}
             </p>
             <p className="mt-1 font-isl-body text-[11px] font-semibold uppercase tracking-[0.2em] text-brass-ink">
               {t("leagueFullName")}
             </p>
             <p className="mt-4 max-w-xs font-isl-body text-sm leading-relaxed text-meta">
-              {t("footerNote")}. Israel&apos;s competitive Formula 1 simulation racing community.
+              {t("footerNote")}{t("footer.tagline")}
             </p>
           </div>
 
           {/* Nav columns */}
           {footerColumns.map((col) => (
-            <div key={col.title}>
+            <div key={col.titleKey}>
               <h3 className="mb-4 font-isl-body text-[10px] font-bold uppercase tracking-[0.2em] text-meta">
-                {col.title}
+                {t(`footer.${col.titleKey}`)}
               </h3>
               <ul className="space-y-2.5">
                 {col.links.map((link) => (
@@ -88,7 +88,7 @@ export default function Footer() {
                       href={link.href}
                       className="font-isl-body text-sm text-ink-2 transition-colors hover:text-oxblood"
                     >
-                      {link.label}
+                      {t(`nav.${link.id}`)}
                     </LoadingLink>
                   </li>
                 ))}
@@ -115,8 +115,7 @@ export default function Footer() {
           </div>
 
           <p className="font-isl-body text-xs text-meta">
-            © {new Date().getFullYear()} {siteConfig.leagueName} — F1 Israeli Super League.
-            Not affiliated with Formula 1 or FOM.
+            © {new Date().getFullYear()} {t("leagueShort")} {t("footer.copyright")}
           </p>
         </div>
       </div>

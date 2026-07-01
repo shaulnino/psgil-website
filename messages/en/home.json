@@ -2,8 +2,55 @@
   "hero": {
     "keyFacts": "Key facts",
     "followUs": "Follow us",
-    "contactUs": "Contact Us"
+    "contactUs": "Contact Us",
+    "title": "ISL – F1 Israeli Super League",
+    "subtitle": "Israel's largest F1 sim racing league, competing primarily on the EA Sports F1 series. Built on competition, respect, and an outstanding community.",
+    "joinNow": "Join Now",
+    "watchLastRace": "Watch Last Race",
+    "imageAlt": "ISL racing atmosphere"
   },
+  "trustChips": [
+    "3+ years running",
+    "{currentSeason} live",
+    "No assists • 50% races",
+    "Fair & stewarded racing",
+    "Two seasons per year",
+    "Competitive grid",
+    "Full race stats & history",
+    "EA Sports F1 series"
+  ],
+  "snapshotStats": {
+    "seasons": "Seasons",
+    "races": "Races",
+    "totalDrivers": "Total Drivers",
+    "winners": "Winners"
+  },
+  "leagueFormatItems": [
+    {
+      "title": "EA SPORTS F1 series",
+      "description": "We race on the official EA Sports F1 titles with standardized settings for fair competition."
+    },
+    {
+      "title": "50% race length",
+      "description": "Half-distance races with real strategy—tyre wear, pit stops, and clean execution matter."
+    },
+    {
+      "title": "No assists",
+      "description": "No driving assists. Full driver control for a competitive and authentic experience."
+    },
+    {
+      "title": "League championship",
+      "description": "Season-long Drivers & Teams championships with consistent points, results, and standings."
+    },
+    {
+      "title": "Two seasons per year",
+      "description": "A reliable calendar with two structured seasons each year—consistent racing and progression."
+    },
+    {
+      "title": "Stewarding culture",
+      "description": "Clear rules and active stewarding to keep racing fair, respectful, and clean."
+    }
+  ],
   "featured": {
     "featuredStory": "Featured Story",
     "newsFlash": "News Flash",

@@ -187,7 +187,7 @@ export default async function Home() {
     }
     // If all races share the same URL, simplify the label
     if (lastRaceYoutubeLinks.length === 1) {
-      lastRaceYoutubeLinks[0].label = siteConfig.hero.secondaryCtaLabel;
+      lastRaceYoutubeLinks[0].label = tHome("hero.watchLastRace");
     }
   }
 
@@ -213,16 +213,16 @@ export default async function Home() {
 
     if (latestWithYoutube) {
       lastRaceYoutubeLinks.push({
-        label: siteConfig.hero.secondaryCtaLabel,
+        label: tHome("hero.watchLastRace"),
         url: (latestWithYoutube.youtube_url ?? "").trim(),
       });
     }
   }
 
   /* ---- Resolve template tokens in siteConfig values ---- */
-  const trustChips = siteConfig.trustChips.map(t);
+  const trustChips = (tHome.raw("trustChips") as string[]).map(t);
   const snapshotStats = siteConfig.snapshotStats.map((stat) => ({
-    ...stat,
+    label: tHome(`snapshotStats.${stat.id}`),
     value: t(stat.value),
   }));
   const featuredNews = latestNews[0] ?? null;
@@ -236,7 +236,7 @@ export default async function Home() {
             <div className="relative aspect-[21/9] w-full overflow-hidden rounded-[2px] border border-[color:var(--isl-hairline)]">
               <Image
                 src={heroImagePath}
-                alt="ISL racing atmosphere"
+                alt={tHome("hero.imageAlt")}
                 fill
                 priority
                 sizes="100vw"
@@ -250,16 +250,16 @@ export default async function Home() {
               {currentSeasonLabel}
             </p>
             <h1 className="mt-3 font-display text-4xl font-bold leading-[1.03] tracking-[0.005em] text-ink md:text-5xl lg:text-6xl">
-              {siteConfig.hero.title}
+              {tHome("hero.title")}
             </h1>
             <p className="mt-4 max-w-xl text-lg text-ink-2 md:text-xl">
-              {siteConfig.hero.subtitle}
+              {tHome("hero.subtitle")}
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Button href="#contact-us">{siteConfig.hero.primaryCtaLabel}</Button>
+              <Button href="#contact-us">{tHome("hero.joinNow")}</Button>
               <WatchLastRaceButton
                 links={lastRaceYoutubeLinks}
-                label={siteConfig.hero.secondaryCtaLabel}
+                label={tHome("hero.watchLastRace")}
               />
             </div>
             <div className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] leading-relaxed">
@@ -363,7 +363,7 @@ export default async function Home() {
         brandTitle
       >
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {siteConfig.leagueFormat.map((item) => (
+          {(tHome.raw("leagueFormatItems") as { title: string; description: string }[]).map((item) => (
             <div
               key={item.title}
               className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-5 text-sm text-ink-2"

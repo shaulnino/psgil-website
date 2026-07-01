@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import LoadingLink from "@/components/LoadingLink";
 import { siteConfig } from "@/lib/siteConfig";
@@ -12,6 +13,7 @@ import StewardNotifBadge from "@/app/stewards/components/StewardNotifBadge";
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+  const t = useTranslations("common");
 
   return (
     <header className="sticky top-0 z-50 border-b border-[color:var(--isl-hairline)] bg-bone">
@@ -19,12 +21,12 @@ export default function Header() {
         <LoadingLink
           href="/"
           hideSpinner
-          aria-label={siteConfig.leagueName}
+          aria-label={t("leagueShort")}
           className="group flex items-center"
         >
           <Image
             src="/isl-logo.png"
-            alt="ISL — Israeli Super League"
+            alt={t("a11y.logoAlt")}
             width={1299}
             height={560}
             className="h-9 w-auto transition group-aria-[busy=true]:opacity-60 md:h-10"
@@ -35,7 +37,7 @@ export default function Header() {
 
         <nav className="hidden items-center gap-1 md:flex">
           {siteConfig.navigation.map((link) => {
-            const isStewards = link.label === "Stewards";
+            const isStewards = link.id === "stewards";
             const active =
               pathname === link.href || (isStewards && pathname.startsWith("/stewards"));
             return (
@@ -48,7 +50,7 @@ export default function Header() {
                       : "border-transparent text-meta hover:text-ink"
                   }`}
                 >
-                  {link.label}
+                  {t(`nav.${link.id}`)}
                 </LoadingLink>
                 {isStewards && <StewardNotifBadge />}
               </div>
@@ -59,13 +61,13 @@ export default function Header() {
         <div className="flex items-center gap-3">
           <div className="hidden sm:block">
             <Button href="/#contact-us" size="sm" onClick={gaClickJoinNow}>
-              Join Now
+              {t("joinNow")}
             </Button>
           </div>
           <button
             onClick={() => setIsOpen((open) => !open)}
             className="flex h-11 w-11 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] text-ink-2 transition-colors hover:border-ink hover:text-ink md:hidden"
-            aria-label="Toggle navigation"
+            aria-label={t("a11y.toggleNav")}
             aria-expanded={isOpen}
           >
             <span className="relative flex h-3 w-4 flex-col justify-between">
@@ -93,13 +95,13 @@ export default function Header() {
                       : "border-transparent text-ink-2 hover:bg-cream hover:text-ink"
                   }`}
                 >
-                  {link.label}
+                  {t(`nav.${link.id}`)}
                 </LoadingLink>
               );
             })}
             <div className="pt-2">
               <Button href="/#contact-us" size="sm" onClick={gaClickJoinNow} className="w-full">
-                Join Now
+                {t("joinNow")}
               </Button>
             </div>
           </div>
