@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from "react";
 import SuccessModal from "./SuccessModal";
 
+// TODO(rebrand): move to the new ISL league email when finalized — kept as psgileague@gmail.com for now.
 const EMAIL = "psgileague@gmail.com";
 
 type FormState = "idle" | "sending" | "sent" | "error";

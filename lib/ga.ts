@@ -18,6 +18,8 @@ export function isGaEnabled(): boolean {
   if (!GA_ID) return false;
   if (typeof window === "undefined") return false;
   if (process.env.NODE_ENV !== "production") return false;
+  // TODO(rebrand): update "psgil.com" to the new ISL domain when finalized —
+  // GA will not fire on the new domain until this is changed.
   return window.location.hostname.includes("psgil.com");
 }
 

@@ -58,6 +58,7 @@ function resolveSiteBaseUrl(): string {
     process.env.SITE_BASE_URL ||
     process.env.NEXT_PUBLIC_SITE_URL ||
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "");
+  // TODO(rebrand): final fallback is psgil.com — update to the new ISL domain when finalized.
   return String(envBase || "").trim().replace(/\/+$/, "") || "https://psgil.com";
 }
 

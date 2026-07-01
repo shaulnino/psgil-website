@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 
+// TODO(rebrand): move to the new ISL league email when finalized — kept as psgileague@gmail.com for now (tied to the GMAIL_APP_PASSWORD env var).
 const LEAGUE_EMAIL = "psgileague@gmail.com";
 
 // ---------------------------------------------------------------------------
