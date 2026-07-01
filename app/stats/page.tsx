@@ -59,7 +59,7 @@ export default async function StatsPage() {
   };
 
   return (
-    <main className="bg-[#0B0B0E] text-white">
+    <main className="bg-bone text-ink">
       <Section
         title="Stats"
         description="Deep stats for every driver, season, and circuit in ISL history."

@@ -19,10 +19,10 @@ function Pill({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-lg px-2.5 py-1.5 text-xs font-semibold transition sm:text-sm ${
+      className={`rounded-[2px] px-2.5 py-1.5 text-xs font-semibold transition sm:text-sm ${
         active
-          ? "bg-[#D4AF37] text-black shadow"
-          : "border border-white/10 bg-white/[0.03] text-white/55 hover:border-white/20 hover:text-white/90"
+          ? "bg-ink text-bone"
+          : "border border-[color:var(--isl-hairline)] bg-paper text-meta hover:border-ink hover:text-ink"
       }`}
     >
       {children}
@@ -55,7 +55,7 @@ export default function StatsFilterPills({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-white/35">Format</span>
+        <span className="font-isl-body text-[10px] font-semibold uppercase tracking-[0.2em] text-oxblood">Format</span>
         <Pill active={formatFilter === undefined} onClick={() => onFormat(undefined)}>
           All
         </Pill>
@@ -70,7 +70,7 @@ export default function StatsFilterPills({
         </Pill>
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-white/35">League</span>
+        <span className="font-isl-body text-[10px] font-semibold uppercase tracking-[0.2em] text-oxblood">League</span>
         <Pill active={competitionFilter === undefined} onClick={() => onCompetition(undefined)}>
           All
         </Pill>
@@ -82,7 +82,7 @@ export default function StatsFilterPills({
         </Pill>
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-white/35">Round</span>
+        <span className="font-isl-body text-[10px] font-semibold uppercase tracking-[0.2em] text-oxblood">Round</span>
         <Pill active={roundTypeFilter === undefined} onClick={() => onRoundType(undefined)}>
           All
         </Pill>
@@ -96,7 +96,7 @@ export default function StatsFilterPills({
           <button
             type="button"
             onClick={onClearAll}
-            className="ml-auto rounded-lg px-2 py-1.5 text-xs font-semibold text-white/40 underline-offset-2 hover:text-white/75 hover:underline"
+            className="ms-auto rounded-[2px] px-2 py-1.5 text-xs font-semibold text-meta underline-offset-2 hover:text-oxblood hover:underline"
           >
             Clear filters
           </button>

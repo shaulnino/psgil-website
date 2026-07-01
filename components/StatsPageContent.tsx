@@ -87,8 +87,8 @@ type Props = {
 const TABS = ["Drivers", "League", "Circuits", "Head-to-Head", "Rankings"] as const;
 type Tab = (typeof TABS)[number];
 
-const COMPARE_COLORS = ["#7020B0", "#D4AF37", "#22d3ee", "#f472b6"];
-const SINGLE_COLOR = "#7020B0";
+const COMPARE_COLORS = ["#7E2A1E", "#2F5A6E", "#3F6B3A", "#B07A1E"];
+const SINGLE_COLOR = "#7E2A1E";
 
 function parseNum(v: string): number | null {
   if (!v || v === "-" || v === "N/A") return null;
@@ -192,15 +192,15 @@ function resolveMetrics(
 function TabBar({ tabs, active, onChange }: { tabs: readonly string[]; active: string; onChange: (t: string) => void }) {
   return (
     <div className="overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-      <div className="inline-flex min-w-max snap-x snap-mandatory gap-1 rounded-xl bg-white/5 p-1">
+      <div className="inline-flex min-w-max snap-x snap-mandatory gap-1 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-1">
         {tabs.map((t) => (
           <button
             key={t}
             onClick={() => onChange(t)}
-            className={`shrink-0 snap-start rounded-lg px-3 py-2 text-xs font-semibold transition sm:px-4 sm:text-sm ${
+            className={`shrink-0 snap-start rounded-[2px] px-3 py-2 text-xs font-semibold transition sm:px-4 sm:text-sm ${
               active === t
-                ? "bg-[#7020B0] text-white shadow"
-                : "text-white/60 hover:bg-white/5 hover:text-white"
+                ? "bg-ink text-bone"
+                : "text-meta hover:bg-sink hover:text-ink"
             }`}
           >
             {t}
@@ -213,15 +213,15 @@ function TabBar({ tabs, active, onChange }: { tabs: readonly string[]; active: s
 
 function Toggle({ options, value, onChange }: { options: string[]; value: string; onChange: (v: string) => void }) {
   return (
-    <div className="flex gap-1 rounded-lg bg-white/5 p-0.5">
+    <div className="flex gap-1 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-0.5">
       {options.map((o) => (
         <button
           key={o}
           onClick={() => onChange(o)}
-          className={`rounded-md px-3 py-1.5 text-sm font-semibold transition ${
+          className={`rounded-[2px] px-3 py-1.5 text-sm font-semibold transition ${
             value === o
-              ? "bg-[#D4AF37] text-black"
-              : "text-white/60 hover:text-white"
+              ? "bg-ink text-bone"
+              : "text-meta hover:text-ink"
           }`}
         >
           {o}
@@ -288,27 +288,27 @@ function SearchableSelect({
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex w-full items-center justify-between gap-2 rounded-lg border-2 border-[#7020B0] bg-white/5 px-3 py-2 text-left text-sm text-white transition hover:border-[#9030D0]"
+        className="flex w-full items-center justify-between gap-2 rounded-[2px] border border-[color:var(--isl-hairline-strong)] bg-paper px-3 py-2 text-start text-sm text-ink transition hover:border-oxblood"
       >
         <span className="truncate">{displayText}</span>
-        <svg className="h-4 w-4 shrink-0 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="h-4 w-4 shrink-0 text-meta" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
       {open && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-60 overflow-auto rounded-lg border border-white/10 bg-[#1a1a24] shadow-xl">
-          <div className="sticky top-0 border-b border-white/10 bg-[#1a1a24] p-2">
+        <div className="absolute start-0 end-0 top-full z-50 mt-1 max-h-60 overflow-auto rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper shadow-none">
+          <div className="sticky top-0 border-b border-[color:var(--isl-hairline)] bg-paper p-2">
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search…"
-              className="w-full rounded-md bg-white/5 px-2 py-1.5 text-sm text-white placeholder-white/30 outline-none focus:ring-1 focus:ring-[#7020B0]"
+              className="w-full rounded-[2px] border border-[color:var(--isl-hairline)] bg-sink px-2 py-1.5 text-sm text-ink placeholder-faint outline-none focus:ring-1 focus:ring-oxblood"
               autoFocus
             />
           </div>
           {filtered.length === 0 && (
-            <p className="px-3 py-2 text-sm text-white/40">No results</p>
+            <p className="px-3 py-2 text-sm text-meta">No results</p>
           )}
           {filtered.map((item) => {
             const isSelected = selected.includes(item);
@@ -317,16 +317,16 @@ function SearchableSelect({
                 key={item}
                 type="button"
                 onClick={() => toggle(item)}
-                className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition hover:bg-white/5 ${
-                  isSelected ? "text-[#D4AF37]" : "text-white/80"
+                className={`flex w-full items-center gap-2 px-3 py-2 text-start text-sm transition hover:bg-sink ${
+                  isSelected ? "text-oxblood" : "text-ink-2"
                 }`}
               >
                 {multiple && (
                   <span
-                    className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border text-sm ${
+                    className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-[2px] border text-sm ${
                       isSelected
-                        ? "border-[#D4AF37] bg-[#D4AF37]/20 text-[#D4AF37]"
-                        : "border-white/20"
+                        ? "border-oxblood text-oxblood"
+                        : "border-[color:var(--isl-hairline-strong)]"
                     }`}
                   >
                     {isSelected && "✓"}
@@ -344,8 +344,8 @@ function SearchableSelect({
 
 function EmptyState({ message }: { message: string }) {
   return (
-    <div className="flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 py-16">
-      <p className="text-sm text-white/50">{message}</p>
+    <div className="flex items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream py-16">
+      <p className="text-sm text-meta">{message}</p>
     </div>
   );
 }
@@ -375,26 +375,26 @@ function CategoryGroup({
   };
 
   return (
-    <div className="rounded-xl border border-white/10 overflow-hidden">
+    <div className="rounded-[2px] border border-[color:var(--isl-hairline)] overflow-hidden">
       <button
         type="button"
         onClick={handleToggle}
-        className="flex w-full items-center justify-between gap-2 bg-[#7020B0]/80 px-4 py-3 text-left transition hover:bg-[#7020B0]"
+        className="flex w-full items-center justify-between gap-2 bg-ink px-4 py-3 text-start transition hover:bg-ink/90"
       >
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-white">{category.label}</span>
-          <span className="rounded-full bg-white/20 px-2 py-0.5 text-sm font-medium text-white/70">
+          <span className="text-sm font-semibold text-bone">{category.label}</span>
+          <span className="num rounded-[2px] bg-bone/20 px-2 py-0.5 text-sm font-medium text-bone/80">
             {category.metrics.length}
           </span>
         </div>
         <svg
-          className={`h-4 w-4 shrink-0 text-white/70 transition-transform ${isOpen ? "rotate-180" : ""}`}
+          className={`h-4 w-4 shrink-0 text-bone/70 transition-transform ${isOpen ? "rotate-180" : ""}`}
           fill="none" stroke="currentColor" viewBox="0 0 24 24"
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
-      {isOpen && <div className="border-t border-[#7020B0]/30 bg-white/[0.02] px-4 py-3">{children}</div>}
+      {isOpen && <div className="border-t border-[color:var(--isl-hairline)] bg-cream px-4 py-3">{children}</div>}
     </div>
   );
 }
@@ -413,7 +413,7 @@ function MetricTooltip({
   return (
     <span className="group/tip relative inline-flex cursor-help">
       {children}
-      <span className="pointer-events-none absolute bottom-full left-0 z-50 mb-2 w-max max-w-[220px] rounded-md bg-[#1a1a2e] px-2.5 py-1.5 text-[11px] font-medium text-white/90 opacity-0 shadow-lg ring-1 ring-white/10 transition-opacity group-hover/tip:opacity-100 text-left leading-snug">
+      <span className="pointer-events-none absolute bottom-full start-0 z-50 mb-2 w-max max-w-[220px] rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-2.5 py-1.5 text-[11px] font-medium text-ink opacity-0 transition-opacity group-hover/tip:opacity-100 text-start leading-snug">
         {text}
       </span>
     </span>
@@ -436,17 +436,17 @@ function StatRow({
   tooltip?: string;
 }) {
   return (
-    <div className="flex items-center justify-between gap-2 rounded-lg px-3 py-1.5 transition hover:bg-white/[0.03]">
+    <div className="flex items-center justify-between gap-2 rounded-[2px] px-3 py-1.5 transition hover:bg-sink">
       {tooltip ? (
         <MetricTooltip text={tooltip}>
-          <span className="text-sm text-white/60 truncate">
+          <span className="text-sm text-meta truncate">
             {label}
           </span>
         </MetricTooltip>
       ) : (
-        <span className="text-sm text-white/60 truncate">{label}</span>
+        <span className="text-sm text-meta truncate">{label}</span>
       )}
-      <span className="text-sm font-semibold text-[#D4AF37] tabular-nums shrink-0">
+      <span className="num text-sm font-semibold text-ink shrink-0">
         {fmtVal(value, isPct)}
       </span>
     </div>
@@ -465,8 +465,8 @@ function StatHeroCard({
   tooltip?: string;
 }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-gradient-to-br from-[#7020B0]/25 via-white/[0.04] to-transparent px-4 py-3 shadow-inner">
-      <div className="text-[10px] font-bold uppercase tracking-wider text-white/45">
+    <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-4 py-3">
+      <div className="text-[10px] font-bold uppercase tracking-wider text-meta">
         {tooltip ? (
           <MetricTooltip text={tooltip}>
             <span>{label}</span>
@@ -475,7 +475,7 @@ function StatHeroCard({
           label
         )}
       </div>
-      <div className="mt-1.5 text-xl font-extrabold tabular-nums tracking-tight text-[#D4AF37] sm:text-2xl">
+      <div className="num mt-1.5 text-xl font-extrabold tracking-tight text-ink sm:text-2xl">
         {fmtVal(value, isPct)}
       </div>
     </div>
@@ -487,21 +487,24 @@ function StatHeroCard({
 /* ------------------------------------------------------------------ */
 
 const CHART_THEME = {
-  bg: "rgba(255,255,255,0.03)",
-  border: "rgba(255,255,255,0.1)",
-  grid: "rgba(255,255,255,0.08)",
-  text: "rgba(255,255,255,0.5)",
-  tooltipBg: "#1a1a24",
-  tooltipBorder: "rgba(255,255,255,0.15)",
+  bg: "#FBF8F0",
+  border: "rgba(28,23,18,0.14)",
+  grid: "rgba(28,23,18,0.14)",
+  text: "#3A322A",
+  muted: "#6E6455",
+  highlight: "#7E2A1E",
+  neutral: "#8A7E6A",
+  tooltipBg: "#FBF8F0",
+  tooltipBorder: "rgba(28,23,18,0.14)",
 };
 
 function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string }>; label?: string }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-lg border border-white/10 bg-[#1a1a24] px-3 py-2 shadow-xl">
-      <p className="mb-1 text-sm font-semibold text-white/70">{label}</p>
+    <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2">
+      <p className="mb-1 text-sm font-semibold text-ink-2">{label}</p>
       {payload.map((p, i) => (
-        <p key={i} className="text-sm" style={{ color: p.color }}>
+        <p key={i} className="num text-sm" style={{ color: p.color }}>
           {p.name}: <span className="font-bold">{fmtVal(p.value)}</span>
         </p>
       ))}
@@ -528,11 +531,11 @@ function WrappedXTick({ x, y, payload }: { x?: number; y?: number; payload?: { v
   }
   return (
     <g transform={`translate(${x},${y})`}>
-      <text x={0} y={0} dy={12} textAnchor="middle" fill="#fff" fontSize={11}>
+      <text x={0} y={0} dy={12} textAnchor="middle" fill="#3A322A" fontSize={11}>
         {line1}
       </text>
       {line2 && (
-        <text x={0} y={0} dy={26} textAnchor="middle" fill="#fff" fontSize={11}>
+        <text x={0} y={0} dy={26} textAnchor="middle" fill="#3A322A" fontSize={11}>
           {line2}
         </text>
       )}
@@ -608,12 +611,12 @@ function StatsBarChart({
     if (!active || !payload?.length) return null;
     const origRow = actualData.find((r) => r[xKey] === label);
     return (
-      <div className="rounded-lg border border-white/10 bg-[#1a1a24] px-3 py-2 shadow-xl">
-        <p className="mb-1 text-sm font-semibold text-white/70">{label}</p>
+      <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2">
+        <p className="mb-1 text-sm font-semibold text-ink-2">{label}</p>
         {payload.map((p, i) => {
           const actual = origRow ? origRow[p.dataKey ?? p.name] : p.value;
           return (
-            <p key={i} className="text-sm" style={{ color: p.color }}>
+            <p key={i} className="num text-sm" style={{ color: p.color }}>
               {p.name}: <span className="font-bold">{fmtVal(typeof actual === "number" ? actual : p.value)}</span>
             </p>
           );
@@ -623,7 +626,7 @@ function StatsBarChart({
   }
 
   return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+    <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-4">
       <ResponsiveContainer width="100%" height={height}>
         <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 40 }}>
           <XAxis
@@ -635,7 +638,7 @@ function StatsBarChart({
             interval={0}
           />
           <YAxis
-            tick={{ fill: "#fff", fontSize: 11 }}
+            tick={{ fill: "#3A322A", fontSize: 11 }}
             axisLine={false}
             tickLine={false}
             domain={normalise ? [0, 100] : undefined}
@@ -645,7 +648,7 @@ function StatsBarChart({
           <Tooltip content={normalise ? <NormTooltip /> : <CustomTooltip />} />
           {!hideLegend && (
             <Legend
-              wrapperStyle={{ fontSize: 12, color: "rgba(255,255,255,0.6)" }}
+              wrapperStyle={{ fontSize: 12, color: "#3A322A" }}
             />
           )}
           {bars.map((b) => (
@@ -654,7 +657,7 @@ function StatsBarChart({
               dataKey={b.key}
               name={b.name}
               fill={b.color}
-              radius={[4, 4, 0, 0]}
+              radius={[2, 2, 0, 0]}
               maxBarSize={40}
             >
               {chartData.map((_, idx) => {
@@ -670,7 +673,7 @@ function StatsBarChart({
                           : 0.28
                         : 1
                     }
-                    stroke={leaderAware && isLeader ? "rgba(255,255,255,0.45)" : "none"}
+                    stroke={leaderAware && isLeader ? "rgba(28,23,18,0.35)" : "none"}
                     strokeWidth={leaderAware && isLeader ? 1 : 0}
                   />
                 );
@@ -693,17 +696,17 @@ function StatsRadarChart({
   height?: number;
 }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+    <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-4">
       <ResponsiveContainer width="100%" height={height}>
         <RadarChart cx="50%" cy="50%" outerRadius="72%" data={data}>
-          <PolarGrid stroke={CHART_THEME.grid} />
+          <PolarGrid stroke="rgba(28,23,18,0.14)" />
           <PolarAngleAxis
             dataKey="subject"
-            tick={{ fill: "#D4AF37", fontSize: 12, fontWeight: 600 }}
+            tick={{ fill: "#7E2A1E", fontSize: 12, fontWeight: 600 }}
           />
           <PolarRadiusAxis
             angle={90}
-            tick={{ fill: "#fff", fontSize: 10 }}
+            tick={{ fill: "#3A322A", fontSize: 10 }}
             axisLine={false}
             domain={[0, 110]}
             ticks={[0, 25, 50, 75, 100] as any}
@@ -721,7 +724,7 @@ function StatsRadarChart({
           ))}
           <Tooltip content={<CustomTooltip />} />
           {subjects.length > 1 && (
-            <Legend wrapperStyle={{ fontSize: 12, color: "rgba(255,255,255,0.6)" }} />
+            <Legend wrapperStyle={{ fontSize: 12, color: "#3A322A" }} />
           )}
         </RadarChart>
       </ResponsiveContainer>
@@ -965,18 +968,18 @@ function DriverCumulativeChart({
     DRIVER_CUM_METRICS.find((m) => m.key === metric)?.label ?? metric;
 
   return (
-    <div className="space-y-4 rounded-xl border border-white/10 bg-white/[0.02] p-4 sm:p-6">
+    <div className="space-y-4 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-4 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 className="text-sm font-semibold text-white/60">Driver Cumulative Trend</h3>
-        <div className="flex gap-1 rounded-lg bg-white/5 p-0.5">
+        <h3 className="text-sm font-semibold text-meta">Driver Cumulative Trend</h3>
+        <div className="flex gap-1 rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-0.5">
           {[5, 10, 15, 0].map((n) => (
             <button
               key={n}
               onClick={() => setRaceCount(n)}
-              className={`rounded-md px-2.5 py-1 text-xs font-semibold transition ${
+              className={`rounded-[2px] px-2.5 py-1 text-xs font-semibold transition ${
                 raceCount === n
-                  ? "bg-[#7020B0] text-white shadow"
-                  : "text-white/50 hover:text-white/80"
+                  ? "bg-ink text-bone"
+                  : "text-meta hover:text-ink"
               }`}
             >
               {n === 0 ? "All" : `Last ${n}`}
@@ -999,8 +1002,8 @@ function DriverCumulativeChart({
       </div>
 
       {chartData.length === 0 ? (
-        <div className="flex h-48 items-center justify-center rounded-xl border border-white/10 bg-white/[0.02]">
-          <p className="text-sm text-white/40">
+        <div className="flex h-48 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream">
+          <p className="text-sm text-meta">
             No race-by-race data available for this driver in the current filter.
           </p>
         </div>
@@ -1008,11 +1011,11 @@ function DriverCumulativeChart({
         <div className="h-72">
           <ResponsiveContainer width="100%" height={288}>
             <LineChart data={chartData} margin={{ top: 8, right: 12, bottom: 4, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(28,23,18,0.10)" />
               <XAxis
                 dataKey="name"
-                tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }}
-                axisLine={{ stroke: "rgba(255,255,255,0.1)" }}
+                tick={{ fill: "#3A322A", fontSize: 10 }}
+                axisLine={{ stroke: "rgba(28,23,18,0.14)" }}
                 tickLine={false}
                 interval="preserveStartEnd"
                 angle={-18}
@@ -1020,28 +1023,29 @@ function DriverCumulativeChart({
                 height={56}
               />
               <YAxis
-                tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }}
-                axisLine={{ stroke: "rgba(255,255,255,0.1)" }}
+                tick={{ fill: "#3A322A", fontSize: 10 }}
+                axisLine={{ stroke: "rgba(28,23,18,0.14)" }}
                 tickLine={false}
                 width={40}
               />
               <Tooltip
                 contentStyle={{
-                  background: "#1a1a24",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  borderRadius: 8,
+                  background: "#FBF8F0",
+                  border: "1px solid rgba(28,23,18,0.14)",
+                  borderRadius: 2,
                   fontSize: 12,
-                  color: "#fff",
+                  color: "#1C1712",
+                  boxShadow: "none",
                 }}
-                labelStyle={{ color: "rgba(255,255,255,0.5)", marginBottom: 4 }}
+                labelStyle={{ color: "#3A322A", marginBottom: 4 }}
               />
               <Line
                 type="monotone"
                 dataKey="value"
                 name={selectedMetricLabel}
-                stroke="#7020B0"
+                stroke="#7E2A1E"
                 strokeWidth={2.5}
-                dot={{ r: 3, fill: "#7020B0" }}
+                dot={{ r: 3, fill: "#7E2A1E" }}
                 activeDot={{ r: 5 }}
                 connectNulls
               />
@@ -1233,16 +1237,16 @@ function DriverCompareCumulativeChart({
   if (driverNames.length < 2) return null;
 
   return (
-    <div className="space-y-4 rounded-xl border border-white/10 bg-white/[0.02] p-4 sm:p-6">
+    <div className="space-y-4 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-4 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 className="text-sm font-semibold text-white/60">Compare Cumulative Trend</h3>
-        <div className="flex gap-1 rounded-lg bg-white/5 p-0.5">
+        <h3 className="text-sm font-semibold text-meta">Compare Cumulative Trend</h3>
+        <div className="flex gap-1 rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-0.5">
           {[5, 10, 15, 0].map((n) => (
             <button
               key={n}
               onClick={() => setRaceCount(n)}
-              className={`rounded-md px-2.5 py-1 text-xs font-semibold transition ${
-                raceCount === n ? "bg-[#7020B0] text-white shadow" : "text-white/50 hover:text-white/80"
+              className={`rounded-[2px] px-2.5 py-1 text-xs font-semibold transition ${
+                raceCount === n ? "bg-ink text-bone" : "text-meta hover:text-ink"
               }`}
             >
               {n === 0 ? "All" : `Last ${n}`}
@@ -1250,7 +1254,7 @@ function DriverCompareCumulativeChart({
           ))}
         </div>
       </div>
-      <p className="text-xs text-white/40">
+      <p className="text-xs text-meta">
         Note: this trend uses a combined race timeline (union of selected drivers&apos; races), not only shared races.
       </p>
 
@@ -1268,18 +1272,18 @@ function DriverCompareCumulativeChart({
       </div>
 
       {chartData.length === 0 ? (
-        <div className="flex h-48 items-center justify-center rounded-xl border border-white/10 bg-white/[0.02]">
-          <p className="text-sm text-white/40">No race-by-race data available for selected drivers in the current filter.</p>
+        <div className="flex h-48 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream">
+          <p className="text-sm text-meta">No race-by-race data available for selected drivers in the current filter.</p>
         </div>
       ) : (
         <div className="h-72">
           <ResponsiveContainer width="100%" height={288}>
             <LineChart data={chartData} margin={{ top: 8, right: 12, bottom: 4, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(28,23,18,0.10)" />
               <XAxis
                 dataKey="name"
-                tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }}
-                axisLine={{ stroke: "rgba(255,255,255,0.1)" }}
+                tick={{ fill: "#3A322A", fontSize: 10 }}
+                axisLine={{ stroke: "rgba(28,23,18,0.14)" }}
                 tickLine={false}
                 interval="preserveStartEnd"
                 angle={-18}
@@ -1287,20 +1291,21 @@ function DriverCompareCumulativeChart({
                 height={56}
               />
               <YAxis
-                tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }}
-                axisLine={{ stroke: "rgba(255,255,255,0.1)" }}
+                tick={{ fill: "#3A322A", fontSize: 10 }}
+                axisLine={{ stroke: "rgba(28,23,18,0.14)" }}
                 tickLine={false}
                 width={40}
               />
               <Tooltip
                 contentStyle={{
-                  background: "#1a1a24",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  borderRadius: 8,
+                  background: "#FBF8F0",
+                  border: "1px solid rgba(28,23,18,0.14)",
+                  borderRadius: 2,
                   fontSize: 12,
-                  color: "#fff",
+                  color: "#1C1712",
+                  boxShadow: "none",
                 }}
-                labelStyle={{ color: "rgba(255,255,255,0.5)", marginBottom: 4 }}
+                labelStyle={{ color: "#3A322A", marginBottom: 4 }}
               />
               <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
               {driverNames.map((name, i) => (
@@ -1594,10 +1599,10 @@ function DriversSection({
           <select
             value={season}
             onChange={(e) => setSeason(e.target.value)}
-            className="rounded-lg border-2 border-[#7020B0] bg-white/5 px-3 py-2 text-sm text-white outline-none"
+            className="num rounded-[2px] border border-[color:var(--isl-hairline-strong)] bg-paper px-3 py-2 text-sm text-ink outline-none"
           >
             {availableSeasons.map((k) => (
-              <option key={k} value={k} className="bg-[#1a1a24]">
+              <option key={k} value={k} className="bg-paper">
                 Season {k.replace("S", "")}
               </option>
             ))}
@@ -1612,18 +1617,18 @@ function DriversSection({
               setSelectedDrivers(driverNames.slice(0, 2));
             }
           }}
-          className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
+          className={`rounded-[2px] px-3 py-2 text-sm font-semibold transition ${
             compare
-              ? "bg-[#D4AF37] text-black"
-              : "border border-white/10 text-white/60 hover:text-white"
+              ? "bg-ink text-bone"
+              : "border border-[color:var(--isl-hairline)] text-meta hover:text-ink"
           }`}
         >
           {compare ? "✕ Compare" : "⇆ Compare"}
         </button>
       </div>
 
-      <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
-        <p className="mb-3 text-[10px] font-bold uppercase tracking-wider text-white/40">Segment results</p>
+      <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-4">
+        <p className="mb-3 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-oxblood">Segment results</p>
         <StatsFilterPills
           formatFilter={formatFilter}
           competitionFilter={competitionFilter}
@@ -1662,7 +1667,7 @@ function DriversSection({
                   : new Set(categories.map((c) => c.id)),
               )
             }
-            className="rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/70 transition hover:text-white"
+            className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-3 py-1.5 text-xs font-semibold text-meta transition hover:text-ink"
           >
             {allCategoriesExpanded ? "Collapse all" : "Expand all"}
           </button>
@@ -1673,7 +1678,7 @@ function DriversSection({
       {singleDriver && (
         <div className="space-y-5">
           <div>
-            <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-white/40">Overview</p>
+            <p className="mb-2 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-oxblood">Overview</p>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
               {heroMetricSlots.map(({ info, key }) => (
                 <StatHeroCard
@@ -1688,8 +1693,8 @@ function DriversSection({
           </div>
 
           <div>
-            <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-white/40">Explore</p>
-            <div className="flex flex-wrap gap-1.5 rounded-xl border border-white/10 bg-white/[0.03] p-1.5">
+            <p className="mb-2 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-oxblood">Explore</p>
+            <div className="flex flex-wrap gap-1.5 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-1.5">
               {DRIVER_STAT_TAB_ORDER.map((t) => {
                 const count = tabMetricGroups[t.id].length;
                 if (count === 0) return null;
@@ -1699,16 +1704,16 @@ function DriversSection({
                     key={t.id}
                     type="button"
                     onClick={() => setDriverStatTab(t.id)}
-                    className={`rounded-lg px-3 py-2 text-xs font-semibold transition sm:text-sm ${
+                    className={`rounded-[2px] px-3 py-2 text-xs font-semibold transition sm:text-sm ${
                       active
-                        ? "bg-[#7020B0] text-white shadow"
-                        : "text-white/55 hover:bg-white/5 hover:text-white"
+                        ? "bg-ink text-bone"
+                        : "text-meta hover:bg-sink hover:text-ink"
                     }`}
                   >
                     {t.label}
                     <span
-                      className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] ${
-                        active ? "bg-white/20 text-white/90" : "bg-white/10 text-white/45"
+                      className={`num ms-1.5 rounded-[2px] px-1.5 py-0.5 text-[10px] ${
+                        active ? "bg-bone/20 text-bone/90" : "bg-sink text-meta"
                       }`}
                     >
                       {count}
@@ -1719,7 +1724,7 @@ function DriversSection({
             </div>
           </div>
 
-          <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
+          <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-4">
             <div className="grid grid-cols-1 gap-x-6 gap-y-0.5 sm:grid-cols-2 lg:grid-cols-3">
               {tabMetricGroups[driverStatTab]
                 .filter((m) => {
@@ -1768,15 +1773,15 @@ function DriversSection({
             >
               <div className="overflow-x-auto -mx-4">
                 <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-white/10">
-                      <th className="px-4 py-2 text-left text-sm font-semibold uppercase tracking-wider text-white/40">
+                  <thead className="bg-sink">
+                    <tr className="border-b border-[color:var(--isl-hairline-strong)]">
+                      <th className="px-4 py-2 text-start text-sm font-semibold uppercase tracking-wider text-meta">
                         Metric
                       </th>
                       {selectedRows.map((dr, i) => (
                         <th
                           key={dr.driver_name}
-                          className="px-4 py-2 text-right text-sm font-semibold uppercase tracking-wider"
+                          className="px-4 py-2 text-end text-sm font-semibold uppercase tracking-wider"
                           style={{ color: COMPARE_COLORS[i] }}
                         >
                           {dr.driver_name}
@@ -1797,8 +1802,8 @@ function DriversSection({
                         numeric.filter((x) => x.value === target).map((x) => x.driver),
                       );
                       return (
-                        <tr key={m.key} className="border-b border-white/5">
-                          <td className="px-4 py-1.5 text-sm text-white/60">
+                        <tr key={m.key} className="border-b border-[color:var(--isl-hairline)]">
+                          <td className="px-4 py-1.5 text-sm text-meta">
                             {m.tooltip ? (
                               <MetricTooltip text={m.tooltip}>
                                 <span>{m.label}</span>
@@ -1810,10 +1815,10 @@ function DriversSection({
                             return (
                               <td
                                 key={dr.driver_name}
-                                className={`px-4 py-1.5 text-right text-sm font-semibold tabular-nums ${
+                                className={`num px-4 py-1.5 text-end text-sm font-semibold ${
                                   isLeader
-                                    ? "text-[#D4AF37]"
-                                    : "text-white/40"
+                                    ? "text-oxblood"
+                                    : "text-faint"
                                 }`}
                               >
                                 {fmtVal(dr.metrics[m.key], m.isPercentage)}
@@ -1837,7 +1842,7 @@ function DriversSection({
           <div className="grid gap-6 lg:grid-cols-2">
             {barData.length > 0 && (
               <div>
-                <h3 className="mb-2 text-sm font-semibold text-white/60">Key Metrics (normalised)</h3>
+                <h3 className="mb-2 text-sm font-semibold text-meta">Key Metrics (normalised)</h3>
                 <StatsBarChart
                   data={barData}
                   bars={selectedRows.map((dr, i) => ({
@@ -1852,13 +1857,13 @@ function DriversSection({
                   hideLegend
                   height={360}
                 />
-                <p className="mt-2 text-xs text-white/35">
+                <p className="mt-2 text-xs text-faint">
                   Brighter bars and highlighted values indicate the current leader for each metric.
                 </p>
                 <div className="mt-2 flex justify-end">
                   <button
                     onClick={() => setShowAllMetrics(true)}
-                    className="text-sm font-semibold text-[#D4AF37]/80 hover:text-[#D4AF37] transition"
+                    className="text-sm font-semibold text-oxblood hover:text-oxblood-deep transition"
                   >
                     All Metrics →
                   </button>
@@ -1867,7 +1872,7 @@ function DriversSection({
             )}
             {radarData.length > 0 && (
               <div>
-                <h3 className="mb-2 text-sm font-semibold text-white/60">Driver Ratings</h3>
+                <h3 className="mb-2 text-sm font-semibold text-meta">Driver Ratings</h3>
                 <StatsRadarChart
                   data={radarData}
                   subjects={selectedRows.map((dr, i) => ({
@@ -1893,19 +1898,19 @@ function DriversSection({
       {/* ---- All Metrics Modal ---- */}
       {showAllMetrics && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60"
           onClick={() => setShowAllMetrics(false)}
         >
           <div
-            className="relative mx-4 flex w-full max-w-6xl max-h-[90vh] flex-col rounded-2xl border border-white/10 bg-[#0e0e14] shadow-2xl"
+            className="relative mx-4 flex w-full max-w-6xl max-h-[90vh] flex-col rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
-              <h2 className="text-lg font-bold text-white">All Metrics (normalised)</h2>
+            <div className="flex items-center justify-between border-b border-[color:var(--isl-hairline)] px-6 py-4">
+              <h2 className="font-display text-lg font-bold text-ink">All Metrics (normalised)</h2>
               <button
                 onClick={() => setShowAllMetrics(false)}
-                className="rounded-lg p-1.5 text-white/40 transition hover:bg-white/10 hover:text-white"
+                className="rounded-[2px] p-1.5 text-meta transition hover:bg-sink hover:text-ink"
               >
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1914,22 +1919,22 @@ function DriversSection({
             </div>
 
             {/* Metric picker */}
-            <div className="border-b border-white/10 px-6 py-3">
+            <div className="border-b border-[color:var(--isl-hairline)] px-6 py-3">
               <div className="mb-2 flex items-center justify-between">
-                <span className="text-sm font-semibold text-white/50 uppercase tracking-wider">
+                <span className="text-sm font-semibold text-meta uppercase tracking-wider">
                   Metrics ({modalSelectedKeys.size}/{allChartableMetrics.length})
                 </span>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setModalSelectedKeys(new Set(allChartableMetrics.map((m) => m.key)))}
-                    className="text-[11px] font-semibold text-[#D4AF37]/70 hover:text-[#D4AF37] transition"
+                    className="text-[11px] font-semibold text-oxblood hover:text-oxblood-deep transition"
                   >
                     Select All
                   </button>
-                  <span className="text-white/20">|</span>
+                  <span className="text-faint">|</span>
                   <button
                     onClick={() => setModalSelectedKeys(new Set())}
-                    className="text-[11px] font-semibold text-white/40 hover:text-white/70 transition"
+                    className="text-[11px] font-semibold text-meta hover:text-ink transition"
                   >
                     Clear
                   </button>
@@ -1949,10 +1954,10 @@ function DriversSection({
                           return next;
                         });
                       }}
-                      className={`rounded-md px-2 py-1 text-[11px] font-medium transition ${
+                      className={`rounded-[2px] px-2 py-1 text-[11px] font-medium transition ${
                         selected
-                          ? "bg-[#7020B0]/60 text-white ring-1 ring-[#7020B0]"
-                          : "bg-white/5 text-white/40 hover:text-white/60"
+                          ? "bg-ink text-bone"
+                          : "bg-cream text-meta hover:text-ink"
                       }`}
                     >
                       {m.label}
@@ -1964,14 +1969,14 @@ function DriversSection({
 
             {/* Sticky driver legend */}
             {selectedRows.length > 0 && (
-              <div className="flex items-center gap-4 border-b border-white/10 bg-[#0e0e14] px-6 py-2">
+              <div className="flex items-center gap-4 border-b border-[color:var(--isl-hairline)] bg-paper px-6 py-2">
                 {selectedRows.map((dr, i) => (
                   <div key={dr.driver_name} className="flex items-center gap-1.5">
                     <span
-                      className="inline-block h-3 w-3 rounded-sm"
+                      className="inline-block h-3 w-3 rounded-[2px]"
                       style={{ backgroundColor: compare ? COMPARE_COLORS[i] : SINGLE_COLOR }}
                     />
-                    <span className="text-sm font-medium text-white/80">{dr.driver_name}</span>
+                    <span className="text-sm font-medium text-ink-2">{dr.driver_name}</span>
                   </div>
                 ))}
               </div>
@@ -1981,7 +1986,7 @@ function DriversSection({
             <div className="flex-1 overflow-auto px-6 py-4">
               {modalBarData.length === 0 ? (
                 <div className="flex items-center justify-center py-16">
-                  <p className="text-sm text-white/40">Select at least one metric above</p>
+                  <p className="text-sm text-meta">Select at least one metric above</p>
                 </div>
               ) : (
                 <div
@@ -2063,10 +2068,10 @@ function LeagueSection({ league }: { league: LeagueStatRow[] }) {
         {mode === "Season" && (
           <button
             onClick={() => setCompare(!compare)}
-            className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
+            className={`rounded-[2px] px-3 py-2 text-sm font-semibold transition ${
               compare
-                ? "bg-[#D4AF37] text-black"
-                : "border border-white/10 text-white/60 hover:text-white"
+                ? "bg-ink text-bone"
+                : "border border-[color:var(--isl-hairline)] text-meta hover:text-ink"
             }`}
           >
             {compare ? "✕ Compare Seasons" : "⇆ Compare Seasons"}
@@ -2081,10 +2086,10 @@ function LeagueSection({ league }: { league: LeagueStatRow[] }) {
             return (
               <div
                 key={metric}
-                className="rounded-xl border border-white/10 bg-gradient-to-br from-[#7020B0]/25 via-white/[0.04] to-transparent px-4 py-3"
+                className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-4 py-3"
               >
-                <div className="text-[10px] font-bold uppercase tracking-wider text-white/45">{short}</div>
-                <div className="mt-1 text-xl font-extrabold tabular-nums text-[#D4AF37] sm:text-2xl">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-meta">{short}</div>
+                <div className="num mt-1 text-xl font-extrabold text-ink sm:text-2xl">
                   {row?.total ?? "—"}
                 </div>
               </div>
@@ -2107,20 +2112,20 @@ function LeagueSection({ league }: { league: LeagueStatRow[] }) {
       )}
 
       {/* Stats table */}
-      <div className="overflow-x-auto rounded-xl border border-white/10">
+      <div className="overflow-x-auto rounded-[2px] border border-[color:var(--isl-hairline)]">
         <table role="table" className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-white/10 bg-white/5">
-              <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-wider text-white/40">Metric</th>
+          <thead className="bg-sink">
+            <tr className="border-b border-[color:var(--isl-hairline-strong)]">
+              <th className="px-4 py-3 text-start text-sm font-semibold uppercase tracking-wider text-meta">Metric</th>
               {mode === "All-time" ? (
-                <th className="px-4 py-3 text-right text-sm font-semibold uppercase tracking-wider text-[#D4AF37]">Total</th>
+                <th className="px-4 py-3 text-end text-sm font-semibold uppercase tracking-wider text-oxblood">Total</th>
               ) : compare ? (
                 selectedSeasons.map((sc, i) => (
-                  <th key={sc} className="px-4 py-3 text-right text-sm font-semibold uppercase tracking-wider" style={{ color: COMPARE_COLORS[i] }}>{sc}</th>
+                  <th key={sc} className="px-4 py-3 text-end text-sm font-semibold uppercase tracking-wider" style={{ color: COMPARE_COLORS[i] }}>{sc}</th>
                 ))
               ) : (
                 seasonCols.map((sc) => (
-                  <th key={sc} className="px-4 py-3 text-right text-sm font-semibold uppercase tracking-wider text-white/40">{sc}</th>
+                  <th key={sc} className="px-4 py-3 text-end text-sm font-semibold uppercase tracking-wider text-meta">{sc}</th>
                 ))
               )}
             </tr>
@@ -2130,8 +2135,8 @@ function LeagueSection({ league }: { league: LeagueStatRow[] }) {
               const tip = getMetricTooltip(r.metric, r.metric);
               const hasTip = tip !== r.metric;
               return (
-              <tr key={r.metric} className="border-b border-white/5 hover:bg-white/[0.02] transition">
-                <td className="px-4 py-2 text-white/70 font-medium">
+              <tr key={r.metric} className="border-b border-[color:var(--isl-hairline)] hover:bg-sink/50 transition">
+                <td className="px-4 py-2 text-ink-2 font-medium">
                   {hasTip ? (
                     <MetricTooltip text={tip}>
                       <span>{r.metric}</span>
@@ -2139,14 +2144,14 @@ function LeagueSection({ league }: { league: LeagueStatRow[] }) {
                   ) : r.metric}
                 </td>
                 {mode === "All-time" ? (
-                  <td className="px-4 py-2 text-right font-semibold text-[#D4AF37]">{r.total}</td>
+                  <td className="num px-4 py-2 text-end font-semibold text-ink">{r.total}</td>
                 ) : compare ? (
                   selectedSeasons.map((sc) => (
-                    <td key={sc} className="px-4 py-2 text-right font-semibold text-[#D4AF37]">{r.seasons[sc] ?? "-"}</td>
+                    <td key={sc} className="num px-4 py-2 text-end font-semibold text-ink">{r.seasons[sc] ?? "-"}</td>
                   ))
                 ) : (
                   seasonCols.map((sc) => (
-                    <td key={sc} className="px-4 py-2 text-right text-[#D4AF37]/70">{r.seasons[sc] ?? "-"}</td>
+                    <td key={sc} className="num px-4 py-2 text-end text-meta">{r.seasons[sc] ?? "-"}</td>
                   ))
                 )}
               </tr>
@@ -2159,7 +2164,7 @@ function LeagueSection({ league }: { league: LeagueStatRow[] }) {
       {/* Bar chart (compare mode) */}
       {compare && mode === "Season" && barData.length > 0 && (
         <div>
-          <h3 className="mb-2 text-sm font-semibold text-white/60">Season Comparison (normalised)</h3>
+          <h3 className="mb-2 text-sm font-semibold text-meta">Season Comparison (normalised)</h3>
           <div className="overflow-x-auto">
             <div style={{ width: Math.max(700, barData.length * 90) }}>
               <StatsBarChart
@@ -2285,10 +2290,10 @@ function CircuitsSection({
               setSelectedCircuits(circuitNames.slice(0, 2));
             }
           }}
-          className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
+          className={`rounded-[2px] px-3 py-2 text-sm font-semibold transition ${
             compare
-              ? "bg-[#D4AF37] text-black"
-              : "border border-white/10 text-white/60 hover:text-white"
+              ? "bg-ink text-bone"
+              : "border border-[color:var(--isl-hairline)] text-meta hover:text-ink"
           }`}
         >
           {compare ? "✕ Compare" : "⇆ Compare Circuits"}
@@ -2318,7 +2323,7 @@ function CircuitsSection({
                   : new Set(categories.map((c) => c.id)),
               )
             }
-            className="rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/70 transition hover:text-white"
+            className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-3 py-1.5 text-xs font-semibold text-meta transition hover:text-ink"
           >
             {allCategoriesExpanded ? "Collapse all" : "Expand all"}
           </button>
@@ -2330,14 +2335,14 @@ function CircuitsSection({
         <div className="space-y-3">
           {/* Podium placements (special non-metric fields) */}
           {[
-            { key: "Winners", label: "Winners", border: "border-[#D4AF37]/30", bg: "bg-[#D4AF37]/10", text: "text-[#D4AF37]/60" },
-            { key: "2nd Place", label: "2nd Place", border: "border-[#C0C0C0]/30", bg: "bg-[#C0C0C0]/10", text: "text-[#C0C0C0]/60" },
-            { key: "3rd Place", label: "3rd Place", border: "border-[#CD7F32]/30", bg: "bg-[#CD7F32]/10", text: "text-[#CD7F32]/60" },
+            { key: "Winners", label: "Winners", border: "border-brass", bg: "bg-cream", text: "text-brass-ink" },
+            { key: "2nd Place", label: "2nd Place", border: "border-[color:var(--isl-silver-ink)]", bg: "bg-cream", text: "text-silver-ink" },
+            { key: "3rd Place", label: "3rd Place", border: "border-[color:var(--isl-bronze-ink)]", bg: "bg-cream", text: "text-bronze-ink" },
           ].map(({ key, label, border, bg, text }) =>
             singleCircuit.raw[key] ? (
-              <div key={key} className={`rounded-xl border ${border} ${bg} px-4 py-3`}>
+              <div key={key} className={`rounded-[2px] border ${border} ${bg} px-4 py-3`}>
                 <p className={`text-sm font-semibold uppercase tracking-wider ${text}`}>{label}</p>
-                <p className="mt-1 text-sm font-semibold text-white">{singleCircuit.raw[key]}</p>
+                <p className="mt-1 text-sm font-semibold text-ink">{singleCircuit.raw[key]}</p>
               </div>
             ) : null,
           )}
@@ -2374,25 +2379,25 @@ function CircuitsSection({
           {/* Season appearances timeline */}
           {seasonAppearances.length > 0 && (
             <div>
-              <h3 className="mb-3 text-sm font-semibold text-white/60">Season Appearances</h3>
-              <div className="rounded-xl border border-white/10 bg-white/[0.03] px-5 py-4">
+              <h3 className="mb-3 text-sm font-semibold text-meta">Season Appearances</h3>
+              <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-5 py-4">
                 <div className="flex items-center justify-between gap-2">
                   {seasonAppearances.map(({ label, appeared }) => (
                     <div key={label} className="flex flex-col items-center gap-2">
                       <div
                         className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all ${
                           appeared
-                            ? "border-[#7020B0] bg-[#7020B0]/20 shadow-[0_0_12px_rgba(112,32,176,0.4)]"
-                            : "border-white/10 bg-white/[0.03]"
+                            ? "border-oxblood bg-paper"
+                            : "border-[color:var(--isl-hairline)] bg-cream"
                         }`}
                       >
                         {appeared && (
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 text-[#7020B0]">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 text-oxblood">
                             <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
                           </svg>
                         )}
                       </div>
-                      <span className={`text-xs font-semibold tracking-wider ${appeared ? "text-white" : "text-white/30"}`}>
+                      <span className={`num text-xs font-semibold tracking-wider ${appeared ? "text-ink" : "text-faint"}`}>
                         {label}
                       </span>
                     </div>
@@ -2424,15 +2429,15 @@ function CircuitsSection({
             >
               <div className="overflow-x-auto -mx-4">
                 <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-white/10">
-                      <th className="px-4 py-2 text-left text-sm font-semibold uppercase tracking-wider text-white/40">
+                  <thead className="bg-sink">
+                    <tr className="border-b border-[color:var(--isl-hairline-strong)]">
+                      <th className="px-4 py-2 text-start text-sm font-semibold uppercase tracking-wider text-meta">
                         Metric
                       </th>
                       {selectedRows.map((cr, i) => (
                         <th
                           key={cr.circuit}
-                          className="px-4 py-2 text-right text-sm font-semibold uppercase tracking-wider"
+                          className="px-4 py-2 text-end text-sm font-semibold uppercase tracking-wider"
                           style={{ color: COMPARE_COLORS[i] }}
                         >
                           {cr.circuit}
@@ -2442,8 +2447,8 @@ function CircuitsSection({
                   </thead>
                   <tbody>
                     {cat.metrics.map((m) => (
-                      <tr key={m.key} className="border-b border-white/5">
-                        <td className="px-4 py-1.5 text-sm text-white/60">
+                      <tr key={m.key} className="border-b border-[color:var(--isl-hairline)]">
+                        <td className="px-4 py-1.5 text-sm text-meta">
                           {m.tooltip ? (
                             <MetricTooltip text={m.tooltip}>
                               <span>{m.label}</span>
@@ -2451,7 +2456,7 @@ function CircuitsSection({
                           ) : m.label}
                         </td>
                         {selectedRows.map((cr) => (
-                          <td key={cr.circuit} className="px-4 py-1.5 text-right text-sm font-semibold text-[#D4AF37] tabular-nums">
+                          <td key={cr.circuit} className="num px-4 py-1.5 text-end text-sm font-semibold text-ink">
                             {fmtVal(cr.metrics[m.key], m.isPercentage)}
                           </td>
                         ))}
@@ -2466,7 +2471,7 @@ function CircuitsSection({
           {/* Compare bar chart */}
           {barData.length > 0 && (
             <div>
-              <h3 className="mb-2 text-sm font-semibold text-white/60">Comparison (normalised)</h3>
+              <h3 className="mb-2 text-sm font-semibold text-meta">Comparison (normalised)</h3>
               <div className="overflow-x-auto">
                 <div style={{ width: Math.max(700, barData.length * 90) }}>
                   <StatsBarChart
@@ -2727,10 +2732,10 @@ function RankingsSection({
           <select
             value={season}
             onChange={(e) => setSeason(e.target.value)}
-            className="rounded-lg border-2 border-[#7020B0] bg-white/5 px-3 py-2 text-sm text-white outline-none"
+            className="num rounded-[2px] border border-[color:var(--isl-hairline-strong)] bg-paper px-3 py-2 text-sm text-ink outline-none"
           >
             {availableSeasons.map((k) => (
-              <option key={k} value={k} className="bg-[#1a1a24]">
+              <option key={k} value={k} className="bg-paper">
                 Season {k.replace("S", "")}
               </option>
             ))}
@@ -2738,8 +2743,8 @@ function RankingsSection({
         )}
       </div>
 
-      <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
-        <p className="mb-3 text-[10px] font-bold uppercase tracking-wider text-white/40">Segment leaderboard</p>
+      <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-4">
+        <p className="mb-3 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-oxblood">Segment leaderboard</p>
         <StatsFilterPills
           formatFilter={formatFilter}
           competitionFilter={competitionFilter}
@@ -2756,7 +2761,7 @@ function RankingsSection({
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <span className="w-full text-[10px] font-bold uppercase tracking-wider text-white/35 sm:w-auto sm:self-center">
+        <span className="w-full font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-oxblood sm:w-auto sm:self-center">
           Quick picks
         </span>
         {RANKINGS_QUICK_PRESETS.map((p) => (
@@ -2770,7 +2775,7 @@ function RankingsSection({
                 setSortAsc(null);
               }
             }}
-            className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-white/70 transition hover:border-[#7020B0]/50 hover:text-white"
+            className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-3 py-1.5 text-xs font-semibold text-meta transition hover:border-oxblood hover:text-ink"
           >
             {p.label}
           </button>
@@ -2780,7 +2785,7 @@ function RankingsSection({
       {/* Stat selector + sort toggle */}
       <div className="flex flex-wrap items-end gap-3">
         <div className="w-full max-w-sm">
-          <label className="mb-1 block text-sm font-semibold uppercase tracking-wider text-white/50">
+          <label className="mb-1 block text-sm font-semibold uppercase tracking-wider text-meta">
             Stat
           </label>
           <SearchableSelect
@@ -2798,7 +2803,7 @@ function RankingsSection({
         </div>
         <button
           onClick={() => setSortAsc(!isAscending)}
-          className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-white/60 transition hover:border-white/20 hover:text-white"
+          className="flex items-center gap-1.5 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-3 py-2 text-sm font-semibold text-meta transition hover:border-[color:var(--isl-hairline-strong)] hover:text-ink"
           title={
             isAscending
               ? "Sorted ascending (lowest first)"
@@ -2811,7 +2816,7 @@ function RankingsSection({
 
       {/* Metric tooltip */}
       {currentMetric && currentMetric.tooltip !== currentMetric.key && (
-        <p className="text-sm text-white/40 -mt-3">{currentMetric.tooltip}</p>
+        <p className="text-sm text-meta -mt-3">{currentMetric.tooltip}</p>
       )}
 
       {ranked.length >= 3 && (
@@ -2819,24 +2824,30 @@ function RankingsSection({
           {ranked.slice(0, 3).map((r, idx) => {
             const ring =
               idx === 0
-                ? "border-[#D4AF37]/50 from-[#D4AF37]/15"
+                ? "border-brass"
                 : idx === 1
-                  ? "border-white/20 from-white/10"
-                  : "border-[#CD7F32]/40 from-[#CD7F32]/12";
+                  ? "border-[color:var(--isl-silver-ink)]"
+                  : "border-[color:var(--isl-bronze-ink)]";
+            const valueColor =
+              idx === 0
+                ? "text-brass-ink"
+                : idx === 1
+                  ? "text-silver-ink"
+                  : "text-bronze-ink";
             return (
               <div
                 key={r.driverName}
-                className={`rounded-xl border bg-gradient-to-br p-4 ${ring} to-transparent`}
+                className={`rounded-[2px] border bg-cream p-4 ${ring}`}
               >
-                <div className="text-[10px] font-bold uppercase tracking-wider text-white/45">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-meta">
                   #{r.rank} {idx === 0 ? "Leader" : idx === 1 ? "2nd" : "3rd"}
                 </div>
-                <div className="mt-1 text-lg font-bold text-white">
+                <div className="mt-1 text-lg font-bold text-ink">
                   {onSelectDriver ? (
                     <button
                       type="button"
                       onClick={() => onSelectDriver(r.driverName)}
-                      className="text-left hover:text-[#D4AF37]"
+                      className="text-start hover:text-oxblood"
                     >
                       {r.driverName}
                     </button>
@@ -2844,7 +2855,7 @@ function RankingsSection({
                     r.driverName
                   )}
                 </div>
-                <div className="mt-2 text-2xl font-extrabold tabular-nums text-[#D4AF37]">
+                <div className={`num mt-2 text-2xl font-extrabold ${valueColor}`}>
                   {fmtVal(r.value, r.isPct)}
                 </div>
               </div>
@@ -2855,25 +2866,25 @@ function RankingsSection({
 
       {/* Rankings table */}
       {ranked.length > 0 ? (
-        <div className="overflow-x-auto rounded-xl border border-white/10">
+        <div className="overflow-x-auto rounded-[2px] border border-[color:var(--isl-hairline)]">
           <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-white/10 bg-white/5">
-                <th className="w-16 px-4 py-3 text-center text-sm font-semibold uppercase tracking-wider text-white/40">
+            <thead className="bg-sink">
+              <tr className="border-b border-[color:var(--isl-hairline-strong)]">
+                <th className="w-16 px-4 py-3 text-center text-sm font-semibold uppercase tracking-wider text-meta">
                   #
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-wider text-white/40">
+                <th className="px-4 py-3 text-start text-sm font-semibold uppercase tracking-wider text-meta">
                   Driver
                 </th>
                 {ranked[0]?.team !== null && (
-                  <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-wider text-white/40">
+                  <th className="px-4 py-3 text-start text-sm font-semibold uppercase tracking-wider text-meta">
                     Team
                   </th>
                 )}
-                <th className="hidden w-36 px-2 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-white/35 sm:table-cell">
+                <th className="hidden w-36 px-2 py-3 text-start text-[10px] font-bold uppercase tracking-wider text-meta sm:table-cell">
                   vs field
                 </th>
-                <th className="px-4 py-3 text-right text-sm font-semibold uppercase tracking-wider text-[#D4AF37]">
+                <th className="px-4 py-3 text-end text-sm font-semibold uppercase tracking-wider text-oxblood">
                   {currentMetric?.label ?? selectedStat}
                 </th>
               </tr>
@@ -2905,26 +2916,24 @@ function RankingsSection({
                 return (
                   <tr
                     key={r.driverName}
-                    className={`border-b border-white/5 transition hover:bg-white/[0.03] ${
-                      isGold
-                        ? "bg-[#D4AF37]/[0.06]"
+                    className={`border-b border-[color:var(--isl-hairline)] transition hover:bg-sink/50 ${
+                      isGold || isBronze
+                        ? "bg-cream"
                         : isSilver
-                          ? "bg-white/[0.03]"
-                          : isBronze
-                            ? "bg-[#CD7F32]/[0.04]"
-                            : ""
+                          ? "bg-cream"
+                          : ""
                     }`}
                   >
                     <td className="px-4 py-2.5 text-center">
                       <span
-                        className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold ${
+                        className={`num inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold ${
                           isGold
-                            ? "bg-[#D4AF37]/20 text-[#D4AF37]"
+                            ? "text-brass-ink"
                             : isSilver
-                              ? "bg-white/10 text-white/80"
+                              ? "text-silver-ink"
                               : isBronze
-                                ? "bg-[#CD7F32]/20 text-[#CD7F32]"
-                                : "text-white/40"
+                                ? "text-bronze-ink"
+                                : "text-meta"
                         }`}
                       >
                         {r.rank}
@@ -2936,31 +2945,31 @@ function RankingsSection({
                         <button
                           type="button"
                           onClick={() => onSelectDriver(r.driverName)}
-                          className="font-semibold text-white transition hover:text-[#D4AF37]"
+                          className="font-semibold text-ink transition hover:text-oxblood"
                         >
                           {r.driverName}
                         </button>
                       ) : (
-                        <span className="font-semibold text-white">
+                        <span className="font-semibold text-ink">
                           {r.driverName}
                         </span>
                       )}
                     </td>
 
                     {r.team !== null && (
-                      <td className="px-4 py-2.5 text-white/50">{r.team}</td>
+                      <td className="px-4 py-2.5 text-meta">{r.team}</td>
                     )}
 
                     <td className="hidden px-3 py-2.5 sm:table-cell">
-                      <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                      <div className="h-2 overflow-hidden rounded-[2px] bg-sink">
                         <div
-                          className="h-full rounded-full bg-gradient-to-r from-[#7020B0] to-[#D4AF37]"
+                          className="h-full rounded-[2px] bg-oxblood"
                           style={{ width: `${Math.min(100, Math.max(4, barW))}%` }}
                         />
                       </div>
                     </td>
 
-                    <td className="px-4 py-2.5 text-right font-bold tabular-nums text-[#D4AF37]">
+                    <td className="num px-4 py-2.5 text-end font-bold text-ink">
                       {fmtVal(r.value, r.isPct)}
                     </td>
                   </tr>
@@ -2977,7 +2986,7 @@ function RankingsSection({
 
       {/* Summary footnote */}
       {ranked.length > 0 && (
-        <p className="text-sm text-white/30">
+        <p className="text-sm text-faint">
           {ranked.length} driver{ranked.length !== 1 ? "s" : ""} ranked
           {mode === "Season" ? ` · Season ${season.replace("S", "")}` : " · All-time"}
           {currentMetric?.isPercentage ? " · Values shown as %" : ""}
@@ -3048,52 +3057,52 @@ function H2HStatCard({
   const pctB = total > 0 ? (Math.abs(nB) / total) * 100 : 50;
 
   return (
-    <div className={`group relative rounded-xl border px-4 pb-3 pt-4 transition ${
+    <div className={`group relative rounded-[2px] border px-4 pb-3 pt-4 transition ${
       winnerSide === "a"
-        ? "border-[#7020B0]/30 bg-[#7020B0]/[0.06]"
+        ? "border-oxblood bg-cream"
         : winnerSide === "b"
-          ? "border-[#D4AF37]/30 bg-[#D4AF37]/[0.06]"
-          : "border-white/10 bg-white/[0.03]"
+          ? "border-[color:var(--isl-hairline-strong)] bg-cream"
+          : "border-[color:var(--isl-hairline)] bg-cream"
     }`}>
-      <span className="mb-3 block text-center text-[10px] font-semibold uppercase tracking-widest text-white/35">{label}</span>
+      <span className="mb-3 block text-center text-[10px] font-semibold uppercase tracking-widest text-meta">{label}</span>
       {tip && (
         <span className="pointer-events-none absolute inset-x-0 bottom-[calc(100%+8px)] z-50 flex justify-center opacity-0 transition group-hover:opacity-100">
-          <span className="w-48 rounded-lg border border-white/10 bg-[#1a1a24] px-3 py-2 text-[11px] font-normal normal-case leading-relaxed tracking-normal text-white/60 shadow-xl">
+          <span className="w-48 rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2 text-[11px] font-normal normal-case leading-relaxed tracking-normal text-ink-2">
             {tip}
           </span>
         </span>
       )}
       <div className="flex items-end justify-between gap-2">
         <div className="flex flex-col items-center gap-0.5">
-          <span className={`text-xl font-extrabold tabular-nums leading-none ${winnerSide === "a" ? "text-[#9040D0]" : "text-white/50"}`}>
+          <span className={`num text-xl font-extrabold leading-none ${winnerSide === "a" ? "text-oxblood" : "text-meta"}`}>
             {fmt(valueA)}
           </span>
         </div>
         <div className="mb-1 flex h-5 w-5 shrink-0 items-center justify-center">
           {winnerSide === "a" && (
-            <svg className="h-3 w-3 text-[#7020B0]" viewBox="0 0 12 12" fill="currentColor"><path d="M1 6l4-4v3h6v2H5v3z" /></svg>
+            <svg className="h-3 w-3 text-oxblood" viewBox="0 0 12 12" fill="currentColor"><path d="M1 6l4-4v3h6v2H5v3z" /></svg>
           )}
           {winnerSide === "b" && (
-            <svg className="h-3 w-3 text-[#D4AF37]" viewBox="0 0 12 12" fill="currentColor"><path d="M11 6l-4-4v3H1v2h6v3z" /></svg>
+            <svg className="h-3 w-3 text-[#2F5A6E]" viewBox="0 0 12 12" fill="currentColor"><path d="M11 6l-4-4v3H1v2h6v3z" /></svg>
           )}
           {!winnerSide && (
-            <span className="text-[10px] font-bold text-white/20">=</span>
+            <span className="text-[10px] font-bold text-faint">=</span>
           )}
         </div>
         <div className="flex flex-col items-center gap-0.5">
-          <span className={`text-xl font-extrabold tabular-nums leading-none ${winnerSide === "b" ? "text-[#D4AF37]" : "text-white/50"}`}>
+          <span className={`num text-xl font-extrabold leading-none ${winnerSide === "b" ? "text-[#2F5A6E]" : "text-meta"}`}>
             {fmt(valueB)}
           </span>
         </div>
       </div>
       {/* Proportional bar */}
-      <div className="mt-3 flex h-1 overflow-hidden rounded-full bg-white/5">
+      <div className="mt-3 flex h-1 overflow-hidden rounded-[2px] bg-sink">
         <div
-          className={`transition-all duration-500 ${winnerSide === "a" ? "bg-[#7020B0]" : "bg-[#7020B0]/30"}`}
+          className={`transition-all duration-500 ${winnerSide === "a" ? "bg-oxblood" : "bg-oxblood/30"}`}
           style={{ width: `${pctA}%` }}
         />
         <div
-          className={`transition-all duration-500 ${winnerSide === "b" ? "bg-[#D4AF37]" : "bg-[#D4AF37]/30"}`}
+          className={`transition-all duration-500 ${winnerSide === "b" ? "bg-[#2F5A6E]" : "bg-[#2F5A6E]/30"}`}
           style={{ width: `${pctB}%` }}
         />
       </div>
@@ -3244,20 +3253,20 @@ function H2HTrendChart({
   if (races.length < 2) return null;
 
   return (
-    <div className="space-y-4 rounded-xl border border-white/10 bg-white/[0.02] p-4 sm:p-6">
+    <div className="space-y-4 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-4 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 className="text-sm font-semibold text-white/60">Trend Over Races</h3>
+        <h3 className="text-sm font-semibold text-meta">Trend Over Races</h3>
 
         {/* Race count selector */}
-        <div className="flex gap-1 rounded-lg bg-white/5 p-0.5">
+        <div className="flex gap-1 rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-0.5">
           {RACE_COUNT_OPTIONS.map((n) => (
             <button
               key={n}
               onClick={() => setRaceCount(n)}
-              className={`rounded-md px-2.5 py-1 text-xs font-semibold transition ${
+              className={`rounded-[2px] px-2.5 py-1 text-xs font-semibold transition ${
                 raceCount === n
-                  ? "bg-[#7020B0] text-white shadow"
-                  : "text-white/50 hover:text-white/80"
+                  ? "bg-ink text-bone"
+                  : "text-meta hover:text-ink"
               }`}
             >
               {n === 0 ? "All" : `Last ${n}`}
@@ -3279,12 +3288,12 @@ function H2HTrendChart({
           return (
             <div key={group} className="relative w-52">
               <div className="mb-1 flex items-center gap-1.5">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-white/30">{group}</span>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-meta">{group}</span>
                 <span className="group/tip relative cursor-help">
-                  <svg className="h-3 w-3 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-3 w-3 text-faint" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z" />
                   </svg>
-                  <span className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 w-52 -translate-x-1/2 rounded-lg border border-white/10 bg-[#1a1a24] px-3 py-2 text-[11px] leading-relaxed text-white/60 opacity-0 shadow-xl transition group-hover/tip:opacity-100">
+                  <span className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 w-52 -translate-x-1/2 rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2 text-[11px] leading-relaxed text-ink-2 opacity-0 transition group-hover/tip:opacity-100">
                     {tooltip}
                   </span>
                 </span>
@@ -3311,18 +3320,18 @@ function H2HTrendChart({
       </div>
 
       {selectedMetrics.length === 0 && (
-        <p className="py-8 text-center text-sm text-white/30">Select at least one metric to display.</p>
+        <p className="py-8 text-center text-sm text-meta">Select at least one metric to display.</p>
       )}
 
       {selectedMetrics.length > 0 && (
         <div className="h-72">
           <ResponsiveContainer width="100%" height={288}>
             <LineChart data={chartData} margin={{ top: 8, right: 12, bottom: 4, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(28,23,18,0.10)" />
               <XAxis
                 dataKey="name"
-                tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }}
-                axisLine={{ stroke: "rgba(255,255,255,0.1)" }}
+                tick={{ fill: "#3A322A", fontSize: 10 }}
+                axisLine={{ stroke: "rgba(28,23,18,0.14)" }}
                 tickLine={false}
                 interval="preserveStartEnd"
                 angle={-18}
@@ -3330,20 +3339,21 @@ function H2HTrendChart({
                 height={56}
               />
               <YAxis
-                tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }}
-                axisLine={{ stroke: "rgba(255,255,255,0.1)" }}
+                tick={{ fill: "#3A322A", fontSize: 10 }}
+                axisLine={{ stroke: "rgba(28,23,18,0.14)" }}
                 tickLine={false}
                 width={36}
               />
               <Tooltip
                 contentStyle={{
-                  background: "#1a1a24",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  borderRadius: 8,
+                  background: "#FBF8F0",
+                  border: "1px solid rgba(28,23,18,0.14)",
+                  borderRadius: 2,
                   fontSize: 12,
-                  color: "#fff",
+                  color: "#1C1712",
+                  boxShadow: "none",
                 }}
-                labelStyle={{ color: "rgba(255,255,255,0.5)", marginBottom: 4 }}
+                labelStyle={{ color: "#3A322A", marginBottom: 4 }}
               />
               <Legend
                 wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
@@ -3354,9 +3364,9 @@ function H2HTrendChart({
                   type="monotone"
                   dataKey={cfg.dataKeyA}
                   name={`${nameA} ${cfg.label}`}
-                  stroke="#7020B0"
+                  stroke="#7E2A1E"
                   strokeWidth={2}
-                  dot={{ r: 3, fill: "#7020B0" }}
+                  dot={{ r: 3, fill: "#7E2A1E" }}
                   activeDot={{ r: 5 }}
                   connectNulls
                   strokeDasharray={lineConfigs.length > 1 ? lineConfigs.indexOf(cfg) === 0 ? undefined : `${(lineConfigs.indexOf(cfg) + 1) * 4} ${(lineConfigs.indexOf(cfg) + 1) * 2}` : undefined}
@@ -3368,9 +3378,9 @@ function H2HTrendChart({
                   type="monotone"
                   dataKey={cfg.dataKeyB}
                   name={`${nameB} ${cfg.label}`}
-                  stroke="#D4AF37"
+                  stroke="#2F5A6E"
                   strokeWidth={2}
-                  dot={{ r: 3, fill: "#D4AF37" }}
+                  dot={{ r: 3, fill: "#2F5A6E" }}
                   activeDot={{ r: 5 }}
                   connectNulls
                   strokeDasharray={lineConfigs.length > 1 ? lineConfigs.indexOf(cfg) === 0 ? undefined : `${(lineConfigs.indexOf(cfg) + 1) * 4} ${(lineConfigs.indexOf(cfg) + 1) * 2}` : undefined}
@@ -3394,14 +3404,14 @@ function H2HWinBar({ winsA, winsB, ties }: { winsA: number; winsB: number; ties:
   return (
     <div className="space-y-2">
       <div className="flex justify-between text-sm font-semibold">
-        <span className="text-[#7020B0]">{winsA} wins</span>
-        {ties > 0 && <span className="text-white/40">{ties} ties</span>}
-        <span className="text-[#D4AF37]">{winsB} wins</span>
+        <span className="num text-oxblood">{winsA} wins</span>
+        {ties > 0 && <span className="num text-meta">{ties} ties</span>}
+        <span className="num text-[#2F5A6E]">{winsB} wins</span>
       </div>
-      <div className="flex h-3 overflow-hidden rounded-full bg-white/5">
-        <div className="bg-[#7020B0] transition-all" style={{ width: `${pA}%` }} />
-        <div className="bg-white/20 transition-all" style={{ width: `${pT}%` }} />
-        <div className="bg-[#D4AF37] transition-all" style={{ width: `${pB}%` }} />
+      <div className="flex h-3 overflow-hidden rounded-[2px] bg-sink">
+        <div className="bg-oxblood transition-all" style={{ width: `${pA}%` }} />
+        <div className="bg-[color:var(--isl-hairline-strong)] transition-all" style={{ width: `${pT}%` }} />
+        <div className="bg-[#2F5A6E] transition-all" style={{ width: `${pB}%` }} />
       </div>
     </div>
   );
@@ -3469,8 +3479,8 @@ function H2HSection({
   return (
     <div className="space-y-6">
       {/* Explainer */}
-      <div className="mx-auto max-w-2xl rounded-xl border border-[#7020B0]/20 bg-[#7020B0]/[0.04] px-5 py-4 text-center text-sm leading-relaxed text-white/50">
-        <span className="font-semibold text-white/70">How is this different from Compare?</span>{" "}
+      <div className="mx-auto max-w-2xl rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-5 py-4 text-center text-sm leading-relaxed text-meta">
+        <span className="font-semibold text-ink-2">How is this different from Compare?</span>{" "}
         The Drivers tab compares career stats across <em>all</em> races each driver entered.
         Head-to-Head only counts races where <em>both</em> drivers participated,
         giving you a direct, fair comparison on the same tracks and conditions.
@@ -3479,7 +3489,7 @@ function H2HSection({
       {/* Driver selectors */}
       <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
         <div className="w-full max-w-xs">
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-[#7020B0]">
+          <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-oxblood">
             Driver A
           </label>
           <SearchableSelect
@@ -3490,12 +3500,12 @@ function H2HSection({
           />
         </div>
 
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 text-sm font-bold text-white/40">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[color:var(--isl-hairline)] bg-cream text-sm font-bold text-meta">
           vs
         </div>
 
         <div className="w-full max-w-xs">
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-[#D4AF37]">
+          <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-[#2F5A6E]">
             Driver B
           </label>
           <SearchableSelect
@@ -3512,7 +3522,7 @@ function H2HSection({
         {driverA && driverB && (
           <button
             onClick={() => { const tmp = driverA; setDriverA(driverB); setDriverB(tmp); }}
-            className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/50 transition hover:border-white/20 hover:text-white/80"
+            className="flex items-center gap-1.5 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-3 py-1.5 text-xs font-medium text-meta transition hover:border-[color:var(--isl-hairline-strong)] hover:text-ink"
           >
             <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
@@ -3521,9 +3531,9 @@ function H2HSection({
           </button>
         )}
 
-        <div className="h-5 w-px bg-white/10" />
+        <div className="h-5 w-px bg-[color:var(--isl-hairline)]" />
 
-        <span className="text-xs font-medium uppercase tracking-wider text-white/30">Filter by</span>
+        <span className="text-xs font-medium uppercase tracking-wider text-meta">Filter by</span>
 
         {/* Season multi-select */}
         <div className="w-48">
@@ -3606,7 +3616,7 @@ function H2HSection({
         {activeFilterCount > 0 && (
           <button
             onClick={() => { setSeasonFilters([]); setCircuitFilters([]); setWeatherFilters([]); setFormatFilter(""); setCompetitionFilter(""); setRoundTypeFilter(""); }}
-            className="flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-medium text-white/40 transition hover:text-white/70"
+            className="flex items-center gap-1 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-2.5 py-1 text-[10px] font-medium text-meta transition hover:text-ink"
           >
             Clear all
             <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -3641,11 +3651,11 @@ function H2HSection({
         <div className="space-y-8">
           {/* Header */}
           <div className="text-center">
-            <p className="text-sm text-white/40">
-              <span className="font-semibold text-white/70">{h2h.summary.sharedRaces}</span>{" "}
+            <p className="text-sm text-meta">
+              <span className="num font-semibold text-ink-2">{h2h.summary.sharedRaces}</span>{" "}
               shared race{h2h.summary.sharedRaces !== 1 ? "s" : ""}
               {activeFilterCount > 0 && (
-                <span className="text-white/30"> · {activeFilterLabel}</span>
+                <span className="text-faint"> · {activeFilterLabel}</span>
               )}
             </p>
           </div>
@@ -3687,26 +3697,26 @@ function H2HSection({
           <H2HTrendChart races={h2h.races} driverA={driverA} driverB={driverB} />
 
           {/* Race-by-race table */}
-          <div className="overflow-x-auto rounded-xl border border-white/10 bg-white/[0.02]">
+          <div className="overflow-x-auto rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper">
             <table className="w-full min-w-[820px] text-sm">
-              <thead>
-                <tr className="border-b border-white/10 text-xs uppercase tracking-wider text-white/40">
-                  <th className="px-3 py-3 text-left font-medium" rowSpan={2}>Race</th>
-                  <th className="px-3 py-3 text-left font-medium" rowSpan={2}>Date</th>
+              <thead className="bg-sink">
+                <tr className="border-b border-[color:var(--isl-hairline-strong)] text-xs uppercase tracking-wider text-meta">
+                  <th className="px-3 py-3 text-start font-medium" rowSpan={2}>Race</th>
+                  <th className="px-3 py-3 text-start font-medium" rowSpan={2}>Date</th>
                   <th className="px-3 py-3 text-center font-medium" rowSpan={2}>Season</th>
                   <th className="px-3 py-3 text-center font-medium" rowSpan={2}>League</th>
-                  <th className="border-l border-white/10 px-3 py-2 text-center font-medium" colSpan={2}>Finish</th>
-                  <th className="border-l border-white/10 px-3 py-2 text-center font-medium" colSpan={2}>Grid</th>
-                  <th className="border-l border-white/10 px-3 py-3 text-center font-medium" rowSpan={2}>Better</th>
+                  <th className="border-s border-[color:var(--isl-hairline)] px-3 py-2 text-center font-medium" colSpan={2}>Finish</th>
+                  <th className="border-s border-[color:var(--isl-hairline)] px-3 py-2 text-center font-medium" colSpan={2}>Grid</th>
+                  <th className="border-s border-[color:var(--isl-hairline)] px-3 py-3 text-center font-medium" rowSpan={2}>Better</th>
                 </tr>
-                <tr className="border-b border-white/5 text-[10px] uppercase tracking-wider">
-                  <th className="border-l border-white/10 px-3 py-1 text-center font-medium text-[#7020B0]/70">{driverA.split(" ").pop()}</th>
-                  <th className="px-3 py-1 text-center font-medium text-[#D4AF37]/70">{driverB.split(" ").pop()}</th>
-                  <th className="border-l border-white/10 px-3 py-1 text-center font-medium text-[#7020B0]/70">{driverA.split(" ").pop()}</th>
-                  <th className="px-3 py-1 text-center font-medium text-[#D4AF37]/70">{driverB.split(" ").pop()}</th>
+                <tr className="border-b border-[color:var(--isl-hairline)] text-[10px] uppercase tracking-wider">
+                  <th className="border-s border-[color:var(--isl-hairline)] px-3 py-1 text-center font-medium text-oxblood">{driverA.split(" ").pop()}</th>
+                  <th className="px-3 py-1 text-center font-medium text-[#2F5A6E]">{driverB.split(" ").pop()}</th>
+                  <th className="border-s border-[color:var(--isl-hairline)] px-3 py-1 text-center font-medium text-oxblood">{driverA.split(" ").pop()}</th>
+                  <th className="px-3 py-1 text-center font-medium text-[#2F5A6E]">{driverB.split(" ").pop()}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-[color:var(--isl-hairline)]">
                 {h2h.races.map((race) => {
                   const gridWinner = race.gridA !== null && race.gridB !== null
                     ? race.gridA < race.gridB ? "a" : race.gridB < race.gridA ? "b" : null
@@ -3714,60 +3724,60 @@ function H2HSection({
                   return (
                     <tr
                       key={race.eventId}
-                      className="transition hover:bg-white/[0.03]"
+                      className="transition hover:bg-sink/50"
                     >
-                      <td className="px-3 py-2.5 font-medium text-white/80">
+                      <td className="px-3 py-2.5 font-medium text-ink-2">
                         <button
                           type="button"
                           onClick={() => setResultsEventId(race.eventId)}
-                          className="text-left underline decoration-white/20 underline-offset-2 transition hover:text-[#a855f7] hover:decoration-[#7020B0]/40"
+                          className="text-start underline decoration-[color:var(--isl-hairline-strong)] underline-offset-2 transition hover:text-oxblood hover:decoration-oxblood"
                         >
                           {race.raceName}
                         </button>
                         {race.circuit && race.circuit !== race.raceName && (
-                          <span className="ml-1.5 text-[10px] text-white/30">{race.circuit}</span>
+                          <span className="ms-1.5 text-[10px] text-faint">{race.circuit}</span>
                         )}
                       </td>
-                      <td className="px-3 py-2.5 text-white/50">{race.date}</td>
+                      <td className="num px-3 py-2.5 text-meta">{race.date}</td>
                       <td className="px-3 py-2.5 text-center">
                         {race.season && (
-                          <span className="inline-block rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-semibold text-white/50">
+                          <span className="num inline-block rounded-[2px] bg-sink px-2 py-0.5 text-[10px] font-semibold text-meta">
                             {race.season}
                           </span>
                         )}
                       </td>
                       <td className="px-3 py-2.5 text-center">
                         {race.league && (
-                          <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${
+                          <span className={`inline-block rounded-[2px] px-2 py-0.5 text-[10px] font-semibold uppercase ${
                             race.league.toLowerCase() === "wild"
-                              ? "bg-orange-500/10 text-orange-400"
-                              : "bg-[#7020B0]/10 text-[#9040D0]"
+                              ? "bg-cream text-status-warning"
+                              : "bg-cream text-oxblood"
                           }`}>
                             {race.league}
                           </span>
                         )}
                       </td>
-                      <td className={`border-l border-white/10 px-3 py-2.5 text-center tabular-nums ${race.winner === "a" ? "font-bold text-[#7020B0]" : "text-white/60"}`}>
+                      <td className={`num border-s border-[color:var(--isl-hairline)] px-3 py-2.5 text-center ${race.winner === "a" ? "font-bold text-oxblood" : "text-meta"}`}>
                         {race.statusA && race.finishA === null ? race.statusA : (race.finishA ?? "-")}
                       </td>
-                      <td className={`px-3 py-2.5 text-center tabular-nums ${race.winner === "b" ? "font-bold text-[#D4AF37]" : "text-white/60"}`}>
+                      <td className={`num px-3 py-2.5 text-center ${race.winner === "b" ? "font-bold text-[#2F5A6E]" : "text-meta"}`}>
                         {race.statusB && race.finishB === null ? race.statusB : (race.finishB ?? "-")}
                       </td>
-                      <td className={`border-l border-white/10 px-3 py-2.5 text-center tabular-nums ${gridWinner === "a" ? "font-semibold text-[#7020B0]/80" : "text-white/40"}`}>
+                      <td className={`num border-s border-[color:var(--isl-hairline)] px-3 py-2.5 text-center ${gridWinner === "a" ? "font-semibold text-oxblood" : "text-faint"}`}>
                         {race.gridA ?? "-"}
                       </td>
-                      <td className={`px-3 py-2.5 text-center tabular-nums ${gridWinner === "b" ? "font-semibold text-[#D4AF37]/80" : "text-white/40"}`}>
+                      <td className={`num px-3 py-2.5 text-center ${gridWinner === "b" ? "font-semibold text-[#2F5A6E]" : "text-faint"}`}>
                         {race.gridB ?? "-"}
                       </td>
-                      <td className="border-l border-white/10 px-3 py-2.5 text-center">
+                      <td className="border-s border-[color:var(--isl-hairline)] px-3 py-2.5 text-center">
                         {race.winner === "a" && (
-                          <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#7020B0] shadow-[0_0_6px_rgba(112,32,176,0.5)]" />
+                          <span className="inline-block h-2.5 w-2.5 rounded-full bg-oxblood" />
                         )}
                         {race.winner === "b" && (
-                          <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#D4AF37] shadow-[0_0_6px_rgba(212,175,55,0.5)]" />
+                          <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#2F5A6E]" />
                         )}
                         {race.winner === "tie" && (
-                          <span className="text-xs text-white/30">—</span>
+                          <span className="text-xs text-faint">—</span>
                         )}
                       </td>
                     </tr>
@@ -3787,7 +3797,7 @@ function H2HSection({
         const ytUrl = eventObj?.youtube_url;
         return (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60"
             onClick={() => setResultsEventId(null)}
           >
             <div
@@ -3796,11 +3806,11 @@ function H2HSection({
             >
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <h3 className="font-display text-sm font-semibold text-white/80 md:text-base">
+                  <h3 className="font-display text-sm font-semibold text-ink md:text-base">
                     {meta?.raceName ?? resultsEventId}
                   </h3>
                   {meta?.season && (
-                    <span className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-semibold text-white/40">
+                    <span className="num rounded-[2px] bg-cream px-2 py-0.5 text-[10px] font-semibold text-meta">
                       {meta.season}
                     </span>
                   )}
@@ -3809,7 +3819,7 @@ function H2HSection({
                       href={ytUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1 text-[11px] font-medium text-red-400 transition hover:bg-red-500/20"
+                      className="inline-flex items-center gap-1.5 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-3 py-1 text-[11px] font-medium text-status-danger transition hover:bg-sink"
                     >
                       <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M23.5 6.2a3 3 0 00-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 00.5 6.2 31.9 31.9 0 000 12a31.9 31.9 0 00.5 5.8 3 3 0 002.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 002.1-2.1A31.9 31.9 0 0024 12a31.9 31.9 0 00-.5-5.8zM9.5 15.6V8.4l6.3 3.6-6.3 3.6z" />
@@ -3820,22 +3830,22 @@ function H2HSection({
                 </div>
                 <button
                   onClick={() => setResultsEventId(null)}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/80 transition hover:text-white"
+                  className="flex h-8 w-8 items-center justify-center rounded-full border border-[color:var(--isl-hairline-strong)] bg-paper text-ink transition hover:text-oxblood"
                 >
                   ×
                 </button>
               </div>
 
               {resultRows.length > 0 ? (
-                <div className="max-h-[85vh] overflow-auto rounded-2xl border border-white/10 bg-[#0B0B0E] p-3 shadow-[0_0_30px_rgba(0,0,0,0.4)]">
+                <div className="max-h-[85vh] overflow-auto rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-3">
                   <RaceResultsTable
                     results={resultRows}
                     caption={`${meta?.raceName ?? resultsEventId} — Race Results`}
                   />
                 </div>
               ) : (
-                <div className="flex items-center justify-center rounded-2xl border border-white/10 bg-[#0B0B0E] py-16">
-                  <p className="text-sm text-white/50">Results not available yet.</p>
+                <div className="flex items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper py-16">
+                  <p className="text-sm text-meta">Results not available yet.</p>
                 </div>
               )}
             </div>
