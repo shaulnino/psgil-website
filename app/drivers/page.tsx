@@ -194,7 +194,7 @@ export default async function DriversPage() {
   }
 
   return (
-    <main className="bg-[#0B0B0E] text-white">
+    <main className="bg-bone text-ink">
       <Section
         title="Drivers"
         description="Official ISL roster: teams, drivers, and profiles — updated as the season progresses."

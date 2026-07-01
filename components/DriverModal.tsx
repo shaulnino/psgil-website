@@ -219,7 +219,7 @@ function Tooltip({ text, children, triggerClassName, wide }: { text: React.React
         <div
           ref={tooltipRef}
           style={{ top: pos.top, left: pos.left }}
-          className={`pointer-events-none absolute z-30 ${wide ? "w-[280px]" : "w-[200px]"} rounded-lg border border-white/10 bg-[#1a1a1f] px-3 py-2 text-xs leading-relaxed text-white/80 shadow-lg ${
+          className={`pointer-events-none absolute z-30 ${wide ? "w-[280px]" : "w-[200px]"} rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2 text-xs leading-relaxed text-ink ${
             pos.above ? "-translate-y-full" : ""
           }`}
         >
@@ -228,8 +228,8 @@ function Tooltip({ text, children, triggerClassName, wide }: { text: React.React
           <div
             className={`absolute left-1/2 -translate-x-1/2 border-[5px] border-transparent ${
               pos.above
-                ? "top-full border-t-[#1a1a1f]"
-                : "bottom-full border-b-[#1a1a1f]"
+                ? "top-full border-t-[color:var(--isl-paper)]"
+                : "bottom-full border-b-[color:var(--isl-paper)]"
             }`}
           />
         </div>,
@@ -458,7 +458,7 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[color:var(--isl-ink)]/70"
       onClick={onClose}
     >
       {/* Modal wrapper – tooltip portal target (no overflow clipping) */}
@@ -470,7 +470,7 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
         <button
           onClick={onClose}
           aria-label="Close driver profile"
-          className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/80 transition hover:border-[#D4AF37]/60 hover:text-white"
+          className="absolute end-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper text-xl text-ink-2 transition-colors hover:border-ink hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
         >
           ×
         </button>
@@ -478,14 +478,14 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
         {/* Scrollable content */}
         <div
           ref={setScrollEl}
-          className="max-h-[85vh] overflow-y-auto rounded-2xl border border-[#D4AF37]/30 bg-[#0B0B0E] p-6 shadow-[0_0_30px_rgba(0,0,0,0.4),0_0_60px_rgba(212,175,55,0.1)]"
+          className="max-h-[85vh] overflow-y-auto rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-6"
         >
           <TooltipPortalContext.Provider
             value={{ container: portalEl, scrollContainer: scrollEl }}
           >
             {/* ---- Header ---- */}
             <div className="grid gap-6 md:grid-cols-[180px_1fr]">
-              <div className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl border border-white/10 bg-black/60">
+              <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream">
                 <Image
                   src={photoSrc}
                   alt={driver.name}
@@ -497,13 +497,13 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
               </div>
               <div>
                 <div className="flex flex-wrap items-center gap-3">
-                  <h2 className="font-display text-2xl font-semibold text-white">{driver.name}</h2>
+                  <h2 className="font-display font-bold tracking-[0.005em] leading-[1.05] text-2xl text-ink">{driver.name}</h2>
                   {driver.number && (
-                    <span className="inline-flex items-center rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-3 py-0.5 text-sm font-semibold text-[#D4AF37]">
+                    <span className="num inline-flex items-center rounded-[2px] border border-[color:var(--isl-hairline-strong)] bg-cream px-3 py-0.5 text-sm font-semibold text-ink">
                       #{driver.number}
                     </span>
                   )}
-                  <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.2em] text-white/60">
+                  <span className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-3 py-1 text-xs uppercase tracking-[0.2em] text-meta">
                     {driver.role === "reserve" ? "Reserve" : "Main"}
                   </span>
                   {/* ---- Achievement icons ---- */}
@@ -512,7 +512,7 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
                       {achievements.map((ach, i) => (
                         <Tooltip key={i} text={ach.tooltip}>
                           <span
-                            className="flex min-h-[26px] min-w-[26px] cursor-help items-center justify-center rounded-md border border-white/10 bg-white/5 px-0.5 transition hover:bg-white/10"
+                            className="flex min-h-[26px] min-w-[26px] cursor-help items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-0.5 transition-colors hover:border-ink"
                             aria-label={ach.ariaLabel}
                             role="img"
                           >
@@ -524,25 +524,25 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
                   )}
                 </div>
                 {driver.about && (
-                  <p className="mt-4 text-sm text-white/60">{driver.about}</p>
+                  <p className="mt-4 text-sm text-ink-2">{driver.about}</p>
                 )}
 
                 {/* ---- League Standing (inline under About) ---- */}
                 {(driver.league_rank_main || driver.league_rank_wild) && (
                   <div className="mt-4 flex items-center gap-4">
-                    <h4 className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50">
+                    <h4 className="font-isl-body text-xs font-semibold uppercase tracking-[0.2em] text-meta">
                       League Standing
                     </h4>
                     <div className="flex items-center gap-3">
-                      <span className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs">
-                        <span className="text-white/60">Main</span>
-                        <span className="font-semibold text-[#D4AF37]">
+                      <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-3 py-1.5 text-xs">
+                        <span className="text-meta">Main</span>
+                        <span className="num font-semibold text-ink">
                           {driver.league_rank_main ? `#${driver.league_rank_main}` : "—"}
                         </span>
                       </span>
-                      <span className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs">
-                        <span className="text-white/60">Wild</span>
-                        <span className="font-semibold text-[#D4AF37]">
+                      <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-3 py-1.5 text-xs">
+                        <span className="text-meta">Wild</span>
+                        <span className="num font-semibold text-ink">
                           {driver.league_rank_wild ? `#${driver.league_rank_wild}` : "—"}
                         </span>
                       </span>
@@ -555,15 +555,15 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
             {/* ---- Quick Stats + Toggle ---- */}
             {earnedRewardStats.length > 0 && (
               <div className="mt-8">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-white/60">
+                <h3 className="font-isl-body text-sm font-semibold uppercase tracking-[0.2em] text-brass-ink">
                   Records & Awards
                 </h3>
-                <div className="mt-3 rounded-xl border border-white/10 bg-white/5 px-4 py-2">
-                  <ul className="divide-y divide-white/10">
+                <div className="mt-3 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-4 py-2">
+                  <ul className="divide-y divide-[color:var(--isl-hairline)]">
                     {earnedRewardStats.map((item) => (
                       <li key={item.label} className="flex items-center justify-between py-1.5 text-sm">
                         <Tooltip text={item.tooltip}>
-                          <span className="inline-flex cursor-help items-center gap-2 text-white/75">
+                          <span className="inline-flex cursor-help items-center gap-2 text-ink-2">
                             <span className="inline-flex h-4 w-4 items-center justify-center">
                               {getAwardIcon(item.awardCode, 14, item.iconCompetition)}
                             </span>
@@ -577,7 +577,7 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
                               : "No seasons found"
                           }
                         >
-                          <span className="cursor-help font-display text-sm font-semibold text-[#D4AF37]">
+                          <span className="num cursor-help font-display text-sm font-semibold text-brass-ink">
                             {item.value}
                           </span>
                         </Tooltip>
@@ -594,17 +594,17 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   {/* Left: title + events badge */}
                   <div className="flex items-center gap-4">
-                    <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-white/60">
+                    <h3 className="font-isl-body text-sm font-semibold uppercase tracking-[0.2em] text-meta">
                       Quick stats
                     </h3>
                     {getEventsCount(driver, statMode, compMode) && (
-                      <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-2.5 py-0.5">
+                      <div className="flex items-center gap-2 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-2.5 py-0.5">
                         <Tooltip text="Total number of race events the driver participated in (Regular Races + 25% Races + Sprint Races combined).">
-                          <span className="cursor-help text-xs text-white/60">
+                          <span className="cursor-help text-xs text-meta">
                             Race Events
                           </span>
                         </Tooltip>
-                        <span className="font-semibold text-[#D4AF37]">
+                        <span className="num font-semibold text-ink">
                           {getEventsCount(driver, statMode, compMode) || "—"}
                         </span>
                       </div>
@@ -614,14 +614,14 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
                   {/* Right: two toggle groups */}
                   <div className="flex flex-wrap items-center gap-2">
                     {/* Time scope */}
-                    <div className="flex rounded-lg border border-white/10 bg-white/5 p-1">
+                    <div className="flex rounded-[2px] border border-[color:var(--isl-hairline)] bg-sink p-1">
                       {(["alltime", "season"] as StatMode[]).map((m) => (
                         <button
                           key={m}
                           type="button"
                           onClick={() => setStatMode(m)}
-                          className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${
-                            statMode === m ? "bg-[#7020B0] text-white" : "text-white/60 hover:text-white"
+                          className={`rounded-[2px] px-3 py-1.5 text-xs font-medium transition-colors ${
+                            statMode === m ? "bg-ink text-bone" : "text-ink-2 hover:text-ink"
                           }`}
                         >
                           {m === "alltime" ? "All-time" : (currentSeasonLabel || "Season")}
@@ -629,14 +629,14 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
                       ))}
                     </div>
                     {/* Competition scope */}
-                    <div className="flex rounded-lg border border-white/10 bg-white/5 p-1">
+                    <div className="flex rounded-[2px] border border-[color:var(--isl-hairline)] bg-sink p-1">
                       {(["all", "main", "wild"] as CompMode[]).map((c) => (
                         <button
                           key={c}
                           type="button"
                           onClick={() => setCompMode(c)}
-                          className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${
-                            compMode === c ? "bg-[#7020B0] text-white" : "text-white/60 hover:text-white"
+                          className={`rounded-[2px] px-3 py-1.5 text-xs font-medium transition-colors ${
+                            compMode === c ? "bg-ink text-bone" : "text-ink-2 hover:text-ink"
                           }`}
                         >
                           {c === "all" ? "All" : c === "main" ? "Main" : "Wild"}
@@ -652,19 +652,19 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
                       const value = hasCompStats ? getStatValue(driver, stat.key, statMode, compMode) : undefined;
                       const rank = getStatRank(driver, stat.key, statMode, compMode);
                       return (
-                        <Tooltip key={stat.key} text={<><p>{stat.tooltipDesc}</p><p className="mt-1.5 text-white/50">{getRankExplanation(statMode, compMode)}</p></>} triggerClassName="block" wide>
+                        <Tooltip key={stat.key} text={<><p>{stat.tooltipDesc}</p><p className="mt-1.5 text-meta">{getRankExplanation(statMode, compMode)}</p></>} triggerClassName="block" wide>
                           <div
-                            className={`relative cursor-help rounded-xl border border-white/10 bg-white/5 px-4 py-3 ${!hasCompStats ? "opacity-40" : ""}`}
+                            className={`relative cursor-help rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-4 py-3 ${!hasCompStats ? "opacity-40" : ""}`}
                           >
                             {rank && (
-                              <span className="absolute right-2 top-2 text-xs font-medium text-[#D4AF37]/80">
+                              <span className="num absolute end-2 top-2 text-xs font-medium text-meta">
                                 #{rank}
                               </span>
                             )}
-                            <p className="text-xs uppercase tracking-[0.2em] text-white/50">
+                            <p className="text-xs uppercase tracking-[0.2em] text-meta">
                               {stat.label}
                             </p>
-                            <p className="font-display text-lg font-semibold text-white">
+                            <p className="num font-display text-lg font-semibold text-ink">
                               {formatStatValue(value, stat.isDecimal)}
                             </p>
                           </div>
@@ -679,7 +679,7 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
             {/* ---- Driver Ratings ---- */}
             {hasAnyRatings && (
               <div className="mt-8">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-white/60">
+                <h3 className="font-isl-body text-sm font-semibold uppercase tracking-[0.2em] text-meta">
                   Driver Ratings
                 </h3>
                 <div className="mt-4 space-y-3">
@@ -696,30 +696,28 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
                         <div className="flex items-center justify-between text-sm">
                           <div className="flex items-center gap-2">
                             <Tooltip text={rating.tooltip}>
-                              <span className="cursor-help text-white/70">
+                              <span className="cursor-help text-ink-2">
                                 {rating.label}
                               </span>
                             </Tooltip>
                             {rank && (
-                              <span className="text-xs font-medium text-[#D4AF37]/80">
+                              <span className="num text-xs font-medium text-meta">
                                 #{rank}
                               </span>
                             )}
                           </div>
                           <span
-                            className={`font-semibold ${
-                              hasValue ? "text-[#D4AF37]" : "text-white/30"
+                            className={`num font-semibold ${
+                              hasValue ? "text-ink" : "text-faint"
                             }`}
                           >
                             {hasValue ? numValue : "—"}
                           </span>
                         </div>
-                        <div className="mt-2 h-2 overflow-hidden rounded-full border border-white/10 bg-white/5">
+                        <div className="mt-2 h-2 overflow-hidden rounded-[2px] border border-[color:var(--isl-hairline)] bg-sink">
                           <div
-                            className={`h-full rounded-full transition-all duration-300 ${
-                              hasValue
-                                ? "bg-gradient-to-r from-[#7020B0] to-[#9030D0]"
-                                : "bg-white/10"
+                            className={`h-full rounded-[2px] transition-all duration-300 ${
+                              hasValue ? "bg-oxblood" : "bg-transparent"
                             }`}
                             style={{ width: hasValue ? `${width}%` : "0%" }}
                           />
@@ -734,7 +732,7 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
             <div className="mt-8 flex justify-center">
               <LoadingLink
                 href={`/stats?driver=${encodeURIComponent(driver.name)}`}
-                className="inline-flex items-center gap-2 rounded-lg border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-5 py-2.5 text-sm font-semibold text-[#D4AF37] transition hover:bg-[#D4AF37]/20 hover:border-[#D4AF37]/50"
+                className="inline-flex items-center gap-2 rounded-[2px] border border-[color:var(--isl-hairline-strong)] bg-transparent px-5 py-2.5 text-sm font-semibold uppercase tracking-[0.08em] text-ink transition-colors hover:border-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
                 showLoadingText
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

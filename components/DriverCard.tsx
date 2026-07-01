@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import type { Driver, Team } from "@/lib/driversData";
 import { getTeamColor } from "@/lib/driversData";
@@ -17,24 +16,24 @@ function isRemote(src?: string) {
   return !!src && src.startsWith("http");
 }
 
-const GOLD_ACCENT = "#D4AF37";
-
 export default function DriverCard({ driver, team, placeholderSrc, onSelect }: DriverCardProps) {
   const photoSrc = driver.photo_url || placeholderSrc;
   const teamColor = getTeamColor(team.team_key);
-  const [hovered, setHovered] = useState(false);
 
   return (
     <button
       type="button"
       onClick={() => onSelect(driver, team)}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{ borderColor: hovered ? GOLD_ACCENT : teamColor }}
-      className="group flex w-full flex-col overflow-hidden rounded-2xl border-2 bg-white/5 text-left transition-colors duration-200 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7020B0]/60"
+      className="group flex w-full flex-col overflow-hidden rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream text-start transition-colors duration-200 hover:border-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-oxblood/60"
     >
       {/* Image area — shorter aspect ratio so the card is more compact */}
-      <div className="relative aspect-[5/5] w-full overflow-hidden bg-[#0B0B0E]">
+      <div className="relative aspect-[5/5] w-full overflow-hidden border-b border-[color:var(--isl-hairline)] bg-sink">
+        {/* Team-color accent: a short bar pinned to the start edge */}
+        <span
+          aria-hidden
+          className="absolute inset-y-0 start-0 z-10 w-[3px]"
+          style={{ backgroundColor: teamColor }}
+        />
         <Image
           src={photoSrc}
           alt={driver.name || "Driver"}
@@ -47,13 +46,13 @@ export default function DriverCard({ driver, team, placeholderSrc, onSelect }: D
       </div>
       {/* Name bar — more prominent */}
       <div className="flex items-center gap-2 px-4 py-3">
-        <p className="font-display text-lg font-bold leading-tight text-white truncate">
+        <p className="font-display text-lg font-bold leading-tight text-ink truncate">
           {driver.name}
         </p>
         <AchievementBadgeList driver={driver} iconSize={14} />
         <span className="flex-1" />
         {driver.number && (
-          <span className="inline-flex shrink-0 items-center rounded-full border border-[#D4AF37]/40 bg-[#D4AF37]/15 px-2.5 py-0.5 text-xs font-bold text-[#D4AF37]">
+          <span className="num inline-flex shrink-0 items-center rounded-[2px] border border-[color:var(--isl-hairline-strong)] bg-paper px-2.5 py-0.5 text-xs font-bold text-ink">
             #{driver.number}
           </span>
         )}
