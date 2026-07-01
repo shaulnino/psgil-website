@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import confetti from "canvas-confetti";
+import { buttonVariants } from "@/components/ui/button";
 
 type FormMode = "signup" | "question";
 
@@ -40,14 +41,14 @@ export default function SuccessModal({ mode, open, onClose }: SuccessModalProps)
         angle: 60,
         spread: 55,
         origin: { x: 0, y: 0.7 },
-        colors: ["#7020B0", "#D4AF37", "#ffffff", "#a855f7"],
+        colors: ["#6b1f28", "#8a6a3b", "#f4efe6", "#1a1a1a"],
       });
       confetti({
         particleCount: 3,
         angle: 120,
         spread: 55,
         origin: { x: 1, y: 0.7 },
-        colors: ["#7020B0", "#D4AF37", "#ffffff", "#a855f7"],
+        colors: ["#6b1f28", "#8a6a3b", "#f4efe6", "#1a1a1a"],
       });
       if (Date.now() < end) requestAnimationFrame(frame);
     };
@@ -87,22 +88,22 @@ export default function SuccessModal({ mode, open, onClose }: SuccessModalProps)
       ref={dialogRef}
       aria-labelledby="success-modal-title"
       onClick={handleBackdropClick}
-      className="fixed inset-0 z-50 m-auto max-w-md rounded-2xl border border-white/10 bg-[#0e0e12] p-0 text-white shadow-[0_0_60px_rgba(112,32,176,0.25)] backdrop:bg-black/60 backdrop:backdrop-blur-sm open:animate-[modal-pop_0.25s_ease-out]"
+      className="fixed inset-0 z-50 m-auto max-w-md rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-0 text-ink backdrop:bg-[color:var(--isl-ink)]/60 open:animate-[f1-rise_0.5s_ease-out]"
     >
       <div className="flex flex-col items-center gap-4 px-6 py-8 text-center sm:px-8 sm:py-10">
         <h2
           id="success-modal-title"
-          className="text-xl font-bold tracking-tight sm:text-2xl"
+          className="font-display font-bold tracking-[0.005em] leading-[1.05] text-xl text-ink sm:text-2xl"
         >
           {copy.title}
         </h2>
 
-        <p className="max-w-xs text-sm leading-relaxed text-white/70">
+        <p className="max-w-xs text-sm leading-relaxed text-ink-2">
           {copy.body}
         </p>
 
         {copy.note && (
-          <p className="max-w-xs text-xs leading-relaxed text-white/40">
+          <p className="max-w-xs text-xs leading-relaxed text-meta">
             {copy.note}
           </p>
         )}
@@ -111,7 +112,7 @@ export default function SuccessModal({ mode, open, onClose }: SuccessModalProps)
           ref={btnRef}
           type="button"
           onClick={onClose}
-          className="mt-2 inline-flex items-center justify-center rounded-full bg-[#7020B0] px-8 py-2.5 text-sm font-semibold text-white shadow-[0_0_20px_rgba(112,32,176,0.35)] transition hover:-translate-y-0.5 hover:shadow-[0_0_28px_rgba(112,32,176,0.6)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7020B0]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0e0e12]"
+          className={`${buttonVariants({ variant: "primary", size: "md" })} mt-2`}
         >
           {copy.button}
         </button>

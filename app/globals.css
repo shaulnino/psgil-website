@@ -224,122 +224,9 @@ body {
   color: var(--isl-bone);
 }
 
-@keyframes hero-zoom {
-  from {
-    transform: scale(1);
-  }
-  to {
-    transform: scale(1.03);
-  }
-}
-
-@keyframes hero-glide {
-  0% {
-    transform: translateX(-30%) translateY(0);
-    opacity: 0;
-  }
-  20%,
-  80% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateX(30%) translateY(0);
-    opacity: 0;
-  }
-}
-
-@keyframes logo-fade {
-  0% {
-    opacity: 0;
-    transform: scale(0.98);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes logo-breathe {
-  0%,
-  100% {
-    opacity: 0.5;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.9;
-    transform: scale(1.04);
-  }
-}
-
-@keyframes upcoming-pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.4;
-  }
-}
-
-@keyframes live-gold-flash {
-  0%,
-  100% {
-    border-color: rgba(212, 175, 55, 0.3);
-    box-shadow: 0 0 8px rgba(212, 175, 55, 0.1);
-  }
-  50% {
-    border-color: rgba(212, 175, 55, 0.9);
-    box-shadow: 0 0 24px rgba(212, 175, 55, 0.3), 0 0 48px rgba(212, 175, 55, 0.1);
-  }
-}
-
-@keyframes live-dot-pulse {
-  0%,
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.5;
-    transform: scale(1.3);
-  }
-}
-
-@keyframes modal-pop {
-  from {
-    opacity: 0;
-    transform: scale(0.92) translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-@keyframes steward-fade-up {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes steward-gold-sheen {
-  0% {
-    transform: translateX(-120%);
-    opacity: 0;
-  }
-  35% {
-    opacity: 0.35;
-  }
-  100% {
-    transform: translateX(140%);
-    opacity: 0;
-  }
-}
+/* Legacy PSGiL-era keyframes (hero-zoom/glide, logo-fade/breathe, upcoming-pulse,
+   live-gold-flash, live-dot-pulse, modal-pop, steward-fade-up, steward-gold-sheen)
+   removed in Phase 6 — replaced by the 4 approved f1-rise / f1-tick keyframes. */
 
 /* ISL editorial steward surfaces (light): flat cream panels, hairline borders,
    an oxblood "on-the-record" top rule. No gradients/shadows/sheen. */
@@ -505,4 +392,45 @@ body {
 .news-prose pre code {
   background: transparent;
   padding: 0;
+}
+
+/* ── Editorial photography treatment (Phase 6) — OPT-IN.
+   Apply .isl-editorial-photo to an <img> (or image wrapper) for the
+   high-contrast B&W/desaturated race-programme look. Not applied broadly yet:
+   current posters/thumbnails are placeholder media with baked-in old branding
+   that will be replaced; apply this when the real ISL photography lands. */
+.isl-editorial-photo {
+  filter: grayscale(0.85) contrast(1.04);
+  transition: filter 200ms ease;
+}
+.isl-editorial-photo:hover {
+  filter: grayscale(0.3) contrast(1.02);
+}
+
+/* ── Print: an editorial "race programme" printout — ink on white paper,
+   chrome hidden (sticky header, footer, fixed widgets/modals). Standings and
+   schedule tables print cleanly. */
+@media print {
+  header,
+  footer,
+  .fixed {
+    display: none !important;
+  }
+  body {
+    background: #ffffff;
+    color: #000000;
+  }
+  a {
+    color: #000000;
+    text-decoration: underline;
+  }
+  main {
+    padding-block: 0 !important;
+  }
+  .steward-panel,
+  tr,
+  img,
+  table {
+    break-inside: avoid;
+  }
 }

@@ -9,6 +9,10 @@ const nextConfig: NextConfig = {
   },
   images: {
     qualities: [100, 75],
+    // Modern formats for the editorial imagery (Phase 6).
+    formats: ["image/avif", "image/webp"],
+    deviceSizes: [360, 480, 640, 768, 1024, 1240, 1440, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 240, 384],
   },
 };
 

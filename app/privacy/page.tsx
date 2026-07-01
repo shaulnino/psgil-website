@@ -8,13 +8,13 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <main className="bg-[#0B0B0E] text-white">
+    <main className="bg-bone text-ink-2">
       <Section
         title="Privacy Policy"
         description="Last updated: February 19, 2026"
         pageHeader
       >
-        <div className="space-y-6 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm leading-7 text-white/80 md:p-8 md:text-base">
+        <div className="space-y-6 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-6 text-sm leading-7 text-ink-2 md:p-8 md:text-base">
           <p>
             F1 Israeli Super League (ISL) respects your privacy.
             This page explains what information we collect, how we use it, and
@@ -22,7 +22,7 @@ export default function PrivacyPage() {
           </p>
 
           <section className="space-y-2">
-            <h2 className="font-display text-xl text-[#D4AF37]">
+            <h2 className="font-display font-bold tracking-[0.005em] leading-[1.05] text-xl text-ink">
               Information We Collect
             </h2>
             <ul className="list-disc space-y-1 pl-5">
@@ -39,7 +39,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="font-display text-xl text-[#D4AF37]">
+            <h2 className="font-display font-bold tracking-[0.005em] leading-[1.05] text-xl text-ink">
               How We Use Information
             </h2>
             <ul className="list-disc space-y-1 pl-5">
@@ -53,7 +53,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="font-display text-xl text-[#D4AF37]">
+            <h2 className="font-display font-bold tracking-[0.005em] leading-[1.05] text-xl text-ink">
               Data Sharing
             </h2>
             <p>
@@ -64,7 +64,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="font-display text-xl text-[#D4AF37]">
+            <h2 className="font-display font-bold tracking-[0.005em] leading-[1.05] text-xl text-ink">
               Data Retention
             </h2>
             <p>
@@ -74,23 +74,23 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="font-display text-xl text-[#D4AF37]">
+            <h2 className="font-display font-bold tracking-[0.005em] leading-[1.05] text-xl text-ink">
               Your Rights and Deletion Requests
             </h2>
             <p>
               To request access, correction, or deletion of personal data,
-              contact us at <a className="text-[#d7b3ff] hover:text-white" href="mailto:psgileague@gmail.com">psgileague@gmail.com</a>.
+              contact us at <a className="text-oxblood hover:text-oxblood-deep" href="mailto:psgileague@gmail.com">psgileague@gmail.com</a>.
             </p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="font-display text-xl text-[#D4AF37]">
+            <h2 className="font-display font-bold tracking-[0.005em] leading-[1.05] text-xl text-ink">
               Contact
             </h2>
             <p>
               For privacy questions, email{" "}
               <a
-                className="text-[#d7b3ff] hover:text-white"
+                className="text-oxblood hover:text-oxblood-deep"
                 href="mailto:psgileague@gmail.com"
               >
                 psgileague@gmail.com

@@ -87,10 +87,10 @@ function MiniFlag({ code }: { code: string }) {
 function CountdownUnit({ value, label }: { value: number; label: string }) {
   return (
     <div className="flex flex-col items-center">
-      <span className="font-display text-lg font-bold leading-none text-white tabular-nums md:text-xl">
+      <span className="num font-display text-lg font-bold leading-none text-ink tabular-nums md:text-xl">
         {String(value).padStart(2, "0")}
       </span>
-      <span className="mt-0.5 text-[10px] uppercase tracking-wider text-white/40">
+      <span className="mt-0.5 text-[10px] uppercase tracking-wider text-meta">
         {label}
       </span>
     </div>
@@ -120,7 +120,7 @@ function WidgetWatchModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[color:var(--isl-ink)]/70"
       onClick={onClose}
     >
       <div
@@ -129,17 +129,17 @@ function WidgetWatchModal({
       >
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#7020B0]/20 px-2.5 py-1 text-xs font-bold uppercase tracking-[0.15em] text-[#a855f7]">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#a855f7]" />
+            <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-oxblood px-2.5 py-1 text-xs font-bold uppercase tracking-[0.15em] text-oxblood">
+              <span className="h-1.5 w-1.5 rounded-full bg-oxblood" />
               Race Broadcast
             </span>
-            <h3 className="font-display text-sm font-semibold text-white/80 md:text-base">
+            <h3 className="font-display text-sm font-semibold text-ink-2 md:text-base">
               {raceName}
             </h3>
           </div>
           <button
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/80 transition hover:text-white"
+            className="flex h-8 w-8 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper text-ink-2 transition-colors hover:border-ink hover:text-ink"
           >
             ×
           </button>
@@ -150,7 +150,7 @@ function WidgetWatchModal({
             href={youtubeUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-medium text-white/50 transition hover:border-white/20 hover:text-white/80"
+            className="inline-flex items-center gap-1.5 rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-1.5 text-[11px] font-medium text-meta transition-colors hover:border-ink hover:text-ink"
           >
             Open on YouTube
           </a>
@@ -230,34 +230,34 @@ export default function NextRaceWidget({ race }: { race: NextRaceData | null }) 
   /* ---------- Minimised pill ---------- */
   if (minimised) {
     return (
-      <div className="fixed bottom-4 right-4 z-40 animate-in fade-in md:bottom-6 md:right-6">
+      <div className="fixed bottom-4 right-4 z-40 animate-in fade-in pb-[env(safe-area-inset-bottom)] md:bottom-6 md:right-6">
         <button
           type="button"
           onClick={() => setMinimised(false)}
-          className={`flex items-center gap-2 rounded-full px-3 py-2 shadow-lg shadow-black/40 backdrop-blur-md transition ${
+          className={`flex items-center gap-2 rounded-[2px] bg-paper px-3 py-2 transition-colors ${
             isLiveNow
-              ? "border-2 border-[#D4AF37]/50 bg-[#0e0e14]/95 animate-[live-gold-flash_2s_ease-in-out_infinite]"
-              : "border border-[#7020B0]/50 bg-[#0e0e14]/95 hover:border-[#7020B0]/80"
+              ? "border border-oxblood"
+              : "border border-[color:var(--isl-hairline-strong)] hover:border-ink"
           }`}
         >
           {isLiveNow ? (
             <>
-              <span className="h-2 w-2 rounded-full bg-[#D4AF37] animate-[live-dot-pulse_1.5s_ease-in-out_infinite]" />
-              <span className="text-sm font-bold uppercase tracking-wider text-[#D4AF37]">LIVE</span>
+              <span className="h-2 w-2 rounded-full bg-oxblood animate-[f1-tick_1s_step-end_infinite]" />
+              <span className="text-sm font-bold uppercase tracking-wider text-oxblood">LIVE</span>
             </>
           ) : (
             <>
-              <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
+              <span className="h-2 w-2 rounded-full bg-status-success" />
               {race.isChampionshipFinale ? (
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 shrink-0 text-[#D4AF37]">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 shrink-0 text-brass-ink">
                   <path fillRule="evenodd" d="M10 1a.75.75 0 0 1 .692.462l1.7 3.644 3.945.576a.75.75 0 0 1 .416 1.279l-2.855 2.783.674 3.93a.75.75 0 0 1-1.088.791L10 12.347l-3.484 1.818a.75.75 0 0 1-1.088-.79l.674-3.931L3.247 6.96a.75.75 0 0 1 .416-1.28l3.945-.575L9.308 1.46A.75.75 0 0 1 10 1Z" clipRule="evenodd" />
                 </svg>
               ) : null}
-              <span className="text-sm font-semibold text-white/80">
+              <span className="text-sm font-semibold text-ink-2">
                 {race.isChampionshipFinale ? "Season Finale" : "Next Race"}
               </span>
               {countdown && (
-                <span className="font-display text-sm font-bold tabular-nums text-[#D4AF37]">
+                <span className="num font-display text-sm font-bold tabular-nums text-ink">
                   {countdown.days > 0 && `${countdown.days}d `}
                   {String(countdown.hours).padStart(2, "0")}:
                   {String(countdown.minutes).padStart(2, "0")}:
@@ -273,14 +273,14 @@ export default function NextRaceWidget({ race }: { race: NextRaceData | null }) 
 
   /* ---------- Full widget ---------- */
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 md:bottom-6 md:left-auto md:right-6 md:w-[340px]">
+    <div className="fixed bottom-0 left-0 right-0 z-40 pb-[env(safe-area-inset-bottom)] md:bottom-6 md:left-auto md:right-6 md:w-[340px]">
       <div
-        className={`border-t shadow-2xl shadow-black/50 backdrop-blur-md md:rounded-2xl md:border ${
+        className={`border-t bg-paper md:rounded-[2px] md:border ${
           isLiveNow
-            ? "border-2 border-[#D4AF37]/50 bg-[#0e0e14]/95 animate-[live-gold-flash_2s_ease-in-out_infinite]"
+            ? "border-oxblood"
             : race.isChampionshipFinale
-              ? "border-[#D4AF37]/40 bg-[#0e0e14]/95 shadow-[0_0_28px_rgba(212,175,55,0.18)]"
-              : "border-[#D4AF37]/20 bg-[#0e0e14]/95 shadow-[0_0_18px_rgba(212,175,55,0.06)]"
+              ? "border-brass"
+              : "border-[color:var(--isl-hairline)]"
         }`}
       >
         {/* Header bar */}
@@ -288,21 +288,21 @@ export default function NextRaceWidget({ race }: { race: NextRaceData | null }) 
           <div className="flex items-center gap-2">
             {isLiveNow ? (
               <>
-                <span className="h-2 w-2 rounded-full bg-[#D4AF37] animate-[live-dot-pulse_1.5s_ease-in-out_infinite]" />
-                <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#D4AF37]">
+                <span className="h-2 w-2 rounded-full bg-oxblood animate-[f1-tick_1s_step-end_infinite]" />
+                <span className="text-xs font-bold uppercase tracking-[0.2em] text-oxblood">
                   LIVE
                 </span>
               </>
             ) : (
               <>
-                <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
-                <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[#D4AF37]/65">
+                <span className="h-2 w-2 rounded-full bg-status-success" />
+                <span className="font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-oxblood">
                   Next Race
                 </span>
               </>
             )}
             {race.isChampionshipFinale && !isLiveNow && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-[#D4AF37]/40 bg-[#D4AF37]/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.15em] text-[#D4AF37]">
+              <span className="inline-flex items-center gap-1 rounded-[2px] border border-brass px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.15em] text-brass-ink">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3 shrink-0">
                   <path fillRule="evenodd" d="M10 1a.75.75 0 0 1 .692.462l1.7 3.644 3.945.576a.75.75 0 0 1 .416 1.279l-2.855 2.783.674 3.93a.75.75 0 0 1-1.088.791L10 12.347l-3.484 1.818a.75.75 0 0 1-1.088-.79l.674-3.931L3.247 6.96a.75.75 0 0 1 .416-1.28l3.945-.575L9.308 1.46A.75.75 0 0 1 10 1Z" clipRule="evenodd" />
                 </svg>
@@ -314,7 +314,7 @@ export default function NextRaceWidget({ race }: { race: NextRaceData | null }) 
             <button
               type="button"
               onClick={() => setMinimised(true)}
-              className="flex h-6 w-6 items-center justify-center rounded-full text-white/40 transition hover:bg-white/10 hover:text-white/70"
+              className="flex h-6 w-6 items-center justify-center rounded-[2px] text-meta transition-colors hover:bg-cream hover:text-ink"
               title="Minimise"
             >
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><line x1="2" y1="6" x2="10" y2="6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
@@ -322,7 +322,7 @@ export default function NextRaceWidget({ race }: { race: NextRaceData | null }) 
             <button
               type="button"
               onClick={handleDismiss}
-              className="flex h-6 w-6 items-center justify-center rounded-full text-white/40 transition hover:bg-white/10 hover:text-white/70"
+              className="flex h-6 w-6 items-center justify-center rounded-[2px] text-meta transition-colors hover:bg-cream hover:text-ink"
               title="Dismiss until next race"
             >
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><line x1="2" y1="2" x2="10" y2="10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /><line x1="10" y1="2" x2="2" y2="10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
@@ -335,8 +335,8 @@ export default function NextRaceWidget({ race }: { race: NextRaceData | null }) 
           <div className="flex gap-3">
             {/* Poster thumbnail */}
             {race.posterImage && (
-              <div className={`relative h-[72px] w-[52px] shrink-0 overflow-hidden rounded-lg border bg-white/5 ${
-                isLiveNow ? "border-[#D4AF37]/30" : "border-white/10"
+              <div className={`relative h-[72px] w-[52px] shrink-0 overflow-hidden rounded-[2px] border bg-cream ${
+                isLiveNow ? "border-oxblood" : "border-[color:var(--isl-hairline)]"
               }`}>
                 <Image
                   src={race.posterImage}
@@ -355,8 +355,8 @@ export default function NextRaceWidget({ race }: { race: NextRaceData | null }) 
                 <MiniFlag code={race.countryCode} />
                 <h4 className={`truncate font-display text-base font-semibold transition-colors ${
                   isLiveNow
-                    ? "text-[#D4AF37]"
-                    : "text-white group-hover:text-[#D4AF37]"
+                    ? "text-oxblood"
+                    : "text-ink group-hover:text-oxblood"
                 }`}>
                   {race.raceName}
                 </h4>
@@ -368,11 +368,7 @@ export default function NextRaceWidget({ race }: { race: NextRaceData | null }) 
                       e.stopPropagation();
                       setShowWatch(true);
                     }}
-                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-white transition ${
-                      isLiveNow
-                        ? "bg-[#D4AF37]/80 hover:bg-[#D4AF37] hover:shadow-[0_0_10px_rgba(212,175,55,0.5)]"
-                        : "bg-[#7020B0]/80 hover:bg-[#7020B0] hover:shadow-[0_0_10px_rgba(112,32,176,0.5)]"
-                    }`}
+                    className="flex h-5 w-5 shrink-0 items-center justify-center rounded-[2px] bg-oxblood text-bone transition-colors hover:bg-oxblood-deep"
                     title={isLiveNow ? "Watch Live" : "Watch the Race"}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-2.5 w-2.5">
@@ -383,23 +379,23 @@ export default function NextRaceWidget({ race }: { race: NextRaceData | null }) 
               </div>
 
               {race.track && (
-                <p className="mt-0.5 truncate text-xs text-[#D4AF37]/45">
+                <p className="mt-0.5 truncate text-xs text-meta">
                   {race.track}
                 </p>
               )}
 
               <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
-                <span className="text-white/50">
-                  Round {race.raceNumber}
+                <span className="text-ink-2">
+                  Round <span className="num">{race.raceNumber}</span>
                 </span>
-                <span className={`rounded-full px-1.5 py-px font-semibold uppercase leading-none tracking-wider ${
+                <span className={`rounded-[2px] px-1.5 py-px font-semibold uppercase leading-none tracking-wider ${
                   race.league.toLowerCase() === "main"
-                    ? "border border-[#7020B0]/40 bg-[#7020B0]/20 text-[#a855f7]"
-                    : "border border-[#D4AF37]/30 bg-[#D4AF37]/15 text-[#D4AF37]"
+                    ? "border border-oxblood text-oxblood"
+                    : "border border-brass text-brass-ink"
                 }`}>
                   {race.league}
                 </span>
-                <span className="text-white/40">
+                <span className="num text-meta">
                   {race.date}
                   {race.startTime && ` · ${race.startTime}`}
                 </span>
@@ -409,20 +405,20 @@ export default function NextRaceWidget({ race }: { race: NextRaceData | null }) 
 
           {/* Countdown OR Live indicator */}
           {isLiveNow ? (
-            <div className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 px-3 py-2.5">
-              <span className="h-2.5 w-2.5 rounded-full bg-[#D4AF37] animate-[live-dot-pulse_1.5s_ease-in-out_infinite]" />
-              <span className="font-display text-base font-bold uppercase tracking-[0.15em] text-[#D4AF37]">
+            <div className="mt-3 flex items-center justify-center gap-2 rounded-[2px] border border-oxblood bg-cream px-3 py-2.5">
+              <span className="h-2.5 w-2.5 rounded-full bg-oxblood animate-[f1-tick_1s_step-end_infinite]" />
+              <span className="font-display text-base font-bold uppercase tracking-[0.15em] text-oxblood">
                 Race in progress
               </span>
             </div>
           ) : countdown && countdown.total > 0 ? (
-            <div className="mt-3 flex items-center justify-center gap-3 rounded-xl border border-[#D4AF37]/15 bg-[#D4AF37]/[0.06] px-3 py-2.5">
+            <div className="mt-3 flex items-center justify-center gap-3 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-3 py-2.5">
               <CountdownUnit value={countdown.days} label="days" />
-              <span className="font-display text-lg font-bold text-white/20">:</span>
+              <span className="font-display text-lg font-bold text-faint">:</span>
               <CountdownUnit value={countdown.hours} label="hrs" />
-              <span className="font-display text-lg font-bold text-white/20">:</span>
+              <span className="font-display text-lg font-bold text-faint">:</span>
               <CountdownUnit value={countdown.minutes} label="min" />
-              <span className="font-display text-lg font-bold text-white/20">:</span>
+              <span className="font-display text-lg font-bold text-faint">:</span>
               <CountdownUnit value={countdown.seconds} label="sec" />
             </div>
           ) : null}
