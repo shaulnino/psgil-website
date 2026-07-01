@@ -20,7 +20,7 @@ type SeasonSelectorProps = {
 
 /**
  * Parse a season label like "Season 6" into { prefix, number } for
- * the gold-number display. Returns null for non-standard labels.
+ * the emphasized-number display. Returns null for non-standard labels.
  */
 function parseLabel(label: string): { prefix: string; number: string } | null {
   const m = label.match(/^(.*?\s*)(\d+)$/);
@@ -38,12 +38,12 @@ function SeasonLabel({
   if (parsed) {
     return (
       <span className="flex items-baseline gap-1.5">
-        <span className={highlight ? "text-white/90" : "text-white/60"}>
+        <span className={highlight ? "text-ink" : "text-ink-2"}>
           {parsed.prefix}
         </span>
         <span
-          className={`font-bold ${
-            highlight ? "text-[#D4AF37]" : "text-[#D4AF37]/70"
+          className={`num font-bold ${
+            highlight ? "text-ink" : "text-meta"
           }`}
         >
           {parsed.number}
@@ -52,7 +52,7 @@ function SeasonLabel({
     );
   }
   return (
-    <span className={highlight ? "text-white/90" : "text-white/70"}>
+    <span className={highlight ? "text-ink" : "text-ink-2"}>
       {label}
     </span>
   );
@@ -161,7 +161,7 @@ export default function SeasonSelector({
       className="relative inline-flex items-center gap-3"
     >
       {/* -------- Label -------- */}
-      <span className="text-sm font-bold uppercase tracking-[0.22em] text-[#D4AF37]/70">
+      <span className="font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-meta">
         Season
       </span>
 
@@ -179,16 +179,16 @@ export default function SeasonSelector({
         onKeyDown={handleKeyDown}
         className={`
           group relative flex min-w-[150px] cursor-pointer items-center justify-between gap-3
-          rounded-xl border-[1.5px] bg-[#111118]/80 px-4 py-2
+          rounded-[2px] border bg-paper px-4 py-2
           text-base font-semibold outline-none
-          transition-all duration-200
+          transition-colors duration-200
           ${
             open
-              ? "border-[#7020B0] shadow-[0_0_12px_rgba(112,32,176,0.25),0_0_4px_rgba(212,175,55,0.15)]"
-              : "border-white/[0.12] hover:border-[#7020B0]/50 hover:shadow-[0_0_8px_rgba(112,32,176,0.15)]"
+              ? "border-ink"
+              : "border-[color:var(--isl-hairline-strong)] hover:border-ink"
           }
-          focus-visible:border-[#7020B0] focus-visible:shadow-[0_0_12px_rgba(112,32,176,0.25),0_0_4px_rgba(212,175,55,0.15)]
-          focus-visible:ring-1 focus-visible:ring-[#7020B0]/40
+          focus-visible:border-ink
+          focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]
           disabled:cursor-wait disabled:opacity-80
         `}
       >
@@ -198,7 +198,7 @@ export default function SeasonSelector({
         {/* Chevron */}
         {isPending ? (
           <svg
-            className="h-4 w-4 animate-spin text-[#D4AF37]"
+            className="h-4 w-4 animate-spin text-oxblood"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -208,7 +208,7 @@ export default function SeasonSelector({
           </svg>
         ) : (
           <svg
-            className={`h-4 w-4 text-white/40 transition-transform duration-200 group-hover:text-white/60 ${
+            className={`h-4 w-4 text-meta transition-transform duration-200 group-hover:text-ink ${
               open ? "rotate-180" : ""
             }`}
             fill="none"
@@ -235,10 +235,9 @@ export default function SeasonSelector({
             focusIdx >= 0 ? `season-option-${focusIdx}` : undefined
           }
           className="
-            absolute right-0 top-full z-50 mt-2 min-w-[150px]
-            overflow-hidden rounded-xl border border-white/[0.12]
-            bg-[#111118]/95 shadow-[0_8px_32px_rgba(0,0,0,0.5),0_0_12px_rgba(112,32,176,0.1)]
-            backdrop-blur-md
+            absolute end-0 top-full z-50 mt-2 min-w-[150px]
+            overflow-hidden rounded-[2px] border border-[color:var(--isl-hairline-strong)]
+            bg-sink
           "
         >
           {seasons.map((s, i) => {
@@ -257,17 +256,17 @@ export default function SeasonSelector({
                   text-base font-semibold transition-colors duration-100
                   ${
                     isFocused
-                      ? "bg-[#7020B0]/15 text-white"
-                      : "text-white/70 hover:bg-white/5"
+                      ? "bg-cream text-ink"
+                      : "text-ink-2 hover:bg-cream"
                   }
-                  ${isSelected ? "!text-white" : ""}
+                  ${isSelected ? "!text-ink" : ""}
                 `}
               >
                 <SeasonLabel label={s.label} highlight={isSelected} />
                 {/* Check mark for selected */}
                 {isSelected && (
                   <svg
-                    className="ml-auto h-3.5 w-3.5 text-[#D4AF37]"
+                    className="ms-auto h-3.5 w-3.5 text-oxblood"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"

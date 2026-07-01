@@ -9,13 +9,13 @@ import { useDriverLookup } from "@/components/DriverLookupProvider";
 function standingsStatCell(value: string | undefined): ReactNode {
   const s = (value ?? "").trim();
   if (s === "" || s === "-" || s === "—") {
-    return <span className="text-white/30">–</span>;
+    return <span className="text-faint">–</span>;
   }
   const n = Number(s.replace(/,/g, ""));
   if (!Number.isNaN(n) && n === 0) {
-    return <span className="text-white/30">–</span>;
+    return <span className="text-faint">–</span>;
   }
-  return s;
+  return <span className="num">{s}</span>;
 }
 
 /* ------------------------------------------------------------------ */
@@ -24,9 +24,9 @@ function standingsStatCell(value: string | undefined): ReactNode {
 
 function PosChange({ value }: { value: string }) {
   const n = parseInt(value, 10);
-  if (!value || isNaN(n) || n === 0) return <span className="text-white/30">–</span>;
-  if (n > 0) return <span className="text-emerald-400">▲{n}</span>;
-  return <span className="text-red-400">▼{Math.abs(n)}</span>;
+  if (!value || isNaN(n) || n === 0) return <span className="text-faint">–</span>;
+  if (n > 0) return <span className="num text-status-success">▲{n}</span>;
+  return <span className="num text-status-danger">▼{Math.abs(n)}</span>;
 }
 
 /* ------------------------------------------------------------------ */
@@ -36,21 +36,23 @@ function PosChange({ value }: { value: string }) {
 const commonStandingsColumns: ColumnDef<StandingsRow>[] = [
   {
     label: "Pos",
-    accessor: "position",
+    accessor: (row) => <span className="num">{row.position}</span>,
     align: "center",
+    mono: true,
     minWidth: 40,
   },
   {
     label: "+/−",
     accessor: (row) => <PosChange value={row.position_change} />,
     align: "center",
+    mono: true,
     minWidth: 44,
   },
 ];
 
 const teamNameCol: ColumnDef<StandingsRow> = {
   label: "Team",
-  accessor: "team",
+  accessor: (row) => <span className="text-ink-2">{row.team}</span>,
   minWidth: 120,
 };
 
@@ -58,15 +60,17 @@ const pointsAndStats: ColumnDef<StandingsRow>[] = [
   {
     label: "Points",
     accessor: (row) => (
-      <span className="font-semibold text-[#D4AF37]">{row.points || "0"}</span>
+      <span className="num font-semibold text-ink">{row.points || "0"}</span>
     ),
     align: "center",
+    mono: true,
     minWidth: 56,
   },
   {
     label: "Gain",
     accessor: (row) => standingsStatCell(row.gain),
     align: "center",
+    mono: true,
     minWidth: 44,
     hideMobile: true,
   },
@@ -90,6 +94,7 @@ const pointsAndStats: ColumnDef<StandingsRow>[] = [
     label: "Wins",
     accessor: (row) => standingsStatCell(row.p1),
     align: "center",
+    mono: true,
     minWidth: 42,
     hideMobile: true,
   },
@@ -97,6 +102,7 @@ const pointsAndStats: ColumnDef<StandingsRow>[] = [
     label: "2nd",
     accessor: (row) => standingsStatCell(row.p2),
     align: "center",
+    mono: true,
     minWidth: 38,
     hideMobile: true,
   },
@@ -104,6 +110,7 @@ const pointsAndStats: ColumnDef<StandingsRow>[] = [
     label: "3rd",
     accessor: (row) => standingsStatCell(row.p3),
     align: "center",
+    mono: true,
     minWidth: 38,
     hideMobile: true,
   },
@@ -111,6 +118,7 @@ const pointsAndStats: ColumnDef<StandingsRow>[] = [
     label: "Top 5",
     accessor: (row) => standingsStatCell(row.top5),
     align: "center",
+    mono: true,
     minWidth: 44,
     hideMobile: true,
   },
@@ -118,6 +126,7 @@ const pointsAndStats: ColumnDef<StandingsRow>[] = [
     label: "Top 10",
     accessor: (row) => standingsStatCell(row.top10),
     align: "center",
+    mono: true,
     minWidth: 48,
     hideMobile: true,
   },
@@ -125,6 +134,7 @@ const pointsAndStats: ColumnDef<StandingsRow>[] = [
     label: "Best Finish",
     accessor: (row) => standingsStatCell(row.best_finish),
     align: "center",
+    mono: true,
     minWidth: 52,
     hideMobile: true,
   },
@@ -132,6 +142,7 @@ const pointsAndStats: ColumnDef<StandingsRow>[] = [
     label: "Best Grid",
     accessor: (row) => standingsStatCell(row.best_quali),
     align: "center",
+    mono: true,
     minWidth: 52,
     hideMobile: true,
   },
@@ -139,6 +150,7 @@ const pointsAndStats: ColumnDef<StandingsRow>[] = [
     label: "Fastest Laps",
     accessor: (row) => standingsStatCell(row.fastest_laps),
     align: "center",
+    mono: true,
     minWidth: 52,
     hideMobile: true,
   },
@@ -146,6 +158,7 @@ const pointsAndStats: ColumnDef<StandingsRow>[] = [
     label: "Poles",
     accessor: (row) => standingsStatCell(row.poles),
     align: "center",
+    mono: true,
     minWidth: 44,
     hideMobile: true,
   },
@@ -153,6 +166,7 @@ const pointsAndStats: ColumnDef<StandingsRow>[] = [
     label: "DOTD",
     accessor: (row) => standingsStatCell(row.dotd),
     align: "center",
+    mono: true,
     minWidth: 44,
     hideMobile: true,
   },
@@ -160,6 +174,7 @@ const pointsAndStats: ColumnDef<StandingsRow>[] = [
     label: "Penalty Pts",
     accessor: (row) => standingsStatCell(row.penalty_points),
     align: "center",
+    mono: true,
     minWidth: 56,
     hideMobile: true,
   },
@@ -167,6 +182,7 @@ const pointsAndStats: ColumnDef<StandingsRow>[] = [
     label: "DNFs",
     accessor: (row) => standingsStatCell(row.dnfs),
     align: "center",
+    mono: true,
     minWidth: 44,
     hideMobile: true,
   },
@@ -174,6 +190,7 @@ const pointsAndStats: ColumnDef<StandingsRow>[] = [
     label: "Races",
     accessor: (row) => standingsStatCell(row.races),
     align: "center",
+    mono: true,
     minWidth: 48,
     hideMobile: true,
   },
@@ -201,14 +218,14 @@ function DriverNameCell({
           e.stopPropagation();
           openDriverModal(driverId);
         }}
-        className="font-semibold text-white transition-colors hover:text-[#D4AF37] hover:underline decoration-[#D4AF37]/40 underline-offset-2 cursor-pointer"
+        className="font-semibold text-ink transition-colors hover:text-oxblood hover:underline underline-offset-2 cursor-pointer"
       >
         {driverName}
       </button>
     );
   }
 
-  return <span className="font-semibold text-white">{driverName}</span>;
+  return <span className="font-semibold text-ink">{driverName}</span>;
 }
 
 /* ------------------------------------------------------------------ */
@@ -236,7 +253,7 @@ function getColumns(type: "drivers" | "constructors"): ColumnDef<StandingsRow>[]
     {
       ...teamNameCol,
       accessor: (row) => (
-        <span className="font-semibold text-white">{row.team}</span>
+        <span className="font-semibold text-ink">{row.team}</span>
       ),
     },
     ...pointsAndStats,

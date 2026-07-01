@@ -182,13 +182,11 @@ function TablesInner({
       {/* Title row + season selector */}
       <div className="mb-12 flex flex-wrap items-center justify-between gap-4">
         <div className="max-w-2xl">
-          <h1 className="font-display text-4xl font-bold tracking-wider md:text-5xl">
-            <span className="bg-gradient-to-r from-[#7020B0] via-[#a855f7] to-[#D4AF37] bg-clip-text text-transparent drop-shadow-[0_0_24px_rgba(112,32,176,0.25)]">
-              Tables
-            </span>
+          <h1 className="font-display text-4xl font-bold tracking-[0.005em] leading-[1.05] text-ink md:text-5xl">
+            Tables
           </h1>
-          <div className="mt-3 h-[3px] w-36 rounded-full bg-gradient-to-r from-[#7020B0] to-[#D4AF37] shadow-[0_0_8px_rgba(112,32,176,0.4)]" />
-          <p className="mt-4 text-base tracking-wide text-white/85 md:text-lg">
+          <div className="mt-3 h-[2px] w-36 bg-oxblood" />
+          <p className="mt-4 text-base text-ink-2 md:text-lg">
             Official championship standings, updated after each round.
           </p>
         </div>
@@ -201,11 +199,11 @@ function TablesInner({
       <div className="flex flex-col gap-12">
         {/* ============ SEASON NOTES BANNER ============ */}
         {notes && (
-          <div className="rounded-xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 px-5 py-4">
+          <div className="rounded-[2px] border border-[color:var(--isl-hairline)] border-s-2 border-s-oxblood bg-cream px-5 py-4">
             {notes.split("\n").map((line, i) => (
               <p
                 key={i}
-                className="text-sm font-medium leading-relaxed text-[#D4AF37]/90"
+                className="text-sm font-medium leading-relaxed text-ink-2"
               >
                 {line}
               </p>
@@ -298,9 +296,9 @@ function TablesInner({
 
         {/* ============ SEASON REWARDS ============ */}
         {seasonRewards.length > 0 && (
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-            <h3 className="font-display text-2xl font-semibold text-white">
-              Season {seasonNumber} Awards
+          <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-5">
+            <h3 className="font-display text-2xl font-bold tracking-[0.005em] leading-[1.05] text-ink">
+              Season <span className="num">{seasonNumber}</span> Awards
             </h3>
             <div className="mt-4 space-y-4">
               {["main", "lower", "wild", "constructors", "community"].map((competition) => {
@@ -309,10 +307,10 @@ function TablesInner({
 
                 return (
                   <div key={competition}>
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.15em] text-white/55">
+                    <p className="mb-2 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-brass-ink">
                       {COMPETITION_LABELS[competition]}
                     </p>
-                    <div className="overflow-hidden rounded-xl border border-white/10">
+                    <div className="overflow-hidden rounded-[2px] border border-[color:var(--isl-hairline)]">
                       {rows.map((reward, idx) => {
                         const winner =
                           reward.recipient_type === "driver"
@@ -353,8 +351,8 @@ function TablesInner({
           data.constructorsWild.length === 0 &&
           seasonRewards.length === 0 &&
           !notes && (
-            <div className="flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 py-16">
-              <p className="text-sm text-white/50">
+            <div className="flex items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream py-16">
+              <p className="text-sm text-meta">
                 No standings data available for this season yet.
               </p>
             </div>
@@ -386,27 +384,27 @@ function RewardRow({
   };
 
   return (
-    <div className={`flex items-center gap-3 px-4 py-3 ${!isLast ? "border-b border-white/10" : ""}`}>
-      <span className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-white/10 bg-white/5">
+    <div className={`flex items-center gap-3 bg-paper px-4 py-3 ${!isLast ? "border-b border-[color:var(--isl-hairline)]" : ""}`}>
+      <span className="inline-flex h-8 w-8 items-center justify-center rounded-[2px] border border-brass bg-cream">
         {getAwardIcon(reward.award_code, 18, reward.competition)}
       </span>
       <div className="min-w-0 flex-1">
-        <div className="text-sm font-semibold text-white">{label}</div>
-        <div className="text-xs text-white/55">{tooltip}</div>
+        <div className="text-sm font-semibold text-ink">{label}</div>
+        <div className="text-xs text-meta">{tooltip}</div>
       </div>
       {isDriver ? (
         <button
           type="button"
           onClick={onClickWinner}
-          className="text-sm font-semibold text-[#D4AF37] transition hover:text-[#f1ce62]"
+          className="text-sm font-semibold text-brass-ink transition-colors hover:text-oxblood-deep"
         >
           {winner}
         </button>
       ) : (
-        <span className="text-right">
-          <span className="block text-sm font-semibold text-white/85">{winner}</span>
+        <span className="text-end">
+          <span className="block text-sm font-semibold text-brass-ink">{winner}</span>
           {teamDriversLabel ? (
-            <span className="block text-xs text-white/55">{teamDriversLabel}</span>
+            <span className="block text-xs text-meta">{teamDriversLabel}</span>
           ) : null}
         </span>
       )}
@@ -423,7 +421,7 @@ export default function TablesPageContent(props: TablesPageContentProps) {
     <Suspense
       fallback={
         <div className="flex items-center justify-center py-24">
-          <p className="text-sm text-white/40">Loading standings…</p>
+          <p className="text-sm text-meta">Loading standings…</p>
         </div>
       }
     >

@@ -89,7 +89,7 @@ export default async function SchedulePage() {
     : [];
 
   return (
-    <main className="bg-[#0B0B0E] text-white">
+    <main className="bg-bone text-ink-2">
       <Section
         title="Schedule & Race Results"
         description="Full race calendar and results for every ISL season."
