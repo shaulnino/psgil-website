@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import StatsFilterPills from "@/components/stats/StatsFilterPills";
 import {
@@ -189,21 +190,30 @@ function resolveMetrics(
 /*  Shared UI atoms                                                    */
 /* ------------------------------------------------------------------ */
 
+const MAIN_TAB_LABEL_KEYS: Record<string, string> = {
+  Drivers: "tabs.drivers",
+  League: "tabs.league",
+  Circuits: "tabs.circuits",
+  "Head-to-Head": "tabs.headToHead",
+  Rankings: "tabs.rankings",
+};
+
 function TabBar({ tabs, active, onChange }: { tabs: readonly string[]; active: string; onChange: (t: string) => void }) {
+  const t = useTranslations("stats");
   return (
     <div className="overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
       <div className="inline-flex min-w-max snap-x snap-mandatory gap-1 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-1">
-        {tabs.map((t) => (
+        {tabs.map((tabId) => (
           <button
-            key={t}
-            onClick={() => onChange(t)}
+            key={tabId}
+            onClick={() => onChange(tabId)}
             className={`shrink-0 snap-start rounded-[2px] px-3 py-2 text-xs font-semibold transition sm:px-4 sm:text-sm ${
-              active === t
+              active === tabId
                 ? "bg-ink text-bone"
                 : "text-meta hover:bg-sink hover:text-ink"
             }`}
           >
-            {t}
+            {MAIN_TAB_LABEL_KEYS[tabId] ? t(MAIN_TAB_LABEL_KEYS[tabId]) : tabId}
           </button>
         ))}
       </div>
@@ -211,7 +221,13 @@ function TabBar({ tabs, active, onChange }: { tabs: readonly string[]; active: s
   );
 }
 
+const TOGGLE_LABEL_KEYS: Record<string, string> = {
+  "All-time": "toggle.allTime",
+  Season: "toggle.season",
+};
+
 function Toggle({ options, value, onChange }: { options: string[]; value: string; onChange: (v: string) => void }) {
+  const t = useTranslations("stats");
   return (
     <div className="flex gap-1 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-0.5">
       {options.map((o) => (
@@ -224,7 +240,7 @@ function Toggle({ options, value, onChange }: { options: string[]; value: string
               : "text-meta hover:text-ink"
           }`}
         >
-          {o}
+          {TOGGLE_LABEL_KEYS[o] ? t(TOGGLE_LABEL_KEYS[o]) : o}
         </button>
       ))}
     </div>
@@ -246,6 +262,7 @@ function SearchableSelect({
   multiple?: boolean;
   maxItems?: number;
 }) {
+  const t = useTranslations("stats");
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
@@ -302,13 +319,13 @@ function SearchableSelect({
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search…"
+              placeholder={t("select.search")}
               className="w-full rounded-[2px] border border-[color:var(--isl-hairline)] bg-sink px-2 py-1.5 text-sm text-ink placeholder-faint outline-none focus:ring-1 focus:ring-oxblood"
               autoFocus
             />
           </div>
           {filtered.length === 0 && (
-            <p className="px-3 py-2 text-sm text-meta">No results</p>
+            <p className="px-3 py-2 text-sm text-meta">{t("select.noResults")}</p>
           )}
           {filtered.map((item) => {
             const isSelected = selected.includes(item);
@@ -808,6 +825,7 @@ function DriverCumulativeChart({
   mode: "All-time" | "Season";
   seasonKey: string;
 }) {
+  const t = useTranslations("stats");
   const [metric, setMetric] = useState<DriverCumMetricKey>("points");
   const [raceCount, setRaceCount] = useState<number>(0);
 
@@ -970,7 +988,7 @@ function DriverCumulativeChart({
   return (
     <div className="space-y-4 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-4 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 className="text-sm font-semibold text-meta">Driver Cumulative Trend</h3>
+        <h3 className="text-sm font-semibold text-meta">{t("charts.driverCumulativeTrend")}</h3>
         <div className="flex gap-1 rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-0.5">
           {[5, 10, 15, 0].map((n) => (
             <button
@@ -982,7 +1000,7 @@ function DriverCumulativeChart({
                   : "text-meta hover:text-ink"
               }`}
             >
-              {n === 0 ? "All" : `Last ${n}`}
+              {n === 0 ? t("raceCount.all") : t("raceCount.last", { n })}
             </button>
           ))}
         </div>
@@ -997,14 +1015,14 @@ function DriverCumulativeChart({
             const found = DRIVER_CUM_METRICS.find((m) => m.label === label);
             if (found) setMetric(found.key);
           }}
-          placeholder="Select metric…"
+          placeholder={t("select.selectMetric")}
         />
       </div>
 
       {chartData.length === 0 ? (
         <div className="flex h-48 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream">
           <p className="text-sm text-meta">
-            No race-by-race data available for this driver in the current filter.
+            {t("empty.noRaceByRaceDriver")}
           </p>
         </div>
       ) : (
@@ -1070,6 +1088,7 @@ function DriverCompareCumulativeChart({
   mode: "All-time" | "Season";
   seasonKey: string;
 }) {
+  const t = useTranslations("stats");
   const [metric, setMetric] = useState<DriverCumMetricKey>("points");
   const [raceCount, setRaceCount] = useState<number>(0);
 
@@ -1239,7 +1258,7 @@ function DriverCompareCumulativeChart({
   return (
     <div className="space-y-4 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-4 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 className="text-sm font-semibold text-meta">Compare Cumulative Trend</h3>
+        <h3 className="text-sm font-semibold text-meta">{t("charts.compareCumulativeTrend")}</h3>
         <div className="flex gap-1 rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-0.5">
           {[5, 10, 15, 0].map((n) => (
             <button
@@ -1249,13 +1268,13 @@ function DriverCompareCumulativeChart({
                 raceCount === n ? "bg-ink text-bone" : "text-meta hover:text-ink"
               }`}
             >
-              {n === 0 ? "All" : `Last ${n}`}
+              {n === 0 ? t("raceCount.all") : t("raceCount.last", { n })}
             </button>
           ))}
         </div>
       </div>
       <p className="text-xs text-meta">
-        Note: this trend uses a combined race timeline (union of selected drivers&apos; races), not only shared races.
+        {t("charts.compareCumulativeNote")}
       </p>
 
       <div className="max-w-sm">
@@ -1267,13 +1286,13 @@ function DriverCompareCumulativeChart({
             const found = DRIVER_CUM_METRICS.find((m) => m.label === label);
             if (found) setMetric(found.key);
           }}
-          placeholder="Select metric…"
+          placeholder={t("select.selectMetric")}
         />
       </div>
 
       {chartData.length === 0 ? (
         <div className="flex h-48 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream">
-          <p className="text-sm text-meta">No race-by-race data available for selected drivers in the current filter.</p>
+          <p className="text-sm text-meta">{t("empty.noRaceByRaceCompare")}</p>
         </div>
       ) : (
         <div className="h-72">
@@ -1346,6 +1365,7 @@ function DriversSection({
   seasons?: SeasonConfig[];
   rewards?: Reward[];
 }) {
+  const t = useTranslations("stats");
   // Derive the default season from bySeason keys (newest first)
   const defaultSeason = useMemo(() => {
     const keys = Object.keys(bySeason).sort((a, b) => {
@@ -1532,7 +1552,15 @@ function DriversSection({
   );
 
   if (dataset.rows.length === 0) {
-    return <EmptyState message={`No driver stats available${mode === "Season" ? ` for ${season}` : ""}.`} />;
+    return (
+      <EmptyState
+        message={
+          mode === "Season"
+            ? t("empty.noDriverStatsForSeason", { season })
+            : t("empty.noDriverStats")
+        }
+      />
+    );
   }
 
   const singleDriver = !compare && selectedRows.length === 1 ? selectedRows[0] : null;
@@ -1623,12 +1651,12 @@ function DriversSection({
               : "border border-[color:var(--isl-hairline)] text-meta hover:text-ink"
           }`}
         >
-          {compare ? "✕ Compare" : "⇆ Compare"}
+          {compare ? t("compare.close") : t("compare.open")}
         </button>
       </div>
 
       <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-4">
-        <p className="mb-3 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-oxblood">Segment results</p>
+        <p className="mb-3 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-oxblood">{t("segments.results")}</p>
         <StatsFilterPills
           formatFilter={formatFilter}
           competitionFilter={competitionFilter}
@@ -1650,7 +1678,7 @@ function DriversSection({
           options={driverNames}
           value={compare ? validDrivers : validDrivers[0] ?? ""}
           onChange={(v) => setSelectedDrivers(Array.isArray(v) ? v : [v])}
-          placeholder={compare ? "Select up to 4 drivers…" : "Select a driver…"}
+          placeholder={compare ? t("select.selectUpTo4Drivers") : t("select.selectDriver")}
           multiple={compare}
           maxItems={4}
         />
@@ -1669,7 +1697,7 @@ function DriversSection({
             }
             className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-3 py-1.5 text-xs font-semibold text-meta transition hover:text-ink"
           >
-            {allCategoriesExpanded ? "Collapse all" : "Expand all"}
+            {allCategoriesExpanded ? t("expand.collapseAll") : t("expand.expandAll")}
           </button>
         </div>
       )}
@@ -1678,7 +1706,7 @@ function DriversSection({
       {singleDriver && (
         <div className="space-y-5">
           <div>
-            <p className="mb-2 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-oxblood">Overview</p>
+            <p className="mb-2 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-oxblood">{t("sections.overview")}</p>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
               {heroMetricSlots.map(({ info, key }) => (
                 <StatHeroCard
@@ -1693,24 +1721,24 @@ function DriversSection({
           </div>
 
           <div>
-            <p className="mb-2 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-oxblood">Explore</p>
+            <p className="mb-2 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-oxblood">{t("sections.explore")}</p>
             <div className="flex flex-wrap gap-1.5 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-1.5">
-              {DRIVER_STAT_TAB_ORDER.map((t) => {
-                const count = tabMetricGroups[t.id].length;
+              {DRIVER_STAT_TAB_ORDER.map((tabDef) => {
+                const count = tabMetricGroups[tabDef.id].length;
                 if (count === 0) return null;
-                const active = driverStatTab === t.id;
+                const active = driverStatTab === tabDef.id;
                 return (
                   <button
-                    key={t.id}
+                    key={tabDef.id}
                     type="button"
-                    onClick={() => setDriverStatTab(t.id)}
+                    onClick={() => setDriverStatTab(tabDef.id)}
                     className={`rounded-[2px] px-3 py-2 text-xs font-semibold transition sm:text-sm ${
                       active
                         ? "bg-ink text-bone"
                         : "text-meta hover:bg-sink hover:text-ink"
                     }`}
                   >
-                    {t.label}
+                    {t(`driverStatTabs.${tabDef.id}`)}
                     <span
                       className={`num ms-1.5 rounded-[2px] px-1.5 py-0.5 text-[10px] ${
                         active ? "bg-bone/20 text-bone/90" : "bg-sink text-meta"
@@ -1776,7 +1804,7 @@ function DriversSection({
                   <thead className="bg-sink">
                     <tr className="border-b border-[color:var(--isl-hairline-strong)]">
                       <th className="px-4 py-2 text-start text-sm font-semibold uppercase tracking-wider text-meta">
-                        Metric
+                        {t("table.metric")}
                       </th>
                       {selectedRows.map((dr, i) => (
                         <th
@@ -1842,7 +1870,7 @@ function DriversSection({
           <div className="grid gap-6 lg:grid-cols-2">
             {barData.length > 0 && (
               <div>
-                <h3 className="mb-2 text-sm font-semibold text-meta">Key Metrics (normalised)</h3>
+                <h3 className="mb-2 text-sm font-semibold text-meta">{t("charts.keyMetricsNormalised")}</h3>
                 <StatsBarChart
                   data={barData}
                   bars={selectedRows.map((dr, i) => ({
@@ -1858,21 +1886,21 @@ function DriversSection({
                   height={360}
                 />
                 <p className="mt-2 text-xs text-faint">
-                  Brighter bars and highlighted values indicate the current leader for each metric.
+                  {t("charts.leaderHint")}
                 </p>
                 <div className="mt-2 flex justify-end">
                   <button
                     onClick={() => setShowAllMetrics(true)}
                     className="text-sm font-semibold text-oxblood hover:text-oxblood-deep transition"
                   >
-                    All Metrics →
+                    {t("charts.allMetricsLink")}
                   </button>
                 </div>
               </div>
             )}
             {radarData.length > 0 && (
               <div>
-                <h3 className="mb-2 text-sm font-semibold text-meta">Driver Ratings</h3>
+                <h3 className="mb-2 text-sm font-semibold text-meta">{t("charts.driverRatings")}</h3>
                 <StatsRadarChart
                   data={radarData}
                   subjects={selectedRows.map((dr, i) => ({
@@ -1907,7 +1935,7 @@ function DriversSection({
           >
             {/* Header */}
             <div className="flex items-center justify-between border-b border-[color:var(--isl-hairline)] px-6 py-4">
-              <h2 className="font-display text-lg font-bold text-ink">All Metrics (normalised)</h2>
+              <h2 className="font-display text-lg font-bold text-ink">{t("modal.allMetricsNormalised")}</h2>
               <button
                 onClick={() => setShowAllMetrics(false)}
                 className="rounded-[2px] p-1.5 text-meta transition hover:bg-sink hover:text-ink"
@@ -1922,21 +1950,21 @@ function DriversSection({
             <div className="border-b border-[color:var(--isl-hairline)] px-6 py-3">
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-sm font-semibold text-meta uppercase tracking-wider">
-                  Metrics ({modalSelectedKeys.size}/{allChartableMetrics.length})
+                  {t("modal.metricsCount", { selected: modalSelectedKeys.size, total: allChartableMetrics.length })}
                 </span>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setModalSelectedKeys(new Set(allChartableMetrics.map((m) => m.key)))}
                     className="text-[11px] font-semibold text-oxblood hover:text-oxblood-deep transition"
                   >
-                    Select All
+                    {t("modal.selectAll")}
                   </button>
                   <span className="text-faint">|</span>
                   <button
                     onClick={() => setModalSelectedKeys(new Set())}
                     className="text-[11px] font-semibold text-meta hover:text-ink transition"
                   >
-                    Clear
+                    {t("modal.clear")}
                   </button>
                 </div>
               </div>
@@ -1986,7 +2014,7 @@ function DriversSection({
             <div className="flex-1 overflow-auto px-6 py-4">
               {modalBarData.length === 0 ? (
                 <div className="flex items-center justify-center py-16">
-                  <p className="text-sm text-meta">Select at least one metric above</p>
+                  <p className="text-sm text-meta">{t("modal.selectAtLeastOne")}</p>
                 </div>
               ) : (
                 <div
@@ -2024,6 +2052,7 @@ function DriversSection({
 /* ------------------------------------------------------------------ */
 
 function LeagueSection({ league }: { league: LeagueStatRow[] }) {
+  const t = useTranslations("stats");
   const seasonCols = useMemo(() => {
     if (league.length === 0) return [];
     return Object.keys(league[0].seasons);
@@ -2036,7 +2065,7 @@ function LeagueSection({ league }: { league: LeagueStatRow[] }) {
   );
 
   if (league.length === 0) {
-    return <EmptyState message="No league statistics available." />;
+    return <EmptyState message={t("empty.noLeagueStats")} />;
   }
 
   // Season compare bar chart data
@@ -2054,10 +2083,10 @@ function LeagueSection({ league }: { league: LeagueStatRow[] }) {
   }, [league, compare, selectedSeasons]);
 
   const leagueHighlightDefs = [
-    { metric: "Total Events", short: "Events" },
-    { metric: "# Drivers Participating*", short: "Drivers" },
-    { metric: "Avg. Participation", short: "Avg. participation" },
-    { metric: "DNF Rate %", short: "DNF rate" },
+    { metric: "Total Events", shortKey: "league.kpi.events" },
+    { metric: "# Drivers Participating*", shortKey: "league.kpi.drivers" },
+    { metric: "Avg. Participation", shortKey: "league.kpi.avgParticipation" },
+    { metric: "DNF Rate %", shortKey: "league.kpi.dnfRate" },
   ] as const;
 
   return (
@@ -2074,21 +2103,21 @@ function LeagueSection({ league }: { league: LeagueStatRow[] }) {
                 : "border border-[color:var(--isl-hairline)] text-meta hover:text-ink"
             }`}
           >
-            {compare ? "✕ Compare Seasons" : "⇆ Compare Seasons"}
+            {compare ? t("compare.closeSeasons") : t("compare.openSeasons")}
           </button>
         )}
       </div>
 
       {mode === "All-time" && (
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {leagueHighlightDefs.map(({ metric, short }) => {
+          {leagueHighlightDefs.map(({ metric, shortKey }) => {
             const row = league.find((r) => r.metric === metric);
             return (
               <div
                 key={metric}
                 className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-4 py-3"
               >
-                <div className="text-[10px] font-bold uppercase tracking-wider text-meta">{short}</div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-meta">{t(shortKey)}</div>
                 <div className="num mt-1 text-xl font-extrabold text-ink sm:text-2xl">
                   {row?.total ?? "—"}
                 </div>
@@ -2104,7 +2133,7 @@ function LeagueSection({ league }: { league: LeagueStatRow[] }) {
             options={seasonCols}
             value={selectedSeasons}
             onChange={(v) => setSelectedSeasons(Array.isArray(v) ? v : [v])}
-            placeholder="Select 2 seasons…"
+            placeholder={t("select.select2Seasons")}
             multiple
             maxItems={2}
           />
@@ -2116,9 +2145,9 @@ function LeagueSection({ league }: { league: LeagueStatRow[] }) {
         <table role="table" className="w-full text-sm">
           <thead className="bg-sink">
             <tr className="border-b border-[color:var(--isl-hairline-strong)]">
-              <th className="px-4 py-3 text-start text-sm font-semibold uppercase tracking-wider text-meta">Metric</th>
+              <th className="px-4 py-3 text-start text-sm font-semibold uppercase tracking-wider text-meta">{t("table.metric")}</th>
               {mode === "All-time" ? (
-                <th className="px-4 py-3 text-end text-sm font-semibold uppercase tracking-wider text-oxblood">Total</th>
+                <th className="px-4 py-3 text-end text-sm font-semibold uppercase tracking-wider text-oxblood">{t("table.total")}</th>
               ) : compare ? (
                 selectedSeasons.map((sc, i) => (
                   <th key={sc} className="px-4 py-3 text-end text-sm font-semibold uppercase tracking-wider" style={{ color: COMPARE_COLORS[i] }}>{sc}</th>
@@ -2164,7 +2193,7 @@ function LeagueSection({ league }: { league: LeagueStatRow[] }) {
       {/* Bar chart (compare mode) */}
       {compare && mode === "Season" && barData.length > 0 && (
         <div>
-          <h3 className="mb-2 text-sm font-semibold text-meta">Season Comparison (normalised)</h3>
+          <h3 className="mb-2 text-sm font-semibold text-meta">{t("charts.seasonComparisonNormalised")}</h3>
           <div className="overflow-x-auto">
             <div style={{ width: Math.max(700, barData.length * 90) }}>
               <StatsBarChart
@@ -2195,6 +2224,7 @@ function CircuitsSection({
 }: {
   circuits: { rows: CircuitStatRow[]; headers: string[] };
 }) {
+  const t = useTranslations("stats");
   const [compare, setCompare] = useState(false);
   const [selectedCircuits, setSelectedCircuits] = useState<string[]>([]);
 
@@ -2242,7 +2272,7 @@ function CircuitsSection({
   );
 
   if (circuits.rows.length === 0) {
-    return <EmptyState message="No circuit statistics available." />;
+    return <EmptyState message={t("empty.noCircuitStats")} />;
   }
 
   // Non-season numeric columns for chart
@@ -2296,7 +2326,7 @@ function CircuitsSection({
               : "border border-[color:var(--isl-hairline)] text-meta hover:text-ink"
           }`}
         >
-          {compare ? "✕ Compare" : "⇆ Compare Circuits"}
+          {compare ? t("compare.close") : t("compare.openCircuits")}
         </button>
       </div>
 
@@ -2306,7 +2336,7 @@ function CircuitsSection({
           options={circuitNames}
           value={compare ? validCircuits : validCircuits[0] ?? ""}
           onChange={(v) => setSelectedCircuits(Array.isArray(v) ? v : [v])}
-          placeholder={compare ? "Select up to 2 circuits…" : "Select a circuit…"}
+          placeholder={compare ? t("select.selectUpTo2Circuits") : t("select.selectCircuit")}
           multiple={compare}
           maxItems={2}
         />
@@ -2325,7 +2355,7 @@ function CircuitsSection({
             }
             className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-3 py-1.5 text-xs font-semibold text-meta transition hover:text-ink"
           >
-            {allCategoriesExpanded ? "Collapse all" : "Expand all"}
+            {allCategoriesExpanded ? t("expand.collapseAll") : t("expand.expandAll")}
           </button>
         </div>
       )}
@@ -2335,13 +2365,13 @@ function CircuitsSection({
         <div className="space-y-3">
           {/* Podium placements (special non-metric fields) */}
           {[
-            { key: "Winners", label: "Winners", border: "border-brass", bg: "bg-cream", text: "text-brass-ink" },
-            { key: "2nd Place", label: "2nd Place", border: "border-[color:var(--isl-silver-ink)]", bg: "bg-cream", text: "text-silver-ink" },
-            { key: "3rd Place", label: "3rd Place", border: "border-[color:var(--isl-bronze-ink)]", bg: "bg-cream", text: "text-bronze-ink" },
-          ].map(({ key, label, border, bg, text }) =>
+            { key: "Winners", labelKey: "circuits.winners", border: "border-brass", bg: "bg-cream", text: "text-brass-ink" },
+            { key: "2nd Place", labelKey: "circuits.secondPlace", border: "border-[color:var(--isl-silver-ink)]", bg: "bg-cream", text: "text-silver-ink" },
+            { key: "3rd Place", labelKey: "circuits.thirdPlace", border: "border-[color:var(--isl-bronze-ink)]", bg: "bg-cream", text: "text-bronze-ink" },
+          ].map(({ key, labelKey, border, bg, text }) =>
             singleCircuit.raw[key] ? (
               <div key={key} className={`rounded-[2px] border ${border} ${bg} px-4 py-3`}>
-                <p className={`text-sm font-semibold uppercase tracking-wider ${text}`}>{label}</p>
+                <p className={`text-sm font-semibold uppercase tracking-wider ${text}`}>{t(labelKey)}</p>
                 <p className="mt-1 text-sm font-semibold text-ink">{singleCircuit.raw[key]}</p>
               </div>
             ) : null,
@@ -2379,7 +2409,7 @@ function CircuitsSection({
           {/* Season appearances timeline */}
           {seasonAppearances.length > 0 && (
             <div>
-              <h3 className="mb-3 text-sm font-semibold text-meta">Season Appearances</h3>
+              <h3 className="mb-3 text-sm font-semibold text-meta">{t("circuits.seasonAppearances")}</h3>
               <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-5 py-4">
                 <div className="flex items-center justify-between gap-2">
                   {seasonAppearances.map(({ label, appeared }) => (
@@ -2432,7 +2462,7 @@ function CircuitsSection({
                   <thead className="bg-sink">
                     <tr className="border-b border-[color:var(--isl-hairline-strong)]">
                       <th className="px-4 py-2 text-start text-sm font-semibold uppercase tracking-wider text-meta">
-                        Metric
+                        {t("table.metric")}
                       </th>
                       {selectedRows.map((cr, i) => (
                         <th
@@ -2471,7 +2501,7 @@ function CircuitsSection({
           {/* Compare bar chart */}
           {barData.length > 0 && (
             <div>
-              <h3 className="mb-2 text-sm font-semibold text-meta">Comparison (normalised)</h3>
+              <h3 className="mb-2 text-sm font-semibold text-meta">{t("charts.comparisonNormalised")}</h3>
               <div className="overflow-x-auto">
                 <div style={{ width: Math.max(700, barData.length * 90) }}>
                   <StatsBarChart
@@ -2545,6 +2575,7 @@ function RankingsSection({
   rewards?: Reward[];
   seasons?: SeasonConfig[];
 }) {
+  const t = useTranslations("stats");
   /* ---------- Season helpers ---------- */
   const defaultSeason = useMemo(() => {
     const keys = Object.keys(bySeason).sort((a, b) => {
@@ -2710,7 +2741,11 @@ function RankingsSection({
   if (dataset.rows.length === 0) {
     return (
       <EmptyState
-        message={`No driver stats available${mode === "Season" ? ` for ${season}` : ""}.`}
+        message={
+          mode === "Season"
+            ? t("empty.noDriverStatsForSeason", { season })
+            : t("empty.noDriverStats")
+        }
       />
     );
   }
@@ -2744,7 +2779,7 @@ function RankingsSection({
       </div>
 
       <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-4">
-        <p className="mb-3 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-oxblood">Segment leaderboard</p>
+        <p className="mb-3 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-oxblood">{t("segments.leaderboard")}</p>
         <StatsFilterPills
           formatFilter={formatFilter}
           competitionFilter={competitionFilter}
@@ -2762,7 +2797,7 @@ function RankingsSection({
 
       <div className="flex flex-wrap gap-2">
         <span className="w-full font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-oxblood sm:w-auto sm:self-center">
-          Quick picks
+          {t("rankings.quickPicks")}
         </span>
         {RANKINGS_QUICK_PRESETS.map((p) => (
           <button
@@ -2786,7 +2821,7 @@ function RankingsSection({
       <div className="flex flex-wrap items-end gap-3">
         <div className="w-full max-w-sm">
           <label className="mb-1 block text-sm font-semibold uppercase tracking-wider text-meta">
-            Stat
+            {t("rankings.stat")}
           </label>
           <SearchableSelect
             options={metricOptions}
@@ -2798,7 +2833,7 @@ function RankingsSection({
                 setSortAsc(null); // reset to default direction
               }
             }}
-            placeholder="Select a stat…"
+            placeholder={t("select.selectStat")}
           />
         </div>
         <button
@@ -2806,11 +2841,11 @@ function RankingsSection({
           className="flex items-center gap-1.5 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-3 py-2 text-sm font-semibold text-meta transition hover:border-[color:var(--isl-hairline-strong)] hover:text-ink"
           title={
             isAscending
-              ? "Sorted ascending (lowest first)"
-              : "Sorted descending (highest first)"
+              ? t("rankings.sortAscTitle")
+              : t("rankings.sortDescTitle")
           }
         >
-          {isAscending ? "↑ Lowest first" : "↓ Highest first"}
+          {isAscending ? t("rankings.lowestFirst") : t("rankings.highestFirst")}
         </button>
       </div>
 
@@ -2840,7 +2875,7 @@ function RankingsSection({
                 className={`rounded-[2px] border bg-cream p-4 ${ring}`}
               >
                 <div className="text-[10px] font-bold uppercase tracking-wider text-meta">
-                  #{r.rank} {idx === 0 ? "Leader" : idx === 1 ? "2nd" : "3rd"}
+                  #{r.rank} {idx === 0 ? t("rankings.leader") : idx === 1 ? t("rankings.second") : t("rankings.third")}
                 </div>
                 <div className="mt-1 text-lg font-bold text-ink">
                   {onSelectDriver ? (
@@ -2874,15 +2909,15 @@ function RankingsSection({
                   #
                 </th>
                 <th className="px-4 py-3 text-start text-sm font-semibold uppercase tracking-wider text-meta">
-                  Driver
+                  {t("table.driver")}
                 </th>
                 {ranked[0]?.team !== null && (
                   <th className="px-4 py-3 text-start text-sm font-semibold uppercase tracking-wider text-meta">
-                    Team
+                    {t("table.team")}
                   </th>
                 )}
                 <th className="hidden w-36 px-2 py-3 text-start text-[10px] font-bold uppercase tracking-wider text-meta sm:table-cell">
-                  vs field
+                  {t("table.vsField")}
                 </th>
                 <th className="px-4 py-3 text-end text-sm font-semibold uppercase tracking-wider text-oxblood">
                   {currentMetric?.label ?? selectedStat}
@@ -2980,16 +3015,18 @@ function RankingsSection({
         </div>
       ) : (
         selectedStat && (
-          <EmptyState message="No drivers have data for this metric." />
+          <EmptyState message={t("empty.noDriversForMetric")} />
         )
       )}
 
       {/* Summary footnote */}
       {ranked.length > 0 && (
         <p className="text-sm text-faint">
-          {ranked.length} driver{ranked.length !== 1 ? "s" : ""} ranked
-          {mode === "Season" ? ` · Season ${season.replace("S", "")}` : " · All-time"}
-          {currentMetric?.isPercentage ? " · Values shown as %" : ""}
+          {t("rankings.rankedCount", { count: ranked.length })}
+          {mode === "Season"
+            ? t("rankings.scopeSeason", { season: season.replace("S", "") })
+            : t("rankings.scopeAllTime")}
+          {currentMetric?.isPercentage ? t("rankings.valuesShownAsPct") : ""}
         </p>
       )}
     </div>
@@ -3150,6 +3187,7 @@ function H2HTrendChart({
   driverA: string;
   driverB: string;
 }) {
+  const t = useTranslations("stats");
   const [selectedMetrics, setSelectedMetrics] = useState<H2HMetricKey[]>(["finish"]);
   const [raceCount, setRaceCount] = useState<number>(0);
 
@@ -3255,7 +3293,7 @@ function H2HTrendChart({
   return (
     <div className="space-y-4 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-4 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 className="text-sm font-semibold text-meta">Trend Over Races</h3>
+        <h3 className="text-sm font-semibold text-meta">{t("h2h.trendOverRaces")}</h3>
 
         {/* Race count selector */}
         <div className="flex gap-1 rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-0.5">
@@ -3269,7 +3307,7 @@ function H2HTrendChart({
                   : "text-meta hover:text-ink"
               }`}
             >
-              {n === 0 ? "All" : `Last ${n}`}
+              {n === 0 ? t("raceCount.all") : t("raceCount.last", { n })}
             </button>
           ))}
         </div>
@@ -3320,7 +3358,7 @@ function H2HTrendChart({
       </div>
 
       {selectedMetrics.length === 0 && (
-        <p className="py-8 text-center text-sm text-meta">Select at least one metric to display.</p>
+        <p className="py-8 text-center text-sm text-meta">{t("h2h.selectAtLeastOneMetric")}</p>
       )}
 
       {selectedMetrics.length > 0 && (
@@ -3395,6 +3433,7 @@ function H2HTrendChart({
 }
 
 function H2HWinBar({ winsA, winsB, ties }: { winsA: number; winsB: number; ties: number }) {
+  const t = useTranslations("stats");
   const total = winsA + winsB + ties;
   if (total === 0) return null;
   const pA = (winsA / total) * 100;
@@ -3404,9 +3443,9 @@ function H2HWinBar({ winsA, winsB, ties }: { winsA: number; winsB: number; ties:
   return (
     <div className="space-y-2">
       <div className="flex justify-between text-sm font-semibold">
-        <span className="num text-oxblood">{winsA} wins</span>
-        {ties > 0 && <span className="num text-meta">{ties} ties</span>}
-        <span className="num text-[#2F5A6E]">{winsB} wins</span>
+        <span className="num text-oxblood">{t("h2h.winsCount", { count: winsA })}</span>
+        {ties > 0 && <span className="num text-meta">{t("h2h.tiesCount", { count: ties })}</span>}
+        <span className="num text-[#2F5A6E]">{t("h2h.winsCount", { count: winsB })}</span>
       </div>
       <div className="flex h-3 overflow-hidden rounded-[2px] bg-sink">
         <div className="bg-oxblood transition-all" style={{ width: `${pA}%` }} />
@@ -3424,6 +3463,7 @@ function H2HSection({
   raceResults: Record<string, RaceResultRow[]>;
   events: RaceEvent[];
 }) {
+  const t = useTranslations("stats");
   const driverIndex = useMemo(() => buildDriverIndex(raceResults), [raceResults]);
   const driverNames = useMemo(() => getDriverNames(driverIndex), [driverIndex]);
   const eventMeta = useMemo(() => buildEventMeta(events), [events]);
@@ -3480,39 +3520,37 @@ function H2HSection({
     <div className="space-y-6">
       {/* Explainer */}
       <div className="mx-auto max-w-2xl rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-5 py-4 text-center text-sm leading-relaxed text-meta">
-        <span className="font-semibold text-ink-2">How is this different from Compare?</span>{" "}
-        The Drivers tab compares career stats across <em>all</em> races each driver entered.
-        Head-to-Head only counts races where <em>both</em> drivers participated,
-        giving you a direct, fair comparison on the same tracks and conditions.
+        <span className="font-semibold text-ink-2">{t("h2h.explainerTitle")}</span>{" "}
+        {t.rich("h2h.explainerBody", { em: (chunks) => <em>{chunks}</em> })}
       </div>
 
       {/* Driver selectors */}
       <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
         <div className="w-full max-w-xs">
           <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-oxblood">
-            Driver A
+            {t("h2h.driverA")}
           </label>
           <SearchableSelect
             options={optionsA}
             value={driverA}
             onChange={(v) => setDriverA(v as string)}
-            placeholder="Select Driver A…"
+            placeholder={t("h2h.selectDriverA")}
           />
         </div>
 
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[color:var(--isl-hairline)] bg-cream text-sm font-bold text-meta">
-          vs
+          {t("h2h.vs")}
         </div>
 
         <div className="w-full max-w-xs">
           <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-[#2F5A6E]">
-            Driver B
+            {t("h2h.driverB")}
           </label>
           <SearchableSelect
             options={optionsB}
             value={driverB}
             onChange={(v) => setDriverB(v as string)}
-            placeholder="Select Driver B…"
+            placeholder={t("h2h.selectDriverB")}
           />
         </div>
       </div>
@@ -3527,13 +3565,13 @@ function H2HSection({
             <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
             </svg>
-            Swap
+            {t("h2h.swap")}
           </button>
         )}
 
         <div className="h-5 w-px bg-[color:var(--isl-hairline)]" />
 
-        <span className="text-xs font-medium uppercase tracking-wider text-meta">Filter by</span>
+        <span className="text-xs font-medium uppercase tracking-wider text-meta">{t("h2h.filterBy")}</span>
 
         {/* Season multi-select */}
         <div className="w-48">
@@ -3544,7 +3582,7 @@ function H2HSection({
               const arr = (Array.isArray(v) ? v : [v]) as string[];
               setSeasonFilters(arr.map((label) => `S${label.replace("Season ", "")}`));
             }}
-            placeholder="All seasons"
+            placeholder={t("h2h.allSeasons")}
             multiple
           />
         </div>
@@ -3555,7 +3593,7 @@ function H2HSection({
             options={filterOptions.circuits}
             value={circuitFilters}
             onChange={(v) => setCircuitFilters((Array.isArray(v) ? v : [v]) as string[])}
-            placeholder="All circuits"
+            placeholder={t("h2h.allCircuits")}
             multiple
           />
         </div>
@@ -3570,7 +3608,7 @@ function H2HSection({
                 const arr = (Array.isArray(v) ? v : [v]) as string[];
                 setWeatherFilters(arr.map((w) => w.toLowerCase()));
               }}
-              placeholder="All weather"
+              placeholder={t("h2h.allWeather")}
               multiple
             />
           </div>
@@ -3585,7 +3623,7 @@ function H2HSection({
               const s = v as string;
               setFormatFilter(s === "50% Race" ? "50%" : s === "25% Race" ? "25%" : s === "Sprint" ? "sprint" : "");
             }}
-            placeholder="All Formats"
+            placeholder={t("h2h.allFormats")}
           />
         </div>
 
@@ -3597,7 +3635,7 @@ function H2HSection({
               const s = v as string;
               setCompetitionFilter(s === "Main" ? "main" : s === "Wild" ? "wild" : "");
             }}
-            placeholder="All Leagues"
+            placeholder={t("h2h.allLeagues")}
           />
         </div>
 
@@ -3609,7 +3647,7 @@ function H2HSection({
               const s = v as string;
               setRoundTypeFilter(s === "Regular Season" ? "regular" : s === "Playoffs" ? "playoff" : "");
             }}
-            placeholder="All Rounds"
+            placeholder={t("h2h.allRounds")}
           />
         </div>
 
@@ -3618,7 +3656,7 @@ function H2HSection({
             onClick={() => { setSeasonFilters([]); setCircuitFilters([]); setWeatherFilters([]); setFormatFilter(""); setCompetitionFilter(""); setRoundTypeFilter(""); }}
             className="flex items-center gap-1 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-2.5 py-1 text-[10px] font-medium text-meta transition hover:text-ink"
           >
-            Clear all
+            {t("h2h.clearAll")}
             <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -3628,11 +3666,11 @@ function H2HSection({
 
       {/* Empty state */}
       {(!driverA || !driverB) && (
-        <EmptyState message="Select two drivers to compare their head-to-head record." />
+        <EmptyState message={t("h2h.selectTwoDrivers")} />
       )}
 
       {driverA && driverB && driverA === driverB && (
-        <EmptyState message="Please select two different drivers." />
+        <EmptyState message={t("h2h.selectDifferentDrivers")} />
       )}
 
       {/* No shared races */}
@@ -3640,8 +3678,8 @@ function H2HSection({
         <EmptyState
           message={
             activeFilterCount > 0
-              ? `No shared races between ${driverA} and ${driverB} for ${activeFilterLabel}.`
-              : `${driverA} and ${driverB} have no shared races.`
+              ? t("h2h.noSharedRacesFiltered", { driverA, driverB, filters: activeFilterLabel })
+              : t("h2h.noSharedRaces", { driverA, driverB })
           }
         />
       )}
@@ -3653,7 +3691,7 @@ function H2HSection({
           <div className="text-center">
             <p className="text-sm text-meta">
               <span className="num font-semibold text-ink-2">{h2h.summary.sharedRaces}</span>{" "}
-              shared race{h2h.summary.sharedRaces !== 1 ? "s" : ""}
+              {t("h2h.sharedRacesWord", { count: h2h.summary.sharedRaces })}
               {activeFilterCount > 0 && (
                 <span className="text-faint"> · {activeFilterLabel}</span>
               )}
@@ -3701,13 +3739,13 @@ function H2HSection({
             <table className="w-full min-w-[820px] text-sm">
               <thead className="bg-sink">
                 <tr className="border-b border-[color:var(--isl-hairline-strong)] text-xs uppercase tracking-wider text-meta">
-                  <th className="px-3 py-3 text-start font-medium" rowSpan={2}>Race</th>
-                  <th className="px-3 py-3 text-start font-medium" rowSpan={2}>Date</th>
-                  <th className="px-3 py-3 text-center font-medium" rowSpan={2}>Season</th>
-                  <th className="px-3 py-3 text-center font-medium" rowSpan={2}>League</th>
-                  <th className="border-s border-[color:var(--isl-hairline)] px-3 py-2 text-center font-medium" colSpan={2}>Finish</th>
-                  <th className="border-s border-[color:var(--isl-hairline)] px-3 py-2 text-center font-medium" colSpan={2}>Grid</th>
-                  <th className="border-s border-[color:var(--isl-hairline)] px-3 py-3 text-center font-medium" rowSpan={2}>Better</th>
+                  <th className="px-3 py-3 text-start font-medium" rowSpan={2}>{t("h2h.table.race")}</th>
+                  <th className="px-3 py-3 text-start font-medium" rowSpan={2}>{t("h2h.table.date")}</th>
+                  <th className="px-3 py-3 text-center font-medium" rowSpan={2}>{t("h2h.table.season")}</th>
+                  <th className="px-3 py-3 text-center font-medium" rowSpan={2}>{t("h2h.table.league")}</th>
+                  <th className="border-s border-[color:var(--isl-hairline)] px-3 py-2 text-center font-medium" colSpan={2}>{t("h2h.table.finish")}</th>
+                  <th className="border-s border-[color:var(--isl-hairline)] px-3 py-2 text-center font-medium" colSpan={2}>{t("h2h.table.grid")}</th>
+                  <th className="border-s border-[color:var(--isl-hairline)] px-3 py-3 text-center font-medium" rowSpan={2}>{t("h2h.table.better")}</th>
                 </tr>
                 <tr className="border-b border-[color:var(--isl-hairline)] text-[10px] uppercase tracking-wider">
                   <th className="border-s border-[color:var(--isl-hairline)] px-3 py-1 text-center font-medium text-oxblood">{driverA.split(" ").pop()}</th>
@@ -3824,7 +3862,7 @@ function H2HSection({
                       <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M23.5 6.2a3 3 0 00-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 00.5 6.2 31.9 31.9 0 000 12a31.9 31.9 0 00.5 5.8 3 3 0 002.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 002.1-2.1A31.9 31.9 0 0024 12a31.9 31.9 0 00-.5-5.8zM9.5 15.6V8.4l6.3 3.6-6.3 3.6z" />
                       </svg>
-                      Watch Race
+                      {t("h2h.watchRace")}
                     </a>
                   )}
                 </div>
@@ -3840,12 +3878,12 @@ function H2HSection({
                 <div className="max-h-[85vh] overflow-auto rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-3">
                   <RaceResultsTable
                     results={resultRows}
-                    caption={`${meta?.raceName ?? resultsEventId} — Race Results`}
+                    caption={t("h2h.raceResultsCaption", { race: meta?.raceName ?? resultsEventId })}
                   />
                 </div>
               ) : (
                 <div className="flex items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper py-16">
-                  <p className="text-sm text-meta">Results not available yet.</p>
+                  <p className="text-sm text-meta">{t("h2h.resultsNotAvailable")}</p>
                 </div>
               )}
             </div>

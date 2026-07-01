@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import type { StatsFilters } from "@/lib/statsComputed";
 
 type Format = StatsFilters["format"];
@@ -47,6 +48,8 @@ export default function StatsFilterPills({
   onRoundType: (v: Round) => void;
   onClearAll: () => void;
 }) {
+  const t = useTranslations("stats");
+
   const any =
     formatFilter !== undefined ||
     competitionFilter !== undefined ||
@@ -55,42 +58,42 @@ export default function StatsFilterPills({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="font-isl-body text-[10px] font-semibold uppercase tracking-[0.2em] text-oxblood">Format</span>
+        <span className="font-isl-body text-[10px] font-semibold uppercase tracking-[0.2em] text-oxblood">{t("filters.format")}</span>
         <Pill active={formatFilter === undefined} onClick={() => onFormat(undefined)}>
-          All
+          {t("filters.all")}
         </Pill>
         <Pill active={formatFilter === "50%"} onClick={() => onFormat("50%")}>
-          50%
+          {t("filters.format50")}
         </Pill>
         <Pill active={formatFilter === "25%"} onClick={() => onFormat("25%")}>
-          25%
+          {t("filters.format25")}
         </Pill>
         <Pill active={formatFilter === "sprint"} onClick={() => onFormat("sprint")}>
-          Sprint
+          {t("filters.sprint")}
         </Pill>
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        <span className="font-isl-body text-[10px] font-semibold uppercase tracking-[0.2em] text-oxblood">League</span>
+        <span className="font-isl-body text-[10px] font-semibold uppercase tracking-[0.2em] text-oxblood">{t("filters.league")}</span>
         <Pill active={competitionFilter === undefined} onClick={() => onCompetition(undefined)}>
-          All
+          {t("filters.all")}
         </Pill>
         <Pill active={competitionFilter === "main"} onClick={() => onCompetition("main")}>
-          Main
+          {t("filters.main")}
         </Pill>
         <Pill active={competitionFilter === "wild"} onClick={() => onCompetition("wild")}>
-          Wild
+          {t("filters.wild")}
         </Pill>
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        <span className="font-isl-body text-[10px] font-semibold uppercase tracking-[0.2em] text-oxblood">Round</span>
+        <span className="font-isl-body text-[10px] font-semibold uppercase tracking-[0.2em] text-oxblood">{t("filters.round")}</span>
         <Pill active={roundTypeFilter === undefined} onClick={() => onRoundType(undefined)}>
-          All
+          {t("filters.all")}
         </Pill>
         <Pill active={roundTypeFilter === "regular"} onClick={() => onRoundType("regular")}>
-          Regular
+          {t("filters.regular")}
         </Pill>
         <Pill active={roundTypeFilter === "playoff"} onClick={() => onRoundType("playoff")}>
-          Playoffs
+          {t("filters.playoffs")}
         </Pill>
         {any && (
           <button
@@ -98,7 +101,7 @@ export default function StatsFilterPills({
             onClick={onClearAll}
             className="ms-auto rounded-[2px] px-2 py-1.5 text-xs font-semibold text-meta underline-offset-2 hover:text-oxblood hover:underline"
           >
-            Clear filters
+            {t("filters.clearFilters")}
           </button>
         )}
       </div>

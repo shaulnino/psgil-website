@@ -1,1 +1,175 @@
-{}
+{
+  "charts": {
+    "allMetricsLink": "All Metrics →",
+    "compareCumulativeNote": "Note: this trend uses a combined race timeline (union of selected drivers' races), not only shared races.",
+    "compareCumulativeTrend": "Compare Cumulative Trend",
+    "comparisonNormalised": "Comparison (normalised)",
+    "driverCumulativeTrend": "Driver Cumulative Trend",
+    "driverRatings": "Driver Ratings",
+    "keyMetricsNormalised": "Key Metrics (normalised)",
+    "leaderHint": "Brighter bars and highlighted values indicate the current leader for each metric.",
+    "seasonComparisonNormalised": "Season Comparison (normalised)"
+  },
+  "circuits": {
+    "seasonAppearances": "Season Appearances",
+    "secondPlace": "2nd Place",
+    "thirdPlace": "3rd Place",
+    "winners": "Winners"
+  },
+  "compare": {
+    "close": "✕ Compare",
+    "closeSeasons": "✕ Compare Seasons",
+    "open": "⇆ Compare",
+    "openCircuits": "⇆ Compare Circuits",
+    "openSeasons": "⇆ Compare Seasons"
+  },
+  "driverStatTabs": {
+    "championship": "Championship",
+    "consistency": "Consistency",
+    "pace": "Race pace",
+    "qualifying": "Qualifying",
+    "racecraft": "Racecraft",
+    "records": "Records & awards"
+  },
+  "empty": {
+    "noCircuitStats": "No circuit statistics available.",
+    "noDriverStats": "No driver stats available.",
+    "noDriverStatsForSeason": "No driver stats available for {season}.",
+    "noDriversForMetric": "No drivers have data for this metric.",
+    "noLeagueStats": "No league statistics available.",
+    "noRaceByRaceCompare": "No race-by-race data available for selected drivers in the current filter.",
+    "noRaceByRaceDriver": "No race-by-race data available for this driver in the current filter."
+  },
+  "expand": {
+    "collapseAll": "Collapse all",
+    "expandAll": "Expand all"
+  },
+  "filters": {
+    "all": "All",
+    "clearFilters": "Clear filters",
+    "format": "Format",
+    "format25": "25%",
+    "format50": "50%",
+    "league": "League",
+    "main": "Main",
+    "playoffs": "Playoffs",
+    "regular": "Regular",
+    "round": "Round",
+    "sprint": "Sprint",
+    "wild": "Wild"
+  },
+  "h2h": {
+    "allCircuits": "All circuits",
+    "allFormats": "All Formats",
+    "allLeagues": "All Leagues",
+    "allRounds": "All Rounds",
+    "allSeasons": "All seasons",
+    "allWeather": "All weather",
+    "clearAll": "Clear all",
+    "driverA": "Driver A",
+    "driverB": "Driver B",
+    "explainerBody": "The Drivers tab compares career stats across <em>all</em> races each driver entered. Head-to-Head only counts races where <em>both</em> drivers participated, giving you a direct, fair comparison on the same tracks and conditions.",
+    "explainerTitle": "How is this different from Compare?",
+    "filterBy": "Filter by",
+    "noSharedRaces": "{driverA} and {driverB} have no shared races.",
+    "noSharedRacesFiltered": "No shared races between {driverA} and {driverB} for {filters}.",
+    "raceResultsCaption": "{race} — Race Results",
+    "resultsNotAvailable": "Results not available yet.",
+    "selectAtLeastOneMetric": "Select at least one metric to display.",
+    "selectDifferentDrivers": "Please select two different drivers.",
+    "selectDriverA": "Select Driver A…",
+    "selectDriverB": "Select Driver B…",
+    "selectTwoDrivers": "Select two drivers to compare their head-to-head record.",
+    "sharedRacesWord": "{count, plural, one {shared race} other {shared races}}",
+    "swap": "Swap",
+    "table": {
+      "better": "Better",
+      "date": "Date",
+      "finish": "Finish",
+      "grid": "Grid",
+      "league": "League",
+      "race": "Race",
+      "season": "Season"
+    },
+    "tiesCount": "{count} ties",
+    "trendOverRaces": "Trend Over Races",
+    "vs": "vs",
+    "watchRace": "Watch Race",
+    "winsCount": "{count} wins"
+  },
+  "league": {
+    "kpi": {
+      "avgParticipation": "Avg. participation",
+      "dnfRate": "DNF rate",
+      "drivers": "Drivers",
+      "events": "Events"
+    }
+  },
+  "modal": {
+    "allMetricsNormalised": "All Metrics (normalised)",
+    "clear": "Clear",
+    "metricsCount": "Metrics ({selected}/{total})",
+    "selectAll": "Select All",
+    "selectAtLeastOne": "Select at least one metric above"
+  },
+  "page": {
+    "description": "Deep stats for every driver, season, and circuit in ISL history.",
+    "title": "Stats"
+  },
+  "raceCount": {
+    "all": "All",
+    "last": "Last {n}"
+  },
+  "rankings": {
+    "highestFirst": "↓ Highest first",
+    "leader": "Leader",
+    "lowestFirst": "↑ Lowest first",
+    "quickPicks": "Quick picks",
+    "rankedCount": "{count, plural, one {# driver} other {# drivers}} ranked",
+    "scopeAllTime": " · All-time",
+    "scopeSeason": " · Season {season}",
+    "second": "2nd",
+    "sortAscTitle": "Sorted ascending (lowest first)",
+    "sortDescTitle": "Sorted descending (highest first)",
+    "stat": "Stat",
+    "third": "3rd",
+    "valuesShownAsPct": " · Values shown as %"
+  },
+  "sections": {
+    "explore": "Explore",
+    "overview": "Overview"
+  },
+  "segments": {
+    "leaderboard": "Segment leaderboard",
+    "results": "Segment results"
+  },
+  "select": {
+    "noResults": "No results",
+    "search": "Search…",
+    "select2Seasons": "Select 2 seasons…",
+    "selectCircuit": "Select a circuit…",
+    "selectDriver": "Select a driver…",
+    "selectMetric": "Select metric…",
+    "selectStat": "Select a stat…",
+    "selectUpTo2Circuits": "Select up to 2 circuits…",
+    "selectUpTo4Drivers": "Select up to 4 drivers…"
+  },
+  "table": {
+    "driver": "Driver",
+    "metric": "Metric",
+    "team": "Team",
+    "total": "Total",
+    "vsField": "vs field"
+  },
+  "tabs": {
+    "circuits": "Circuits",
+    "drivers": "Drivers",
+    "headToHead": "Head-to-Head",
+    "league": "League",
+    "rankings": "Rankings"
+  },
+  "toggle": {
+    "allTime": "All-time",
+    "season": "Season"
+  }
+}

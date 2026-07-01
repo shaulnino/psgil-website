@@ -1,6 +1,7 @@
 export const revalidate = 300;
 
 import { Suspense } from "react";
+import { getTranslations } from "next-intl/server";
 import Section from "@/components/Section";
 import StatsPageContent from "@/components/StatsPageContent";
 import { fetchSeasonsConfig, GLOBAL_CSV_URLS } from "@/lib/seasonConfig";
@@ -15,6 +16,7 @@ import {
 } from "@/lib/statsComputed";
 
 export default async function StatsPage() {
+  const t = await getTranslations("stats");
   const seasons = await fetchSeasonsConfig();
 
   const [raceResultsByEvent, scheduleCsv, rewards] = await Promise.all([
@@ -61,8 +63,8 @@ export default async function StatsPage() {
   return (
     <main className="bg-bone text-ink">
       <Section
-        title="Stats"
-        description="Deep stats for every driver, season, and circuit in ISL history."
+        title={t("page.title")}
+        description={t("page.description")}
         pageHeader
       >
         <Suspense>
