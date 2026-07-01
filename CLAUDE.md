@@ -109,7 +109,6 @@ psgil-website/
 │   ├── driversData.ts          # Driver roster types + mappers + fetchers
 │   ├── scheduleData.ts         # Schedule types + mappers + fetchers
 │   ├── statsComputed.ts        # Core stats computation from raw race results
-│   ├── statsInsights.ts        # Intelligence layer: DNA, archetypes, tier, insights, rivals
 │   ├── statsMetricRegistry.ts  # Metric definitions, tab groupings, display config
 │   ├── statsData.ts            # LEGACY: old CSV-based stats fetchers (mostly unused)
 │   ├── h2h.ts                  # Head-to-head comparison engine + rivalry detection
@@ -217,7 +216,9 @@ Always use `matchesSeason(dataValue, seasonKey)` from `lib/seasonConfig.ts` when
 
 ## 7. Statistics Engine
 
-The statistics system lives in `lib/statsComputed.ts` and `lib/statsInsights.ts`.
+The statistics system lives in `lib/statsComputed.ts` (with head-to-head in `lib/h2h.ts`).
+
+> **Note:** an earlier "intelligence layer" (`lib/statsInsights.ts` — driver DNA, archetypes, tiers, auto-generated narrative sentences) was documented here but **does not exist in the codebase** (verified: no such file, and none of its functions are referenced anywhere). Do not plan around it. If narrative/insight generation is built for the new brand, build it i18n-aware from day one (see `docs/i18n-architecture.md`).
 
 ### Architecture
 
@@ -240,15 +241,7 @@ Raw CSV race results (all seasons, all events)
 | `computeCircuitStats` | `statsComputed.ts` | Per-circuit aggregates |
 | `computeLeagueStats` | `statsComputed.ts` | League-wide aggregate metrics |
 | `computeHomePageSnapshot` | `statsComputed.ts` | Homepage hero numbers |
-| `computeAutoInsights` | `statsInsights.ts` | Narrative insight strings for a driver |
-| `computeDriverArchetype` | `statsInsights.ts` | Classify driver into archetype tags |
-| `computePerformanceTier` | `statsInsights.ts` | Assign Elite/Front Runner/etc tier |
-| `computeDriverDNA` | `statsInsights.ts` | 6-axis normalized DNA scores (0–100) |
-| `computeMilestones` | `statsInsights.ts` | Upcoming achievement milestones |
-| `computeDriverCircuitStats` | `statsInsights.ts` | Per-circuit breakdown for one driver |
-| `computeTopRivals` | `h2h.ts` | Auto-detect top rivals (closest, most faced, nemesis) |
 | `computeH2H` | `h2h.ts` | Head-to-head record between two drivers |
-| `computeSeasonNarrative` | `statsInsights.ts` | Auto-generate season summary sentences |
 
 ### Legacy stats (`lib/statsData.ts`)
 
@@ -367,7 +360,7 @@ To test Netlify Blobs locally, use `netlify dev` (requires Netlify CLI), which i
 - `.env.local` → secrets file, never read or display its contents
 
 ### CSV schema contract
-Column names in CSV data are the source of truth for metric keys throughout the stats engine. Metric keys like `"Avg. Final Position"` or `"Driver Rating"` flow through as raw strings from the CSV headers. Renaming a CSV column will break metric lookups throughout `statsComputed.ts`, `statsInsights.ts`, and `StatsPageContent.tsx`.
+Column names in CSV data are the source of truth for metric keys throughout the stats engine. Metric keys like `"Avg. Final Position"` or `"Driver Rating"` flow through as raw strings from the CSV headers. Renaming a CSV column will break metric lookups throughout `statsComputed.ts` and `StatsPageContent.tsx`.
 
 ### Season key convention
 Always use `"S6"` format (capital S + number) for `season_key`. Use `matchesSeason()` for comparisons — never `===` directly on raw CSV values.
@@ -459,7 +452,7 @@ Event poster images live at `/public/events/{event_id}.webp` or `.jpg`.
 | Where is the current season defined? | `csv_seasons_config` tab → `is_current = TRUE` |
 | Where is steward data stored locally? | `data/stewards/store.json` (gitignored) |
 | Where are permissions defined? | `lib/stewards/auth.ts` → `PERMISSION_MATRIX` |
-| Where does stats computation happen? | `lib/statsComputed.ts` + `lib/statsInsights.ts` |
+| Where does stats computation happen? | `lib/statsComputed.ts` (H2H in `lib/h2h.ts`) |
 | Where are H2H and rivalries computed? | `lib/h2h.ts` |
 | Where is the standings calculation? | Google Apps Script in `scripts/standings/psgil-standings.gs` |
 | Where are metric display names defined? | `lib/statsMetricRegistry.ts` |

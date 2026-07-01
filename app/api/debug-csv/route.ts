@@ -3,6 +3,12 @@ export const dynamic = "force-dynamic";
 import { GLOBAL_CSV_URLS, SEASONS_CONFIG_CSV_URL } from "@/lib/seasonConfig";
 
 export async function GET() {
+  // Dev/debug only — this endpoint exposes internal CSV source URLs.
+  // Never serve it in production.
+  if (process.env.NODE_ENV === "production") {
+    return new Response("Not found", { status: 404 });
+  }
+
   const rawUrls = {
     SEASONS_CONFIG_CSV_URL,
     schedule: GLOBAL_CSV_URLS.schedule,
