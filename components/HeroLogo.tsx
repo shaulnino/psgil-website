@@ -6,8 +6,8 @@ type HeroLogoProps = {
 };
 
 export default function HeroLogo({
-  src = "/psgil-logo.png",
-  alt = "ISL league logo",
+  src = "/isl-logo.png",
+  alt = "ISL — Israeli Super League",
 }: HeroLogoProps) {
   const isLocalPublic = src.startsWith("/") && !src.startsWith("//");
   return (
@@ -15,8 +15,8 @@ export default function HeroLogo({
       <Image
         src={src}
         alt={alt}
-        width={512}
-        height={512}
+        width={1299}
+        height={560}
         priority
         className="relative h-auto w-full animate-[f1-rise_0.7s_ease-out]"
         sizes="(max-width: 640px) 220px, (max-width: 768px) 240px, (max-width: 1024px) 280px, 320px"

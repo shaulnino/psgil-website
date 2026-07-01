@@ -49,7 +49,7 @@ import {
 const heroImagePath = "/hero.jpg";
 const resolvePublic = (filePath: string) =>
   path.join(process.cwd(), "public", filePath.replace(/^\/+/, ""));
-const newsFallbackImage = "/psgil-banner.png";
+const newsFallbackImage = "/isl-banner.png";
 
 function isRemote(src?: string) {
   return !!src && src.startsWith("http");

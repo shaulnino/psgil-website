@@ -16,22 +16,21 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-[color:var(--isl-hairline)] bg-bone">
       <div className="mx-auto flex h-16 w-full max-w-[1240px] items-center justify-between px-5">
-        <LoadingLink href="/" hideSpinner className="group flex items-center gap-3">
-          <span className="flex h-11 w-11 items-center justify-center transition group-aria-[busy=true]:opacity-60 md:h-12 md:w-12">
-            <Image
-              src="/psgil-logo.png"
-              alt="ISL logo"
-              width={64}
-              height={64}
-              className="h-full w-full object-contain"
-              sizes="(max-width: 768px) 44px, 48px"
-              priority
-              unoptimized
-            />
-          </span>
-          <span className="font-display text-2xl font-bold tracking-[0.01em] text-ink">
-            {siteConfig.leagueName}
-          </span>
+        <LoadingLink
+          href="/"
+          hideSpinner
+          aria-label={siteConfig.leagueName}
+          className="group flex items-center"
+        >
+          <Image
+            src="/isl-logo.png"
+            alt="ISL — Israeli Super League"
+            width={1299}
+            height={560}
+            className="h-9 w-auto transition group-aria-[busy=true]:opacity-60 md:h-10"
+            priority
+            unoptimized
+          />
         </LoadingLink>
 
         <nav className="hidden items-center gap-1 md:flex">

@@ -32,7 +32,7 @@ const PLACEHOLDER_PHOTO = "/placeholders/driver.png";
 const DEMO_TEAM = {
   team_key: "psgil-demo",
   team_name: "ISL Demo Team",
-  logo_url: "/psgil-logo.png",
+  logo_url: "/isl-mark.png",
 };
 
 const DEMO_DRIVER = {

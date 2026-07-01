@@ -46,7 +46,7 @@ const DEV_FALLBACK_ARTICLES: NewsArticle[] = [
     author: "ISL",
     excerpt:
       "This is a local development fallback article. Connect NEWS_SHEET_URL to show real Google Sheets content.",
-    coverImageUrl: "/psgil-banner.png",
+    coverImageUrl: "/isl-banner.png",
     tags: ["sample", "local"],
     category: NEWS_CATEGORY.HUB,
     youtubeUrl: "",

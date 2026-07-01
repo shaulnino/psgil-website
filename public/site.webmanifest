@@ -3,8 +3,8 @@
   "short_name": "ISL",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0B0B0E",
-  "theme_color": "#7020B0",
+  "background_color": "#f4efe4",
+  "theme_color": "#7e2a1e",
   "icons": [
     {
       "src": "/android-chrome-192x192.png",

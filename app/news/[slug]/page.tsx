@@ -66,7 +66,7 @@ function resolveSiteBaseUrl(): string {
 
 function resolveAbsoluteUrl(baseUrl: string, value: string): string {
   const raw = String(value || "").trim();
-  if (!raw) return `${baseUrl}/psgil-banner.png`;
+  if (!raw) return `${baseUrl}/isl-banner.png`;
   if (/^https?:\/\//i.test(raw)) return raw;
   return `${baseUrl}${raw.startsWith("/") ? "" : "/"}${raw}`;
 }

@@ -61,12 +61,12 @@ export default function DriversGrid({ teams, reserves, historicDrivers, placehol
               <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-2">
                 <div className="flex h-full w-full items-center justify-center rounded-[2px] bg-white p-1">
                   <Image
-                    src={team.logo_url || "/psgil-logo.png"}
+                    src={team.logo_url || "/isl-mark.png"}
                     alt={`${team.team_name} logo`}
                     width={64}
                     height={64}
                     className="h-14 w-14 object-contain"
-                    unoptimized={!isRemote(team.logo_url || "/psgil-logo.png")}
+                    unoptimized={!isRemote(team.logo_url || "/isl-mark.png")}
                   />
                 </div>
               </div>
@@ -107,7 +107,7 @@ export default function DriversGrid({ teams, reserves, historicDrivers, placehol
             const team = teams.find((teamItem) => teamItem.team_key === driver.team_key) ?? {
               team_key: driver.team_key,
               team_name: "Independent",
-              logo_url: "/psgil-logo.png",
+              logo_url: "/isl-mark.png",
             };
             return (
               <DriverCard
@@ -144,7 +144,7 @@ export default function DriversGrid({ teams, reserves, historicDrivers, placehol
               const team = teams.find((t) => t.team_key === driver.team_key) ?? {
                 team_key: driver.team_key,
                 team_name: "Independent",
-                logo_url: "/psgil-logo.png",
+                logo_url: "/isl-mark.png",
               };
               return (
                 <button

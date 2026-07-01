@@ -10,7 +10,7 @@ type NewsImageProps = {
   loading?: "lazy" | "eager";
 };
 
-const DEFAULT_FALLBACK = "/psgil-banner.png";
+const DEFAULT_FALLBACK = "/isl-banner.png";
 
 export default function NewsImage({
   src,
