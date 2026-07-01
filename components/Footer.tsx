@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { siteConfig } from "@/lib/siteConfig";
 import LoadingLink from "@/components/LoadingLink";
 
@@ -56,6 +57,7 @@ function SocialIcon({ icon }: { icon: string }) {
 }
 
 export default function Footer() {
+  const t = useTranslations("common");
   return (
     <footer className="border-t border-[color:var(--isl-hairline)] bg-cream">
       <div className="mx-auto w-full max-w-[1240px] px-5 py-12">
@@ -66,10 +68,10 @@ export default function Footer() {
               {siteConfig.leagueName}
             </p>
             <p className="mt-1 font-isl-body text-[11px] font-semibold uppercase tracking-[0.2em] text-brass-ink">
-              F1 Israeli Super League
+              {t("leagueFullName")}
             </p>
             <p className="mt-4 max-w-xs font-isl-body text-sm leading-relaxed text-meta">
-              {siteConfig.footerNote}. Israel&apos;s competitive Formula 1 simulation racing community.
+              {t("footerNote")}. Israel&apos;s competitive Formula 1 simulation racing community.
             </p>
           </div>
 

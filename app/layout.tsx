@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { NextIntlClientProvider } from "next-intl";
+import { getMessages } from "next-intl/server";
 import Script from "next/script";
 import {
   Inter,
@@ -77,16 +79,18 @@ export const metadata: Metadata = {
   manifest: "/site.webmanifest",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const messages = await getMessages();
   return (
     <html lang="en" data-scroll-behavior="smooth">
       <body
         className={`${inter.variable} ${rajdhani.variable} ${zillaSlab.variable} ${publicSans.variable} ${splineSansMono.variable} ${frankRuhl.variable} ${assistant.variable} antialiased`}
       >
+        <NextIntlClientProvider messages={messages}>
         {/* ── Google Analytics 4 (production only) ── */}
         {GA_ID && process.env.NODE_ENV === "production" && (
           <>
@@ -117,6 +121,7 @@ export default function RootLayout({
         <Suspense fallback={null}>
           <NextRaceWidgetServer />
         </Suspense>
+        </NextIntlClientProvider>
       </body>
     </html>
   );
