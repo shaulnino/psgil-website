@@ -78,19 +78,19 @@ export default async function StewardCasesPage({ searchParams }: { searchParams:
 
   return (
     <div className="space-y-6">
-      <section className="steward-panel rounded-2xl p-5">
-        <h2 className="font-display text-2xl font-semibold">Cases</h2>
-        <p className="mt-1 text-white/70">Complaints are visible immediately to all authorized module users.</p>
+      <section className="steward-panel rounded-[2px] p-5">
+        <h2 className="font-display text-2xl font-bold tracking-[0.005em] leading-[1.05] text-ink">Cases</h2>
+        <p className="mt-1 text-ink-2">Complaints are visible immediately to all authorized module users.</p>
       </section>
 
       {canCreateComplaint(user.roles) && view === "driver" && (
         <CreateComplaintPanel initiallyOpen={forceOpen || error === "missing-fields" || error === "evidence-required"}>
           {seasonRoundOptions.length === 0 ? (
-            <div className="flex items-start gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-4">
-              <span className="mt-0.5 text-lg leading-none">⏱</span>
+            <div className="flex items-start gap-3 rounded-[2px] border border-status-warning bg-cream px-4 py-4">
+              <span className="mt-0.5 text-lg leading-none text-status-warning">⏱</span>
               <div>
-                <p className="font-semibold text-amber-200">Complaint window closed</p>
-                <p className="mt-1 text-sm text-amber-200/70">
+                <p className="font-semibold text-ink">Complaint window closed</p>
+                <p className="mt-1 text-sm text-ink-2">
                   Complaints can only be submitted within <strong>48 hours</strong> of a race starting.
                   No races from the last 3 days are on the schedule — check back after the next race.
                 </p>
@@ -98,9 +98,9 @@ export default async function StewardCasesPage({ searchParams }: { searchParams:
             </div>
           ) : (
           <>
-          <p className="text-xs text-white/60"><span className="text-red-400">*</span> indicates mandatory fields.</p>
+          <p className="text-xs text-meta"><span className="text-status-danger">*</span> indicates mandatory fields.</p>
           {(error === "missing-fields" || error === "evidence-required") && (
-            <div className="mt-3 rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-100">
+            <div className="mt-3 rounded-[2px] border border-status-danger bg-cream px-3 py-2 text-sm text-status-danger">
               {error === "evidence-required"
                 ? "At least one evidence item is required: upload attachment or add text/link in Evidence box."
                 : "All mandatory fields must be filled before submit."}
@@ -110,20 +110,20 @@ export default async function StewardCasesPage({ searchParams }: { searchParams:
             <SeasonRoundSelectors options={seasonRoundOptions} />
             <InvolvedDriversPicker options={memberOptions} />
             <label className="block md:col-span-2">
-              <span className="mb-1 block text-sm text-white/80">Description <span className="text-red-400">*</span></span>
-              <textarea name="description" required rows={5} lang="he" dir="rtl" className="w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-right" />
+              <span className="mb-1 block text-sm text-ink-2">Description <span className="text-status-danger">*</span></span>
+              <textarea name="description" required rows={5} dir="auto" className="w-full rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2 text-ink placeholder:text-faint focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]" />
             </label>
-            <div className="md:col-span-2 rounded-xl border border-steward-gold/25 bg-black/20 p-4">
-              <h4 className="text-sm font-semibold uppercase tracking-wide text-steward-gold">Evidence <span className="text-red-400">*</span></h4>
-              <p className="mt-1 text-xs text-white/60">Attach files, paste screenshots, or add links/notes. At least one item is required.</p>
+            <div className="md:col-span-2 rounded-[2px] border border-brass bg-cream p-4">
+              <h4 className="font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-brass-ink">Evidence <span className="text-status-danger">*</span></h4>
+              <p className="mt-1 text-xs text-meta">Attach files, paste screenshots, or add links/notes. At least one item is required.</p>
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 {/* screenshot paste + drag-drop zone */}
                 <EvidencePasteBox />
                 <div className="space-y-3">
                   <AttachmentFilePicker />
                   <label className="block">
-                    <span className="mb-1 block text-sm text-white/80">Links / notes (one per line)</span>
-                    <textarea name="evidence_items" rows={4} lang="he" dir="rtl" className="w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-right" />
+                    <span className="mb-1 block text-sm text-ink-2">Links / notes (one per line)</span>
+                    <textarea name="evidence_items" rows={4} dir="auto" className="w-full rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2 text-ink placeholder:text-faint focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]" />
                   </label>
                 </div>
               </div>
@@ -146,7 +146,7 @@ export default async function StewardCasesPage({ searchParams }: { searchParams:
               />
             </div>
           )}
-          <section className="steward-panel rounded-2xl p-5 pt-8">
+          <section className="steward-panel rounded-[2px] p-5 pt-8">
             <DriverCasesList
               openCases={openRows}
               closedCases={closedRows}
@@ -165,7 +165,7 @@ export default async function StewardCasesPage({ searchParams }: { searchParams:
               />
             </div>
           )}
-          <section className="steward-panel overflow-hidden rounded-2xl pt-8">
+          <section className="steward-panel overflow-hidden rounded-[2px] pt-8">
             <StewardCasesTable
               cases={stewardRows}
               isAdmin={isAdmin}

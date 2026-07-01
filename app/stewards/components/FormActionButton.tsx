@@ -13,7 +13,7 @@ export default function FormActionButton({
   idleLabel,
   loadingLabel,
   className = "",
-  spinnerClassName = "border-white/30 border-t-white",
+  spinnerClassName = "border-[color:var(--isl-hairline)] border-t-ink",
 }: Props) {
   const { pending } = useFormStatus();
   return (

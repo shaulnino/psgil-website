@@ -2,11 +2,12 @@
 
 import { useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { Button } from "@/components/ui/button";
 
 const MIN_LENGTH = 8;
 
 const inputCls =
-  "w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2.5 text-sm text-white/90 focus:border-steward-gold/50 focus:outline-none transition placeholder:text-white/25";
+  "w-full rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2.5 text-sm text-ink placeholder:text-faint focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)] transition-colors";
 
 function ShowHideInput({
   name,
@@ -20,7 +21,7 @@ function ShowHideInput({
   const [show, setShow] = useState(false);
   return (
     <label className="block">
-      <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">{label}</span>
+      <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-meta">{label}</span>
       <div className="relative">
         <input
           name={name}
@@ -28,13 +29,13 @@ function ShowHideInput({
           type={show ? "text" : "password"}
           placeholder={placeholder}
           minLength={MIN_LENGTH}
-          className={`${inputCls} pr-16`}
+          className={`${inputCls} pe-16`}
         />
         <button
           type="button"
           tabIndex={-1}
           onClick={() => setShow((v) => !v)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold tracking-widest text-steward-gold/60 hover:text-steward-gold transition"
+          className="absolute end-3 top-1/2 -translate-y-1/2 text-[10px] font-bold tracking-widest text-brass-ink hover:text-ink transition-colors"
         >
           {show ? "HIDE" : "SHOW"}
         </button>
@@ -46,13 +47,9 @@ function ShowHideInput({
 function SubmitBtn({ label }: { label: string }) {
   const { pending } = useFormStatus();
   return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="w-full justify-center rounded-full bg-[#7020B0] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_0_18px_rgba(112,32,176,0.35)] transition hover:bg-[#7d2ac5] disabled:opacity-60"
-    >
+    <Button type="submit" variant="primary" disabled={pending} className="w-full">
       {pending ? "Saving…" : label}
-    </button>
+    </Button>
   );
 }
 
@@ -107,12 +104,12 @@ export default function ChangePasswordForm({
   if (success) {
     return (
       <div className="flex flex-col items-center gap-3 py-4 text-center">
-        <span className="text-3xl">✓</span>
-        <p className="font-semibold text-white/90">Password updated successfully.</p>
+        <span className="text-3xl text-status-success">✓</span>
+        <p className="font-semibold text-ink">Password updated successfully.</p>
         <button
           type="button"
           onClick={() => setSuccess(false)}
-          className="text-xs text-white/40 hover:text-white/70 transition"
+          className="text-xs text-meta hover:text-ink transition-colors"
         >
           Change again
         </button>
@@ -141,7 +138,7 @@ export default function ChangePasswordForm({
       />
 
       {clientError && (
-        <p className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+        <p className="rounded-[2px] border border-status-danger bg-paper px-3 py-2 text-sm text-status-danger">
           {clientError}
         </p>
       )}

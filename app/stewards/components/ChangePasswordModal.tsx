@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import Modal from "@/app/stewards/components/Modal";
 import ChangePasswordForm from "@/app/stewards/change-password/ChangePasswordForm";
 import { selfChangePasswordAction } from "@/app/stewards/actions";
+import { Button } from "@/components/ui/button";
 
 export default function ChangePasswordModal() {
   const [open, setOpen] = useState(false);
@@ -11,26 +12,28 @@ export default function ChangePasswordModal() {
 
   return (
     <>
-      <button
+      <Button
         type="button"
+        variant="secondary"
+        size="sm"
         onClick={() => setOpen(true)}
-        className="rounded-full border border-white/15 px-3 py-1.5 text-xs font-medium text-white/60 transition hover:border-white/30 hover:text-white/90"
       >
         Change password
-      </button>
+      </Button>
 
       <Modal open={open} onClose={close}>
-        <div className="w-full max-w-sm rounded-2xl border border-steward-gold/30 bg-[#13131f] shadow-[0_24px_60px_rgba(0,0,0,0.6)]">
+        <div className="w-full max-w-sm rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
+          <div className="flex items-center justify-between border-b border-[color:var(--isl-hairline)] px-6 py-4">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-steward-gold/70">Account</p>
-              <p className="mt-0.5 text-sm font-semibold text-white/90">Change Password</p>
+              <p className="font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-brass-ink">Account</p>
+              <p className="mt-0.5 text-sm font-semibold text-ink">Change Password</p>
             </div>
             <button
               type="button"
               onClick={close}
-              className="text-lg leading-none text-white/40 transition hover:text-white"
+              aria-label="Close"
+              className="flex h-11 w-11 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper text-lg leading-none text-ink-2 transition-colors hover:border-ink hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
             >
               ✕
             </button>

@@ -36,24 +36,24 @@ export default function InvolvedDriversPicker({ options }: { options: DriverOpti
 
   return (
     <div className="md:col-span-2">
-      <span className="mb-1 block text-sm text-white/80">Involved drivers (single or multiple) <span className="text-red-400">*</span></span>
+      <span className="mb-1 block text-sm text-ink-2">Involved drivers (single or multiple) <span className="text-status-danger">*</span></span>
       <div className="relative" ref={containerRef}>
-        <button type="button" onClick={() => setOpen((v) => !v)} className="flex w-full items-center justify-between rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-left text-sm">
+        <button type="button" onClick={() => setOpen((v) => !v)} className="flex w-full items-center justify-between rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2 text-start text-sm text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]">
           <span>{selectedIds.length ? `${selectedIds.length} driver${selectedIds.length > 1 ? "s" : ""} selected` : "Choose involved drivers"}</span>
-          <span className="text-white/50">{open ? "▲" : "▼"}</span>
+          <span className="text-meta">{open ? "▲" : "▼"}</span>
         </button>
         {open && (
-          <div className="absolute z-20 mt-2 w-full rounded-lg border border-white/15 bg-[#111119] p-2 shadow-xl">
+          <div className="absolute z-20 mt-2 w-full rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-2">
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search drivers..."
-              className="mb-2 w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm"
+              className="mb-2 w-full rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2 text-sm text-ink placeholder:text-faint focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
             />
             <div className="max-h-56 overflow-y-auto">
               {filtered.map((o) => (
-                <label key={o.id} className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 hover:bg-white/5">
-                  <input type="checkbox" checked={selectedIds.includes(o.id)} onChange={() => toggle(o.id)} className="h-4 w-4 accent-[#7020B0]" />
+                <label key={o.id} className="flex cursor-pointer items-center gap-2 rounded-[2px] px-2 py-1.5 text-ink hover:bg-cream">
+                  <input type="checkbox" checked={selectedIds.includes(o.id)} onChange={() => toggle(o.id)} className="h-4 w-4 accent-[color:var(--isl-oxblood)]" />
                   <span className="text-sm">{o.name} ({o.email})</span>
                 </label>
               ))}
@@ -61,13 +61,13 @@ export default function InvolvedDriversPicker({ options }: { options: DriverOpti
           </div>
         )}
       </div>
-      <div className="mt-2 rounded-lg border border-white/10 bg-black/20 p-2">
+      <div className="mt-2 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-2">
         {selected.length ? (
           <div className="flex flex-wrap gap-2">
-            {selected.map((d) => <span key={d.id} className="inline-flex rounded-full border border-[#7020B0]/40 bg-[#7020B0]/20 px-2.5 py-1 text-xs">{d.name}</span>)}
+            {selected.map((d) => <span key={d.id} className="inline-flex rounded-[2px] border border-oxblood px-2.5 py-1 text-xs text-oxblood">{d.name}</span>)}
           </div>
         ) : (
-          <p className="text-xs text-white/55">Selected drivers will appear here.</p>
+          <p className="text-xs text-meta">Selected drivers will appear here.</p>
         )}
       </div>
       {selectedIds.map((id) => <input key={id} type="hidden" name="involved_driver_ids" value={id} />)}

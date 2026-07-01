@@ -51,7 +51,7 @@ function DeleteButton({
       }}
       className={`inline-flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-70 ${className}`}
     >
-      {pending && <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-red-200/30 border-t-red-100" />}
+      {pending && <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-[color:var(--isl-hairline)] border-t-status-danger" />}
       {pending ? loadingLabel : idleLabel}
     </button>
   );

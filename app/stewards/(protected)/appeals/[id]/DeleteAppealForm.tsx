@@ -25,10 +25,10 @@ function DeleteButton({ formRef }: { formRef: React.RefObject<HTMLFormElement | 
           formRef.current?.requestSubmit();
         }
       }}
-      className="inline-flex items-center gap-2 rounded-full border border-red-500/50 px-3 py-1.5 text-xs text-red-200 transition hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-70"
+      className="inline-flex items-center gap-2 rounded-[2px] border border-status-danger px-3 py-1.5 text-xs uppercase tracking-[0.08em] text-status-danger transition-colors hover:bg-cream focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)] disabled:cursor-not-allowed disabled:opacity-50"
     >
       {pending && (
-        <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-red-200/30 border-t-red-100" />
+        <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-status-danger/30 border-t-status-danger" />
       )}
       {pending ? "Deleting…" : "Delete Appeal"}
     </button>

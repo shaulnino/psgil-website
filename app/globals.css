@@ -341,72 +341,36 @@ body {
   }
 }
 
+/* ISL editorial steward surfaces (light): flat cream panels, hairline borders,
+   an oxblood "on-the-record" top rule. No gradients/shadows/sheen. */
 .stewards-ui .steward-panel {
   position: relative;
-  overflow: hidden;
-  border: 1px solid rgba(143, 132, 112, 0.32);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.012)),
-    radial-gradient(circle at 12% 0%, rgba(143, 132, 112, 0.09), transparent 48%),
-    #13131b;
-  box-shadow:
-    0 0 0 1px rgba(143, 132, 112, 0.08) inset,
-    0 10px 26px rgba(0, 0, 0, 0.22);
-  transition:
-    transform 220ms ease,
-    border-color 220ms ease,
-    box-shadow 220ms ease,
-    background-color 220ms ease;
-  animation: steward-fade-up 260ms ease both;
+  border: 1px solid var(--isl-hairline);
+  background: var(--isl-cream);
+  border-radius: 2px;
+  animation: f1-rise 260ms ease both;
 }
 
 .stewards-ui .steward-panel::after {
   content: "";
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 48%;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  width: 40%;
   height: 2px;
-  background: linear-gradient(90deg, rgba(143, 132, 112, 0.75), rgba(143, 132, 112, 0.12), transparent);
-  opacity: 0.9;
-}
-
-.stewards-ui .steward-panel::before {
-  content: "";
-  pointer-events: none;
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    105deg,
-    transparent 36%,
-    rgba(143, 132, 112, 0.1) 48%,
-    transparent 64%
-  );
-  transform: translateX(-120%);
-}
-
-.stewards-ui .steward-panel:hover {
-  transform: translateY(-2px);
-  border-color: rgba(143, 132, 112, 0.38);
-  box-shadow:
-    0 16px 34px rgba(0, 0, 0, 0.25),
-    0 0 0 1px rgba(143, 132, 112, 0.08) inset,
-    0 0 20px rgba(143, 132, 112, 0.08);
-}
-
-.stewards-ui .steward-panel:hover::before {
-  animation: steward-gold-sheen 680ms ease;
+  background: var(--isl-oxblood);
+  opacity: 0.7;
 }
 
 .stewards-ui .steward-soft {
-  border: 1px solid rgba(143, 132, 112, 0.26);
-  background: linear-gradient(180deg, rgba(143, 132, 112, 0.05), rgba(0, 0, 0, 0.24));
+  border: 1px solid var(--isl-hairline);
+  background: var(--isl-paper);
+  border-radius: 2px;
   transition: border-color 180ms ease, background-color 180ms ease;
 }
 
 .stewards-ui .steward-soft:hover {
-  border-color: rgba(143, 132, 112, 0.34);
-  background: rgba(0, 0, 0, 0.3);
+  border-color: var(--isl-hairline-strong);
 }
 
 .stewards-ui details.steward-expand > summary {
@@ -414,7 +378,7 @@ body {
 }
 
 .stewards-ui details.steward-expand[open] > summary {
-  background: linear-gradient(90deg, rgba(143, 132, 112, 0.12), rgba(143, 132, 112, 0.04));
+  background: var(--isl-cream);
 }
 
 .stewards-ui .steward-table tbody tr {
@@ -422,18 +386,18 @@ body {
 }
 
 .stewards-ui .steward-table tbody tr:hover {
-  background: rgba(143, 132, 112, 0.09);
+  background: color-mix(in srgb, var(--isl-sink) 55%, transparent);
 }
 
 .stewards-ui .steward-panel h2,
 .stewards-ui .steward-panel h3,
 .stewards-ui .steward-panel h4 {
-  color: #b8b0a0;
+  color: var(--isl-ink);
   text-shadow: none;
 }
 
 .stewards-ui .steward-panel thead {
-  background: linear-gradient(90deg, rgba(143, 132, 112, 0.12), rgba(143, 132, 112, 0.04));
+  background: var(--isl-sink);
 }
 
 @media (prefers-reduced-motion: reduce) {

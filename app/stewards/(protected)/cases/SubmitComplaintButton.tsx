@@ -7,7 +7,8 @@ export default function SubmitComplaintButton() {
     <FormActionButton
       idleLabel="Submit Complaint"
       loadingLabel="Submitting..."
-      className="rounded-full bg-[#7020B0] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#7c2ac3]"
+      className="rounded-[2px] bg-ink px-5 py-2.5 text-sm font-medium uppercase tracking-[0.08em] text-bone transition-colors hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
+      spinnerClassName="border-bone/30 border-t-bone"
     />
   );
 }

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
 import { addHistoricalPenaltyAction } from "@/app/stewards/actions";
+import { Button } from "@/components/ui/button";
 
 type Driver = { id: string; name: string; email: string };
 type SeasonRoundOption = { value: string; label: string; rounds: { value: string; label: string }[] };
@@ -18,7 +19,7 @@ const DECISIONS = ["Racing Incident", "No Further Action", "Penalty Imposed", "D
 const SESSIONS  = ["Race", "Sprint", "Qualifying"] as const;
 
 const inputCls =
-  "w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white/90 focus:border-steward-gold/50 focus:outline-none transition";
+  "w-full rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2 text-sm text-ink placeholder:text-faint focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)] transition-colors";
 
 export default function HistoricalPenaltyForm({
   drivers,
@@ -50,21 +51,23 @@ export default function HistoricalPenaltyForm({
   };
 
   return (
-    <section className="steward-panel rounded-2xl p-5">
+    <section className="steward-panel rounded-[2px] p-5">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold">Add Historical Penalty</h3>
-          <p className="mt-0.5 text-sm text-white/55">
+          <h3 className="font-display font-bold tracking-[0.005em] leading-[1.05] text-ink text-lg">Add Historical Penalty</h3>
+          <p className="mt-0.5 text-sm text-ink-2">
             Record penalties from before the system was live. Creates a closed case + published verdict directly.
           </p>
         </div>
-        <button
+        <Button
           type="button"
+          variant="secondary"
+          size="sm"
           onClick={() => setOpen((v) => !v)}
-          className="shrink-0 rounded-full border border-steward-gold/50 bg-steward-gold/10 px-4 py-2 text-sm font-semibold text-steward-cream transition hover:border-steward-gold/80 hover:bg-steward-gold/20"
+          className="shrink-0"
         >
           {open ? "Close" : "+ Add Entry"}
-        </button>
+        </Button>
       </div>
 
       {open && (
@@ -72,7 +75,7 @@ export default function HistoricalPenaltyForm({
           {/* Context */}
           <div className="grid gap-3 md:grid-cols-3">
             <label className="block">
-              <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">Season <span className="text-red-400">*</span></span>
+              <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-meta">Season <span className="text-status-danger">*</span></span>
               {seasonRoundOptions.length > 0 ? (
                 <select
                   name="season"
@@ -91,7 +94,7 @@ export default function HistoricalPenaltyForm({
               )}
             </label>
             <label className="block">
-              <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">Round <span className="text-red-400">*</span></span>
+              <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-meta">Round <span className="text-status-danger">*</span></span>
               {seasonRoundOptions.length > 0 ? (
                 <select name="round" required disabled={!selectedSeason} className={inputCls}>
                   <option value="">{selectedSeason ? "Select round…" : "Select season first"}</option>
@@ -104,7 +107,7 @@ export default function HistoricalPenaltyForm({
               )}
             </label>
             <label className="block">
-              <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">Session</span>
+              <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-meta">Session</span>
               <select name="weekendSession" className={inputCls}>
                 {SESSIONS.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
@@ -112,23 +115,23 @@ export default function HistoricalPenaltyForm({
           </div>
 
           <label className="block">
-            <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">Incident description (optional)</span>
-            <textarea name="description" rows={2} placeholder="Brief description of the incident…" className={inputCls} />
+            <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-meta">Incident description (optional)</span>
+            <textarea name="description" rows={2} dir="auto" placeholder="Brief description of the incident…" className={inputCls} />
           </label>
 
           {/* Verdict decision */}
           <div>
-            <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-white/60">Verdict decision</span>
+            <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-meta">Verdict decision</span>
             <div className="flex flex-wrap gap-2">
               {DECISIONS.map((d) => (
                 <button
                   key={d}
                   type="button"
                   onClick={() => setDecision(decision === d ? "" : d)}
-                  className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
+                  className={`rounded-[2px] border px-3 py-1 text-xs font-semibold transition-colors ${
                     decision === d
-                      ? "border-steward-gold bg-steward-gold/20 text-steward-cream"
-                      : "border-white/15 bg-white/5 text-white/60 hover:border-white/30"
+                      ? "border-ink bg-ink text-bone"
+                      : "border-[color:var(--isl-hairline)] text-ink-2 hover:bg-cream"
                   }`}
                 >
                   {d}
@@ -140,23 +143,23 @@ export default function HistoricalPenaltyForm({
           {/* Per-driver entries */}
           <div>
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-white/60">Drivers &amp; Penalties <span className="text-red-400">*</span></span>
-              <button type="button" onClick={addEntry} className="rounded-full border border-white/20 px-3 py-0.5 text-xs text-white/60 hover:border-white/40 hover:text-white transition">
+              <span className="text-xs font-semibold uppercase tracking-wider text-meta">Drivers &amp; Penalties <span className="text-status-danger">*</span></span>
+              <button type="button" onClick={addEntry} className="rounded-[2px] border border-[color:var(--isl-hairline)] px-3 py-0.5 text-xs text-ink-2 hover:bg-cream hover:text-ink transition-colors">
                 + Add driver
               </button>
             </div>
             <div className="space-y-3">
               {entries.map((entry, i) => (
-                <div key={i} className="rounded-xl border border-white/10 bg-white/3 p-4">
+                <div key={i} className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-4">
                   <div className="mb-3 flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-widest text-steward-gold/70">Driver {i + 1}</span>
+                    <span className="text-xs font-bold uppercase tracking-widest text-brass-ink">Driver <span className="num">{i + 1}</span></span>
                     {entries.length > 1 && (
-                      <button type="button" onClick={() => removeEntry(i)} className="text-xs text-red-400/70 hover:text-red-300 transition">Remove</button>
+                      <button type="button" onClick={() => removeEntry(i)} className="text-xs text-status-danger hover:text-oxblood-deep transition-colors">Remove</button>
                     )}
                   </div>
                   <div className="grid gap-3 md:grid-cols-2">
                     <label className="block md:col-span-2">
-                      <span className="mb-1 block text-xs text-white/50">Driver <span className="text-red-400">*</span></span>
+                      <span className="mb-1 block text-xs text-meta">Driver <span className="text-status-danger">*</span></span>
                       <select
                         value={entry.driverId}
                         onChange={(e) => updateEntry(i, "driverId", e.target.value)}
@@ -170,7 +173,7 @@ export default function HistoricalPenaltyForm({
                       </select>
                     </label>
                     <label className="block">
-                      <span className="mb-1 block text-xs text-white/50">License points</span>
+                      <span className="mb-1 block text-xs text-meta">License points</span>
                       <input
                         type="number" min={0} max={12} step={1}
                         value={entry.licensePoints}
@@ -180,7 +183,7 @@ export default function HistoricalPenaltyForm({
                       />
                     </label>
                     <label className="block">
-                      <span className="mb-1 block text-xs text-white/50">Time penalty (seconds)</span>
+                      <span className="mb-1 block text-xs text-meta">Time penalty (seconds)</span>
                       <input
                         type="number" min={0} step={1}
                         value={entry.timePenaltySeconds}
@@ -190,10 +193,11 @@ export default function HistoricalPenaltyForm({
                       />
                     </label>
                     <label className="block md:col-span-2">
-                      <span className="mb-1 block text-xs text-white/50">Warning text (leave blank if none)</span>
+                      <span className="mb-1 block text-xs text-meta">Warning text (leave blank if none)</span>
                       <input
                         value={entry.warningText}
                         onChange={(e) => updateEntry(i, "warningText", e.target.value)}
+                        dir="auto"
                         placeholder="e.g. Unsportsmanlike conduct warning"
                         className={inputCls}
                       />
@@ -206,15 +210,15 @@ export default function HistoricalPenaltyForm({
 
           {/* Full text (optional) */}
           <label className="block">
-            <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">Verdict full explanation (optional)</span>
-            <textarea name="verdict_full_text" rows={3} placeholder="Steward reasoning or notes…" className={inputCls} />
+            <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-meta">Verdict full explanation (optional)</span>
+            <textarea name="verdict_full_text" rows={3} dir="auto" placeholder="Steward reasoning or notes…" className={inputCls} />
           </label>
 
           <div className="flex items-center gap-3 pt-1">
             <SubmitBtn />
-            <button type="button" onClick={() => setOpen(false)} className="rounded-full border border-white/15 px-5 py-2 text-sm text-white/60 hover:border-white/30 hover:text-white transition">
+            <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
               Cancel
-            </button>
+            </Button>
           </div>
         </form>
       )}
@@ -225,12 +229,8 @@ export default function HistoricalPenaltyForm({
 function SubmitBtn() {
   const { pending } = useFormStatus();
   return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="rounded-full bg-[#7020B0] px-6 py-2 text-sm font-semibold shadow-[0_0_14px_rgba(112,32,176,0.3)] transition hover:bg-[#7c2ac3] disabled:opacity-60"
-    >
+    <Button type="submit" variant="primary" disabled={pending}>
       {pending ? "Saving…" : "Save Historical Penalty"}
-    </button>
+    </Button>
   );
 }

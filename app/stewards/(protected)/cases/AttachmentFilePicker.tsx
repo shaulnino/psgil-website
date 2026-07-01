@@ -2,12 +2,14 @@
 
 import { useRef, useState } from "react";
 
+import { Button } from "@/components/ui/button";
+
 export default function AttachmentFilePicker() {
   const ref = useRef<HTMLInputElement | null>(null);
   const [summary, setSummary] = useState("No files selected");
   return (
     <div>
-      <span className="mb-1 block text-sm text-white/80">Attachments (upload from computer)</span>
+      <span className="mb-1 block text-sm text-ink-2">Attachments (upload from computer)</span>
       <input
         ref={ref}
         type="file"
@@ -22,8 +24,8 @@ export default function AttachmentFilePicker() {
         }}
       />
       <div className="flex flex-wrap items-center gap-3">
-        <button type="button" onClick={() => ref.current?.click()} className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white/90">Choose files</button>
-        <span className="text-xs text-white/60">{summary}</span>
+        <Button type="button" variant="secondary" size="sm" onClick={() => ref.current?.click()}>Choose files</Button>
+        <span className="text-xs text-meta">{summary}</span>
       </div>
     </div>
   );

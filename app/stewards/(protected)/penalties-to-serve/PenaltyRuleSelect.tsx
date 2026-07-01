@@ -5,7 +5,10 @@ import { useState } from "react";
 type Rule = { id: string; penaltyType: string; penaltyLabel: string; penaltyDescription: string };
 
 const inputCls =
-  "w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white/90 focus:border-steward-gold/50 focus:outline-none transition";
+  "w-full rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2 text-sm text-ink placeholder:text-faint focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]";
+
+const labelCls =
+  "mb-1 block text-xs font-semibold uppercase tracking-wider text-brass-ink";
 
 export default function PenaltyRuleSelect({ rules }: { rules: Rule[] }) {
   const [selected, setSelected] = useState<string>("");
@@ -17,7 +20,7 @@ export default function PenaltyRuleSelect({ rules }: { rules: Rule[] }) {
     <div className="md:col-span-2 grid gap-3 md:grid-cols-2">
       {/* Dropdown — spans full width */}
       <label className="block md:col-span-2">
-        <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-white/60">
+        <span className={labelCls}>
           Penalty type *
         </span>
         <select
@@ -50,19 +53,19 @@ export default function PenaltyRuleSelect({ rules }: { rules: Rule[] }) {
       {isCustom && (
         <>
           <label className="block">
-            <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-white/60">
+            <span className={labelCls}>
               Penalty label *
             </span>
             <input name="penalty_label" required placeholder="e.g. Qualifying Ban" className={inputCls} />
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-white/60">
+            <span className={labelCls}>
               Type (internal key)
             </span>
             <input name="penalty_type" placeholder="e.g. qualifying_ban" className={inputCls} />
           </label>
           <label className="block md:col-span-2">
-            <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-white/60">
+            <span className={labelCls}>
               Description
             </span>
             <input name="penalty_description" placeholder="Brief explanation" className={inputCls} />

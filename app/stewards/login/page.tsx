@@ -13,52 +13,52 @@ export default async function StewardLoginPage({ searchParams }: { searchParams:
   const params = await searchParams;
 
   return (
-    <main className="stewards-ui min-h-[70vh] bg-[#0B0B0E] px-6 py-16 text-white">
-      <div className="steward-panel mx-auto w-full max-w-md rounded-2xl p-6">
-        <h1 className="font-display text-3xl font-semibold text-white">Steward Login</h1>
-        <p className="mt-2 text-sm text-white/60">Access is limited to steward-system users only.</p>
+    <main className="stewards-ui min-h-[70vh] bg-bone px-6 py-16 text-ink">
+      <div className="steward-panel mx-auto w-full max-w-md rounded-[2px] p-6">
+        <h1 className="font-display font-bold tracking-[0.005em] leading-[1.05] text-3xl text-ink">Steward Login</h1>
+        <p className="mt-2 text-sm text-meta">Access is limited to steward-system users only.</p>
 
         {params.error && (
-          <div className="mt-4 rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+          <div className="mt-4 rounded-[2px] border border-status-danger bg-cream px-4 py-3 text-sm text-status-danger">
             Incorrect email or password. Please try again.
           </div>
         )}
 
         <form action={loginStewardAction} className="mt-6 space-y-4">
           <label className="block">
-            <span className="mb-1 block text-sm text-white/80">Email</span>
+            <span className="mb-1 block text-sm text-ink-2">Email</span>
             <input
               type="email"
               name="email"
               required
-              className="w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white placeholder:text-white/30 focus:border-steward-gold/50 focus:ring-1 focus:ring-steward-gold/20 focus:outline-none transition"
+              className="w-full rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2 text-ink placeholder:text-faint focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)] transition"
             />
           </label>
           <label className="block">
-            <span className="mb-1 block text-sm text-white/80">Password</span>
+            <span className="mb-1 block text-sm text-ink-2">Password</span>
             <input
               type="password"
               name="password"
               required
-              className="w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white placeholder:text-white/30 focus:border-steward-gold/50 focus:ring-1 focus:ring-steward-gold/20 focus:outline-none transition"
+              className="w-full rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2 text-ink placeholder:text-faint focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)] transition"
             />
           </label>
           <label className="flex cursor-pointer items-center gap-2.5 select-none">
             <input
               type="checkbox"
               name="remember_me"
-              className="h-4 w-4 rounded border border-white/20 bg-black/30 accent-[#7020B0] cursor-pointer"
+              className="h-4 w-4 rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper accent-[color:var(--isl-oxblood)] cursor-pointer"
             />
-            <span className="text-sm text-white/60">Stay signed in</span>
+            <span className="text-sm text-meta">Stay signed in</span>
           </label>
           <FormActionButton
             idleLabel="Sign in"
             loadingLabel="Signing in..."
-            className="w-full justify-center rounded-full bg-[#7020B0] px-4 py-2.5 font-semibold text-white transition hover:bg-[#7d2ac5]"
+            className="w-full justify-center rounded-[2px] bg-ink px-4 py-2.5 font-semibold text-bone transition hover:bg-oxblood"
           />
         </form>
 
-        <div className="mt-5 border-t border-white/8 pt-4 text-center">
+        <div className="mt-5 border-t border-[color:var(--isl-hairline)] pt-4 text-center">
           <ForgotPasswordTip />
         </div>
       </div>
