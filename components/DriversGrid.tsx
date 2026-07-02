@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import type { Driver, Team, TeamWithDrivers } from "@/lib/driversData";
-import { getTeamColor } from "@/lib/driversData";
+import { getTeamColor, localizedDriverName } from "@/lib/driversData";
 import DriverCard from "@/components/DriverCard";
 import DriverModal from "@/components/DriverModal";
 import { AchievementBadgeList } from "@/components/AchievementBadges";
@@ -24,6 +24,7 @@ function isRemote(src?: string) {
 
 export default function DriversGrid({ teams, reserves, historicDrivers, placeholderSrc, currentSeasonLabel }: DriversGridProps) {
   const t = useTranslations("drivers");
+  const locale = useLocale();
   const [selected, setSelected] = useState<{ driver: Driver; team: Team } | null>(null);
   const lastFocused = useRef<HTMLElement | null>(null);
 
@@ -156,7 +157,7 @@ export default function DriversGrid({ teams, reserves, historicDrivers, placehol
                   }`}
                 >
                   <span className="font-display text-base font-semibold text-ink transition-colors group-hover:text-oxblood">
-                    {driver.name}
+                    {localizedDriverName(driver, locale)}
                   </span>
                   <AchievementBadgeList driver={driver} iconSize={14} />
                   <span className="flex-1" />

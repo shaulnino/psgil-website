@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect, createContext, useContext } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import LoadingLink from "@/components/LoadingLink";
-import type { Driver, CompetitionStats } from "@/lib/driversData";
+import { localizedDriverName, type Driver, type CompetitionStats } from "@/lib/driversData";
 import { buildAchievements, getAwardIcon } from "@/components/AchievementBadges";
 import type { AwardCode, RewardCompetition } from "@/lib/rewardsData";
 
@@ -266,6 +266,7 @@ function Tooltip({ text, children, triggerClassName, wide }: { text: React.React
 export default function DriverModal({ driver, placeholderSrc, onClose, currentSeasonLabel }: DriverModalProps) {
   const t = useTranslations("drivers");
   const tr = useTranslations("rewards");
+  const locale = useLocale();
   const [statMode, setStatMode] = useState<StatMode>("alltime");
   const [compMode, setCompMode] = useState<CompMode>("all");
   const [portalEl, setPortalEl] = useState<HTMLDivElement | null>(null);
@@ -500,7 +501,7 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
               </div>
               <div>
                 <div className="flex flex-wrap items-center gap-3">
-                  <h2 className="font-display font-bold tracking-[0.005em] leading-[1.05] text-2xl text-ink">{driver.name}</h2>
+                  <h2 className="font-display font-bold tracking-[0.005em] leading-[1.05] text-2xl text-ink">{localizedDriverName(driver, locale)}</h2>
                   {driver.number && (
                     <span className="num inline-flex items-center rounded-[2px] border border-[color:var(--isl-hairline-strong)] bg-cream px-3 py-0.5 text-sm font-semibold text-ink">
                       #{driver.number}

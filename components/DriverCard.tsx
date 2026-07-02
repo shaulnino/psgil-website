@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
+import { useLocale } from "next-intl";
 import type { Driver, Team } from "@/lib/driversData";
-import { getTeamColor } from "@/lib/driversData";
+import { getTeamColor, localizedDriverName } from "@/lib/driversData";
 import { AchievementBadgeList } from "@/components/AchievementBadges";
 
 type DriverCardProps = {
@@ -17,6 +18,8 @@ function isRemote(src?: string) {
 }
 
 export default function DriverCard({ driver, team, placeholderSrc, onSelect }: DriverCardProps) {
+  const locale = useLocale();
+  const displayName = localizedDriverName(driver, locale);
   const photoSrc = driver.photo_url || placeholderSrc;
   const teamColor = getTeamColor(team.team_key);
 
@@ -36,7 +39,7 @@ export default function DriverCard({ driver, team, placeholderSrc, onSelect }: D
         />
         <Image
           src={photoSrc}
-          alt={driver.name || "Driver"}
+          alt={displayName || "Driver"}
           fill
           sizes="(max-width: 768px) 100vw, 240px"
           className="object-cover transition duration-200 group-hover:scale-[1.02]"
@@ -47,7 +50,7 @@ export default function DriverCard({ driver, team, placeholderSrc, onSelect }: D
       {/* Name bar — more prominent */}
       <div className="flex items-center gap-2 px-4 py-3">
         <p className="font-display text-lg font-bold leading-tight text-ink truncate">
-          {driver.name}
+          {displayName}
         </p>
         <AchievementBadgeList driver={driver} iconSize={14} />
         <span className="flex-1" />

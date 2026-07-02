@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import Image from "next/image";
 import ZoomableImage from "@/components/ZoomableImage";
 import type { RaceGroup, RaceEvent } from "@/lib/scheduleData";
-import { toIsraelTimestamp } from "@/lib/scheduleData";
+import { toIsraelTimestamp, localizedRaceName } from "@/lib/scheduleData";
 import type { RaceResultRow } from "@/lib/resultsData";
 import type { Driver, Team } from "@/lib/driversData";
 import RaceResultsTable from "@/components/RaceResultsTable";
@@ -42,8 +42,8 @@ type HomeRaceCardsProps = {
 /* ------------------------------------------------------------------ */
 
 /** Short label for a race (tab/button text). */
-function raceLabel(event: RaceEvent): string {
-  return event.race_name || `Race #${event.race_number}`;
+function raceLabel(event: RaceEvent, locale: string): string {
+  return localizedRaceName(event, locale) || `Race #${event.race_number}`;
 }
 
 /** Collect unique youtube URLs from a group. */
@@ -282,6 +282,7 @@ function RaceGroupCard({
   endTimestamp?: number | null;
 }) {
   const t = useTranslations("home");
+  const locale = useLocale();
   const isSingle = group.events.length === 1;
   const first = group.events[0];
   const poster = group.events.find((e) => !!e.poster_image) ?? first;
@@ -363,7 +364,7 @@ function RaceGroupCard({
         {hasPoster ? (
           <ZoomableImage
             src={poster.poster_image!}
-            alt={`${first.race_name} poster`}
+            alt={`${localizedRaceName(first, locale)} poster`}
             fill
             sizes="(max-width: 768px) 100vw, 50vw"
             triggerClassName="group relative aspect-video cursor-pointer"
@@ -382,7 +383,7 @@ function RaceGroupCard({
       <div className="mt-4 space-y-1">
         {isSingle ? (
           <p className="text-sm text-ink-2">
-            Season {first.season} · Race #{first.race_number}, {first.race_name}
+            Season {first.season} · Race #{first.race_number}, {localizedRaceName(first, locale)}
             {isWild ? " · Wild Event" : ""} · {group.date}
           </p>
         ) : (
@@ -392,7 +393,7 @@ function RaceGroupCard({
             </p>
             {group.events.map((e) => (
               <p key={e.race_number} className="text-sm text-meta">
-                Race #{e.race_number}: {e.race_name}
+                Race #{e.race_number}: {localizedRaceName(e, locale)}
               </p>
             ))}
           </>
@@ -471,6 +472,7 @@ function GroupResultsModal({
   onClose: () => void;
 }) {
   const t = useTranslations("home");
+  const locale = useLocale();
   // Events that have either a results image or CSV table data
   const withResults = group.events.filter(
     (e) => !!e.results_image || (raceResultsByEvent[e.event_id]?.length ?? 0) > 0,
@@ -518,7 +520,7 @@ function GroupResultsModal({
         <div className="mb-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <h3 className="font-display font-bold tracking-[0.005em] text-sm text-ink md:text-base">
-              {current.race_name}
+              {localizedRaceName(current, locale)}
             </h3>
             {hasTable && hasImage && (
               <button
@@ -562,7 +564,7 @@ function GroupResultsModal({
                     : "text-meta hover:text-ink"
                 }`}
               >
-                {raceLabel(e)}
+                {raceLabel(e, locale)}
               </button>
             ))}
           </div>
@@ -635,7 +637,7 @@ function GroupResultsModal({
             <Image
               key={current.race_number}
               src={current.results_image!}
-              alt={`${current.race_name} results`}
+              alt={`${localizedRaceName(current, locale)} results`}
               width={2000}
               height={1200}
               sizes="100vw"
@@ -649,7 +651,7 @@ function GroupResultsModal({
           <div className="max-h-[85vh] overflow-auto rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-3">
             <RaceResultsTable
               results={tableData}
-              caption={`${current.race_name} — Race Results`}
+              caption={`${localizedRaceName(current, locale)} — Race Results`}
             />
           </div>
         ) : null}

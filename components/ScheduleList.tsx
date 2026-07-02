@@ -1,11 +1,11 @@
 "use client";
 
 import { Suspense, useState, useEffect, useRef, useMemo } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import type { RaceEvent } from "@/lib/scheduleData";
-import { toIsraelTimestamp } from "@/lib/scheduleData";
+import { toIsraelTimestamp, localizedRaceName } from "@/lib/scheduleData";
 import type { RaceResultRow } from "@/lib/resultsData";
 import type { Driver, Team } from "@/lib/driversData";
 import type { SeasonConfig } from "@/lib/seasonConfig";
@@ -90,6 +90,7 @@ function WatchModal({
   onClose: () => void;
 }) {
   const t = useTranslations("schedule");
+  const locale = useLocale();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -118,7 +119,7 @@ function WatchModal({
               {t("watchModal.eyebrow")}
             </span>
             <h3 className="font-display font-bold tracking-[0.005em] leading-[1.05] text-base text-ink md:text-lg">
-              {event.race_name}
+              {localizedRaceName(event, locale)}
             </h3>
             {timeState === "upcoming" && event.start_time && (
               <span className="inline-flex items-center gap-1 rounded-[2px] border border-status-info px-2.5 py-1 text-[11px] font-medium text-status-info">
@@ -205,6 +206,7 @@ function ResultsModal({
   onClose: () => void;
 }) {
   const t = useTranslations("schedule");
+  const locale = useLocale();
   const hasTable = tableData.length > 0;
   const hasImage = !!event.results_image;
   const [showImage, setShowImage] = useState(!hasTable && hasImage);
@@ -238,7 +240,7 @@ function ResultsModal({
         <div className="mb-3 flex items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-3">
             <h3 className="font-display font-bold tracking-[0.005em] leading-[1.05] text-sm text-ink md:text-base">
-              {event.race_name}
+              {localizedRaceName(event, locale)}
             </h3>
             {/* Race format + playoff badges */}
             {event.race_format === "sprint" && (
@@ -411,6 +413,7 @@ function PosterModal({
   onWatch: () => void;
 }) {
   const t = useTranslations("schedule");
+  const locale = useLocale();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -473,7 +476,7 @@ function PosterModal({
                 height={20}
               />
               <h3 className="font-display font-bold tracking-[0.005em] leading-[1.05] text-lg text-ink">
-                {event.race_name}
+                {localizedRaceName(event, locale)}
               </h3>
               <span
                 className={`inline-flex items-center justify-center rounded-[2px] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
@@ -865,6 +868,7 @@ function ScheduleListInner({
   allTeams = [],
 }: ScheduleListProps) {
   const t = useTranslations("schedule");
+  const locale = useLocale();
   const searchParams = useSearchParams();
   const selectedSeasonKey =
     searchParams.get("season") || defaultSeasonKey;
@@ -986,7 +990,7 @@ function ScheduleListInner({
                       {/* Race name + metadata badges */}
                       <span className="font-display text-sm font-semibold text-ink md:text-base">
                         <span className="inline-flex flex-wrap items-center gap-2">
-                          {event.race_name}
+                          {localizedRaceName(event, locale)}
                           <RaceBadges event={event} />
                         </span>
                       </span>

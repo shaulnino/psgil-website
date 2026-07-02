@@ -12,6 +12,8 @@ export type RaceEvent = {
   season: string;
   race_number: string;
   race_name: string;
+  /** Optional Hebrew Grand Prix name (csv column: race_name_he). Falls back to race_name. */
+  race_name_he?: string;
   date: string;
   league: string; // "Main" | "Wild"
   status: string; // "Completed" | "Scheduled"
@@ -21,6 +23,8 @@ export type RaceEvent = {
   youtube_url?: string;
   /** Track / circuit name */
   track?: string;
+  /** Optional Hebrew circuit name (csv column: track_he). Falls back to track. */
+  track_he?: string;
   /** Start time in HH:MM format (Israel local time, e.g. "21:30") */
   start_time?: string;
   /** "dry" | "wet" | "mixed" or empty */
@@ -45,6 +49,22 @@ export type RaceEvent = {
    */
   is_playoff: boolean;
 };
+
+/** Grand Prix name in the active locale — Hebrew when available, else English. */
+export function localizedRaceName(
+  event: Pick<RaceEvent, "race_name" | "race_name_he">,
+  locale: string,
+): string {
+  return locale === "he" && event.race_name_he ? event.race_name_he : event.race_name;
+}
+
+/** Circuit/track name in the active locale — Hebrew when available, else English. */
+export function localizedTrack(
+  event: Pick<RaceEvent, "track" | "track_he">,
+  locale: string,
+): string | undefined {
+  return locale === "he" && event.track_he ? event.track_he : event.track;
+}
 
 /**
  * Ensure an image path is a valid absolute path or full URL.
@@ -144,6 +164,7 @@ export function mapRaceEvents(raw: Record<string, string>[]): RaceEvent[] {
       season,
       race_number: raceNumber,
       race_name: row.race_name ?? "",
+      race_name_he: (row.race_name_he ?? "").trim() || undefined,
       date: row.date ?? "",
       league,
       status: row.status ?? "Scheduled",
@@ -152,6 +173,7 @@ export function mapRaceEvents(raw: Record<string, string>[]): RaceEvent[] {
       results_image: sanitizeImagePath(row.results_image),
       youtube_url: pickYoutubeUrlFromScheduleRow(row),
       track: (row.track ?? "").trim() || undefined,
+      track_he: (row.track_he ?? "").trim() || undefined,
       start_time: (row.start_time ?? "").trim() || undefined,
       weather: (row.weather ?? "").trim().toLowerCase() || undefined,
       safety_cars: isNaN(scNum) ? 0 : scNum,

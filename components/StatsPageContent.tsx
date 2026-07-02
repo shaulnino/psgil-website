@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import StatsFilterPills from "@/components/stats/StatsFilterPills";
 import {
@@ -47,6 +47,7 @@ import {
 } from "@/lib/statsData";
 import type { RaceResultRow } from "@/lib/resultsData";
 import type { RaceEvent } from "@/lib/scheduleData";
+import { localizedRaceName, localizedTrack } from "@/lib/scheduleData";
 import type { Reward } from "@/lib/rewardsData";
 import type { SeasonConfig } from "@/lib/seasonConfig";
 import { computeDriverStats } from "@/lib/statsComputed";
@@ -3464,10 +3465,18 @@ function H2HSection({
   events: RaceEvent[];
 }) {
   const t = useTranslations("stats");
+  const locale = useLocale();
   const driverIndex = useMemo(() => buildDriverIndex(raceResults), [raceResults]);
   const driverNames = useMemo(() => getDriverNames(driverIndex), [driverIndex]);
   const eventMeta = useMemo(() => buildEventMeta(events), [events]);
   const filterOptions = useMemo(() => getFilterOptions(eventMeta), [eventMeta]);
+  // Lookup a RaceEvent by its event_id so visible GP / circuit names can be
+  // shown in the active locale (Hebrew when available, else English fallback).
+  const eventById = useMemo(() => {
+    const map = new Map<string, RaceEvent>();
+    for (const e of events) map.set(e.event_id, e);
+    return map;
+  }, [events]);
 
   const [driverA, setDriverA] = useState("");
   const [driverB, setDriverB] = useState("");
@@ -3759,6 +3768,13 @@ function H2HSection({
                   const gridWinner = race.gridA !== null && race.gridB !== null
                     ? race.gridA < race.gridB ? "a" : race.gridB < race.gridA ? "b" : null
                     : null;
+                  const raceEvent = eventById.get(race.eventId);
+                  const raceNameDisplay = raceEvent
+                    ? localizedRaceName(raceEvent, locale)
+                    : race.raceName;
+                  const circuitDisplay = raceEvent
+                    ? localizedTrack(raceEvent, locale) ?? race.circuit
+                    : race.circuit;
                   return (
                     <tr
                       key={race.eventId}
@@ -3770,10 +3786,10 @@ function H2HSection({
                           onClick={() => setResultsEventId(race.eventId)}
                           className="text-start underline decoration-[color:var(--isl-hairline-strong)] underline-offset-2 transition hover:text-oxblood hover:decoration-oxblood"
                         >
-                          {race.raceName}
+                          {raceNameDisplay}
                         </button>
                         {race.circuit && race.circuit !== race.raceName && (
-                          <span className="ms-1.5 text-[10px] text-faint">{race.circuit}</span>
+                          <span className="ms-1.5 text-[10px] text-faint">{circuitDisplay}</span>
                         )}
                       </td>
                       <td className="num px-3 py-2.5 text-meta">{race.date}</td>
@@ -3833,6 +3849,9 @@ function H2HSection({
         const meta = eventMeta.get(resultsEventId);
         const eventObj = events.find((e) => e.event_id === resultsEventId);
         const ytUrl = eventObj?.youtube_url;
+        const modalRaceName = eventObj
+          ? localizedRaceName(eventObj, locale)
+          : meta?.raceName ?? resultsEventId;
         return (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60"
@@ -3845,7 +3864,7 @@ function H2HSection({
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <h3 className="font-display text-sm font-semibold text-ink md:text-base">
-                    {meta?.raceName ?? resultsEventId}
+                    {modalRaceName}
                   </h3>
                   {meta?.season && (
                     <span className="num rounded-[2px] bg-cream px-2 py-0.5 text-[10px] font-semibold text-meta">
@@ -3878,7 +3897,7 @@ function H2HSection({
                 <div className="max-h-[85vh] overflow-auto rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-3">
                   <RaceResultsTable
                     results={resultRows}
-                    caption={t("h2h.raceResultsCaption", { race: meta?.raceName ?? resultsEventId })}
+                    caption={t("h2h.raceResultsCaption", { race: modalRaceName })}
                   />
                 </div>
               ) : (

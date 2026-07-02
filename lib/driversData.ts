@@ -53,6 +53,8 @@ export type CompetitionStats = {
 export type Driver = {
   driver_id: string;
   name: string;
+  /** Optional Hebrew driver name (csv column: name_he). Falls back to name. */
+  name_he?: string;
   team_key: string;
   role: DriverRole;
   number?: string;
@@ -133,6 +135,14 @@ export type Driver = {
   season_comp_main?: CompetitionStats;
   season_comp_wild?: CompetitionStats;
 };
+
+/** Driver name in the active locale — Hebrew when available, else English/Latin. */
+export function localizedDriverName(
+  driver: Pick<Driver, "name" | "name_he">,
+  locale: string,
+): string {
+  return locale === "he" && driver.name_he ? driver.name_he : driver.name;
+}
 
 /* ------------------------------------------------------------------ */
 /*  League Standings (separate sheet, joined by driver_id)             */
@@ -229,6 +239,7 @@ export function mapDrivers(raw: Record<string, string>[]): Driver[] {
   return raw.map((row) => ({
     driver_id: row.driver_id ?? "",
     name: row.name ?? "",
+    name_he: (row.name_he ?? "").trim() || undefined,
     team_key: row.team_key ?? "",
     role: normalizeRole(row.role ?? "main"),
     number: row.number || undefined,

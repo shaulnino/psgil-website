@@ -23,6 +23,7 @@ import {
   groupTimestamp,
   groupEndTimestamp,
   toIsraelTimestamp,
+  localizedRaceName,
 } from "@/lib/scheduleData";
 import type { RaceGroup, RaceEvent } from "@/lib/scheduleData";
 import { fetchAllRaceResults, fetchStandings } from "@/lib/resultsData";
@@ -181,7 +182,7 @@ export default async function Home() {
       if (hasValidYoutube && !seen.has(youtubeUrl)) {
         seen.add(youtubeUrl);
         lastRaceYoutubeLinks.push({
-          label: `Watch Race #${e.race_number} – ${e.race_name}`,
+          label: `Watch Race #${e.race_number} – ${localizedRaceName(e, locale)}`,
           url: youtubeUrl,
         });
       }
