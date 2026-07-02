@@ -2,8 +2,6 @@ export const dynamic = "force-dynamic";
 
 import { getLocale, getTranslations } from "next-intl/server";
 import Image from "next/image";
-import path from "node:path";
-import { existsSync } from "node:fs";
 import { Button } from "@/components/ui/button";
 import HomeRaceCards from "@/components/HomeRaceCards";
 import WatchLastRaceButton from "@/components/WatchLastRaceButton";
@@ -47,9 +45,6 @@ import {
   GLOBAL_CSV_URLS,
 } from "@/lib/seasonConfig";
 
-const heroImagePath = "/hero.jpg";
-const resolvePublic = (filePath: string) =>
-  path.join(process.cwd(), "public", filePath.replace(/^\/+/, ""));
 const newsFallbackImage = "/isl-banner.png";
 
 function isRemote(src?: string) {
@@ -59,7 +54,6 @@ function isRemote(src?: string) {
 export default async function Home() {
   const tHome = await getTranslations("home");
   const locale = await getLocale();
-  const heroImageExists = existsSync(resolvePublic(heroImagePath));
 
   /* ---- Seasons config ---- */
   const seasonsConfig = await fetchSeasonsConfig();
@@ -234,27 +228,21 @@ export default async function Home() {
       {/* ── Hero: editorial masthead — framed (desaturated) race image + ink headline on bone ── */}
       <section className="isl-speed-lines border-b border-[color:var(--isl-hairline)]">
         <div className="mx-auto w-full max-w-[1240px] px-5 pb-8 pt-10">
-          {heroImageExists && (
-            <div className="relative aspect-[21/9] w-full overflow-hidden rounded-[2px] border border-[color:var(--isl-hairline)]">
-              <Image
-                src={heroImagePath}
-                alt={tHome("hero.imageAlt")}
-                fill
-                priority
-                sizes="100vw"
-                className="object-cover object-center [filter:grayscale(0.25)_contrast(1.03)]"
-              />
-            </div>
-          )}
+          <div className="relative w-full overflow-hidden rounded-[2px] border border-[color:var(--isl-hairline)] bg-ink">
+            <Image
+              src="/hero-new-era.png"
+              alt={tHome("hero.imageAlt")}
+              width={1264}
+              height={848}
+              priority
+              sizes="(max-width: 1240px) 100vw, 1240px"
+              className="h-auto w-full"
+            />
+          </div>
 
           <div className="mt-8 max-w-3xl">
-            <p className="font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-oxblood">
-              {currentSeasonLabel}
-            </p>
-            <h1 className="mt-3 font-display text-4xl font-bold leading-[1.03] tracking-[0.005em] text-ink md:text-5xl lg:text-6xl">
-              {tHome("hero.title")}
-            </h1>
-            <p className="mt-4 max-w-xl text-lg text-ink-2 md:text-xl">
+            <h1 className="sr-only">{tHome("hero.title")}</h1>
+            <p className="max-w-xl text-lg text-ink-2 md:text-xl">
               {tHome("hero.subtitle")}
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
