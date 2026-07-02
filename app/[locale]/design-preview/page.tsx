@@ -61,7 +61,7 @@ export default function DesignPreviewPage() {
                 dir="rtl"
                 lang="he"
                 className="text-3xl leading-none text-ink"
-                style={{ fontFamily: "var(--font-frank-ruhl), serif", fontWeight: 700 }}
+                style={{ fontFamily: "var(--font-heebo), sans-serif", fontWeight: 800 }}
               >
                 קו ראשון
               </span>

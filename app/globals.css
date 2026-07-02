@@ -129,6 +129,23 @@
   font-family: var(--font-public-sans), system-ui, sans-serif;
 }
 
+/* Hebrew type: apply the Hebrew families directly on Hebrew pages/subtrees.
+   (We can't just append them to the Latin stacks — next/font injects a
+   Hebrew-capable metric fallback right after each Latin font, which would
+   intercept Hebrew glyphs before Heebo/Assistant.) Latin tokens inside Hebrew
+   text (ISL, F1, EA Sports) render in the same Hebrew family — intentional, so
+   a Hebrew heading reads as one typeface rather than a Zilla/Heebo mix. */
+[lang="he"] body {
+  font-family: var(--font-assistant), system-ui, sans-serif;
+}
+[lang="he"] .font-display,
+[lang="he"] .font-isl-display {
+  font-family: var(--font-heebo), sans-serif;
+}
+[lang="he"] .font-isl-body {
+  font-family: var(--font-assistant), system-ui, sans-serif;
+}
+
 /* Signature "double rule" (thin-over-thick) with a single oxblood tick at the
    inline-start — the ISL divider identity. */
 .isl-double-rule {

@@ -9,7 +9,7 @@ import {
   Zilla_Slab,
   Public_Sans,
   Spline_Sans_Mono,
-  Frank_Ruhl_Libre,
+  Heebo,
   Assistant,
 } from "next/font/google";
 import "./globals.css";
@@ -53,8 +53,8 @@ const splineSansMono = Spline_Sans_Mono({
   subsets: ["latin"],
   display: "swap",
 });
-const frankRuhl = Frank_Ruhl_Libre({
-  variable: "--font-frank-ruhl", // Hebrew display / headlines (variable)
+const heebo = Heebo({
+  variable: "--font-heebo", // Hebrew display / headlines (variable, geometric sans)
   subsets: ["hebrew", "latin"],
   display: "swap",
 });
@@ -92,7 +92,7 @@ export default async function RootLayout({
   return (
     <html lang={locale} dir={dir} data-scroll-behavior="smooth">
       <body
-        className={`${inter.variable} ${rajdhani.variable} ${zillaSlab.variable} ${publicSans.variable} ${splineSansMono.variable} ${frankRuhl.variable} ${assistant.variable} antialiased`}
+        className={`${inter.variable} ${rajdhani.variable} ${zillaSlab.variable} ${publicSans.variable} ${splineSansMono.variable} ${heebo.variable} ${assistant.variable} antialiased`}
       >
         <NextIntlClientProvider messages={messages}>
         {/* ── Google Analytics 4 (production only) ── */}
