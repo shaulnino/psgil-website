@@ -240,8 +240,8 @@ export default async function Home() {
             />
           </div>
 
-          <div className="mt-8 max-w-3xl">
-            <h1 className="font-display text-4xl font-bold leading-[1.03] tracking-[0.005em] text-ink md:text-5xl lg:text-6xl">
+          <div className="mt-8 max-w-5xl">
+            <h1 className="font-display text-4xl font-bold leading-[1.03] tracking-[0.005em] text-ink md:text-5xl lg:text-6xl [text-wrap:balance]">
               {tHome("hero.title")}
             </h1>
             <p className="mt-4 max-w-xl text-lg text-ink-2 md:text-xl">
