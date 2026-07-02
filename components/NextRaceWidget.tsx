@@ -257,7 +257,7 @@ export default function NextRaceWidget({ race }: { race: NextRaceData | null }) 
                 {race.isChampionshipFinale ? "Season Finale" : "Next Race"}
               </span>
               {countdown && (
-                <span className="num font-display text-sm font-bold tabular-nums text-ink">
+                <span dir="ltr" className="num font-display text-sm font-bold tabular-nums text-ink">
                   {countdown.days > 0 && `${countdown.days}d `}
                   {String(countdown.hours).padStart(2, "0")}:
                   {String(countdown.minutes).padStart(2, "0")}:
@@ -412,7 +412,7 @@ export default function NextRaceWidget({ race }: { race: NextRaceData | null }) 
               </span>
             </div>
           ) : countdown && countdown.total > 0 ? (
-            <div className="mt-3 flex items-center justify-center gap-3 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-3 py-2.5">
+            <div dir="ltr" className="mt-3 flex items-center justify-center gap-3 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-3 py-2.5">
               <CountdownUnit value={countdown.days} label="days" />
               <span className="font-display text-lg font-bold text-faint">:</span>
               <CountdownUnit value={countdown.hours} label="hrs" />

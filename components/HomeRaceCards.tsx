@@ -220,7 +220,7 @@ function RaceCountdown({
   const pad = (v: number) => String(v).padStart(2, "0");
 
   return (
-    <div className="inline-flex h-[34px] items-center gap-1.5 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-3 transition-colors hover:border-[color:var(--isl-hairline-strong)]">
+    <div dir="ltr" className="inline-flex h-[34px] items-center gap-1.5 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-3 transition-colors hover:border-[color:var(--isl-hairline-strong)]">
       {[
         { v: days, l: "d" },
         { v: hours, l: "h" },
