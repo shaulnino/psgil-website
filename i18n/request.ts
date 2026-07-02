@@ -1,5 +1,6 @@
 import { getRequestConfig } from "next-intl/server";
 import { routing } from "./routing";
+import { getCurrentStewardUser } from "@/lib/stewards/auth";
 
 /**
  * next-intl request config (Phase 9b).
@@ -40,10 +41,21 @@ function deepMerge(base: Dict, over: Dict): Dict {
 
 export default getRequestConfig(async ({ requestLocale }) => {
   const requested = await requestLocale;
-  const locale =
-    requested && (routing.locales as readonly string[]).includes(requested)
-      ? requested
-      : "en";
+  let locale: string;
+  if (requested && (routing.locales as readonly string[]).includes(requested)) {
+    // Public [locale] route.
+    locale = requested;
+  } else {
+    // Non-localized route (steward portal / api). The steward portal uses the
+    // logged-in user's saved language preference (Phase 9e); everything else en.
+    let stewardLocale: string | undefined;
+    try {
+      stewardLocale = (await getCurrentStewardUser())?.locale;
+    } catch {
+      stewardLocale = undefined;
+    }
+    locale = stewardLocale === "he" ? "he" : "en";
+  }
 
   const enEntries = await Promise.all(
     NAMESPACES.map(async (ns) => [ns, (await import(`../messages/en/${ns}.json`)).default] as const),

@@ -1,19 +1,26 @@
+import { getTranslations } from "next-intl/server";
 import { logoutStewardAction } from "@/app/stewards/actions";
 import FormActionButton from "@/app/stewards/components/FormActionButton";
 import StewardNav from "@/app/stewards/components/StewardNav";
 import ChangePasswordModal from "@/app/stewards/components/ChangePasswordModal";
+import StewardLocaleToggle from "@/app/stewards/components/StewardLocaleToggle";
 import { can, requireStewardUser } from "@/lib/stewards/auth";
-import { getTranslations } from "next-intl/server";
 
 export default async function StewardProtectedLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const user = await requireStewardUser();
+  // Steward portal language is a per-user preference (Phase 9e). i18n/request.ts
+  // resolves the request locale + messages from this same preference, so
+  // getTranslations() below and all child components already render in it; here
+  // we only need it for the dir/lang wrapper + the toggle's current state.
+  const locale = user.locale === "he" ? "he" : "en";
   const t = await getTranslations("stewards");
+  const dir = locale === "he" ? "rtl" : "ltr";
   const rolesDisplay = user.roles.map((r) => t(`shell.role.${r}`)).join(", ");
 
   return (
-    <main className="stewards-ui bg-bone text-ink">
+    <main dir={dir} lang={locale} className="stewards-ui bg-bone text-ink">
       <section className="border-b border-[color:var(--isl-hairline)] bg-paper">
         <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-4">
           <div>
@@ -21,6 +28,7 @@ export default async function StewardProtectedLayout({
             <p className="text-sm text-ink-2">{t("shell.signedInAs", { name: user.name, roles: rolesDisplay })}</p>
           </div>
           <div className="flex items-center gap-2">
+            <StewardLocaleToggle locale={locale} />
             <ChangePasswordModal />
             <form action={logoutStewardAction}>
               <FormActionButton

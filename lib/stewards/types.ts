@@ -24,6 +24,8 @@ export type StewardUser = {
   isActive: boolean;
   /** Forces the user into the change-password flow on next login. */
   mustChangePassword: boolean;
+  /** Steward portal UI language. Absent = "en". Set by the steward themselves. */
+  locale?: "en" | "he";
   createdAt: string;
   updatedAt: string;
 };

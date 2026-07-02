@@ -48,6 +48,7 @@ import {
   updatePenaltyStatus,
   updateUser,
   updateUserRoles,
+  setUserLocale,
   upsertAppealVerdict,
   upsertVerdict,
 } from "@/lib/stewards/repository";
@@ -155,6 +156,12 @@ export async function loginStewardAction(formData: FormData) {
 export async function logoutStewardAction() {
   await clearStewardSessionCookie();
   redirect("/stewards/login");
+}
+
+export async function setStewardLocaleAction(locale: "en" | "he") {
+  const user = await requireStewardUser();
+  await setUserLocale(user.id, locale === "he" ? "he" : "en");
+  revalidatePath("/stewards", "layout");
 }
 
 export async function createComplaintAction(formData: FormData) {
