@@ -17,7 +17,7 @@ export const revalidate = 60; // 60 seconds — news articles should appear quic
 export default async function NewsPage() {
   const t = await getTranslations("news");
   const locale = await getLocale();
-  const { articles, error } = await fetchArticlesWithStatus();
+  const { articles, error } = await fetchArticlesWithStatus(locale);
   const grouped = NEWS_CATEGORY_ORDER.map((category) => ({
     category,
     label: t(`categories.${category}`),

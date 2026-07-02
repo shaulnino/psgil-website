@@ -76,8 +76,8 @@ export async function generateMetadata({
 }: NewsArticlePageProps): Promise<Metadata> {
   const t = await getTranslations("news");
   const baseUrl = resolveSiteBaseUrl();
-  const { slug } = await params;
-  const article = await fetchArticleBySlug(slug);
+  const { locale, slug } = await params;
+  const article = await fetchArticleBySlug(slug, locale);
   const url = `${baseUrl}/news/${encodeURIComponent(slug)}`;
 
   if (!article) {
@@ -129,7 +129,7 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
   const t = await getTranslations("news");
   const locale = await getLocale();
   const { slug } = await params;
-  const { articles, error } = await fetchArticlesWithStatus();
+  const { articles, error } = await fetchArticlesWithStatus(locale);
   const article = articles.find((item) => item.slug === slug) ?? null;
 
   if (!article) {

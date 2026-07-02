@@ -82,7 +82,7 @@ export default async function Home() {
       fetchStandings(GLOBAL_CSV_URLS.driversStandingsMain),
       fetchStandings(GLOBAL_CSV_URLS.driversStandingsWild),
       fetchRewards(GLOBAL_CSV_URLS.rewards),
-      fetchLatestArticles(3),
+      fetchLatestArticles(3, locale),
     ]);
 
   const allResultsFlat = Object.values(raceResultsByEvent).flat();
