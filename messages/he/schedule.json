@@ -1,0 +1,163 @@
+{
+  "page": {
+    "title": "לוח מרוצים ותוצאות",
+    "description": "לוח המרוצים המלא והתוצאות לכל עונה של ISL."
+  },
+  "tables": {
+    "title": "טבלאות",
+    "description": "טבלאות האליפות הרשמיות, מתעדכנות לאחר כל סבב."
+  },
+  "watchModal": {
+    "eyebrow": "שידור המרוץ",
+    "streamStartsAt": "השידור מתחיל בשעה",
+    "replayAvailable": "שידור חוזר זמין",
+    "liveOrReplay": "חי / שידור חוזר",
+    "closeBroadcast": "סגירת השידור",
+    "broadcastTitleSuffix": "– שידור המרוץ",
+    "openOnYouTube": "פתחו ב-YouTube"
+  },
+  "resultsModal": {
+    "sprint": "ספרינט",
+    "quarterDistance": "25%",
+    "playoff": "פלייאוף",
+    "table": "טבלה",
+    "image": "תמונה",
+    "closeResults": "סגירת התוצאות",
+    "zoomOut": "התרחקות",
+    "zoomIn": "התקרבות",
+    "reset": "איפוס",
+    "resultsCaptionSuffix": "— תוצאות המרוץ",
+    "resultsNotAvailable": "התוצאות עדיין אינן זמינות."
+  },
+  "posterModal": {
+    "closePoster": "סגירת הכרזה",
+    "posterNotAvailable": "הכרזה אינה זמינה",
+    "sprint": "ספרינט",
+    "quarterDistance": "25%",
+    "playoff": "פלייאוף",
+    "provisional": "זמני",
+    "provisionalTooltip": "תוצאות זמניות — כפופות להחלטות השיפוט.",
+    "season": "עונה",
+    "race": "מרוץ מס׳",
+    "seeResult": "צפייה בתוצאה",
+    "watchLive": "צפייה בשידור חי",
+    "watchTheRace": "צפו במרוץ",
+    "streamStartsAt": "השידור מתחיל בשעה"
+  },
+  "badges": {
+    "sprintTooltip": "מרוץ ספרינט (פורמט קצר)",
+    "quarterDistanceTooltip": "מרוץ במרחק 25%",
+    "playoffTooltip": "סבב פלייאוף",
+    "provisionalTooltip": "תוצאות זמניות — כפופות להחלטות השיפוט.",
+    "dryTooltip": "מזג אוויר: מרוץ יבש",
+    "dry": "Dry",
+    "wetTooltip": "מזג אוויר: מרוץ רטוב",
+    "wet": "Wet",
+    "mixedTooltip": "מזג אוויר: תנאים מעורבים (יבש ורטוב)",
+    "mixed": "מעורב",
+    "safetyCarsTooltip": "מכוניות בטיחות: {count}",
+    "reverseGridTooltip": "במרוץ זה נעשה שימוש במקבץ הפוך"
+  },
+  "status": {
+    "live": "חי",
+    "upcoming": "Upcoming",
+    "completed": "Completed",
+    "postponed": "נדחה",
+    "cancelled": "בוטל",
+    "scheduled": "מתוכנן"
+  },
+  "list": {
+    "headerNumber": "#",
+    "headerRace": "מרוץ",
+    "headerDate": "תאריך",
+    "headerLeague": "ליגה",
+    "headerStatus": "סטטוס",
+    "headerFlag": "דגל",
+    "open": "Open",
+    "noEventsAvailable": "עדיין אין אירועי מרוץ זמינים.",
+    "noEventsForSeason": "אין אירועי מרוץ זמינים לעונה זו.",
+    "loading": "טוען לוח מרוצים…"
+  },
+  "standingsTable": {
+    "pos": "מיקום",
+    "posChange": "+/−",
+    "driver": "נהג",
+    "team": "קבוצה",
+    "points": "נקודות",
+    "gain": "רווח",
+    "interval": "מרווח",
+    "gap": "פער",
+    "wins": "ניצחונות",
+    "second": "מקום 2",
+    "third": "מקום 3",
+    "top5": "5 המובילים",
+    "top10": "10 המובילים",
+    "bestFinish": "הסיום הטוב ביותר",
+    "bestGrid": "מיקום הזינוק הטוב ביותר",
+    "fastestLaps": "הקפות מהירות",
+    "poles": "עמדות זינוק ראשונות",
+    "dotd": "DOTD",
+    "penaltyPts": "נקודות עונש",
+    "dnfs": "DNFs",
+    "races": "מרוצים",
+    "upperBracket": "בית עליון",
+    "lowerBracket": "בית תחתון"
+  },
+  "raceResultsTable": {
+    "pos": "מיקום",
+    "posChange": "+/−",
+    "driver": "נהג",
+    "team": "קבוצה",
+    "timeOrGap": "זמן / פער",
+    "bestLap": "הקפה מהירה",
+    "grid": "זינוק",
+    "stops": "עצירות",
+    "points": "נקודות",
+    "status": "סטטוס",
+    "finished": "Finished",
+    "fastestLap": "הקפה מהירה ביותר",
+    "driverOfTheDay": "נהג היום",
+    "polePosition": "עמדת זינוק ראשונה"
+  },
+  "resultsTable": {
+    "noData": "עדיין אין נתונים זמינים."
+  },
+  "standingsSection": {
+    "showTable": "הצגת טבלה",
+    "showImage": "הצגת תמונה",
+    "resultsNotUploaded": "התוצאות עדיין לא הועלו."
+  },
+  "tablesContent": {
+    "upperBracket": "בית עליון",
+    "lowerBracket": "בית תחתון",
+    "overall": "כללי",
+    "mainLeague": "הליגה הראשית",
+    "lowerLeague": "הליגה התחתונה",
+    "wildLeague": "ליגת Wild",
+    "constructors": "קבוצות",
+    "community": "קהילה",
+    "driversMainBracketTitle": "אליפות הנהגים הראשית – {bracket}",
+    "driversMainSubtitleUpper": "המחצית העליונה של המקבץ.",
+    "driversMainSubtitleLower": "המחצית התחתונה של המקבץ.",
+    "driversMainSubtitleOverall": "טבלת הנקודות הנוכחית לאחר הסבב האחרון.",
+    "driversMainTitle": "טבלת אליפות הנהגים הראשית",
+    "driversMainSubtitle": "טבלת הנקודות הנוכחית לאחר הסבב האחרון.",
+    "driversMainImageAlt": "טבלת אליפות הנהגים הראשית",
+    "constructorsMainTitle": "טבלת אליפות הקבוצות הראשית",
+    "constructorsMainSubtitle": "טבלת הקבוצות באליפות הראשית.",
+    "constructorsMainImageAlt": "טבלת אליפות הקבוצות הראשית",
+    "driversWildTitle": "טבלת אליפות הנהגים Wild",
+    "driversWildSubtitle": "טבלת הנקודות של אליפות Wild.",
+    "driversWildImageAlt": "טבלת אליפות הנהגים Wild",
+    "constructorsWildTitle": "טבלת אליפות הקבוצות Wild",
+    "constructorsWildSubtitle": "טבלת הקבוצות באליפות Wild.",
+    "constructorsWildImageAlt": "טבלת אליפות הקבוצות Wild",
+    "seasonAwardsPrefix": "עונה",
+    "seasonAwards": "פרסים",
+    "noStandingsForSeason": "עדיין אין נתוני טבלאות זמינים לעונה זו.",
+    "loading": "טוען טבלאות…"
+  },
+  "seasonSelector": {
+    "season": "עונה"
+  }
+}

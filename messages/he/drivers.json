@@ -1,0 +1,41 @@
+{
+  "page": {
+    "title": "נהגים",
+    "description": "המצבת הרשמית של ISL: קבוצות, נהגים ופרופילים — מתעדכן במהלך העונה."
+  },
+  "grid": {
+    "mainDrivers": "נהגים ראשיים",
+    "lineupComingSoon": "מצבת הנהגים תפורסם בקרוב.",
+    "reserveDrivers": "נהגי מילואים",
+    "reserveDescription": "נהגים נוספים הזמינים לחילופים.",
+    "reserveComingSoon": "מצבת המילואים תפורסם בקרוב.",
+    "historicalDrivers": "נהגים היסטוריים",
+    "historicalDescription": "נהגים שהתחרו בעונות קודמות של ISL."
+  },
+  "modal": {
+    "closeAriaLabel": "סגירת פרופיל הנהג",
+    "roleReserve": "מילואים",
+    "roleMain": "ראשי",
+    "leagueStanding": "דירוג בליגה",
+    "leagueMain": "Main",
+    "leagueWild": "Wild",
+    "recordsAndAwards": "שיאים ופרסים",
+    "quickStats": "סטטיסטיקה מהירה",
+    "raceEvents": "אירועי מרוץ",
+    "raceEventsTooltip": "המספר הכולל של אירועי המרוץ שבהם השתתף הנהג (מרוצים רגילים + מרוצי 25% + מרוצי ספרינט יחד).",
+    "scopeAllTime": "כל הזמנים",
+    "scopeSeason": "עונה",
+    "compAll": "הכול",
+    "compMain": "Main",
+    "compWild": "Wild",
+    "driverRatings": "דירוגי הנהג",
+    "fullDriverStats": "סטטיסטיקה מלאה של הנהג"
+  },
+  "ratings": {
+    "rating_speed": "מהירות",
+    "rating_consistency": "עקביות",
+    "rating_performance": "ביצועים",
+    "rating_agility": "זריזות",
+    "rating_overall": "דירוג נהג"
+  }
+}

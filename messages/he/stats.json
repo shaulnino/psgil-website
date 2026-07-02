@@ -1,0 +1,175 @@
+{
+  "charts": {
+    "allMetricsLink": "כל המדדים →",
+    "compareCumulativeNote": "לתשומת לבכם: מגמה זו מבוססת על ציר זמן מרוצים משולב (איחוד המרוצים של הנהגים שנבחרו), ולא רק על מרוצים משותפים.",
+    "compareCumulativeTrend": "השוואת מגמה מצטברת",
+    "comparisonNormalised": "השוואה (מנורמלת)",
+    "driverCumulativeTrend": "מגמה מצטברת של הנהג",
+    "driverRatings": "דירוגי נהגים",
+    "keyMetricsNormalised": "מדדים מרכזיים (מנורמלים)",
+    "leaderHint": "עמודות בהירות יותר וערכים מודגשים מציינים את המוביל הנוכחי בכל מדד.",
+    "seasonComparisonNormalised": "השוואת עונות (מנורמלת)"
+  },
+  "circuits": {
+    "seasonAppearances": "הופעות בעונה",
+    "secondPlace": "מקום שני",
+    "thirdPlace": "מקום שלישי",
+    "winners": "מנצחים"
+  },
+  "compare": {
+    "close": "✕ השוואה",
+    "closeSeasons": "✕ השוואת עונות",
+    "open": "⇆ השוואה",
+    "openCircuits": "⇆ השוואת מסלולים",
+    "openSeasons": "⇆ השוואת עונות"
+  },
+  "driverStatTabs": {
+    "championship": "אליפות",
+    "consistency": "עקביות",
+    "pace": "קצב מרוץ",
+    "qualifying": "מקצה דירוג",
+    "racecraft": "אומנות המרוץ",
+    "records": "שיאים ופרסים"
+  },
+  "empty": {
+    "noCircuitStats": "אין סטטיסטיקת מסלולים זמינה.",
+    "noDriverStats": "אין סטטיסטיקת נהגים זמינה.",
+    "noDriverStatsForSeason": "אין סטטיסטיקת נהגים זמינה עבור {season}.",
+    "noDriversForMetric": "לאף נהג אין נתונים עבור מדד זה.",
+    "noLeagueStats": "אין סטטיסטיקת ליגה זמינה.",
+    "noRaceByRaceCompare": "אין נתונים מרוץ-אחר-מרוץ זמינים עבור הנהגים שנבחרו בסינון הנוכחי.",
+    "noRaceByRaceDriver": "אין נתונים מרוץ-אחר-מרוץ זמינים עבור נהג זה בסינון הנוכחי."
+  },
+  "expand": {
+    "collapseAll": "כווצו הכל",
+    "expandAll": "הרחיבו הכל"
+  },
+  "filters": {
+    "all": "הכל",
+    "clearFilters": "נקו סינון",
+    "format": "פורמט",
+    "format25": "25%",
+    "format50": "50%",
+    "league": "ליגה",
+    "main": "ראשית",
+    "playoffs": "פלייאוף",
+    "regular": "רגיל",
+    "round": "סבב",
+    "sprint": "ספרינט",
+    "wild": "וויילד"
+  },
+  "h2h": {
+    "allCircuits": "כל המסלולים",
+    "allWeather": "כל מזג האוויר",
+    "allFormats": "כל הפורמטים",
+    "allLeagues": "כל הליגות",
+    "allRounds": "כל הסבבים",
+    "allSeasons": "כל העונות",
+    "clearAll": "נקו הכל",
+    "driverA": "נהג א'",
+    "driverB": "נהג ב'",
+    "explainerBody": "לשונית הנהגים משווה סטטיסטיקת קריירה על פני <em>כל</em> המרוצים שכל נהג השתתף בהם. השוואה ראש בראש סופרת רק מרוצים שבהם <em>שני</em> הנהגים השתתפו, ומספקת השוואה ישירה והוגנת על אותם מסלולים ובאותם תנאים.",
+    "explainerTitle": "במה זה שונה מהשוואה?",
+    "filterBy": "סננו לפי",
+    "noSharedRaces": "ל{driverA} ו{driverB} אין מרוצים משותפים.",
+    "noSharedRacesFiltered": "אין מרוצים משותפים בין {driverA} ל{driverB} עבור {filters}.",
+    "raceResultsCaption": "{race} — תוצאות המרוץ",
+    "resultsNotAvailable": "התוצאות עדיין אינן זמינות.",
+    "selectAtLeastOneMetric": "בחרו מדד אחד לפחות להצגה.",
+    "selectDifferentDrivers": "אנא בחרו שני נהגים שונים.",
+    "selectDriverA": "בחרו נהג א'…",
+    "selectDriverB": "בחרו נהג ב'…",
+    "selectTwoDrivers": "בחרו שני נהגים כדי להשוות את המאזן הראש-בראש שלהם.",
+    "sharedRacesWord": "{count, plural, one {מרוץ משותף} two {מרוצים משותפים} many {מרוצים משותפים} other {מרוצים משותפים}}",
+    "swap": "החליפו",
+    "table": {
+      "better": "טוב יותר",
+      "date": "תאריך",
+      "finish": "סיום",
+      "grid": "מקבץ",
+      "league": "ליגה",
+      "race": "מרוץ",
+      "season": "עונה"
+    },
+    "tiesCount": "{count, plural, one {תיקו אחד} two {שני תיקו} many {# תיקו} other {# תיקו}}",
+    "trendOverRaces": "מגמה לאורך המרוצים",
+    "vs": "נגד",
+    "watchRace": "צפו במרוץ",
+    "winsCount": "{count, plural, one {ניצחון אחד} two {שני ניצחונות} many {# ניצחונות} other {# ניצחונות}}"
+  },
+  "league": {
+    "kpi": {
+      "avgParticipation": "השתתפות ממוצעת",
+      "dnfRate": "שיעור DNF",
+      "drivers": "נהגים",
+      "events": "אירועים"
+    }
+  },
+  "modal": {
+    "allMetricsNormalised": "כל המדדים (מנורמלים)",
+    "clear": "נקו",
+    "metricsCount": "מדדים ({selected}/{total})",
+    "selectAll": "בחרו הכל",
+    "selectAtLeastOne": "בחרו מדד אחד לפחות למעלה"
+  },
+  "page": {
+    "description": "סטטיסטיקה מעמיקה לכל נהג, עונה ומסלול בהיסטוריה של ISL.",
+    "title": "סטטיסטיקה"
+  },
+  "raceCount": {
+    "all": "הכל",
+    "last": "{n} אחרונים"
+  },
+  "rankings": {
+    "highestFirst": "↓ הגבוה תחילה",
+    "leader": "מוביל",
+    "lowestFirst": "↑ הנמוך תחילה",
+    "quickPicks": "בחירות מהירות",
+    "rankedCount": "{count, plural, one {# נהג} two {# נהגים} many {# נהגים} other {# נהגים}} מדורגים",
+    "scopeAllTime": " · כל הזמנים",
+    "scopeSeason": " · עונה {season}",
+    "second": "מקום שני",
+    "sortAscTitle": "ממוין בסדר עולה (הנמוך תחילה)",
+    "sortDescTitle": "ממוין בסדר יורד (הגבוה תחילה)",
+    "stat": "נתון",
+    "third": "מקום שלישי",
+    "valuesShownAsPct": " · הערכים מוצגים באחוזים"
+  },
+  "sections": {
+    "explore": "חקרו",
+    "overview": "סקירה כללית"
+  },
+  "segments": {
+    "leaderboard": "טבלת מובילים לפי מקטע",
+    "results": "תוצאות לפי מקטע"
+  },
+  "select": {
+    "noResults": "אין תוצאות",
+    "search": "חיפוש…",
+    "select2Seasons": "בחרו 2 עונות…",
+    "selectCircuit": "בחרו מסלול…",
+    "selectDriver": "בחרו נהג…",
+    "selectMetric": "בחרו מדד…",
+    "selectStat": "בחרו נתון…",
+    "selectUpTo2Circuits": "בחרו עד 2 מסלולים…",
+    "selectUpTo4Drivers": "בחרו עד 4 נהגים…"
+  },
+  "table": {
+    "driver": "נהג",
+    "metric": "מדד",
+    "team": "קבוצה",
+    "total": "סך הכל",
+    "vsField": "מול המקבץ"
+  },
+  "tabs": {
+    "circuits": "מסלולים",
+    "drivers": "נהגים",
+    "headToHead": "ראש בראש",
+    "league": "ליגה",
+    "rankings": "דירוגים"
+  },
+  "toggle": {
+    "allTime": "כל הזמנים",
+    "season": "עונה"
+  }
+}
