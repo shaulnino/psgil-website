@@ -6,7 +6,7 @@ import Script from "next/script";
 import {
   Inter,
   Rajdhani,
-  Zilla_Slab,
+  Oswald,
   Public_Sans,
   Spline_Sans_Mono,
   Heebo,
@@ -37,10 +37,10 @@ const rajdhani = Rajdhani({
    theme flip that switches display/body/mono/Hebrew to these happens in
    Phase 5. Inter + Rajdhani remain the active fonts until then.
    Hebrew subsets are loaded up front (multilingual is in-scope for launch). */
-const zillaSlab = Zilla_Slab({
-  variable: "--font-zilla-slab", // display / masthead (slab serif)
+const oswald = Oswald({
+  variable: "--font-oswald", // display / masthead (condensed sport grotesque)
   subsets: ["latin"],
-  weight: ["600", "700"],
+  weight: ["500", "600", "700"],
   display: "swap",
 });
 const publicSans = Public_Sans({
@@ -92,7 +92,7 @@ export default async function RootLayout({
   return (
     <html lang={locale} dir={dir} data-scroll-behavior="smooth">
       <body
-        className={`${inter.variable} ${rajdhani.variable} ${zillaSlab.variable} ${publicSans.variable} ${splineSansMono.variable} ${heebo.variable} ${assistant.variable} antialiased`}
+        className={`${inter.variable} ${rajdhani.variable} ${oswald.variable} ${publicSans.variable} ${splineSansMono.variable} ${heebo.variable} ${assistant.variable} antialiased`}
       >
         <NextIntlClientProvider messages={messages}>
         {/* ── Google Analytics 4 (production only) ── */}

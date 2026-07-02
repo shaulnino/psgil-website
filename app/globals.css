@@ -2,7 +2,7 @@
 
 /* ── Phase 5 theme flip: the site now runs the ISL "Qav Rishon" LIGHT theme.
    The semantic tokens (--background/--foreground/--muted) are repointed to the
-   ISL light palette; fonts swap to Zilla Slab / Public Sans. This is the
+   ISL light palette; fonts swap to Oswald / Public Sans. This is the
    single-mode light theme (no dark twin). Route/content migration to the new
    utilities proceeds route-by-route on this branch. ── */
 :root {
@@ -16,7 +16,7 @@
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --font-sans: var(--font-public-sans);
-  --font-display: var(--font-zilla-slab);
+  --font-display: var(--font-oswald);
   /* Steward module palette — repointed to the shared ISL gold/cream so steward
      surfaces move onto the editorial system when that module is migrated. */
   --color-steward-gold: #9c7a3c;
@@ -123,7 +123,7 @@
 /* ISL font-family utilities (consumed by the primitive library + showcase).
    Additive: the global body font is unchanged until the Phase 5 flip. */
 .font-isl-display {
-  font-family: var(--font-zilla-slab), Georgia, "Times New Roman", serif;
+  font-family: var(--font-oswald), "Arial Narrow", system-ui, sans-serif;
 }
 .font-isl-body {
   font-family: var(--font-public-sans), system-ui, sans-serif;
@@ -134,7 +134,7 @@
    Hebrew-capable metric fallback right after each Latin font, which would
    intercept Hebrew glyphs before Heebo/Assistant.) Latin tokens inside Hebrew
    text (ISL, F1, EA Sports) render in the same Hebrew family — intentional, so
-   a Hebrew heading reads as one typeface rather than a Zilla/Heebo mix. */
+   a Hebrew heading reads as one typeface rather than an Oswald/Heebo mix. */
 [lang="he"] body {
   font-family: var(--font-assistant), system-ui, sans-serif;
 }
@@ -228,7 +228,7 @@ body {
 }
 
 .font-display {
-  font-family: var(--font-zilla-slab), Georgia, "Times New Roman", serif;
+  font-family: var(--font-oswald), "Arial Narrow", system-ui, sans-serif;
 }
 
 /* Global focus ring + selection — the single oxblood accent expression. */
@@ -327,7 +327,7 @@ body {
 .news-prose h2,
 .news-prose h3,
 .news-prose h4 {
-  font-family: var(--font-zilla-slab), Georgia, "Times New Roman", serif;
+  font-family: var(--font-oswald), "Arial Narrow", system-ui, sans-serif;
   font-weight: 700;
   color: var(--isl-ink);
   letter-spacing: 0.005em;

@@ -97,7 +97,7 @@ export default function DesignPreviewPage() {
         <SectionRule label="Typography" />
         <div className="mt-4 grid gap-6 md:grid-cols-2">
           <div>
-            <p className="text-[0.7rem] uppercase tracking-[0.2em] text-meta">Display · Barlow…er, Zilla Slab 700</p>
+            <p className="text-[0.7rem] uppercase tracking-[0.2em] text-meta">Display · Oswald 600</p>
             <p className="font-isl-display text-4xl font-bold leading-[1.05] tracking-[0.005em] text-ink">
               Emilia Romagna Grand Prix
             </p>
