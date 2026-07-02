@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
+import { useTranslations } from "next-intl";
 import { editPenaltyToServeAction } from "@/app/stewards/actions";
 import Modal from "@/app/stewards/components/Modal";
 import { Button } from "@/components/ui/button";
@@ -14,14 +15,16 @@ const inputCls =
 
 function SaveBtn() {
   const { pending } = useFormStatus();
+  const t = useTranslations("stewards");
   return (
     <Button type="submit" disabled={pending} size="md">
-      {pending ? "Saving…" : "Save Changes"}
+      {pending ? t("penaltiesToServe.editModal.saving") : t("penaltiesToServe.editModal.save")}
     </Button>
   );
 }
 
 export default function EditPenaltyModal({ penalty, rules }: { penalty: PenaltyToServe; rules: Rule[] }) {
+  const t = useTranslations("stewards");
   const [open, setOpen] = useState(false);
 
   // Find if current label matches a known rule
@@ -38,7 +41,7 @@ export default function EditPenaltyModal({ penalty, rules }: { penalty: PenaltyT
         size="sm"
         onClick={() => setOpen(true)}
       >
-        Edit
+        {t("penaltiesToServe.editModal.editButton")}
       </Button>
 
       <Modal open={open} onClose={() => setOpen(false)}>
@@ -46,13 +49,13 @@ export default function EditPenaltyModal({ penalty, rules }: { penalty: PenaltyT
             {/* Header */}
             <div className="border-b border-[color:var(--isl-hairline)] px-6 py-4 flex items-center justify-between shrink-0">
               <div>
-                <p className="font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-brass-ink">Edit Penalty</p>
+                <p className="font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-brass-ink">{t("penaltiesToServe.editModal.heading")}</p>
                 <p className="mt-0.5 text-sm font-semibold text-ink">{penalty.penaltyLabel}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                aria-label="Close"
+                aria-label={t("penaltiesToServe.editModal.close")}
                 className="flex h-11 w-11 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] text-meta transition-colors hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
               >
                 ✕
@@ -71,15 +74,15 @@ export default function EditPenaltyModal({ penalty, rules }: { penalty: PenaltyT
 
               {/* Penalty type — dropdown from rules, or custom */}
               <div>
-                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-meta">Penalty type *</span>
+                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-meta">{t("penaltiesToServe.editModal.penaltyType")}</span>
                 <select value={selected} onChange={(e) => setSelected(e.target.value)} required className={inputCls}>
-                  <option value="">Select penalty…</option>
+                  <option value="">{t("penaltiesToServe.editModal.selectPenalty")}</option>
                   {rules.map((r) => (
                     <option key={r.id} value={r.id}>
                       {r.penaltyLabel}{r.penaltyDescription ? ` — ${r.penaltyDescription}` : ""}
                     </option>
                   ))}
-                  <option value="__custom__">Custom / Other…</option>
+                  <option value="__custom__">{t("penaltiesToServe.editModal.customOther")}</option>
                 </select>
               </div>
 
@@ -96,23 +99,23 @@ export default function EditPenaltyModal({ penalty, rules }: { penalty: PenaltyT
               {isCustom && (
                 <>
                   <label className="block">
-                    <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-meta">Penalty label *</span>
+                    <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-meta">{t("penaltiesToServe.editModal.penaltyLabel")}</span>
                     <input name="penalty_label" required defaultValue={penalty.penaltyLabel} className={inputCls} />
                   </label>
                   <label className="block">
-                    <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-meta">Type (internal key)</span>
-                    <input name="penalty_type" defaultValue={penalty.penaltyType} placeholder="e.g. qualifying_ban" className={inputCls} />
+                    <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-meta">{t("penaltiesToServe.editModal.typeInternalKey")}</span>
+                    <input name="penalty_type" defaultValue={penalty.penaltyType} placeholder={t("penaltiesToServe.editModal.typePlaceholder")} className={inputCls} />
                   </label>
                   <label className="block">
-                    <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-meta">Description</span>
-                    <input name="penalty_description" defaultValue={penalty.penaltyDescription} placeholder="Brief explanation" className={inputCls} />
+                    <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-meta">{t("penaltiesToServe.editModal.description")}</span>
+                    <input name="penalty_description" defaultValue={penalty.penaltyDescription} placeholder={t("penaltiesToServe.editModal.descriptionPlaceholder")} className={inputCls} />
                   </label>
                 </>
               )}
 
               <label className="block">
-                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-meta">Admin notes</span>
-                <textarea name="admin_notes" rows={2} dir="auto" defaultValue={penalty.adminNotes ?? ""} placeholder="Reason or context…" className={inputCls} />
+                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-meta">{t("penaltiesToServe.editModal.adminNotes")}</span>
+                <textarea name="admin_notes" rows={2} dir="auto" defaultValue={penalty.adminNotes ?? ""} placeholder={t("penaltiesToServe.editModal.adminNotesPlaceholder")} className={inputCls} />
               </label>
 
               <div className="flex items-center gap-3 pt-1">
@@ -123,7 +126,7 @@ export default function EditPenaltyModal({ penalty, rules }: { penalty: PenaltyT
                   size="md"
                   onClick={() => setOpen(false)}
                 >
-                  Cancel
+                  {t("penaltiesToServe.editModal.cancel")}
                 </Button>
               </div>
             </form>

@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { fmtDateTime } from "@/app/stewards/lib/dates";
 import DeleteCaseForm from "@/app/stewards/(protected)/cases/DeleteCaseForm";
 
@@ -52,9 +53,10 @@ const STATUS_CHIP: Record<string, string> = {
 };
 
 function StatusChip({ status }: { status: string }) {
+  const t = useTranslations("stewards");
   return (
     <span className={`inline-flex items-center rounded-[2px] border px-2 py-0.5 font-isl-body text-[0.625rem] font-semibold uppercase tracking-[0.12em] leading-none ${STATUS_CHIP[status] ?? STATUS_CHIP["Open"]}`}>
-      {status}
+      {t(`cases.status.${status}`)}
     </span>
   );
 }
@@ -64,6 +66,7 @@ function StatusChip({ status }: { status: string }) {
 /* ------------------------------------------------------------------ */
 
 function SearchBar({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const t = useTranslations("stewards");
   return (
     <div className="relative">
       <svg className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-faint" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -73,7 +76,7 @@ function SearchBar({ value, onChange }: { value: string; onChange: (v: string) =
         type="search"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Filter by title, case #…"
+        placeholder={t("cases.filter.searchPlaceholder")}
         className="w-full rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper py-2 ps-9 pe-4 text-sm text-ink placeholder:text-faint focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
       />
       {value && (
@@ -149,6 +152,7 @@ function FilterBar({
   onChange: (f: Filters) => void;
   allCases: CaseRow[];
 }) {
+  const t = useTranslations("stewards");
   const seasons = useMemo(
     () => [...new Set(allCases.map((r) => r.season))].sort().reverse(),
     [allCases],
@@ -184,25 +188,25 @@ function FilterBar({
       />
       <div className="flex flex-wrap items-center gap-2">
         <FilterDropdown
-          label="Season"
+          label={t("cases.filter.season")}
           value={filters.season}
           options={seasons}
           onChange={(v) => onChange({ ...filters, season: v, round: "" })}
         />
         <FilterDropdown
-          label="Round"
+          label={t("cases.filter.round")}
           value={filters.round}
           options={rounds}
           onChange={(v) => onChange({ ...filters, round: v })}
         />
         <FilterDropdown
-          label="Session"
+          label={t("cases.filter.session")}
           value={filters.session}
           options={sessions}
           onChange={(v) => onChange({ ...filters, session: v })}
         />
         <FilterDropdown
-          label="Status"
+          label={t("cases.filter.status")}
           value={filters.status}
           options={statuses}
           onChange={(v) => onChange({ ...filters, status: v })}
@@ -213,7 +217,7 @@ function FilterBar({
             onClick={() => onChange(EMPTY_FILTERS)}
             className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-3 py-1.5 text-xs text-meta hover:border-[color:var(--isl-hairline-strong)] hover:text-ink transition"
           >
-            Clear all
+            {t("cases.filter.clearAll")}
           </button>
         )}
       </div>
@@ -297,6 +301,7 @@ export function DriverCasesList({
   closedCases: CaseRow[];
   otherCases: CaseRow[];
 }) {
+  const t = useTranslations("stewards");
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     open: true,
@@ -325,14 +330,14 @@ export function DriverCasesList({
 
       {hasFilters && (
         <p className="text-xs text-meta">
-          {totalFiltered === 0 ? "No cases match your filter." : `${totalFiltered} case${totalFiltered !== 1 ? "s" : ""} match`}
+          {totalFiltered === 0 ? t("cases.filter.noMatch") : t("cases.filter.matchCount", { count: totalFiltered })}
         </p>
       )}
 
       {/* My Open Cases */}
       <div className="space-y-2">
         <SectionHeader
-          title="My Open Cases"
+          title={t("cases.sections.myOpen")}
           count={filteredOpen.length}
           open={openSections.open || hasFilters}
           onToggle={() => toggle("open")}
@@ -341,11 +346,11 @@ export function DriverCasesList({
           <div className="space-y-2 ps-1">
             {filteredOpen.length === 0 ? (
               <div className="steward-soft rounded-[2px] px-4 py-3 text-sm text-ink-2">
-                {hasFilters ? "No open cases match." : "No open cases currently involve you."}
+                {hasFilters ? t("cases.sections.noOpenMatch") : t("cases.sections.noOpenInvolve")}
               </div>
             ) : (
               filteredOpen.map((row) => (
-                <CaseCard key={row.id} row={row} dim={false} arrow="Open →" />
+                <CaseCard key={row.id} row={row} dim={false} arrow={t("cases.card.open")} />
               ))
             )}
           </div>
@@ -355,7 +360,7 @@ export function DriverCasesList({
       {/* My Closed Cases */}
       <div className="border-t border-[color:var(--isl-hairline)] pt-3 space-y-2">
         <SectionHeader
-          title="My Closed Cases"
+          title={t("cases.sections.myClosed")}
           count={filteredClosed.length}
           open={openSections.closed || hasFilters}
           onToggle={() => toggle("closed")}
@@ -364,11 +369,11 @@ export function DriverCasesList({
           <div className="space-y-2 ps-1">
             {filteredClosed.length === 0 ? (
               <div className="steward-soft rounded-[2px] px-4 py-3 text-sm text-ink-2">
-                {hasFilters ? "No closed cases match." : "No closed cases found."}
+                {hasFilters ? t("cases.sections.noClosedMatch") : t("cases.sections.noClosedFound")}
               </div>
             ) : (
               filteredClosed.map((row) => (
-                <CaseCard key={row.id} row={row} dim arrow="Open →" />
+                <CaseCard key={row.id} row={row} dim arrow={t("cases.card.open")} />
               ))
             )}
           </div>
@@ -379,8 +384,8 @@ export function DriverCasesList({
       {(otherCases.length > 0 || hasFilters) && (
         <div className="border-t border-[color:var(--isl-hairline)] pt-3 space-y-2">
           <SectionHeader
-            title="All Cases"
-            subtitle="Cases you are not directly involved in"
+            title={t("cases.sections.allCases")}
+            subtitle={t("cases.sections.allCasesSubtitle")}
             count={filteredOther.length}
             open={openSections.other || hasFilters}
             onToggle={() => toggle("other")}
@@ -389,11 +394,11 @@ export function DriverCasesList({
             <div className="space-y-2 ps-1">
               {filteredOther.length === 0 ? (
                 <div className="steward-soft rounded-[2px] px-4 py-3 text-sm text-ink-2">
-                  {hasFilters ? "No other cases match." : "No other cases."}
+                  {hasFilters ? t("cases.sections.noOtherMatch") : t("cases.sections.noOther")}
                 </div>
               ) : (
                 filteredOther.map((row) => (
-                  <CaseCard key={row.id} row={row} dim opacity arrow="View →" />
+                  <CaseCard key={row.id} row={row} dim opacity arrow={t("cases.card.view")} />
                 ))
               )}
             </div>
@@ -452,6 +457,7 @@ export function StewardCasesTable({
   cases: StewardCaseRow[];
   isAdmin: boolean;
 }) {
+  const t = useTranslations("stewards");
   const router = useRouter();
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
 
@@ -469,8 +475,8 @@ export function StewardCasesTable({
         {hasFilters && (
           <p className="mt-2 text-xs text-meta">
             {filtered.length === 0
-              ? "No cases match."
-              : `${filtered.length} of ${cases.length} case${cases.length !== 1 ? "s" : ""}`}
+              ? t("cases.table.noMatch")
+              : t("cases.table.showing", { shown: filtered.length, total: cases.length })}
           </p>
         )}
       </div>
@@ -480,13 +486,13 @@ export function StewardCasesTable({
           <thead className="bg-cream text-ink">
             <tr>
               <th className="px-4 py-3 w-12 text-center">#</th>
-              <th className="px-4 py-3">Case</th>
-              <th className="px-4 py-3">Season</th>
-              <th className="px-4 py-3">Round</th>
-              <th className="px-4 py-3">Session</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Created</th>
-              {isAdmin && <th className="px-4 py-3">Actions</th>}
+              <th className="px-4 py-3">{t("cases.table.case")}</th>
+              <th className="px-4 py-3">{t("cases.table.season")}</th>
+              <th className="px-4 py-3">{t("cases.table.round")}</th>
+              <th className="px-4 py-3">{t("cases.table.session")}</th>
+              <th className="px-4 py-3">{t("cases.table.status")}</th>
+              <th className="px-4 py-3">{t("cases.table.created")}</th>
+              {isAdmin && <th className="px-4 py-3">{t("cases.table.actions")}</th>}
             </tr>
           </thead>
           <tbody>
@@ -511,13 +517,13 @@ export function StewardCasesTable({
                       {item.needsReview && (
                         <span className="inline-flex items-center gap-1 rounded-[2px] border border-status-warning px-2 py-0.5 font-isl-body text-[9px] font-semibold uppercase tracking-[0.12em] text-status-warning">
                           <span className="inline-flex h-1.5 w-1.5 rounded-full bg-[color:var(--isl-warning)] animate-[f1-tick_1s_step-end_infinite]" />
-                          Review Now
+                          {t("cases.table.reviewNow")}
                         </span>
                       )}
                       {item.verdictReady && (
                         <span className="inline-flex items-center gap-1 rounded-[2px] border border-brass px-2 py-0.5 font-isl-body text-[9px] font-semibold uppercase tracking-[0.12em] text-brass-ink">
                           <span className="inline-flex h-1.5 w-1.5 rounded-full bg-[color:var(--isl-brass)] animate-[f1-tick_1s_step-end_infinite]" />
-                          Publish Verdict
+                          {t("cases.table.publishVerdict")}
                         </span>
                       )}
                     </div>
@@ -542,7 +548,7 @@ export function StewardCasesTable({
             {filtered.length === 0 && (
               <tr>
                 <td className="px-4 py-5 text-meta" colSpan={isAdmin ? 8 : 7}>
-                  {hasFilters ? "No cases match your filter." : "No cases yet."}
+                  {hasFilters ? t("cases.filter.noMatch") : t("cases.table.noCasesYet")}
                 </td>
               </tr>
             )}

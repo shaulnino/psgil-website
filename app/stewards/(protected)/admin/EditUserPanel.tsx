@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
+import { useTranslations } from "next-intl";
 import { editUserAction } from "@/app/stewards/actions";
 import Modal from "@/app/stewards/components/Modal";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ type Props = {
 };
 
 export default function EditUserPanel({ user }: Props) {
+  const t = useTranslations("stewards");
   const [open, setOpen] = useState(false);
   const [showPw, setShowPw] = useState(false);
 
@@ -25,7 +27,7 @@ export default function EditUserPanel({ user }: Props) {
         size="sm"
         onClick={() => setOpen((v) => !v)}
       >
-        Edit
+        {t("admin.editUser.trigger")}
       </Button>
 
       <Modal open={open} onClose={() => setOpen(false)}>
@@ -33,12 +35,12 @@ export default function EditUserPanel({ user }: Props) {
             {/* header */}
             <div className="border-b border-[color:var(--isl-hairline)] px-6 py-4 flex items-center justify-between">
               <div>
-                <p className="font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-brass-ink">Edit User</p>
+                <p className="font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-brass-ink">{t("admin.editUser.heading")}</p>
                 <div className="mt-0.5 flex items-center gap-2">
                   <p className="text-sm font-semibold text-ink">{user.name}</p>
                   {user.mustChangePassword && (
                     <span className="rounded-[2px] border border-status-warning px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-status-warning">
-                      Must change password
+                      {t("admin.editUser.mustChangePassword")}
                     </span>
                   )}
                 </div>
@@ -46,7 +48,7 @@ export default function EditUserPanel({ user }: Props) {
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                aria-label="Close"
+                aria-label={t("admin.editUser.close")}
                 className="flex h-11 w-11 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper text-lg leading-none text-ink-2 transition-colors hover:border-ink hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
               >
                 ✕
@@ -64,30 +66,30 @@ export default function EditUserPanel({ user }: Props) {
               <input type="hidden" name="user_id" value={user.id} />
 
               <label className="block">
-                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-meta">Name</span>
+                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-meta">{t("admin.editUser.name")}</span>
                 <input name="name" required defaultValue={user.name} className={inputCls} />
               </label>
 
               <label className="block">
-                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-meta">Email</span>
+                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-meta">{t("admin.editUser.email")}</span>
                 <input name="email" type="email" required defaultValue={user.email} className={inputCls} />
               </label>
 
               <div>
                 <div className="mb-1.5 flex items-center justify-between">
                   <span className="text-xs font-semibold uppercase tracking-wider text-meta">
-                    Reset password
+                    {t("admin.editUser.resetPassword")}
                   </span>
-                  <span className="text-[10px] text-faint">(leave blank to keep current)</span>
+                  <span className="text-[10px] text-faint">{t("admin.editUser.leaveBlank")}</span>
                 </div>
                 <p className="mb-2 text-[11px] text-status-warning">
-                  Setting a new password will force the user to change it on next login.
+                  {t("admin.editUser.forceChangeNote")}
                 </p>
                 <div className="relative">
                   <input
                     name="password"
                     type={showPw ? "text" : "password"}
-                    placeholder="Enter new password…"
+                    placeholder={t("admin.editUser.passwordPlaceholder")}
                     className={`${inputCls} pe-16`}
                   />
                   <button
@@ -95,12 +97,12 @@ export default function EditUserPanel({ user }: Props) {
                     onClick={() => setShowPw((v) => !v)}
                     className="absolute end-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-brass-ink transition-colors hover:text-oxblood-deep"
                   >
-                    {showPw ? "HIDE" : "SHOW"}
+                    {showPw ? t("admin.editUser.hide") : t("admin.editUser.show")}
                   </button>
                 </div>
                 {showPw && (
                   <p className="mt-1.5 text-[10px] text-status-warning">
-                    ⚠ Password is visible — share it securely with the user
+                    {t("admin.editUser.visibleWarning")}
                   </p>
                 )}
               </div>
@@ -112,7 +114,7 @@ export default function EditUserPanel({ user }: Props) {
                   variant="secondary"
                   onClick={() => setOpen(false)}
                 >
-                  Cancel
+                  {t("admin.editUser.cancel")}
                 </Button>
               </div>
             </form>
@@ -123,10 +125,11 @@ export default function EditUserPanel({ user }: Props) {
 }
 
 function SaveButton() {
+  const t = useTranslations("stewards");
   const { pending } = useFormStatus();
   return (
     <Button type="submit" variant="primary" disabled={pending}>
-      {pending ? "Saving…" : "Save Changes"}
+      {pending ? t("admin.editUser.saving") : t("admin.editUser.saveChanges")}
     </Button>
   );
 }

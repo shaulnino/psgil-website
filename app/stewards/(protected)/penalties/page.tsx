@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import FormActionButton from "@/app/stewards/components/FormActionButton";
 import { can, requireStewardUser } from "@/lib/stewards/auth";
 import { aggregateDriverPenalties, listHistoricalCases, listUsers } from "@/lib/stewards/repository";
@@ -39,6 +40,7 @@ type SearchParams = Promise<{ season?: string; driver?: string; sort?: "points" 
 
 export default async function StewardPenaltiesPage({ searchParams }: { searchParams: SearchParams }) {
   const user = await requireStewardUser();
+  const t = await getTranslations("stewards");
   const isAdmin = can(user, "manage_penalties");
   const params = await searchParams;
   const seasonFilter = (params.season ?? "").trim().toLowerCase();
@@ -70,42 +72,42 @@ export default async function StewardPenaltiesPage({ searchParams }: { searchPar
   return (
     <div className="space-y-6">
       <section className="steward-panel rounded-[2px] p-5">
-        <h2 className="font-display text-2xl font-bold tracking-[0.005em] leading-[1.05] text-ink">Penalty Tracking</h2>
-        <p className="mt-1 text-ink-2">Aggregated from published verdicts with composable penalties.</p>
+        <h2 className="font-display text-2xl font-bold tracking-[0.005em] leading-[1.05] text-ink">{t("penalties.title")}</h2>
+        <p className="mt-1 text-ink-2">{t("penalties.subtitle")}</p>
         <form className="mt-4 grid gap-3 md:grid-cols-4">
           <label className="block">
-            <span className="mb-1 block text-sm text-ink-2">Season</span>
+            <span className="mb-1 block text-sm text-ink-2">{t("penalties.filters.season")}</span>
             <select name="season" defaultValue={params.season ?? ""} className="w-full rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2 text-sm text-ink placeholder:text-faint focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]">
-              <option value="">All seasons</option>
+              <option value="">{t("penalties.filters.allSeasons")}</option>
               {seasonOptions.map((s) => (
                 <option key={s} value={s}>{s}</option>
               ))}
             </select>
           </label>
           <label className="block">
-            <span className="mb-1 block text-sm text-ink-2">Driver</span>
+            <span className="mb-1 block text-sm text-ink-2">{t("penalties.filters.driver")}</span>
             <select name="driver" defaultValue={params.driver ?? ""} className="w-full rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2 text-sm text-ink placeholder:text-faint focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]">
-              <option value="">All drivers</option>
+              <option value="">{t("penalties.filters.allDrivers")}</option>
               {driverOptions.map(([id, name]) => (
                 <option key={id} value={name}>{name}</option>
               ))}
             </select>
           </label>
-          <label className="block"><span className="mb-1 block text-sm text-ink-2">Sort by</span><select name="sort" defaultValue={sort} className="w-full rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2 text-ink placeholder:text-faint focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"><option value="points">License points</option><option value="seconds">Time penalties</option><option value="warnings">Warnings</option><option value="cases">Cases</option></select></label>
-          <div className="flex items-end"><FormActionButton idleLabel="Apply" loadingLabel="Applying..." className="rounded-[2px] bg-ink px-5 py-2.5 text-sm font-medium uppercase tracking-[0.08em] text-bone transition-opacity hover:opacity-90" spinnerClassName="border-bone/30 border-t-bone" /></div>
+          <label className="block"><span className="mb-1 block text-sm text-ink-2">{t("penalties.filters.sortBy")}</span><select name="sort" defaultValue={sort} className="w-full rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2 text-ink placeholder:text-faint focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"><option value="points">{t("penalties.filters.sortPoints")}</option><option value="seconds">{t("penalties.filters.sortSeconds")}</option><option value="warnings">{t("penalties.filters.sortWarnings")}</option><option value="cases">{t("penalties.filters.sortCases")}</option></select></label>
+          <div className="flex items-end"><FormActionButton idleLabel={t("penalties.filters.apply")} loadingLabel={t("penalties.filters.applying")} className="rounded-[2px] bg-ink px-5 py-2.5 text-sm font-medium uppercase tracking-[0.08em] text-bone transition-opacity hover:opacity-90" spinnerClassName="border-bone/30 border-t-bone" /></div>
         </form>
       </section>
       <section className="steward-panel overflow-hidden rounded-[2px]">
         <div className="overflow-x-auto">
           <table className="steward-table min-w-full text-left text-sm">
-            <thead className="text-meta"><tr><th className="px-4 py-3 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em]">Driver</th><th className="px-4 py-3 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em]">Season</th><th className="px-4 py-3 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em]">License Points</th><th className="px-4 py-3 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em]">Time Penalty (s)</th><th className="px-4 py-3 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em]">Warnings</th><th className="px-4 py-3 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em]">Cases</th></tr></thead>
+            <thead className="text-meta"><tr><th className="px-4 py-3 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em]">{t("penalties.table.driver")}</th><th className="px-4 py-3 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em]">{t("penalties.table.season")}</th><th className="px-4 py-3 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em]">{t("penalties.table.licensePoints")}</th><th className="px-4 py-3 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em]">{t("penalties.table.timePenalty")}</th><th className="px-4 py-3 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em]">{t("penalties.table.warnings")}</th><th className="px-4 py-3 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em]">{t("penalties.table.cases")}</th></tr></thead>
             <tbody>
               {filtered.map((row) => (
                 <tr key={`${row.driverId}:${row.season}`} className="border-t border-[color:var(--isl-hairline)]">
                   <td className="px-4 py-3 text-ink">{row.driverName}</td><td className="px-4 py-3 num text-ink-2">{row.season}</td><td className="px-4 py-3 num text-ink-2">{row.totalLicensePoints}</td><td className="px-4 py-3 num text-ink-2">{row.totalTimePenaltySeconds}</td><td className="px-4 py-3 num text-ink-2">{row.totalWarningsCount}</td><td className="px-4 py-3 num text-ink-2">{row.totalCases}</td>
                 </tr>
               ))}
-              {filtered.length === 0 && <tr><td className="px-4 py-5 text-meta" colSpan={6}>No penalty data yet.</td></tr>}
+              {filtered.length === 0 && <tr><td className="px-4 py-5 text-meta" colSpan={6}>{t("penalties.table.empty")}</td></tr>}
             </tbody>
           </table>
         </div>
@@ -114,19 +116,19 @@ export default async function StewardPenaltiesPage({ searchParams }: { searchPar
       {isAdmin && historicalCases.length > 0 && (
         <section className="steward-panel overflow-hidden rounded-[2px]">
           <div className="px-5 py-4 border-b border-[color:var(--isl-hairline)]">
-            <h3 className="text-base font-display font-bold tracking-[0.005em] leading-[1.05] text-ink">Historical Entries</h3>
-            <p className="mt-0.5 text-xs text-meta">Manually recorded historical penalties. Click Edit to update.</p>
+            <h3 className="text-base font-display font-bold tracking-[0.005em] leading-[1.05] text-ink">{t("penalties.historical.title")}</h3>
+            <p className="mt-0.5 text-xs text-meta">{t("penalties.historical.subtitle")}</p>
           </div>
           <div className="overflow-x-auto">
             <table className="steward-table min-w-full text-left text-sm">
               <thead className="text-meta">
                 <tr>
-                  <th className="px-4 py-3 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em]">Case</th>
-                  <th className="px-4 py-3 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em]">Season</th>
-                  <th className="px-4 py-3 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em]">Round</th>
-                  <th className="px-4 py-3 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em]">Session</th>
-                  <th className="px-4 py-3 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em]">Drivers</th>
-                  <th className="px-4 py-3 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em]">Decision</th>
+                  <th className="px-4 py-3 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em]">{t("penalties.historical.table.case")}</th>
+                  <th className="px-4 py-3 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em]">{t("penalties.historical.table.season")}</th>
+                  <th className="px-4 py-3 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em]">{t("penalties.historical.table.round")}</th>
+                  <th className="px-4 py-3 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em]">{t("penalties.historical.table.session")}</th>
+                  <th className="px-4 py-3 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em]">{t("penalties.historical.table.drivers")}</th>
+                  <th className="px-4 py-3 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em]">{t("penalties.historical.table.decision")}</th>
                   <th className="px-4 py-3"></th>
                 </tr>
               </thead>
@@ -150,7 +152,7 @@ export default async function StewardPenaltiesPage({ searchParams }: { searchPar
                         );
                       })}
                     </td>
-                    <td className="px-4 py-3 text-faint text-xs">{verdict?.verdict_decision ?? "—"}</td>
+                    <td className="px-4 py-3 text-faint text-xs">{verdict?.verdict_decision ?? t("penalties.historical.table.noDecision")}</td>
                     <td className="px-4 py-3">
                       <EditHistoricalCaseModal
                         caseItem={caseItem}

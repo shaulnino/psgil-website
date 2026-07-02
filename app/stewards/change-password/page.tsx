@@ -1,5 +1,6 @@
 import { requireStewardUserForPasswordChange } from "@/lib/stewards/auth";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { forcedChangePasswordAction } from "@/app/stewards/actions";
 import ChangePasswordForm from "./ChangePasswordForm";
 
@@ -10,10 +11,11 @@ export default async function ChangePasswordPage({ searchParams }: { searchParam
   // If they somehow land here without needing to change, send them home
   if (!user.mustChangePassword) redirect("/stewards");
 
+  const t = await getTranslations("stewards");
   const params = await searchParams;
   const errorMsg =
-    params.error === "mismatch"   ? "Passwords do not match. Please try again." :
-    params.error === "too-short"  ? "Password must be at least 8 characters." :
+    params.error === "mismatch"   ? t("auth.forced.errorMismatch") :
+    params.error === "too-short"  ? t("auth.forced.errorTooShort") :
     null;
 
   return (
@@ -21,11 +23,12 @@ export default async function ChangePasswordPage({ searchParams }: { searchParam
       <div className="w-full max-w-md space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
-          <p className="font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-brass-ink">ISL Steward System</p>
-          <h1 className="font-display text-3xl font-bold tracking-[0.005em] leading-[1.05] text-ink">Set your password</h1>
+          <p className="font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-brass-ink">{t("auth.forced.eyebrow")}</p>
+          <h1 className="font-display text-3xl font-bold tracking-[0.005em] leading-[1.05] text-ink">{t("auth.forced.title")}</h1>
           <p className="text-sm text-ink-2">
-            Welcome, <span className="text-ink font-medium">{user.name}</span>.
-            You must choose a personal password before continuing.
+            {t.rich("auth.forced.welcome", {
+              name: () => <span className="text-ink font-medium">{user.name}</span>,
+            })}
           </p>
         </div>
 
@@ -35,7 +38,7 @@ export default async function ChangePasswordPage({ searchParams }: { searchParam
           <div className="flex items-start gap-3 rounded-[2px] border border-brass bg-cream px-4 py-3">
             <span className="mt-0.5 text-brass-ink text-base">🔒</span>
             <p className="text-sm text-ink-2 leading-relaxed">
-              Your account was set up with a temporary password. Choose a new password that only you know — admins will not be able to see it.
+              {t("auth.forced.banner")}
             </p>
           </div>
 
@@ -49,7 +52,7 @@ export default async function ChangePasswordPage({ searchParams }: { searchParam
         </div>
 
         <p className="text-center text-xs text-faint">
-          Password must be at least 8 characters. You can change it again later from your account settings.
+          {t("auth.forced.footnote")}
         </p>
       </div>
     </main>

@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 type DriverOption = { id: string; name: string; email: string };
 
 export default function InvolvedDriversPicker({ options }: { options: DriverOption[] }) {
+  const t = useTranslations("stewards");
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -36,10 +38,10 @@ export default function InvolvedDriversPicker({ options }: { options: DriverOpti
 
   return (
     <div className="md:col-span-2">
-      <span className="mb-1 block text-sm text-ink-2">Involved drivers (single or multiple) <span className="text-status-danger">*</span></span>
+      <span className="mb-1 block text-sm text-ink-2">{t("cases.involved.label")} <span className="text-status-danger">*</span></span>
       <div className="relative" ref={containerRef}>
         <button type="button" onClick={() => setOpen((v) => !v)} className="flex w-full items-center justify-between rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2 text-start text-sm text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]">
-          <span>{selectedIds.length ? `${selectedIds.length} driver${selectedIds.length > 1 ? "s" : ""} selected` : "Choose involved drivers"}</span>
+          <span>{selectedIds.length ? t("cases.involved.selectedCount", { count: selectedIds.length }) : t("cases.involved.choose")}</span>
           <span className="text-meta">{open ? "▲" : "▼"}</span>
         </button>
         {open && (
@@ -47,7 +49,7 @@ export default function InvolvedDriversPicker({ options }: { options: DriverOpti
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search drivers..."
+              placeholder={t("cases.involved.searchPlaceholder")}
               className="mb-2 w-full rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2 text-sm text-ink placeholder:text-faint focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
             />
             <div className="max-h-56 overflow-y-auto">
@@ -67,7 +69,7 @@ export default function InvolvedDriversPicker({ options }: { options: DriverOpti
             {selected.map((d) => <span key={d.id} className="inline-flex rounded-[2px] border border-oxblood px-2.5 py-1 text-xs text-oxblood">{d.name}</span>)}
           </div>
         ) : (
-          <p className="text-xs text-meta">Selected drivers will appear here.</p>
+          <p className="text-xs text-meta">{t("cases.involved.emptyHint")}</p>
         )}
       </div>
       {selectedIds.map((id) => <input key={id} type="hidden" name="involved_driver_ids" value={id} />)}

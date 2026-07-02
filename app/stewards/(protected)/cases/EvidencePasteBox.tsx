@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 type PastedImage = { id: string; file: File; previewUrl: string };
 
 export default function EvidencePasteBox() {
+  const t = useTranslations("stewards");
   const [images, setImages] = useState<PastedImage[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const dropZoneRef = useRef<HTMLDivElement | null>(null);
@@ -88,7 +90,9 @@ export default function EvidencePasteBox() {
       >
         {images.length === 0 ? (
           <p className="text-sm text-meta">
-            <span className="font-semibold text-oxblood">Paste a screenshot</span> anywhere (Ctrl+V) or drop an image here
+            {t.rich("cases.evidence.pasteHint", {
+              strong: (chunks) => <span className="font-semibold text-oxblood">{chunks}</span>,
+            })}
           </p>
         ) : (
           <div className="flex flex-wrap gap-3">
@@ -104,7 +108,7 @@ export default function EvidencePasteBox() {
                   type="button"
                   onClick={() => removeImage(img.id)}
                   className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-oxblood text-[10px] font-bold text-bone opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
-                  aria-label="Remove image"
+                  aria-label={t("cases.evidence.removeImage")}
                 >
                   ✕
                 </button>
@@ -116,14 +120,14 @@ export default function EvidencePasteBox() {
               onClick={() => dropZoneRef.current?.dispatchEvent(new Event("click"))}
               className="flex h-20 w-28 items-center justify-center rounded-[2px] border border-dashed border-[color:var(--isl-hairline)] text-xs text-faint transition-colors hover:border-oxblood hover:text-ink-2"
             >
-              + Add more
+              {t("cases.evidence.addMore")}
             </button>
           </div>
         )}
       </div>
 
       <p className="text-[11px] text-faint">
-        Screenshots pasted via Ctrl+V are attached automatically. You can also drag &amp; drop image files above.
+        {t("cases.evidence.pasteNote")}
       </p>
     </div>
   );

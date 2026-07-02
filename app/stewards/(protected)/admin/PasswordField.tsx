@@ -1,13 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 export default function PasswordField() {
+  const t = useTranslations("stewards");
   const [show, setShow] = useState(false);
 
   return (
     <div>
-      <span className="mb-1 block text-sm text-ink-2">Password</span>
+      <span className="mb-1 block text-sm text-ink-2">{t("admin.password.label")}</span>
       <div className="relative">
         <input
           name="password"
@@ -20,12 +22,12 @@ export default function PasswordField() {
           onClick={() => setShow((v) => !v)}
           className="absolute end-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-brass-ink hover:text-oxblood-deep transition"
         >
-          {show ? "HIDE" : "SHOW"}
+          {show ? t("admin.password.hide") : t("admin.password.show")}
         </button>
       </div>
       {show && (
         <p className="mt-1 text-[10px] text-status-warning">
-          ⚠ Password is visible — share it securely with the user
+          {t("admin.password.visibleWarning")}
         </p>
       )}
     </div>

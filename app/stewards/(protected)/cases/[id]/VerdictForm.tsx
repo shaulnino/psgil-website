@@ -2,6 +2,7 @@
 
 import { useRef, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { useTranslations } from "next-intl";
 import { upsertVerdictAction } from "@/app/stewards/actions";
 import { Button } from "@/components/ui/button";
 import type { DriverVerdictWithDriver } from "@/lib/stewards/repository";
@@ -63,6 +64,7 @@ export default function VerdictForm({
   existingVerdict: Verdict | null;
   existingDriverVerdicts: DriverVerdictWithDriver[];
 }) {
+  const t = useTranslations("stewards");
   const [entries, setEntries] = useState<Entry[]>(() =>
     buildEntries(involvedDrivers, existingDriverVerdicts),
   );
@@ -148,7 +150,7 @@ export default function VerdictForm({
                   onClick={() => removeEntry(entry.key)}
                   className="rounded-[2px] px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-status-danger transition hover:bg-cream"
                 >
-                  Remove
+                  {t("cases.verdictForm.remove")}
                 </button>
               )}
             </div>
@@ -157,20 +159,20 @@ export default function VerdictForm({
             <div className="grid gap-3 p-4 md:grid-cols-3">
               <label className="block">
                 <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.2em] text-brass-ink">
-                  License points
+                  {t("cases.verdictForm.licensePoints")}
                 </span>
                 <input
                   type="number"
                   min={0}
                   value={entry.licensePoints}
                   onChange={(e) => updateEntry(entry.key, "licensePoints", e.target.value)}
-                  placeholder="e.g. 2"
+                  placeholder={t("cases.verdictForm.licensePointsPlaceholder")}
                   className={inputCls}
                 />
               </label>
               <label className="block">
                 <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.2em] text-brass-ink">
-                  Time penalty (s)
+                  {t("cases.verdictForm.timePenalty")}
                 </span>
                 <input
                   type="number"
@@ -178,19 +180,19 @@ export default function VerdictForm({
                   min={0}
                   value={entry.timePenaltySeconds}
                   onChange={(e) => updateEntry(entry.key, "timePenaltySeconds", e.target.value)}
-                  placeholder="e.g. 5"
+                  placeholder={t("cases.verdictForm.timePenaltyPlaceholder")}
                   className={inputCls}
                 />
               </label>
               <label className="block">
                 <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.2em] text-meta">
-                  Warning text
+                  {t("cases.verdictForm.warningText")}
                 </span>
                 <input
                   type="text"
                   value={entry.warningText}
                   onChange={(e) => updateEntry(entry.key, "warningText", e.target.value)}
-                  placeholder="Optional"
+                  placeholder={t("cases.verdictForm.warningPlaceholder")}
                   className={inputCls}
                   dir="auto"
                 />
@@ -214,7 +216,7 @@ export default function VerdictForm({
             defaultValue=""
           >
             <option value="" disabled>
-              + Add another driver…
+              {t("cases.verdictForm.addDriver")}
             </option>
             {allDrivers
               .filter((d) => !entries.some((e) => e.driverId === d.id))
@@ -231,7 +233,7 @@ export default function VerdictForm({
       <div className="grid gap-3 border-t border-[color:var(--isl-hairline)] pt-5 md:grid-cols-2">
         {/* Decision */}
         <div className="md:col-span-2">
-          <span className="mb-2 block text-xs text-ink-2">Decision type</span>
+          <span className="mb-2 block text-xs text-ink-2">{t("cases.verdictForm.decisionType")}</span>
           <div className="flex flex-wrap gap-2">
             {DECISIONS.map((d) => (
               <button
@@ -244,7 +246,7 @@ export default function VerdictForm({
                     : "border-[color:var(--isl-hairline)] text-meta hover:border-ink hover:text-ink hover:bg-cream"
                 }`}
               >
-                {d.label}
+                {t(`cases.decision.${d.value}`)}
               </button>
             ))}
           </div>
@@ -254,9 +256,9 @@ export default function VerdictForm({
         {/* Auto-generated summary — read-only preview */}
         <div className="md:col-span-2">
           <span className="mb-1.5 block text-xs text-ink-2">
-            Verdict summary{" "}
+            {t("cases.verdictForm.summary")}{" "}
             <span className="ms-1 rounded-[2px] border border-brass px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.2em] text-brass-ink">
-              auto
+              {t("cases.verdictForm.auto")}
             </span>
           </span>
           <div className="flex items-center gap-2 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-3 py-2.5 text-sm text-ink">
@@ -266,7 +268,7 @@ export default function VerdictForm({
           <input type="hidden" name="verdict_summary" value={autoSummary} />
         </div>
         <label className="block md:col-span-2">
-          <span className="mb-1 block text-xs text-ink-2">Full verdict text <span className="text-status-danger">*</span></span>
+          <span className="mb-1 block text-xs text-ink-2">{t("cases.verdictForm.fullText")} <span className="text-status-danger">*</span></span>
           <textarea
             name="verdict_full_text"
             required
@@ -289,19 +291,21 @@ export default function VerdictForm({
 }
 
 function SaveButton() {
+  const t = useTranslations("stewards");
   const { pending } = useFormStatus();
   return (
     <Button type="submit" variant="secondary" disabled={pending}>
-      {pending ? "Saving…" : "Save Draft"}
+      {pending ? t("cases.verdictForm.saving") : t("cases.verdictForm.saveDraft")}
     </Button>
   );
 }
 
 function PublishButton() {
+  const t = useTranslations("stewards");
   const { pending } = useFormStatus();
   return (
     <Button type="submit" name="is_published" value="on" variant="primary" disabled={pending}>
-      {pending ? "Publishing…" : "Save & Publish Verdict"}
+      {pending ? t("cases.verdictForm.publishing") : t("cases.verdictForm.savePublish")}
     </Button>
   );
 }

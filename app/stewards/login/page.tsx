@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { loginStewardAction } from "@/app/stewards/actions";
 import { getCurrentStewardUser } from "@/lib/stewards/auth";
 import FormActionButton from "@/app/stewards/components/FormActionButton";
@@ -10,23 +11,24 @@ export default async function StewardLoginPage({ searchParams }: { searchParams:
   const user = await getCurrentStewardUser();
   if (user?.isActive) redirect("/stewards");
 
+  const t = await getTranslations("stewards");
   const params = await searchParams;
 
   return (
     <main className="stewards-ui min-h-[70vh] bg-bone px-6 py-16 text-ink">
       <div className="steward-panel mx-auto w-full max-w-md rounded-[2px] p-6">
-        <h1 className="font-display font-bold tracking-[0.005em] leading-[1.05] text-3xl text-ink">Steward Login</h1>
-        <p className="mt-2 text-sm text-meta">Access is limited to steward-system users only.</p>
+        <h1 className="font-display font-bold tracking-[0.005em] leading-[1.05] text-3xl text-ink">{t("auth.login.title")}</h1>
+        <p className="mt-2 text-sm text-meta">{t("auth.login.subtitle")}</p>
 
         {params.error && (
           <div className="mt-4 rounded-[2px] border border-status-danger bg-cream px-4 py-3 text-sm text-status-danger">
-            Incorrect email or password. Please try again.
+            {t("auth.login.error")}
           </div>
         )}
 
         <form action={loginStewardAction} className="mt-6 space-y-4">
           <label className="block">
-            <span className="mb-1 block text-sm text-ink-2">Email</span>
+            <span className="mb-1 block text-sm text-ink-2">{t("auth.login.emailLabel")}</span>
             <input
               type="email"
               name="email"
@@ -35,7 +37,7 @@ export default async function StewardLoginPage({ searchParams }: { searchParams:
             />
           </label>
           <label className="block">
-            <span className="mb-1 block text-sm text-ink-2">Password</span>
+            <span className="mb-1 block text-sm text-ink-2">{t("auth.login.passwordLabel")}</span>
             <input
               type="password"
               name="password"
@@ -49,11 +51,11 @@ export default async function StewardLoginPage({ searchParams }: { searchParams:
               name="remember_me"
               className="h-4 w-4 rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper accent-[color:var(--isl-oxblood)] cursor-pointer"
             />
-            <span className="text-sm text-meta">Stay signed in</span>
+            <span className="text-sm text-meta">{t("auth.login.rememberMe")}</span>
           </label>
           <FormActionButton
-            idleLabel="Sign in"
-            loadingLabel="Signing in..."
+            idleLabel={t("auth.login.submit")}
+            loadingLabel={t("auth.login.submitting")}
             className="w-full justify-center rounded-[2px] bg-ink px-4 py-2.5 font-semibold text-bone transition hover:bg-oxblood"
           />
         </form>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 type Rule = { id: string; penaltyType: string; penaltyLabel: string; penaltyDescription: string };
 
@@ -11,6 +12,7 @@ const labelCls =
   "mb-1 block text-xs font-semibold uppercase tracking-wider text-brass-ink";
 
 export default function PenaltyRuleSelect({ rules }: { rules: Rule[] }) {
+  const t = useTranslations("stewards");
   const [selected, setSelected] = useState<string>("");
   const isCustom = selected === "__custom__";
 
@@ -21,7 +23,7 @@ export default function PenaltyRuleSelect({ rules }: { rules: Rule[] }) {
       {/* Dropdown — spans full width */}
       <label className="block md:col-span-2">
         <span className={labelCls}>
-          Penalty type *
+          {t("penaltiesToServe.ruleSelect.penaltyType")}
         </span>
         <select
           value={selected}
@@ -29,14 +31,14 @@ export default function PenaltyRuleSelect({ rules }: { rules: Rule[] }) {
           required
           className={inputCls}
         >
-          <option value="">Select penalty…</option>
+          <option value="">{t("penaltiesToServe.ruleSelect.selectPenalty")}</option>
           {rules.map((r) => (
             <option key={r.id} value={r.id}>
               {r.penaltyLabel}
               {r.penaltyDescription ? ` — ${r.penaltyDescription}` : ""}
             </option>
           ))}
-          <option value="__custom__">Custom / Other…</option>
+          <option value="__custom__">{t("penaltiesToServe.ruleSelect.customOther")}</option>
         </select>
       </label>
 
@@ -54,21 +56,21 @@ export default function PenaltyRuleSelect({ rules }: { rules: Rule[] }) {
         <>
           <label className="block">
             <span className={labelCls}>
-              Penalty label *
+              {t("penaltiesToServe.ruleSelect.penaltyLabel")}
             </span>
-            <input name="penalty_label" required placeholder="e.g. Qualifying Ban" className={inputCls} />
+            <input name="penalty_label" required placeholder={t("penaltiesToServe.ruleSelect.penaltyLabelPlaceholder")} className={inputCls} />
           </label>
           <label className="block">
             <span className={labelCls}>
-              Type (internal key)
+              {t("penaltiesToServe.ruleSelect.typeInternalKey")}
             </span>
-            <input name="penalty_type" placeholder="e.g. qualifying_ban" className={inputCls} />
+            <input name="penalty_type" placeholder={t("penaltiesToServe.ruleSelect.typePlaceholder")} className={inputCls} />
           </label>
           <label className="block md:col-span-2">
             <span className={labelCls}>
-              Description
+              {t("penaltiesToServe.ruleSelect.description")}
             </span>
-            <input name="penalty_description" placeholder="Brief explanation" className={inputCls} />
+            <input name="penalty_description" placeholder={t("penaltiesToServe.ruleSelect.descriptionPlaceholder")} className={inputCls} />
           </label>
         </>
       )}

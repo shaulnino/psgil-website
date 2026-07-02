@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import { useFormStatus } from "react-dom";
+import { useTranslations } from "next-intl";
 import { deleteAppealAction } from "@/app/stewards/actions";
 
 export default function DeleteAppealForm({ appealId }: { appealId: string }) {
@@ -16,12 +17,13 @@ export default function DeleteAppealForm({ appealId }: { appealId: string }) {
 
 function DeleteButton({ formRef }: { formRef: React.RefObject<HTMLFormElement | null> }) {
   const { pending } = useFormStatus();
+  const t = useTranslations("stewards");
   return (
     <button
       type="button"
       disabled={pending}
       onClick={() => {
-        if (window.confirm("Delete this appeal? This cannot be undone.")) {
+        if (window.confirm(t("appeals.deleteConfirm"))) {
           formRef.current?.requestSubmit();
         }
       }}
@@ -30,7 +32,7 @@ function DeleteButton({ formRef }: { formRef: React.RefObject<HTMLFormElement | 
       {pending && (
         <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-status-danger/30 border-t-status-danger" />
       )}
-      {pending ? "Deleting…" : "Delete Appeal"}
+      {pending ? t("appeals.deleteLoading") : t("appeals.deleteIdle")}
     </button>
   );
 }

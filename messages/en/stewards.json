@@ -1,1 +1,710 @@
-{}
+{
+  "admin": {
+    "title": "Steward Admin",
+    "subtitle": "Manage users, multi-role access, and steward-module permissions.",
+    "errorPrefix": "Error:",
+    "role": {
+      "member": "member",
+      "steward": "steward",
+      "admin": "admin"
+    },
+    "badge": {
+      "pwReset": "pw reset"
+    },
+    "addUser": {
+      "heading": "Add user",
+      "name": "Name",
+      "email": "Email",
+      "roles": "Roles",
+      "createIdle": "Create User",
+      "createLoading": "Creating..."
+    },
+    "table": {
+      "name": "Name",
+      "email": "Email",
+      "roles": "Roles",
+      "updateRoles": "Update roles",
+      "edit": "Edit",
+      "remove": "Remove"
+    },
+    "updateRoles": {
+      "saveIdle": "Save",
+      "saveLoading": "Saving..."
+    },
+    "remove": {
+      "idle": "Remove",
+      "loading": "Removing..."
+    },
+    "password": {
+      "label": "Password",
+      "hide": "HIDE",
+      "show": "SHOW",
+      "visibleWarning": "⚠ Password is visible — share it securely with the user"
+    },
+    "editUser": {
+      "trigger": "Edit",
+      "heading": "Edit User",
+      "mustChangePassword": "Must change password",
+      "close": "Close",
+      "name": "Name",
+      "email": "Email",
+      "resetPassword": "Reset password",
+      "leaveBlank": "(leave blank to keep current)",
+      "forceChangeNote": "Setting a new password will force the user to change it on next login.",
+      "passwordPlaceholder": "Enter new password…",
+      "hide": "HIDE",
+      "show": "SHOW",
+      "visibleWarning": "⚠ Password is visible — share it securely with the user",
+      "cancel": "Cancel",
+      "saving": "Saving…",
+      "saveChanges": "Save Changes"
+    },
+    "historical": {
+      "heading": "Add Historical Penalty",
+      "subtitle": "Record penalties from before the system was live. Creates a closed case + published verdict directly.",
+      "close": "Close",
+      "addEntry": "+ Add Entry",
+      "season": "Season",
+      "selectSeason": "Select season…",
+      "seasonPlaceholder": "e.g. S6",
+      "round": "Round",
+      "selectRound": "Select round…",
+      "selectSeasonFirst": "Select season first",
+      "roundPlaceholder": "e.g. Race 03 – Monaco",
+      "session": "Session",
+      "sessionLabel": {
+        "race": "Race",
+        "sprint": "Sprint",
+        "qualifying": "Qualifying"
+      },
+      "incidentDescription": "Incident description (optional)",
+      "incidentPlaceholder": "Brief description of the incident…",
+      "verdictDecision": "Verdict decision",
+      "decisionLabel": {
+        "racingIncident": "Racing Incident",
+        "noFurtherAction": "No Further Action",
+        "penaltyImposed": "Penalty Imposed",
+        "driverReprimand": "Driver Reprimand",
+        "other": "Other"
+      },
+      "driversPenalties": "Drivers & Penalties",
+      "addDriver": "+ Add driver",
+      "driverN": "Driver",
+      "removeDriver": "Remove",
+      "driver": "Driver",
+      "selectDriver": "Select driver…",
+      "licensePoints": "License points",
+      "licensePointsPlaceholder": "e.g. 2",
+      "timePenalty": "Time penalty (seconds)",
+      "timePenaltyPlaceholder": "e.g. 10",
+      "warningText": "Warning text (leave blank if none)",
+      "warningTextPlaceholder": "e.g. Unsportsmanlike conduct warning",
+      "verdictFullText": "Verdict full explanation (optional)",
+      "verdictFullTextPlaceholder": "Steward reasoning or notes…",
+      "cancel": "Cancel",
+      "saving": "Saving…",
+      "submit": "Save Historical Penalty"
+    }
+  },
+  "appeals": {
+    "title": "Appeals",
+    "subtitleAll": "All appeals filed against published case verdicts.",
+    "subtitleOwn": "Appeals you have submitted.",
+    "activeHeading": "Active Appeals",
+    "emptyActive": "No active appeals.",
+    "closedHeading": "Closed Appeals",
+    "caseLabel": "Appeal — Case #{caseNumber}",
+    "needsReviewBadge": "Needs Review",
+    "listMetaActive": "{title} · Appellant: {appellant}",
+    "listMetaClosed": "{title} · {appellant}",
+    "openAction": "Open →",
+    "viewAction": "View →",
+    "decisionChangedBadge": "⚡ Decision Changed",
+    "upheldBadgeShort": "✓ Upheld",
+    "upheldBadge": "✓ Original Decision Upheld",
+    "status": {
+      "submitted": "Submitted",
+      "underReview": "Under Review",
+      "verdictReady": "Verdict Ready",
+      "closed": "Closed"
+    },
+    "submittedBanner": "✓ Your appeal has been submitted. The stewards will review it shortly.",
+    "eyebrow": "Appeal",
+    "headingPrefix": "Appeal — Case",
+    "metaAppellant": "Appellant",
+    "metaFiled": "Filed",
+    "metaOriginalCase": "Original Case",
+    "sectionAppeal": "1 · Appeal",
+    "evidenceHeading": "Evidence",
+    "sectionVerdict": "2 · Appeal Verdict",
+    "newPenaltiesHeading": "New Penalties",
+    "ptsSuffix": "pts",
+    "noPenalties": "No penalties",
+    "publishedPrefix": "Published",
+    "reviewingNotice": "The stewards are reviewing this appeal. A decision will be published shortly.",
+    "publishVerdictIdle": "Publish Appeal Verdict",
+    "publishVerdictLoading": "Publishing…",
+    "statusSectionHeading": "Appeal Status",
+    "updateStatusIdle": "Update Status",
+    "updateStatusLoading": "Updating…",
+    "internalHeading": "3 · Internal Discussion",
+    "internalVisibility": "Visible to stewards and admins only.",
+    "internalEmpty": "No internal discussion yet.",
+    "addCommentLabel": "Add comment",
+    "postCommentIdle": "Post Comment",
+    "postCommentLoading": "Posting…",
+    "backToCase": "← Back to original case",
+    "backToAll": "← All appeals",
+    "deleteConfirm": "Delete this appeal? This cannot be undone.",
+    "deleteIdle": "Delete Appeal",
+    "deleteLoading": "Deleting…",
+    "verdictSaving": "Saving…",
+    "saveDraft": "Save Draft",
+    "outcomeLabel": "Appeal Outcome *",
+    "outcomeNoChange": "No Change — Original Decision Upheld",
+    "outcomeChanged": "Changed Decision",
+    "newPenaltiesPerDriver": "New Penalties per Driver",
+    "addDriver": "+ Add driver",
+    "driverEntryLabel": "Driver",
+    "removeDriver": "Remove",
+    "driverField": "Driver *",
+    "selectDriver": "Select driver…",
+    "licensePointsField": "License points",
+    "licensePointsPlaceholder": "e.g. 2",
+    "timePenaltyField": "Time penalty (s)",
+    "timePenaltyPlaceholder": "e.g. 10",
+    "warningTextField": "Warning text",
+    "warningTextPlaceholder": "Leave blank if none",
+    "verdictSummaryLabel": "Verdict Summary",
+    "verdictSummaryPlaceholder": "Brief summary of the appeal decision…",
+    "verdictFullTextLabel": "Full Reasoning (optional)",
+    "verdictFullTextPlaceholder": "Detailed steward reasoning…",
+    "submitIdle": "Submit Appeal",
+    "submitLoading": "Submitting appeal…",
+    "confirmEyebrow": "Before you continue",
+    "confirmTitle": "Important — Appeal Cost",
+    "confirmPenaltyHeading": "⚠ Unsuccessful appeals are penalised",
+    "confirmPenaltyBody": "If your appeal is <notUpheld>not upheld</notUpheld>, you will receive an additional <points>1 license point</points> as a penalty for an unsuccessful appeal.",
+    "confirmContextBody": "You are appealing the verdict in <caseStrong>Case: {caseTitle}</caseStrong>. The appeal window closes in approximately <hoursStrong>{hoursRemaining} hours</hoursStrong>.",
+    "confirmProceed": "Do you understand and wish to proceed with submitting an appeal?",
+    "confirmContinue": "Yes, I understand — Continue",
+    "confirmCancel": "Cancel",
+    "formEyebrow": "File an Appeal",
+    "formWindowWarning": "Appeal window closes in ~{hoursRemaining}h. Unsuccessful appeals cost 1 license point.",
+    "descriptionLabel": "Appeal Description",
+    "descriptionPlaceholder": "Explain the grounds for your appeal. Be clear and specific about what was incorrect in the original verdict…",
+    "evidenceLabel": "Evidence",
+    "evidenceHelper": "At least one piece of evidence is required. Upload files or add links/notes below.",
+    "linksNotesLabel": "Links / notes (one per line)",
+    "linksNotesPlaceholder": "Paste links or add notes…",
+    "attachFilesLabel": "Attach files",
+    "formBack": "Back"
+  },
+  "auth": {
+    "login": {
+      "title": "Steward Login",
+      "subtitle": "Access is limited to steward-system users only.",
+      "error": "Incorrect email or password. Please try again.",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "rememberMe": "Stay signed in",
+      "submit": "Sign in",
+      "submitting": "Signing in..."
+    },
+    "forgot": {
+      "trigger": "Forgot your password?",
+      "heading": "Contact your league admin",
+      "body": "Passwords are managed by league administration. Ask your admin to reset your password — you'll then be prompted to set a new one on your next login."
+    },
+    "forced": {
+      "eyebrow": "ISL Steward System",
+      "title": "Set your password",
+      "welcome": "Welcome, <name></name>. You must choose a personal password before continuing.",
+      "banner": "Your account was set up with a temporary password. Choose a new password that only you know — admins will not be able to see it.",
+      "footnote": "Password must be at least 8 characters. You can change it again later from your account settings.",
+      "errorMismatch": "Passwords do not match. Please try again.",
+      "errorTooShort": "Password must be at least 8 characters."
+    },
+    "changeForm": {
+      "hide": "HIDE",
+      "show": "SHOW",
+      "saving": "Saving…",
+      "submitDefault": "Set new password",
+      "currentLabel": "Current password",
+      "currentPlaceholder": "Enter current password…",
+      "newLabel": "New password",
+      "newPlaceholder": "At least 8 characters…",
+      "confirmLabel": "Confirm new password",
+      "confirmPlaceholder": "Repeat new password…",
+      "successMessage": "Password updated successfully.",
+      "changeAgain": "Change again",
+      "errorTooShort": "Password must be at least {min} characters.",
+      "errorMismatch": "Passwords do not match.",
+      "errorCurrentIncorrect": "Current password is incorrect.",
+      "errorGeneric": "Something went wrong. Please try again."
+    },
+    "modal": {
+      "trigger": "Change password",
+      "eyebrow": "Account",
+      "title": "Change Password",
+      "close": "Close",
+      "submit": "Update password"
+    }
+  },
+  "cases": {
+    "list": {
+      "title": "Cases",
+      "subtitle": "Complaints are visible immediately to all authorized module users."
+    },
+    "create": {
+      "title": "Create Complaint",
+      "close": "Close"
+    },
+    "window": {
+      "closedTitle": "Complaint window closed",
+      "closedBody": "Complaints can only be submitted within <strong>48 hours</strong> of a race starting. No races from the last 3 days are on the schedule — check back after the next race."
+    },
+    "form": {
+      "mandatoryNote": "indicates mandatory fields.",
+      "errorEvidenceRequired": "At least one evidence item is required: upload attachment or add text/link in Evidence box.",
+      "errorMissingFields": "All mandatory fields must be filled before submit.",
+      "description": "Description",
+      "evidence": "Evidence",
+      "evidenceHint": "Attach files, paste screenshots, or add links/notes. At least one item is required.",
+      "linksNotes": "Links / notes (one per line)",
+      "season": "Season",
+      "round": "Round",
+      "noRounds": "No rounds available",
+      "weekendSession": "Weekend session",
+      "incidentLap": "Incident lap number",
+      "qualifyingTime": "Time left to qualifying session",
+      "qualifyingTimePlaceholder": "e.g. 15:32"
+    },
+    "session": {
+      "Race": "Race",
+      "Sprint": "Sprint",
+      "Qualifying": "Qualifying"
+    },
+    "status": {
+      "Open": "Open",
+      "Waiting for Response": "Waiting for Response",
+      "Under Review": "Under Review",
+      "Verdict Ready": "Verdict Ready",
+      "Closed": "Closed",
+      "Archived": "Archived"
+    },
+    "decision": {
+      "Racing Incident": "Racing Incident",
+      "No Further Action": "No Further Action",
+      "Penalty Imposed": "Penalty Imposed",
+      "Driver Reprimand": "Driver Reprimand",
+      "Other": "Other"
+    },
+    "appealStatus": {
+      "Submitted": "Submitted",
+      "Under Review": "Under Review",
+      "Verdict Ready": "Verdict Ready",
+      "Closed": "Closed"
+    },
+    "attachments": {
+      "label": "Attachments (upload from computer)",
+      "noFiles": "No files selected",
+      "chooseFiles": "Choose files",
+      "filesSelected": "{count} files selected"
+    },
+    "evidence": {
+      "pasteHint": "<strong>Paste a screenshot</strong> anywhere (Ctrl+V) or drop an image here",
+      "removeImage": "Remove image",
+      "addMore": "+ Add more",
+      "pasteNote": "Screenshots pasted via Ctrl+V are attached automatically. You can also drag & drop image files above.",
+      "fullSize": "⤢ Full size"
+    },
+    "involved": {
+      "label": "Involved drivers (single or multiple)",
+      "selectedCount": "{count, plural, one {# driver selected} other {# drivers selected}}",
+      "choose": "Choose involved drivers",
+      "searchPlaceholder": "Search drivers...",
+      "emptyHint": "Selected drivers will appear here."
+    },
+    "delete": {
+      "remove": "Remove",
+      "removing": "Removing...",
+      "confirm": "Are you sure you want to delete this case? This will remove case, responses, internal comments, and verdict data."
+    },
+    "comment": {
+      "delete": "Delete",
+      "deleteConfirm": "Delete this comment?"
+    },
+    "submit": {
+      "idle": "Submit Complaint",
+      "loading": "Submitting..."
+    },
+    "toast": {
+      "submitted": "Complaint submitted successfully."
+    },
+    "view": {
+      "driver": "Driver",
+      "steward": "Steward"
+    },
+    "filter": {
+      "searchPlaceholder": "Filter by title, case #…",
+      "season": "Season",
+      "round": "Round",
+      "session": "Session",
+      "status": "Status",
+      "clearAll": "Clear all",
+      "noMatch": "No cases match your filter.",
+      "matchCount": "{count, plural, one {# case match} other {# cases match}}"
+    },
+    "sections": {
+      "myOpen": "My Open Cases",
+      "noOpenMatch": "No open cases match.",
+      "noOpenInvolve": "No open cases currently involve you.",
+      "myClosed": "My Closed Cases",
+      "noClosedMatch": "No closed cases match.",
+      "noClosedFound": "No closed cases found.",
+      "allCases": "All Cases",
+      "allCasesSubtitle": "Cases you are not directly involved in",
+      "noOtherMatch": "No other cases match.",
+      "noOther": "No other cases."
+    },
+    "card": {
+      "open": "Open →",
+      "view": "View →"
+    },
+    "table": {
+      "noMatch": "No cases match.",
+      "showing": "{shown} of {total, plural, one {# case} other {# cases}}",
+      "case": "Case",
+      "season": "Season",
+      "round": "Round",
+      "session": "Session",
+      "status": "Status",
+      "created": "Created",
+      "actions": "Actions",
+      "reviewNow": "Review Now",
+      "publishVerdict": "Publish Verdict",
+      "noCasesYet": "No cases yet."
+    },
+    "detail": {
+      "appealExists": "You have already submitted an appeal for this case.",
+      "lap": "Lap",
+      "remaining": "remaining",
+      "session": "Session",
+      "incidentDescription": "Incident description",
+      "evidence": "Evidence",
+      "removeCase": "Remove Case",
+      "backToCases": "← Back to Cases"
+    },
+    "parties": {
+      "complainant": "Complainant",
+      "involved": "Involved",
+      "involvedDrivers": "Involved drivers",
+      "unknown": "Unknown"
+    },
+    "timeline": {
+      "complaint": "Complaint",
+      "driverStatements": "Driver Statements",
+      "verdict": "Verdict"
+    },
+    "statements": {
+      "intro": "Each driver involved in this incident submits one statement. Statements are final once submitted.",
+      "you": "you",
+      "submitted": "Submitted",
+      "pending": "Pending",
+      "placeholder": "Write your statement here. This cannot be edited once submitted.",
+      "optional": "(optional)",
+      "evidenceHint": "Attach files, paste screenshots, or add links to support your statement.",
+      "submit": "Submit Statement",
+      "submitting": "Submitting...",
+      "none": "No statement submitted yet."
+    },
+    "verdict": {
+      "licensePoints": "{count, plural, one {License Point} other {License Points}}",
+      "timePenalty": "Time Penalty",
+      "warningIssued": "Warning Issued",
+      "noPenaltiesDriver": "No penalties for this driver",
+      "published": "Published",
+      "noneYet": "No verdict published yet",
+      "reviewing": "The stewards are reviewing the incident.",
+      "ptsShort": "pts",
+      "noPenalties": "No penalties",
+      "noPublished": "No published verdict yet.",
+      "publishBtn": "Publish Verdict",
+      "publishingBtn": "Publishing…"
+    },
+    "appeal": {
+      "viewResult": "View Appeal Result →",
+      "statusLink": "Appeal {status} →",
+      "viewResultShort": "View result →",
+      "statusShort": "{status} →",
+      "by": "by {name}",
+      "onThisCase": "Appeals on this case",
+      "windowClosesIn": "Appeal window closes in ~",
+      "onePerPerson": " · one appeal per person",
+      "windowLabel": "Appeal window: ~",
+      "remainingSuffix": " remaining (one appeal per person)",
+      "windowClosed": "Appeal window closed."
+    },
+    "stewardView": {
+      "complaint": "1 · Complaint",
+      "complainantTag": "↑ Complainant",
+      "involvedTag": "▣ Involved",
+      "driverStatements": "2 · Driver Statements",
+      "verdict": "3 · Verdict",
+      "caseStatus": "Case Status",
+      "updateStatus": "Update Status",
+      "updatingStatus": "Updating..."
+    },
+    "internal": {
+      "title": "4 · Internal Discussion",
+      "visibility": "Visible to stewards and admins only.",
+      "edited": "(edited)",
+      "edit": "Edit",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving...",
+      "none": "No internal discussion yet.",
+      "addComment": "Add comment",
+      "postComment": "Post Comment",
+      "posting": "Posting..."
+    },
+    "verdictForm": {
+      "remove": "Remove",
+      "licensePoints": "License points",
+      "licensePointsPlaceholder": "e.g. 2",
+      "timePenalty": "Time penalty (s)",
+      "timePenaltyPlaceholder": "e.g. 5",
+      "warningText": "Warning text",
+      "warningPlaceholder": "Optional",
+      "addDriver": "+ Add another driver…",
+      "decisionType": "Decision type",
+      "summary": "Verdict summary",
+      "auto": "auto",
+      "fullText": "Full verdict text",
+      "saving": "Saving…",
+      "saveDraft": "Save Draft",
+      "publishing": "Publishing…",
+      "savePublish": "Save & Publish Verdict"
+    }
+  },
+  "penalties": {
+    "title": "Penalty Tracking",
+    "subtitle": "Aggregated from published verdicts with composable penalties.",
+    "filters": {
+      "season": "Season",
+      "allSeasons": "All seasons",
+      "driver": "Driver",
+      "allDrivers": "All drivers",
+      "sortBy": "Sort by",
+      "sortPoints": "License points",
+      "sortSeconds": "Time penalties",
+      "sortWarnings": "Warnings",
+      "sortCases": "Cases",
+      "apply": "Apply",
+      "applying": "Applying..."
+    },
+    "table": {
+      "driver": "Driver",
+      "season": "Season",
+      "licensePoints": "License Points",
+      "timePenalty": "Time Penalty (s)",
+      "warnings": "Warnings",
+      "cases": "Cases",
+      "empty": "No penalty data yet."
+    },
+    "historical": {
+      "title": "Historical Entries",
+      "subtitle": "Manually recorded historical penalties. Click Edit to update.",
+      "table": {
+        "case": "Case",
+        "season": "Season",
+        "round": "Round",
+        "session": "Session",
+        "drivers": "Drivers",
+        "decision": "Decision",
+        "noDecision": "—"
+      }
+    },
+    "session": {
+      "Race": "Race",
+      "Sprint": "Sprint",
+      "Qualifying": "Qualifying"
+    },
+    "decision": {
+      "racingIncident": "Racing Incident",
+      "noFurtherAction": "No Further Action",
+      "penaltyImposed": "Penalty Imposed",
+      "driverReprimand": "Driver Reprimand",
+      "other": "Other"
+    },
+    "editHistorical": {
+      "editButton": "Edit",
+      "heading": "Edit Historical Entry",
+      "close": "Close",
+      "seasonLabel": "Season *",
+      "selectSeason": "Select season…",
+      "roundLabel": "Round *",
+      "selectRound": "Select round…",
+      "selectSeasonFirst": "Select season first",
+      "sessionLabel": "Session",
+      "description": "Description",
+      "verdictDecision": "Verdict decision",
+      "driversAndPenalties": "Drivers & Penalties *",
+      "addDriver": "+ Add driver",
+      "driverN": "Driver",
+      "remove": "Remove",
+      "driverRequired": "Driver *",
+      "selectDriver": "Select driver…",
+      "licensePoints": "License points",
+      "licensePointsPlaceholder": "e.g. 2",
+      "timePenalty": "Time penalty (s)",
+      "timePenaltyPlaceholder": "e.g. 10",
+      "warningText": "Warning text",
+      "warningTextPlaceholder": "Leave blank if none",
+      "verdictExplanation": "Verdict explanation (optional)",
+      "verdictExplanationPlaceholder": "Steward reasoning or notes…",
+      "saving": "Saving…",
+      "save": "Save Changes",
+      "cancel": "Cancel"
+    }
+  },
+  "penaltiesToServe": {
+    "title": "Penalties to Serve",
+    "subtitle": "Race-service penalties assigned to drivers based on accumulated license points. All penalties must be served in the next Main League race.",
+    "errorPrefix": "Error:",
+    "ptsArrow": "pts →",
+    "awaitingHeading": "Awaiting Service Confirmation",
+    "activeHeading": "Active Penalties",
+    "noActive": "No active penalties to serve.",
+    "historyHeading": "History",
+    "status": {
+      "pending": "Pending",
+      "assigned": "Assigned",
+      "awaiting_confirmation": "Awaiting Confirmation",
+      "served": "Served",
+      "not_served": "Not Served",
+      "rolled_forward": "Rolled Forward",
+      "cancelled": "Cancelled"
+    },
+    "card": {
+      "manual": "manual",
+      "roll": "roll #",
+      "raceArrow": "→",
+      "triggeredAt": "Triggered at",
+      "pts": "pts",
+      "race": "Race:",
+      "created": "Created:",
+      "confirmServed": "✓ Served",
+      "notServed": "✗ Not Served",
+      "markServed": "Mark Served",
+      "saving": "Saving…",
+      "rolling": "Rolling…",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "ellipsis": "…"
+    },
+    "addManual": {
+      "heading": "Add Penalty Manually",
+      "subtitle": "Directly assign a penalty-to-serve without a threshold trigger.",
+      "queuedNote": "Will be queued after any existing active penalties for that driver.",
+      "driver": "Driver *",
+      "selectDriver": "Select driver…",
+      "quantity": "Quantity",
+      "quantityHint": "(consecutive penalties)",
+      "adminNotes": "Admin notes",
+      "adminNotesPlaceholder": "Reason for manual assignment…",
+      "submit": "Add Penalty",
+      "submitting": "Adding…"
+    },
+    "ruleSelect": {
+      "penaltyType": "Penalty type *",
+      "selectPenalty": "Select penalty…",
+      "customOther": "Custom / Other…",
+      "penaltyLabel": "Penalty label *",
+      "penaltyLabelPlaceholder": "e.g. Qualifying Ban",
+      "typeInternalKey": "Type (internal key)",
+      "typePlaceholder": "e.g. qualifying_ban",
+      "description": "Description",
+      "descriptionPlaceholder": "Brief explanation"
+    },
+    "editModal": {
+      "editButton": "Edit",
+      "heading": "Edit Penalty",
+      "close": "Close",
+      "penaltyType": "Penalty type *",
+      "selectPenalty": "Select penalty…",
+      "customOther": "Custom / Other…",
+      "penaltyLabel": "Penalty label *",
+      "typeInternalKey": "Type (internal key)",
+      "typePlaceholder": "e.g. qualifying_ban",
+      "description": "Description",
+      "descriptionPlaceholder": "Brief explanation",
+      "adminNotes": "Admin notes",
+      "adminNotesPlaceholder": "Reason or context…",
+      "saving": "Saving…",
+      "save": "Save Changes",
+      "cancel": "Cancel"
+    }
+  },
+  "shell": {
+    "title": "Steward System",
+    "signedInAs": "Signed in as {name} ({roles})",
+    "signOut": "Sign out",
+    "signingOut": "Signing out...",
+    "role": {
+      "admin": "admin",
+      "steward": "steward",
+      "member": "member"
+    },
+    "nav": {
+      "dashboard": "Dashboard",
+      "cases": "Cases",
+      "appeals": "Appeals",
+      "penalties": "Penalties",
+      "penaltiesToServe": "Penalties to Serve",
+      "admin": "Admin"
+    },
+    "notif": {
+      "ariaLabel": "{count, plural, one {# pending steward action} other {# pending steward actions}}",
+      "pendingActions": "Pending Actions",
+      "openSystem": "Open Steward System →"
+    },
+    "error": {
+      "title": "Something went wrong",
+      "chunkMessage": "The page failed to load properly. This usually happens after a site update. Please do a hard refresh (<strong>Ctrl + Shift + R</strong> on Windows, <strong>Cmd + Shift + R</strong> on Mac) to get the latest version.",
+      "genericMessage": "An unexpected error occurred. Try refreshing the page or going back.",
+      "reload": "Reload page",
+      "tryAgain": "Try again",
+      "debugInfo": "Debug info",
+      "digest": "Digest: {value}",
+      "message": "Message: {value}"
+    },
+    "dashboard": {
+      "heading": "Dashboard",
+      "subtitle": "Internal steward workflow for complaints, responses, deliberation, and verdicts.",
+      "awaitingAlert": "<strong>{count}</strong> {count, plural, one {penalty} other {penalties}} awaiting service confirmation after a completed race.",
+      "review": "Review",
+      "metric": {
+        "totalCases": "Total Cases",
+        "openUnderReview": "Open / Under Review",
+        "waitingForResponse": "Waiting for Response",
+        "closed": "Closed"
+      },
+      "penaltiesToServe": {
+        "heading": "Penalties to Serve",
+        "subtitle": "Upcoming race-service penalties",
+        "viewAll": "View all"
+      },
+      "unassigned": "Unassigned",
+      "quickLinks": {
+        "heading": "Quick links",
+        "openCases": "Open Cases",
+        "createComplaint": "+ Create Complaint",
+        "penaltyTracking": "Penalty Tracking",
+        "penaltiesToServe": "Penalties to Serve",
+        "userRoleAdmin": "User & Role Admin"
+      }
+    }
+  }
+}

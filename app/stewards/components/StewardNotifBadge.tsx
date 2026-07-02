@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 type Indicator = { id: string; label: string; count: number; href: string };
 
@@ -12,6 +13,7 @@ const ICON: Record<string, string> = {
 };
 
 export default function StewardNotifBadge() {
+  const t = useTranslations("stewards");
   const [total, setTotal]           = useState(0);
   const [items, setItems]           = useState<Indicator[]>([]);
   const [open, setOpen]             = useState(false);
@@ -51,7 +53,7 @@ export default function StewardNotifBadge() {
       <button
         onClick={() => setOpen((v) => !v)}
         className="flex items-center gap-1.5 rounded-[2px] border border-brass bg-cream px-2.5 py-1 text-xs font-bold text-ink transition hover:bg-paper"
-        aria-label={`${total} pending steward action${total > 1 ? "s" : ""}`}
+        aria-label={t("shell.notif.ariaLabel", { count: total })}
       >
         <span className="relative flex h-2 w-2">
           <span className="relative inline-flex h-2 w-2 rounded-full bg-oxblood animate-[f1-tick_1s_step-end_infinite]" />
@@ -63,7 +65,7 @@ export default function StewardNotifBadge() {
         <div className="absolute end-0 top-full z-50 mt-2 w-72 overflow-hidden rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper">
           <div className="border-b border-[color:var(--isl-hairline)] px-4 py-2.5">
             <p className="font-isl-body text-[10px] font-semibold uppercase tracking-[0.2em] text-brass-ink">
-              Pending Actions
+              {t("shell.notif.pendingActions")}
             </p>
           </div>
           <ul className="divide-y divide-[color:var(--isl-hairline)]">
@@ -93,7 +95,7 @@ export default function StewardNotifBadge() {
               onClick={() => setOpen(false)}
               className="text-[11px] text-meta transition hover:text-oxblood-deep"
             >
-              Open Steward System →
+              {t("shell.notif.openSystem")}
             </Link>
           </div>
         </div>

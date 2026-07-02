@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
+import { useTranslations } from "next-intl";
 import { addHistoricalPenaltyAction } from "@/app/stewards/actions";
 import { Button } from "@/components/ui/button";
 
@@ -18,6 +19,20 @@ type DriverEntry = {
 const DECISIONS = ["Racing Incident", "No Further Action", "Penalty Imposed", "Driver Reprimand", "Other"] as const;
 const SESSIONS  = ["Race", "Sprint", "Qualifying"] as const;
 
+// value -> translation-key-segment (display only; underlying values above are unchanged)
+const DECISION_KEYS: Record<(typeof DECISIONS)[number], string> = {
+  "Racing Incident": "racingIncident",
+  "No Further Action": "noFurtherAction",
+  "Penalty Imposed": "penaltyImposed",
+  "Driver Reprimand": "driverReprimand",
+  "Other": "other",
+};
+const SESSION_KEYS: Record<(typeof SESSIONS)[number], string> = {
+  "Race": "race",
+  "Sprint": "sprint",
+  "Qualifying": "qualifying",
+};
+
 const inputCls =
   "w-full rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2 text-sm text-ink placeholder:text-faint focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)] transition-colors";
 
@@ -28,6 +43,7 @@ export default function HistoricalPenaltyForm({
   drivers: Driver[];
   seasonRoundOptions?: SeasonRoundOption[];
 }) {
+  const t = useTranslations("stewards");
   const [open, setOpen] = useState(false);
   const [entries, setEntries] = useState<DriverEntry[]>([{ driverId: "", licensePoints: "", timePenaltySeconds: "", warningText: "" }]);
   const [decision, setDecision] = useState("");
@@ -54,9 +70,9 @@ export default function HistoricalPenaltyForm({
     <section className="steward-panel rounded-[2px] p-5">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h3 className="font-display font-bold tracking-[0.005em] leading-[1.05] text-ink text-lg">Add Historical Penalty</h3>
+          <h3 className="font-display font-bold tracking-[0.005em] leading-[1.05] text-ink text-lg">{t("admin.historical.heading")}</h3>
           <p className="mt-0.5 text-sm text-ink-2">
-            Record penalties from before the system was live. Creates a closed case + published verdict directly.
+            {t("admin.historical.subtitle")}
           </p>
         </div>
         <Button
@@ -66,7 +82,7 @@ export default function HistoricalPenaltyForm({
           onClick={() => setOpen((v) => !v)}
           className="shrink-0"
         >
-          {open ? "Close" : "+ Add Entry"}
+          {open ? t("admin.historical.close") : t("admin.historical.addEntry")}
         </Button>
       </div>
 
@@ -75,7 +91,7 @@ export default function HistoricalPenaltyForm({
           {/* Context */}
           <div className="grid gap-3 md:grid-cols-3">
             <label className="block">
-              <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-meta">Season <span className="text-status-danger">*</span></span>
+              <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-meta">{t("admin.historical.season")} <span className="text-status-danger">*</span></span>
               {seasonRoundOptions.length > 0 ? (
                 <select
                   name="season"
@@ -84,44 +100,44 @@ export default function HistoricalPenaltyForm({
                   onChange={(e) => setSelectedSeason(e.target.value)}
                   className={inputCls}
                 >
-                  <option value="">Select season…</option>
+                  <option value="">{t("admin.historical.selectSeason")}</option>
                   {seasonRoundOptions.map((s) => (
                     <option key={s.value} value={s.value}>{s.label}</option>
                   ))}
                 </select>
               ) : (
-                <input name="season" required placeholder="e.g. S6" className={inputCls} />
+                <input name="season" required placeholder={t("admin.historical.seasonPlaceholder")} className={inputCls} />
               )}
             </label>
             <label className="block">
-              <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-meta">Round <span className="text-status-danger">*</span></span>
+              <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-meta">{t("admin.historical.round")} <span className="text-status-danger">*</span></span>
               {seasonRoundOptions.length > 0 ? (
                 <select name="round" required disabled={!selectedSeason} className={inputCls}>
-                  <option value="">{selectedSeason ? "Select round…" : "Select season first"}</option>
+                  <option value="">{selectedSeason ? t("admin.historical.selectRound") : t("admin.historical.selectSeasonFirst")}</option>
                   {roundOptions.map((r) => (
                     <option key={r.value} value={r.value}>{r.label}</option>
                   ))}
                 </select>
               ) : (
-                <input name="round" required placeholder="e.g. Race 03 – Monaco" className={inputCls} />
+                <input name="round" required placeholder={t("admin.historical.roundPlaceholder")} className={inputCls} />
               )}
             </label>
             <label className="block">
-              <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-meta">Session</span>
+              <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-meta">{t("admin.historical.session")}</span>
               <select name="weekendSession" className={inputCls}>
-                {SESSIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                {SESSIONS.map((s) => <option key={s} value={s}>{t(`admin.historical.sessionLabel.${SESSION_KEYS[s]}`)}</option>)}
               </select>
             </label>
           </div>
 
           <label className="block">
-            <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-meta">Incident description (optional)</span>
-            <textarea name="description" rows={2} dir="auto" placeholder="Brief description of the incident…" className={inputCls} />
+            <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-meta">{t("admin.historical.incidentDescription")}</span>
+            <textarea name="description" rows={2} dir="auto" placeholder={t("admin.historical.incidentPlaceholder")} className={inputCls} />
           </label>
 
           {/* Verdict decision */}
           <div>
-            <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-meta">Verdict decision</span>
+            <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-meta">{t("admin.historical.verdictDecision")}</span>
             <div className="flex flex-wrap gap-2">
               {DECISIONS.map((d) => (
                 <button
@@ -134,7 +150,7 @@ export default function HistoricalPenaltyForm({
                       : "border-[color:var(--isl-hairline)] text-ink-2 hover:bg-cream"
                   }`}
                 >
-                  {d}
+                  {t(`admin.historical.decisionLabel.${DECISION_KEYS[d]}`)}
                 </button>
               ))}
             </div>
@@ -143,62 +159,62 @@ export default function HistoricalPenaltyForm({
           {/* Per-driver entries */}
           <div>
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-meta">Drivers &amp; Penalties <span className="text-status-danger">*</span></span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-meta">{t("admin.historical.driversPenalties")} <span className="text-status-danger">*</span></span>
               <button type="button" onClick={addEntry} className="rounded-[2px] border border-[color:var(--isl-hairline)] px-3 py-0.5 text-xs text-ink-2 hover:bg-cream hover:text-ink transition-colors">
-                + Add driver
+                {t("admin.historical.addDriver")}
               </button>
             </div>
             <div className="space-y-3">
               {entries.map((entry, i) => (
                 <div key={i} className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-4">
                   <div className="mb-3 flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-widest text-brass-ink">Driver <span className="num">{i + 1}</span></span>
+                    <span className="text-xs font-bold uppercase tracking-widest text-brass-ink">{t("admin.historical.driverN")} <span className="num">{i + 1}</span></span>
                     {entries.length > 1 && (
-                      <button type="button" onClick={() => removeEntry(i)} className="text-xs text-status-danger hover:text-oxblood-deep transition-colors">Remove</button>
+                      <button type="button" onClick={() => removeEntry(i)} className="text-xs text-status-danger hover:text-oxblood-deep transition-colors">{t("admin.historical.removeDriver")}</button>
                     )}
                   </div>
                   <div className="grid gap-3 md:grid-cols-2">
                     <label className="block md:col-span-2">
-                      <span className="mb-1 block text-xs text-meta">Driver <span className="text-status-danger">*</span></span>
+                      <span className="mb-1 block text-xs text-meta">{t("admin.historical.driver")} <span className="text-status-danger">*</span></span>
                       <select
                         value={entry.driverId}
                         onChange={(e) => updateEntry(i, "driverId", e.target.value)}
                         required
                         className={inputCls}
                       >
-                        <option value="">Select driver…</option>
+                        <option value="">{t("admin.historical.selectDriver")}</option>
                         {drivers.map((d) => (
                           <option key={d.id} value={d.id}>{d.name}</option>
                         ))}
                       </select>
                     </label>
                     <label className="block">
-                      <span className="mb-1 block text-xs text-meta">License points</span>
+                      <span className="mb-1 block text-xs text-meta">{t("admin.historical.licensePoints")}</span>
                       <input
                         type="number" min={0} max={12} step={1}
                         value={entry.licensePoints}
                         onChange={(e) => updateEntry(i, "licensePoints", e.target.value)}
-                        placeholder="e.g. 2"
+                        placeholder={t("admin.historical.licensePointsPlaceholder")}
                         className={inputCls}
                       />
                     </label>
                     <label className="block">
-                      <span className="mb-1 block text-xs text-meta">Time penalty (seconds)</span>
+                      <span className="mb-1 block text-xs text-meta">{t("admin.historical.timePenalty")}</span>
                       <input
                         type="number" min={0} step={1}
                         value={entry.timePenaltySeconds}
                         onChange={(e) => updateEntry(i, "timePenaltySeconds", e.target.value)}
-                        placeholder="e.g. 10"
+                        placeholder={t("admin.historical.timePenaltyPlaceholder")}
                         className={inputCls}
                       />
                     </label>
                     <label className="block md:col-span-2">
-                      <span className="mb-1 block text-xs text-meta">Warning text (leave blank if none)</span>
+                      <span className="mb-1 block text-xs text-meta">{t("admin.historical.warningText")}</span>
                       <input
                         value={entry.warningText}
                         onChange={(e) => updateEntry(i, "warningText", e.target.value)}
                         dir="auto"
-                        placeholder="e.g. Unsportsmanlike conduct warning"
+                        placeholder={t("admin.historical.warningTextPlaceholder")}
                         className={inputCls}
                       />
                     </label>
@@ -210,14 +226,14 @@ export default function HistoricalPenaltyForm({
 
           {/* Full text (optional) */}
           <label className="block">
-            <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-meta">Verdict full explanation (optional)</span>
-            <textarea name="verdict_full_text" rows={3} dir="auto" placeholder="Steward reasoning or notes…" className={inputCls} />
+            <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-meta">{t("admin.historical.verdictFullText")}</span>
+            <textarea name="verdict_full_text" rows={3} dir="auto" placeholder={t("admin.historical.verdictFullTextPlaceholder")} className={inputCls} />
           </label>
 
           <div className="flex items-center gap-3 pt-1">
             <SubmitBtn />
             <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
-              Cancel
+              {t("admin.historical.cancel")}
             </Button>
           </div>
         </form>
@@ -227,10 +243,11 @@ export default function HistoricalPenaltyForm({
 }
 
 function SubmitBtn() {
+  const t = useTranslations("stewards");
   const { pending } = useFormStatus();
   return (
     <Button type="submit" variant="primary" disabled={pending}>
-      {pending ? "Saving…" : "Save Historical Penalty"}
+      {pending ? t("admin.historical.saving") : t("admin.historical.submit")}
     </Button>
   );
 }

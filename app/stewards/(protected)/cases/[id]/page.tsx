@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import {
   addInternalCommentAction,
   editInternalCommentAction,
@@ -48,6 +49,7 @@ export default async function StewardCaseDetailPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ submitted?: string; view?: "driver" | "steward"; error?: string; edit_comment?: string }>;
 }) {
+  const t = await getTranslations("stewards");
   const user = await requireStewardUser();
   const { id } = await params;
   const query = await searchParams;
@@ -97,7 +99,7 @@ export default async function StewardCaseDetailPage({
 
   const appealErrorMsg =
     query.error === "appeal-exists"
-      ? "You have already submitted an appeal for this case."
+      ? t("cases.detail.appealExists")
       : null;
 
   return (
@@ -127,17 +129,17 @@ export default async function StewardCaseDetailPage({
               <span className="text-faint">·</span>
               <span>{caseItem.round}</span>
               <span className="text-faint">·</span>
-              <span>{caseItem.weekendSession}</span>
+              <span>{t(`cases.session.${caseItem.weekendSession}`)}</span>
               {caseItem.weekendSession === "Race" && caseItem.incidentLapNumber && (
                 <>
                   <span className="text-faint">·</span>
-                  <span>Lap <span className="num">{caseItem.incidentLapNumber}</span></span>
+                  <span>{t("cases.detail.lap")} <span className="num">{caseItem.incidentLapNumber}</span></span>
                 </>
               )}
               {caseItem.weekendSession === "Qualifying" && caseItem.qualifyingTime && (
                 <>
                   <span className="text-faint">·</span>
-                  <span className="num">{caseItem.qualifyingTime} remaining</span>
+                  <span className="num">{caseItem.qualifyingTime} {t("cases.detail.remaining")}</span>
                 </>
               )}
               <span className="text-faint">·</span>
@@ -147,7 +149,7 @@ export default async function StewardCaseDetailPage({
             {/* status badge row */}
             <div className="mt-3">
               <span className={`inline-flex items-center rounded-[2px] border px-3 py-1 font-isl-body text-[11px] font-semibold uppercase tracking-[0.12em] leading-none ${STATUS_STYLE[caseItem.status] ?? STATUS_STYLE["Open"]}`}>
-                {caseItem.status}
+                {t(`cases.status.${caseItem.status}`)}
               </span>
             </div>
 
@@ -157,8 +159,8 @@ export default async function StewardCaseDetailPage({
               <div className="flex items-center gap-2.5 rounded-[2px] border border-brass bg-cream px-4 py-2.5">
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[2px] border border-brass text-xs font-bold text-brass-ink">↑</span>
                 <div>
-                  <p className="font-isl-body text-[10px] font-semibold uppercase tracking-[0.2em] text-brass-ink">Complainant</p>
-                  <p className="text-sm font-semibold text-ink">{complainant?.name ?? "Unknown"}</p>
+                  <p className="font-isl-body text-[10px] font-semibold uppercase tracking-[0.2em] text-brass-ink">{t("cases.parties.complainant")}</p>
+                  <p className="text-sm font-semibold text-ink">{complainant?.name ?? t("cases.parties.unknown")}</p>
                 </div>
               </div>
 
@@ -167,7 +169,7 @@ export default async function StewardCaseDetailPage({
                 <div key={d.id} className="flex items-center gap-2.5 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-4 py-2.5">
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline-strong)] text-xs font-bold text-ink-2">▣</span>
                   <div>
-                    <p className="font-isl-body text-[10px] font-semibold uppercase tracking-[0.2em] text-meta">Involved</p>
+                    <p className="font-isl-body text-[10px] font-semibold uppercase tracking-[0.2em] text-meta">{t("cases.parties.involved")}</p>
                     <p className="text-sm font-semibold text-ink">{d.name}</p>
                   </div>
                 </div>
@@ -188,7 +190,7 @@ export default async function StewardCaseDetailPage({
               <DeleteCaseForm
                 caseId={caseItem.id}
                 redirectTo="/stewards/cases?view=steward"
-                idleLabel="Remove Case"
+                idleLabel={t("cases.detail.removeCase")}
                 className="rounded-[2px] border border-status-danger px-3 py-1.5 text-xs text-status-danger transition hover:bg-cream"
               />
             )}
@@ -203,16 +205,16 @@ export default async function StewardCaseDetailPage({
           <div className="absolute start-3.5 top-0 h-full w-px bg-[color:var(--isl-hairline-strong)]" />
 
           {/* ── STEP 1: COMPLAINT ──────────────────────────────── */}
-          <TimelineStep number={1} label="Complaint" done={stepDone(1)}>
+          <TimelineStep number={1} label={t("cases.timeline.complaint")} done={stepDone(1)}>
             <div className="grid gap-5 md:grid-cols-[200px_1fr]">
               {/* left: parties */}
               <div className="space-y-3">
                 <div>
-                  <p className="font-isl-body text-[10px] font-semibold uppercase tracking-[0.2em] text-brass-ink">Complainant</p>
-                  <p className="mt-1 text-sm font-medium text-ink">{complainant?.name ?? "Unknown"}</p>
+                  <p className="font-isl-body text-[10px] font-semibold uppercase tracking-[0.2em] text-brass-ink">{t("cases.parties.complainant")}</p>
+                  <p className="mt-1 text-sm font-medium text-ink">{complainant?.name ?? t("cases.parties.unknown")}</p>
                 </div>
                 <div>
-                  <p className="font-isl-body text-[10px] font-semibold uppercase tracking-[0.2em] text-brass-ink">Involved drivers</p>
+                  <p className="font-isl-body text-[10px] font-semibold uppercase tracking-[0.2em] text-brass-ink">{t("cases.parties.involvedDrivers")}</p>
                   <div className="mt-1 flex flex-wrap gap-1.5">
                     {involvedDrivers.map((d) => (
                       <span key={d.id} className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-2 py-0.5 text-xs text-ink-2">
@@ -222,14 +224,14 @@ export default async function StewardCaseDetailPage({
                   </div>
                 </div>
                 <div>
-                  <p className="font-isl-body text-[10px] font-semibold uppercase tracking-[0.2em] text-brass-ink">Session</p>
-                  <p className="mt-1 text-sm text-ink-2">{caseItem.weekendSession}</p>
+                  <p className="font-isl-body text-[10px] font-semibold uppercase tracking-[0.2em] text-brass-ink">{t("cases.detail.session")}</p>
+                  <p className="mt-1 text-sm text-ink-2">{t(`cases.session.${caseItem.weekendSession}`)}</p>
                 </div>
               </div>
 
               {/* right: description */}
               <div>
-                <p className="font-isl-body text-[10px] font-semibold uppercase tracking-[0.2em] text-brass-ink">Incident description</p>
+                <p className="font-isl-body text-[10px] font-semibold uppercase tracking-[0.2em] text-brass-ink">{t("cases.detail.incidentDescription")}</p>
                 <p className="mt-2 whitespace-pre-wrap leading-relaxed text-ink-2" dir="auto" lang="he">
                   {caseItem.description}
                 </p>
@@ -239,16 +241,16 @@ export default async function StewardCaseDetailPage({
             {/* evidence gallery */}
             {(caseItem.attachments.length > 0 || caseItem.links.length > 0) && (
               <div className="mt-5 border-t border-[color:var(--isl-hairline)] pt-4">
-                <p className="mb-3 font-isl-body text-[10px] font-semibold uppercase tracking-[0.2em] text-brass-ink">Evidence</p>
+                <p className="mb-3 font-isl-body text-[10px] font-semibold uppercase tracking-[0.2em] text-brass-ink">{t("cases.detail.evidence")}</p>
                 <EvidenceGallery attachments={caseItem.attachments} links={caseItem.links} />
               </div>
             )}
           </TimelineStep>
 
           {/* ── STEP 2: DRIVER STATEMENTS ──────────────────────── */}
-          <TimelineStep number={2} label="Driver Statements" done={stepDone(2)}>
+          <TimelineStep number={2} label={t("cases.timeline.driverStatements")} done={stepDone(2)}>
             <p className="mb-4 text-xs text-meta">
-              Each driver involved in this incident submits one statement. Statements are final once submitted.
+              {t("cases.statements.intro")}
             </p>
 
             <div className="space-y-3">
@@ -266,16 +268,16 @@ export default async function StewardCaseDetailPage({
                         <span className="text-sm font-semibold text-ink">{driverName}</span>
                         {isMe && (
                           <span className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-2 py-0.5 text-[10px] text-meta">
-                            you
+                            {t("cases.statements.you")}
                           </span>
                         )}
                       </div>
                       {statement ? (
                         <span className="flex items-center gap-1 text-[10px] text-status-success">
-                          <span>✓</span> Submitted <span className="num">{fmtDate(statement.createdAt)}</span>
+                          <span>✓</span> {t("cases.statements.submitted")} <span className="num">{fmtDate(statement.createdAt)}</span>
                         </span>
                       ) : (
-                        <span className="text-[10px] text-faint">Pending</span>
+                        <span className="text-[10px] text-faint">{t("cases.statements.pending")}</span>
                       )}
                     </div>
 
@@ -287,7 +289,7 @@ export default async function StewardCaseDetailPage({
                         </p>
                         {(statement.attachments.length > 0 || statement.links.length > 0) && (
                           <div className="border-t border-[color:var(--isl-hairline)] pt-3">
-                            <p className="mb-2 font-isl-body text-[10px] font-semibold uppercase tracking-[0.2em] text-brass-ink">Evidence</p>
+                            <p className="mb-2 font-isl-body text-[10px] font-semibold uppercase tracking-[0.2em] text-brass-ink">{t("cases.detail.evidence")}</p>
                             <EvidenceGallery attachments={statement.attachments} links={statement.links} />
                           </div>
                         )}
@@ -302,21 +304,21 @@ export default async function StewardCaseDetailPage({
                             rows={4}
                             lang="he"
                             dir="auto"
-                            placeholder="Write your statement here. This cannot be edited once submitted."
+                            placeholder={t("cases.statements.placeholder")}
                             className="w-full rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2.5 leading-relaxed text-ink placeholder:text-faint focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
                           />
                           {/* Evidence — same capabilities as complaint form */}
                           <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-4">
                             <h4 className="font-isl-body text-xs font-semibold uppercase tracking-[0.2em] text-brass-ink">
-                              Evidence <span className="font-normal normal-case tracking-normal text-meta">(optional)</span>
+                              {t("cases.detail.evidence")} <span className="font-normal normal-case tracking-normal text-meta">{t("cases.statements.optional")}</span>
                             </h4>
-                            <p className="mt-1 text-xs text-meta">Attach files, paste screenshots, or add links to support your statement.</p>
+                            <p className="mt-1 text-xs text-meta">{t("cases.statements.evidenceHint")}</p>
                             <div className="mt-3 grid gap-4 md:grid-cols-2">
                               <EvidencePasteBox />
                               <div className="space-y-3">
                                 <AttachmentFilePicker />
                                 <label className="block">
-                                  <span className="mb-1 block text-xs text-ink-2">Links / notes (one per line)</span>
+                                  <span className="mb-1 block text-xs text-ink-2">{t("cases.form.linksNotes")}</span>
                                   <textarea
                                     name="evidence_items"
                                     rows={3}
@@ -329,15 +331,15 @@ export default async function StewardCaseDetailPage({
                             </div>
                           </div>
                           <FormActionButton
-                            idleLabel="Submit Statement"
-                            loadingLabel="Submitting..."
+                            idleLabel={t("cases.statements.submit")}
+                            loadingLabel={t("cases.statements.submitting")}
                             className="w-fit rounded-[2px] bg-ink px-5 py-2 text-sm font-semibold text-bone transition hover:opacity-90"
                           />
                         </form>
                       </div>
                     ) : (
                       <div className="px-4 py-3">
-                        <p className="text-sm text-faint italic">No statement submitted yet.</p>
+                        <p className="text-sm text-faint italic">{t("cases.statements.none")}</p>
                       </div>
                     )}
                   </div>
@@ -347,7 +349,7 @@ export default async function StewardCaseDetailPage({
           </TimelineStep>
 
           {/* ── STEP 3: VERDICT ────────────────────────────────── */}
-          <TimelineStep number={3} label="Verdict" done={stepDone(3)} isLast>
+          <TimelineStep number={3} label={t("cases.timeline.verdict")} done={stepDone(3)} isLast>
             {verdict?.is_published ? (
               <div className="space-y-4">
                 {/* per-driver penalty blocks */}
@@ -361,21 +363,21 @@ export default async function StewardCaseDetailPage({
                         <div className="flex flex-wrap gap-2 px-4 py-3">
                           {dv.license_points != null && dv.license_points > 0 && (
                             <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-status-danger px-3 py-1.5 text-xs font-bold text-status-danger">
-                              ● <span className="num">+{dv.license_points}</span> License Point{dv.license_points !== 1 ? "s" : ""}
+                              ● <span className="num">+{dv.license_points}</span> {t("cases.verdict.licensePoints", { count: dv.license_points })}
                             </span>
                           )}
                           {dv.time_penalty_seconds != null && dv.time_penalty_seconds > 0 && (
                             <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-status-info px-3 py-1.5 text-xs font-bold text-status-info">
-                              ⏱ <span className="num">+{dv.time_penalty_seconds}s</span> Time Penalty
+                              ⏱ <span className="num">+{dv.time_penalty_seconds}s</span> {t("cases.verdict.timePenalty")}
                             </span>
                           )}
                           {dv.warning_text && (
                             <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-status-warning px-3 py-1.5 text-xs font-bold text-status-warning">
-                              ⚠ Warning Issued
+                              ⚠ {t("cases.verdict.warningIssued")}
                             </span>
                           )}
                           {dv.license_points == null && dv.time_penalty_seconds == null && !dv.warning_text && (
-                            <span className="text-xs text-faint italic">No penalties for this driver</span>
+                            <span className="text-xs text-faint italic">{t("cases.verdict.noPenaltiesDriver")}</span>
                           )}
                         </div>
                         {dv.warning_text && (
@@ -396,7 +398,7 @@ export default async function StewardCaseDetailPage({
                   </p>
                 </div>
                 <p className="text-xs text-meta">
-                  Published <span className="num">{fmtDateTime(verdict.published_at)}</span>
+                  {t("cases.verdict.published")} <span className="num">{fmtDateTime(verdict.published_at)}</span>
                 </p>
 
                 {/* ── Appeal entry point ── */}
@@ -406,7 +408,7 @@ export default async function StewardCaseDetailPage({
                       href={`/stewards/appeals/${myAppeal.id}`}
                       className="inline-flex items-center gap-2 rounded-[2px] border border-brass px-4 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-brass-ink transition hover:bg-cream"
                     >
-                      {myAppeal.status === "Closed" ? "View Appeal Result →" : `Appeal ${myAppeal.status} →`}
+                      {myAppeal.status === "Closed" ? t("cases.appeal.viewResult") : t("cases.appeal.statusLink", { status: t(`cases.appealStatus.${myAppeal.status}`) })}
                     </Link>
                   ) : canAppeal ? (
                     <div className="flex flex-wrap items-center gap-3">
@@ -416,11 +418,11 @@ export default async function StewardCaseDetailPage({
                         hoursRemaining={appealHoursRemaining}
                       />
                       <span className="text-xs text-meta">
-                        Appeal window closes in ~<span className="num">{appealHoursRemaining}h</span> · one appeal per person
+                        {t("cases.appeal.windowClosesIn")}<span className="num">{appealHoursRemaining}h</span>{t("cases.appeal.onePerPerson")}
                       </span>
                     </div>
                   ) : (
-                    <p className="text-xs text-faint italic">Appeal window closed.</p>
+                    <p className="text-xs text-faint italic">{t("cases.appeal.windowClosed")}</p>
                   )}
                 </div>
               </div>
@@ -428,8 +430,8 @@ export default async function StewardCaseDetailPage({
               <div className="flex items-center gap-3 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-4 py-4">
                 <span className="text-2xl opacity-40">⚖️</span>
                 <div>
-                  <p className="text-sm font-medium text-ink-2">No verdict published yet</p>
-                  <p className="mt-0.5 text-xs text-meta">The stewards are reviewing the incident.</p>
+                  <p className="text-sm font-medium text-ink-2">{t("cases.verdict.noneYet")}</p>
+                  <p className="mt-0.5 text-xs text-meta">{t("cases.verdict.reviewing")}</p>
                 </div>
               </div>
             )}
@@ -443,18 +445,18 @@ export default async function StewardCaseDetailPage({
 
           {/* Complaint */}
           <section className="steward-panel rounded-[2px] p-5">
-            <h3 className="font-display text-base font-bold uppercase tracking-[0.12em] text-ink">1 · Complaint</h3>
+            <h3 className="font-display text-base font-bold uppercase tracking-[0.12em] text-ink">{t("cases.stewardView.complaint")}</h3>
             <p className="mt-3 whitespace-pre-wrap leading-relaxed text-ink-2" dir="auto" lang="he">
               {caseItem.description}
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               <div className="flex items-center gap-1.5 rounded-[2px] border border-brass bg-cream px-2.5 py-1.5">
-                <span className="font-isl-body text-[9px] font-semibold uppercase tracking-[0.2em] text-brass-ink">↑ Complainant</span>
+                <span className="font-isl-body text-[9px] font-semibold uppercase tracking-[0.2em] text-brass-ink">{t("cases.stewardView.complainantTag")}</span>
                 <span className="text-xs font-semibold text-ink">{complainant?.name ?? caseItem.complainantId}</span>
               </div>
               {involvedDrivers.map((d) => (
                 <div key={d.id} className="flex items-center gap-1.5 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-2.5 py-1.5">
-                  <span className="font-isl-body text-[9px] font-semibold uppercase tracking-[0.2em] text-meta">▣ Involved</span>
+                  <span className="font-isl-body text-[9px] font-semibold uppercase tracking-[0.2em] text-meta">{t("cases.stewardView.involvedTag")}</span>
                   <span className="text-xs font-semibold text-ink-2">{d.name}</span>
                 </div>
               ))}
@@ -468,7 +470,7 @@ export default async function StewardCaseDetailPage({
 
           {/* Statements */}
           <section className="steward-panel rounded-[2px] p-5">
-            <h3 className="font-display text-base font-bold uppercase tracking-[0.12em] text-ink">2 · Driver Statements</h3>
+            <h3 className="font-display text-base font-bold uppercase tracking-[0.12em] text-ink">{t("cases.stewardView.driverStatements")}</h3>
             <div className="mt-3 space-y-3">
               {participantIds.map((pid) => {
                 const driver = involvedDrivers.find((d) => d.id === pid) ?? null;
@@ -482,20 +484,20 @@ export default async function StewardCaseDetailPage({
                       </div>
                       {statement
                         ? <span className="text-[10px] text-status-success">✓ <span className="num">{fmtDate(statement.createdAt)}</span></span>
-                        : <span className="text-[10px] text-faint">Pending</span>}
+                        : <span className="text-[10px] text-faint">{t("cases.statements.pending")}</span>}
                     </div>
                     {statement ? (
                       <div className="px-3 py-3 space-y-3">
                         <p className="whitespace-pre-wrap text-sm text-ink-2" dir="auto" lang="he">{statement.text}</p>
                         {(statement.attachments.length > 0 || statement.links.length > 0) && (
                           <div className="border-t border-[color:var(--isl-hairline)] pt-3">
-                            <p className="mb-2 font-isl-body text-[10px] font-semibold uppercase tracking-[0.2em] text-brass-ink">Evidence</p>
+                            <p className="mb-2 font-isl-body text-[10px] font-semibold uppercase tracking-[0.2em] text-brass-ink">{t("cases.detail.evidence")}</p>
                             <EvidenceGallery attachments={statement.attachments} links={statement.links} />
                           </div>
                         )}
                       </div>
                     ) : (
-                      <p className="px-3 py-3 text-sm italic text-faint">No statement submitted yet.</p>
+                      <p className="px-3 py-3 text-sm italic text-faint">{t("cases.statements.none")}</p>
                     )}
                   </div>
                 );
@@ -505,7 +507,7 @@ export default async function StewardCaseDetailPage({
 
           {/* Verdict */}
           <section className="steward-panel rounded-[2px] p-5">
-            <h3 className="font-display text-base font-bold uppercase tracking-[0.12em] text-ink">3 · Verdict</h3>
+            <h3 className="font-display text-base font-bold uppercase tracking-[0.12em] text-ink">{t("cases.stewardView.verdict")}</h3>
 
             {/* Read-only display when published */}
             {verdict?.is_published && (
@@ -517,7 +519,7 @@ export default async function StewardCaseDetailPage({
                     </div>
                     <div className="flex flex-wrap gap-2 px-3 py-2.5">
                       {dv.license_points != null && dv.license_points > 0 && (
-                        <span className="rounded-[2px] border border-status-danger px-2.5 py-0.5 text-xs font-bold text-status-danger"><span className="num">+{dv.license_points}</span> pts</span>
+                        <span className="rounded-[2px] border border-status-danger px-2.5 py-0.5 text-xs font-bold text-status-danger"><span className="num">+{dv.license_points}</span> {t("cases.verdict.ptsShort")}</span>
                       )}
                       {dv.time_penalty_seconds != null && dv.time_penalty_seconds > 0 && (
                         <span className="rounded-[2px] border border-status-info px-2.5 py-0.5 text-xs font-bold text-status-info num">+{dv.time_penalty_seconds}s</span>
@@ -526,7 +528,7 @@ export default async function StewardCaseDetailPage({
                         <span className="rounded-[2px] border border-status-warning px-2.5 py-0.5 text-xs font-bold text-status-warning">⚠ {dv.warning_text}</span>
                       )}
                       {dv.license_points == null && dv.time_penalty_seconds == null && !dv.warning_text && (
-                        <span className="text-xs italic text-faint">No penalties</span>
+                        <span className="text-xs italic text-faint">{t("cases.verdict.noPenalties")}</span>
                       )}
                     </div>
                   </div>
@@ -537,7 +539,7 @@ export default async function StewardCaseDetailPage({
               </div>
             )}
             {!verdict?.is_published && !canEditVerdict && (
-              <p className="mt-3 text-sm text-meta">No published verdict yet.</p>
+              <p className="mt-3 text-sm text-meta">{t("cases.verdict.noPublished")}</p>
             )}
 
             {/* One-click publish for a saved draft verdict */}
@@ -545,8 +547,8 @@ export default async function StewardCaseDetailPage({
               <form action={publishVerdictAction} className="mt-4">
                 <input type="hidden" name="case_id" value={caseItem.id} />
                 <FormActionButton
-                  idleLabel="Publish Verdict"
-                  loadingLabel="Publishing…"
+                  idleLabel={t("cases.verdict.publishBtn")}
+                  loadingLabel={t("cases.verdict.publishingBtn")}
                   className="rounded-[2px] bg-ink px-5 py-2 text-sm font-semibold text-bone transition hover:opacity-90"
                 />
               </form>
@@ -571,7 +573,7 @@ export default async function StewardCaseDetailPage({
                 {appealsForCase.length > 0 && (
                   <div className="mb-4 space-y-2">
                     <span className="font-isl-body text-xs font-semibold uppercase tracking-[0.2em] text-meta">
-                      Appeals on this case (<span className="num">{appealsForCase.length}</span>)
+                      {t("cases.appeal.onThisCase")} (<span className="num">{appealsForCase.length}</span>)
                     </span>
                     <ul className="flex flex-col gap-2">
                       {appealsForCase.map((a) => {
@@ -582,10 +584,10 @@ export default async function StewardCaseDetailPage({
                               href={`/stewards/appeals/${a.id}`}
                               className="rounded-[2px] border border-brass px-3 py-1 text-xs font-semibold text-brass-ink transition hover:bg-cream"
                             >
-                              {a.status === "Closed" ? "View result →" : `${a.status} →`}
+                              {a.status === "Closed" ? t("cases.appeal.viewResultShort") : t("cases.appeal.statusShort", { status: t(`cases.appealStatus.${a.status}`) })}
                             </Link>
                             <span className="text-xs text-meta">
-                              by {submitter?.name ?? a.submittedByUserId}
+                              {t("cases.appeal.by", { name: submitter?.name ?? a.submittedByUserId })}
                             </span>
                           </li>
                         );
@@ -602,13 +604,13 @@ export default async function StewardCaseDetailPage({
                       hoursRemaining={appealHoursRemaining}
                     />
                     <span className="text-xs text-meta">
-                      Appeal window: ~<span className="num">{appealHoursRemaining}h</span> remaining (one appeal per person)
+                      {t("cases.appeal.windowLabel")}<span className="num">{appealHoursRemaining}h</span>{t("cases.appeal.remainingSuffix")}
                     </span>
                   </div>
                 )}
 
                 {!myAppeal && !appealWindowOpen && verdict?.is_published && (
-                  <p className="text-xs text-faint italic">Appeal window closed.</p>
+                  <p className="text-xs text-faint italic">{t("cases.appeal.windowClosed")}</p>
                 )}
               </div>
             )}
@@ -617,13 +619,13 @@ export default async function StewardCaseDetailPage({
           {/* Status control */}
           {canEditVerdict && (
             <section className="steward-panel rounded-[2px] p-5">
-              <h3 className="font-display text-base font-bold uppercase tracking-[0.12em] text-ink">Case Status</h3>
+              <h3 className="font-display text-base font-bold uppercase tracking-[0.12em] text-ink">{t("cases.stewardView.caseStatus")}</h3>
               <form action={updateCaseStatusAction} className="mt-3 flex flex-wrap items-center gap-3">
                 <input type="hidden" name="case_id" value={caseItem.id} />
                 <select name="status" defaultValue={caseItem.status} className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2 text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]">
-                  {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                  {STATUSES.map((s) => <option key={s} value={s}>{t(`cases.status.${s}`)}</option>)}
                 </select>
-                <FormActionButton idleLabel="Update Status" loadingLabel="Updating..." className="rounded-[2px] border border-hairline-strong bg-transparent px-4 py-2 text-sm font-semibold text-ink transition hover:border-ink hover:bg-cream disabled:opacity-50" />
+                <FormActionButton idleLabel={t("cases.stewardView.updateStatus")} loadingLabel={t("cases.stewardView.updatingStatus")} className="rounded-[2px] border border-hairline-strong bg-transparent px-4 py-2 text-sm font-semibold text-ink transition hover:border-ink hover:bg-cream disabled:opacity-50" />
               </form>
             </section>
           )}
@@ -631,8 +633,8 @@ export default async function StewardCaseDetailPage({
           {/* Internal discussion */}
           {canInternal && (
             <section className="steward-panel rounded-[2px] border border-oxblood p-5">
-              <h3 className="font-display text-base font-bold uppercase tracking-[0.12em] text-ink">4 · Internal Discussion</h3>
-              <p className="mt-1 text-xs text-meta">Visible to stewards and admins only.</p>
+              <h3 className="font-display text-base font-bold uppercase tracking-[0.12em] text-ink">{t("cases.internal.title")}</h3>
+              <p className="mt-1 text-xs text-meta">{t("cases.internal.visibility")}</p>
               <div className="mt-4 space-y-3">
                 {internalComments.map((c) => {
                   const isAuthor = c.authorId === user.id;
@@ -644,7 +646,7 @@ export default async function StewardCaseDetailPage({
                         <p className="text-xs text-meta">
                           {c.author?.name ?? c.authorId} · <span className="num">{fmtDateTime(c.createdAt)}</span>
                           {c.updatedAt !== c.createdAt && (
-                            <span className="ms-1.5 text-faint">(edited)</span>
+                            <span className="ms-1.5 text-faint">{t("cases.internal.edited")}</span>
                           )}
                         </p>
                         <div className="flex shrink-0 items-center gap-1">
@@ -653,7 +655,7 @@ export default async function StewardCaseDetailPage({
                               href={`/stewards/cases/${caseItem.id}?view=steward&edit_comment=${c.id}`}
                               className="rounded-[2px] px-1.5 py-0.5 text-[10px] text-meta transition hover:bg-cream hover:text-oxblood"
                             >
-                              Edit
+                              {t("cases.internal.edit")}
                             </a>
                           )}
                           {isEditing && (
@@ -661,7 +663,7 @@ export default async function StewardCaseDetailPage({
                               href={`/stewards/cases/${caseItem.id}?view=steward`}
                               className="rounded-[2px] px-1.5 py-0.5 text-[10px] text-meta transition hover:bg-cream hover:text-ink"
                             >
-                              Cancel
+                              {t("cases.internal.cancel")}
                             </a>
                           )}
                           {(isAuthor || isAdmin) && (
@@ -684,8 +686,8 @@ export default async function StewardCaseDetailPage({
                             className="w-full rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2 text-sm text-ink placeholder:text-faint focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
                           />
                           <FormActionButton
-                            idleLabel="Save"
-                            loadingLabel="Saving..."
+                            idleLabel={t("cases.internal.save")}
+                            loadingLabel={t("cases.internal.saving")}
                             className="w-fit rounded-[2px] border border-brass px-4 py-1.5 text-xs font-semibold text-brass-ink transition hover:bg-cream disabled:opacity-50"
                           />
                         </form>
@@ -695,12 +697,12 @@ export default async function StewardCaseDetailPage({
                     </article>
                   );
                 })}
-                {internalComments.length === 0 && <p className="text-sm text-meta">No internal discussion yet.</p>}
+                {internalComments.length === 0 && <p className="text-sm text-meta">{t("cases.internal.none")}</p>}
               </div>
               <form action={addInternalCommentAction} className="mt-4 grid gap-3">
                 <input type="hidden" name="case_id" value={caseItem.id} />
-                <label className="block"><span className="mb-1 block text-xs text-ink-2">Add comment</span><textarea name="text" rows={4} required lang="he" dir="auto" className="w-full rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2 text-ink placeholder:text-faint focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]" /></label>
-                <FormActionButton idleLabel="Post Comment" loadingLabel="Posting..." className="w-fit rounded-[2px] bg-ink px-5 py-2.5 text-sm font-semibold text-bone transition hover:opacity-90 disabled:opacity-50" />
+                <label className="block"><span className="mb-1 block text-xs text-ink-2">{t("cases.internal.addComment")}</span><textarea name="text" rows={4} required lang="he" dir="auto" className="w-full rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2 text-ink placeholder:text-faint focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]" /></label>
+                <FormActionButton idleLabel={t("cases.internal.postComment")} loadingLabel={t("cases.internal.posting")} className="w-fit rounded-[2px] bg-ink px-5 py-2.5 text-sm font-semibold text-bone transition hover:opacity-90 disabled:opacity-50" />
               </form>
             </section>
           )}
@@ -710,7 +712,7 @@ export default async function StewardCaseDetailPage({
       {/* back link */}
       <div className="pt-2">
         <Link href={`/stewards/cases?view=${view}`} className="text-xs text-meta transition hover:text-oxblood">
-          ← Back to Cases
+          {t("cases.detail.backToCases")}
         </Link>
       </div>
     </div>
@@ -758,13 +760,14 @@ function TimelineStep({
 }
 
 /* ── EVIDENCE GALLERY ──────────────────────────────────────── */
-function EvidenceGallery({
+async function EvidenceGallery({
   attachments,
   links,
 }: {
   attachments: AttachmentRef[];
   links: string[];
 }) {
+  const t = await getTranslations("stewards");
   const isImage = (url: string) => /\.(png|jpe?g|gif|webp|bmp|svg)(\?.*)?$/i.test(url);
   const isUrl   = (s: string)   => /^https?:\/\//i.test(s);
 
@@ -787,7 +790,7 @@ function EvidenceGallery({
                   <p className="truncate text-[10px] text-bone">{a.name}</p>
                 </div>
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
-                  <span className="rounded-[2px] bg-[color:var(--isl-ink)]/70 px-2 py-1 text-[10px] text-bone">⤢ Full size</span>
+                  <span className="rounded-[2px] bg-[color:var(--isl-ink)]/70 px-2 py-1 text-[10px] text-bone">{t("cases.evidence.fullSize")}</span>
                 </div>
               </a>
             ) : (
@@ -841,10 +844,11 @@ const DECISION_STYLE: Record<VerdictDecision, string> = {
   "Other":             "border-[color:var(--isl-hairline-strong)] text-meta",
 };
 
-function DecisionBadge({ decision, large }: { decision: VerdictDecision; large?: boolean }) {
+async function DecisionBadge({ decision, large }: { decision: VerdictDecision; large?: boolean }) {
+  const t = await getTranslations("stewards");
   return (
     <span className={`inline-flex items-center rounded-[2px] border font-isl-body font-semibold uppercase tracking-[0.12em] leading-none ${large ? "px-4 py-1.5 text-sm" : "px-3 py-1 text-[11px]"} ${DECISION_STYLE[decision]}`}>
-      {decision}
+      {t(`cases.decision.${decision}`)}
     </span>
   );
 }

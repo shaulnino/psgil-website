@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 type View = "driver" | "steward";
 
@@ -14,6 +15,7 @@ export default function ViewToggle({
   driverHref: string;
   stewardHref: string;
 }) {
+  const t = useTranslations("stewards");
   const driverRef = useRef<HTMLAnchorElement | null>(null);
   const stewardRef = useRef<HTMLAnchorElement | null>(null);
   const [sliderStyle, setSliderStyle] = useState<React.CSSProperties>({});
@@ -46,7 +48,7 @@ export default function ViewToggle({
             view === "driver" ? "text-bone" : "text-ink-2 hover:text-ink"
           }`}
         >
-          Driver
+          {t("cases.view.driver")}
         </Link>
         <Link
           ref={stewardRef}
@@ -55,7 +57,7 @@ export default function ViewToggle({
             view === "steward" ? "text-bone" : "text-ink-2 hover:text-ink"
           }`}
         >
-          Steward
+          {t("cases.view.steward")}
         </Link>
       </div>
     </div>
