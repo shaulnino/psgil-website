@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
       req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
     if (isRateLimited(ip)) {
       return NextResponse.json(
-        { error: "Too many requests. Please try again in a minute." },
+        { error: "rate-limited" },
         { status: 429 },
       );
     }
@@ -59,21 +59,21 @@ export async function POST(req: NextRequest) {
 
     if (!name?.trim() || !email?.trim()) {
       return NextResponse.json(
-        { error: "Name and email are required." },
+        { error: "missing-name-email" },
         { status: 400 },
       );
     }
 
     if (!isSignup && !message?.trim()) {
       return NextResponse.json(
-        { error: "Message is required." },
+        { error: "missing-message" },
         { status: 400 },
       );
     }
 
     if (isSignup && (!birthdate?.trim() || !platform?.trim() || !experience?.trim())) {
       return NextResponse.json(
-        { error: "Birth date, platform, and experience are required." },
+        { error: "missing-signup-fields" },
         { status: 400 },
       );
     }
@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
     if (!appPassword) {
       console.error("GMAIL_APP_PASSWORD is not set");
       return NextResponse.json(
-        { error: "Email service is not configured." },
+        { error: "email-not-configured" },
         { status: 500 },
       );
     }
@@ -163,7 +163,7 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error("Contact form error:", err);
     return NextResponse.json(
-      { error: "Failed to send message. Please try again." },
+      { error: "send-failed" },
       { status: 500 },
     );
   }

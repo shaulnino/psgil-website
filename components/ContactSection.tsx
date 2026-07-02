@@ -71,7 +71,12 @@ export default function ContactSection() {
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || t("contact.errors.generic"));
+        const code = typeof data.error === "string" ? data.error : "";
+        throw new Error(
+          code && t.has(`contact.errorCodes.${code}`)
+            ? t(`contact.errorCodes.${code}`)
+            : t("contact.errors.generic"),
+        );
       }
 
       setState("sent");

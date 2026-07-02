@@ -43,6 +43,14 @@
     "errors": {
       "generic": "Something went wrong.",
       "failed": "Failed to send. Please try again."
+    },
+    "errorCodes": {
+      "rate-limited": "Too many requests. Please try again in a minute.",
+      "missing-name-email": "Name and email are required.",
+      "missing-message": "Message is required.",
+      "missing-signup-fields": "Birth date, platform, and experience are required.",
+      "email-not-configured": "Email service is not configured.",
+      "send-failed": "Failed to send message. Please try again."
     }
   },
   "success": {
