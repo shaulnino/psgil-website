@@ -1,4 +1,4 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import Section from "@/components/Section";
 import LoadingLink from "@/components/LoadingLink";
 import NewsCategoryTag from "@/components/NewsCategoryTag";
@@ -16,6 +16,7 @@ export const revalidate = 60; // 60 seconds — news articles should appear quic
 
 export default async function NewsPage() {
   const t = await getTranslations("news");
+  const locale = await getLocale();
   const { articles, error } = await fetchArticlesWithStatus();
   const grouped = NEWS_CATEGORY_ORDER.map((category) => ({
     category,
@@ -41,7 +42,7 @@ export default async function NewsPage() {
           <div className="p-5">
             <div className="flex flex-wrap items-center gap-2">
               <p className="num text-xs font-semibold uppercase tracking-[0.16em] text-meta">
-                {formatNewsDate(article.date)}
+                {formatNewsDate(article.date, locale)}
               </p>
               <NewsCategoryTag category={category} />
             </div>

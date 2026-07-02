@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import Image from "next/image";
 import path from "node:path";
 import { existsSync } from "node:fs";
@@ -57,6 +57,7 @@ function isRemote(src?: string) {
 
 export default async function Home() {
   const tHome = await getTranslations("home");
+  const locale = await getLocale();
   const heroImageExists = existsSync(resolvePublic(heroImagePath));
 
   /* ---- Seasons config ---- */
@@ -325,7 +326,7 @@ export default async function Home() {
                       {tHome("featured.newsFlash")}
                     </span>
                     <span className="num text-[11px] font-semibold uppercase tracking-[0.13em] text-meta">
-                      {formatNewsDate(featuredNews.date)}
+                      {formatNewsDate(featuredNews.date, locale)}
                     </span>
                   </div>
 

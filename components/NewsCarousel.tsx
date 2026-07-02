@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import LoadingLink from "@/components/LoadingLink";
 import NewsCategoryTag from "@/components/NewsCategoryTag";
 import NewsImage from "@/components/NewsImage";
@@ -16,6 +16,7 @@ const AUTO_ADVANCE_MS = 6000;
 
 export default function NewsCarousel({ articles }: NewsCarouselProps) {
   const t = useTranslations("news");
+  const locale = useLocale();
   const [index, setIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
@@ -82,7 +83,7 @@ export default function NewsCarousel({ articles }: NewsCarouselProps) {
               )}
               <div className="flex flex-wrap items-center gap-2">
                 <p className="num text-xs font-semibold uppercase tracking-[0.16em] text-meta">
-                  {formatNewsDate(active.date)}
+                  {formatNewsDate(active.date, locale)}
                 </p>
                 <NewsCategoryTag category={active.category} />
               </div>

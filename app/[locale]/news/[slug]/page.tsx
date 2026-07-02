@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import Section from "@/components/Section";
 import LoadingLink from "@/components/LoadingLink";
 import NewsCategoryTag from "@/components/NewsCategoryTag";
@@ -127,6 +127,7 @@ export async function generateMetadata({
 
 export default async function NewsArticlePage({ params }: NewsArticlePageProps) {
   const t = await getTranslations("news");
+  const locale = await getLocale();
   const { slug } = await params;
   const { articles, error } = await fetchArticlesWithStatus();
   const article = articles.find((item) => item.slug === slug) ?? null;
@@ -287,7 +288,7 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
           </div>
           <div className="border-b border-[color:var(--isl-hairline)] bg-cream p-6 md:p-8">
             <p className="num text-xs font-semibold uppercase tracking-[0.16em] text-meta">
-              {formatNewsDate(article.date)}
+              {formatNewsDate(article.date, locale)}
               <span className="mx-2 text-faint">•</span>
               {article.author}
             </p>

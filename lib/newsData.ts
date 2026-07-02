@@ -145,10 +145,11 @@ function sortByDateDesc(a: NewsArticle, b: NewsArticle): number {
   return b.date.localeCompare(a.date);
 }
 
-export function formatNewsDate(isoDate: string): string {
+export function formatNewsDate(isoDate: string, locale: string = "en"): string {
   const parsed = new Date(`${isoDate}T00:00:00`);
   if (Number.isNaN(parsed.getTime())) return isoDate;
-  return new Intl.DateTimeFormat("en-GB", {
+  const intlLocale = locale === "he" ? "he-IL" : "en-GB";
+  return new Intl.DateTimeFormat(intlLocale, {
     year: "numeric",
     month: "short",
     day: "numeric",
