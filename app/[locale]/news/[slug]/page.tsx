@@ -36,7 +36,7 @@ import {
 export const revalidate = 300;
 
 type NewsArticlePageProps = {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ locale: string; slug: string }>;
 };
 
 /** All event_id tokens in the article id (same calendar day + league may list multiple rounds). */

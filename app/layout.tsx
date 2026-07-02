@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { NextIntlClientProvider } from "next-intl";
-import { getMessages, getTranslations } from "next-intl/server";
+import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import Script from "next/script";
 import {
   Inter,
@@ -87,8 +87,10 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const messages = await getMessages();
+  const locale = await getLocale();
+  const dir = locale === "he" ? "rtl" : "ltr";
   return (
-    <html lang="en" data-scroll-behavior="smooth">
+    <html lang={locale} dir={dir} data-scroll-behavior="smooth">
       <body
         className={`${inter.variable} ${rajdhani.variable} ${zillaSlab.variable} ${publicSans.variable} ${splineSansMono.variable} ${frankRuhl.variable} ${assistant.variable} antialiased`}
       >

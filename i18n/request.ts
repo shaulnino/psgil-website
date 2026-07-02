@@ -1,15 +1,15 @@
 import { getRequestConfig } from "next-intl/server";
+import { routing } from "./routing";
 
 /**
- * next-intl request config — Phase 8 (English-only, NO i18n routing yet).
- * The locale is fixed to "en" here. Phase 9 introduces the app/[locale]
- * segment + middleware and derives the locale from the route / user.
- * Messages are namespaced by feature under messages/{locale}/*.json and
- * merged into a single object keyed by namespace.
+ * next-intl request config (Phase 9b).
+ * Locale comes from the [locale] route segment for public pages (he | en).
+ * Non-localized routes (stewards, api, rss) have no segment → render English;
+ * steward locale becomes a user preference in Phase 9e.
+ *
+ * English is loaded as the base and the active locale is deep-merged over it,
+ * so any not-yet-translated key gracefully falls back to English.
  */
-export const LOCALES = ["en"] as const;
-export const DEFAULT_LOCALE = "en";
-
 const NAMESPACES = [
   "common",
   "home",
@@ -23,13 +23,41 @@ const NAMESPACES = [
   "errors",
 ] as const;
 
-export default getRequestConfig(async () => {
-  const locale = DEFAULT_LOCALE;
-  const entries = await Promise.all(
-    NAMESPACES.map(async (ns) => [ns, (await import(`../messages/${locale}/${ns}.json`)).default] as const),
+type Dict = Record<string, unknown>;
+
+function deepMerge(base: Dict, over: Dict): Dict {
+  const out: Dict = { ...base };
+  for (const k of Object.keys(over)) {
+    const b = base[k];
+    const o = over[k];
+    out[k] =
+      b && o && typeof b === "object" && typeof o === "object" && !Array.isArray(o)
+        ? deepMerge(b as Dict, o as Dict)
+        : o;
+  }
+  return out;
+}
+
+export default getRequestConfig(async ({ requestLocale }) => {
+  const requested = await requestLocale;
+  const locale =
+    requested && (routing.locales as readonly string[]).includes(requested)
+      ? requested
+      : "en";
+
+  const enEntries = await Promise.all(
+    NAMESPACES.map(async (ns) => [ns, (await import(`../messages/en/${ns}.json`)).default] as const),
   );
-  return {
-    locale,
-    messages: Object.fromEntries(entries),
-  };
+  const en = Object.fromEntries(enEntries) as Record<string, Dict>;
+
+  if (locale === "en") {
+    return { locale, messages: en };
+  }
+
+  const messages: Record<string, Dict> = {};
+  for (const ns of NAMESPACES) {
+    const overlay = (await import(`../messages/${locale}/${ns}.json`)).default as Dict;
+    messages[ns] = deepMerge(en[ns], overlay);
+  }
+  return { locale, messages };
 });

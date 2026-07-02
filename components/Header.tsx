@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import LoadingLink from "@/components/LoadingLink";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { siteConfig } from "@/lib/siteConfig";
 import { gaClickJoinNow } from "@/lib/ga";
 import StewardNotifBadge from "@/app/stewards/components/StewardNotifBadge";
@@ -59,6 +60,7 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
+          <LanguageSwitcher className="hidden sm:inline-flex" />
           <div className="hidden sm:block">
             <Button href="/#contact-us" size="sm" onClick={gaClickJoinNow}>
               {t("joinNow")}
@@ -99,7 +101,8 @@ export default function Header() {
                 </LoadingLink>
               );
             })}
-            <div className="pt-2">
+            <div className="flex flex-col gap-2 pt-2">
+              <LanguageSwitcher className="w-full justify-center py-2.5" />
               <Button href="/#contact-us" size="sm" onClick={gaClickJoinNow} className="w-full">
                 {t("joinNow")}
               </Button>
