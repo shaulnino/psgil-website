@@ -265,6 +265,7 @@ function Tooltip({ text, children, triggerClassName, wide }: { text: React.React
 
 export default function DriverModal({ driver, placeholderSrc, onClose, currentSeasonLabel }: DriverModalProps) {
   const t = useTranslations("drivers");
+  const tr = useTranslations("rewards");
   const [statMode, setStatMode] = useState<StatMode>("alltime");
   const [compMode, setCompMode] = useState<CompMode>("all");
   const [portalEl, setPortalEl] = useState<HTMLDivElement | null>(null);
@@ -287,7 +288,7 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
     || (statMode === "season" && compMode === "main" && !!driver.season_comp_main)
     || (statMode === "season" && compMode === "wild" && !!driver.season_comp_wild);
 
-  const achievements = buildAchievements(driver);
+  const achievements = buildAchievements(driver, tr);
   const driverRewards = driver.rewards ?? [];
   const countRewards = (
     competition: RewardCompetition,
@@ -313,144 +314,144 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
     ).sort((a, b) => a - b);
   const rewardStatCards = [
     {
-      label: "Main Champion Titles",
+      label: tr("cards.mainChampion.label"),
       value: countRewards("main", "champion"),
-      tooltip: "Seasons won as Main League champion.",
+      tooltip: tr("cards.mainChampion.tooltip"),
       awardCode: "champion" as AwardCode,
       iconCompetition: "main" as RewardCompetition,
       seasons: seasonsFor(["main"], ["champion"]),
     },
     {
-      label: "Main 2nd Titles",
+      label: tr("cards.mainSecond.label"),
       value: countRewards("main", "runner_up"),
-      tooltip: "Seasons finished 2nd in Main League.",
+      tooltip: tr("cards.mainSecond.tooltip"),
       awardCode: "runner_up" as AwardCode,
       iconCompetition: "main" as RewardCompetition,
       seasons: seasonsFor(["main"], ["runner_up"]),
     },
     {
-      label: "Main 3rd Titles",
+      label: tr("cards.mainThird.label"),
       value: countRewards("main", "third_place"),
-      tooltip: "Seasons finished 3rd in Main League.",
+      tooltip: tr("cards.mainThird.tooltip"),
       awardCode: "third_place" as AwardCode,
       iconCompetition: "main" as RewardCompetition,
       seasons: seasonsFor(["main"], ["third_place"]),
     },
     {
-      label: "Lower Champion Titles",
+      label: tr("cards.lowerChampion.label"),
       value: countRewards("lower", "champion"),
-      tooltip: "Seasons won as Lower League champion.",
+      tooltip: tr("cards.lowerChampion.tooltip"),
       awardCode: "champion" as AwardCode,
       iconCompetition: "lower" as RewardCompetition,
       seasons: seasonsFor(["lower"], ["champion"]),
     },
     {
-      label: "Lower 2nd Titles",
+      label: tr("cards.lowerSecond.label"),
       value: countRewards("lower", "runner_up"),
-      tooltip: "Seasons finished 2nd in Lower League.",
+      tooltip: tr("cards.lowerSecond.tooltip"),
       awardCode: "runner_up" as AwardCode,
       iconCompetition: "lower" as RewardCompetition,
       seasons: seasonsFor(["lower"], ["runner_up"]),
     },
     {
-      label: "Lower 3rd Titles",
+      label: tr("cards.lowerThird.label"),
       value: countRewards("lower", "third_place"),
-      tooltip: "Seasons finished 3rd in Lower League.",
+      tooltip: tr("cards.lowerThird.tooltip"),
       awardCode: "third_place" as AwardCode,
       iconCompetition: "lower" as RewardCompetition,
       seasons: seasonsFor(["lower"], ["third_place"]),
     },
     {
-      label: "Wild Champion Titles",
+      label: tr("cards.wildChampion.label"),
       value: countRewards("wild", "champion"),
-      tooltip: "Seasons won as Wild League champion.",
+      tooltip: tr("cards.wildChampion.tooltip"),
       awardCode: "champion" as AwardCode,
       iconCompetition: "wild" as RewardCompetition,
       seasons: seasonsFor(["wild"], ["champion"]),
     },
     {
-      label: "Wild 2nd Titles",
+      label: tr("cards.wildSecond.label"),
       value: countRewards("wild", "runner_up"),
-      tooltip: "Seasons finished 2nd in Wild League.",
+      tooltip: tr("cards.wildSecond.tooltip"),
       awardCode: "runner_up" as AwardCode,
       iconCompetition: "wild" as RewardCompetition,
       seasons: seasonsFor(["wild"], ["runner_up"]),
     },
     {
-      label: "Wild 3rd Titles",
+      label: tr("cards.wildThird.label"),
       value: countRewards("wild", "third_place"),
-      tooltip: "Seasons finished 3rd in Wild League.",
+      tooltip: tr("cards.wildThird.tooltip"),
       awardCode: "third_place" as AwardCode,
       iconCompetition: "wild" as RewardCompetition,
       seasons: seasonsFor(["wild"], ["third_place"]),
     },
     {
-      label: "Best of the Rest",
+      label: tr("cards.bestOfRest.label"),
       value:
         countRewards("main", "best_of_rest") +
         countRewards("lower", "best_of_rest") +
         countRewards("wild", "best_of_rest"),
-      tooltip: "Finished 4th overall in a season championship.",
+      tooltip: tr("cards.bestOfRest.tooltip"),
       awardCode: "best_of_rest" as AwardCode,
       iconCompetition: "main" as RewardCompetition,
       seasons: seasonsFor(["main", "lower", "wild"], ["best_of_rest"]),
     },
     {
-      label: "Cleanest Driver",
+      label: tr("cards.cleanestDriver.label"),
       value:
         countRewards("main", "cleanest_driver") +
         countRewards("lower", "cleanest_driver") +
         countRewards("wild", "cleanest_driver"),
-      tooltip: "Lowest combined penalties (game + stewards) across a season.",
+      tooltip: tr("cards.cleanestDriver.tooltip"),
       awardCode: "cleanest_driver" as AwardCode,
       iconCompetition: "main" as RewardCompetition,
       seasons: seasonsFor(["main", "lower", "wild"], ["cleanest_driver"]),
     },
     {
-      label: "Driver of the Season",
+      label: tr("cards.driverOfSeason.label"),
       value:
         countRewards("main", "driver_of_season") +
         countRewards("lower", "driver_of_season") +
         countRewards("wild", "driver_of_season"),
-      tooltip: "Most Driver of the Day awards in a season.",
+      tooltip: tr("cards.driverOfSeason.tooltip"),
       awardCode: "driver_of_season" as AwardCode,
       iconCompetition: "main" as RewardCompetition,
       seasons: seasonsFor(["main", "lower", "wild"], ["driver_of_season"]),
     },
     {
-      label: "Grid Climber",
+      label: tr("cards.gridClimber.label"),
       value:
         countRewards("main", "grid_climber") +
         countRewards("lower", "grid_climber") +
         countRewards("wild", "grid_climber"),
-      tooltip: "Most total positions gained across a season.",
+      tooltip: tr("cards.gridClimber.tooltip"),
       awardCode: "grid_climber" as AwardCode,
       iconCompetition: "main" as RewardCompetition,
       seasons: seasonsFor(["main", "lower", "wild"], ["grid_climber"]),
     },
     {
-      label: "Mr. Consistent",
+      label: tr("cards.mrConsistent.label"),
       value:
         countRewards("main", "mr_consistent") +
         countRewards("lower", "mr_consistent") +
         countRewards("wild", "mr_consistent"),
-      tooltip: "Finished the most races in a season.",
+      tooltip: tr("cards.mrConsistent.tooltip"),
       awardCode: "mr_consistent" as AwardCode,
       iconCompetition: "main" as RewardCompetition,
       seasons: seasonsFor(["main", "lower", "wild"], ["mr_consistent"]),
     },
     {
-      label: "Most Improved",
+      label: tr("cards.mostImproved.label"),
       value: countRewards("community", "most_improved"),
-      tooltip: "Community vote: Most Improved Driver.",
+      tooltip: tr("cards.mostImproved.tooltip"),
       awardCode: "most_improved" as AwardCode,
       iconCompetition: "community" as RewardCompetition,
       seasons: seasonsFor(["community"], ["most_improved"]),
     },
     {
-      label: "Most Valuable",
+      label: tr("cards.mostValuable.label"),
       value: countRewards("community", "most_valuable"),
-      tooltip: "Community vote: Most Valuable Driver.",
+      tooltip: tr("cards.mostValuable.tooltip"),
       awardCode: "most_valuable" as AwardCode,
       iconCompetition: "community" as RewardCompetition,
       seasons: seasonsFor(["community"], ["most_valuable"]),

@@ -15,9 +15,7 @@ import {
   type StandingsRow,
 } from "@/lib/resultsData";
 import {
-  DEFAULT_AWARD_LABELS,
   DEFAULT_AWARD_RANK,
-  DEFAULT_AWARD_TOOLTIPS,
   type Reward,
 } from "@/lib/rewardsData";
 import type { SeasonConfig } from "@/lib/seasonConfig";
@@ -380,8 +378,9 @@ function RewardRow({
   isLast: boolean;
 }) {
   const { openDriverModal } = useDriverLookup();
-  const label = reward.award_label || DEFAULT_AWARD_LABELS[reward.award_code];
-  const tooltip = reward.tooltip || DEFAULT_AWARD_TOOLTIPS[reward.award_code];
+  const tr = useTranslations("rewards");
+  const label = reward.award_label || tr(`awards.${reward.award_code}.label`);
+  const tooltip = reward.tooltip || tr(`awards.${reward.award_code}.tooltip`);
   const onClickWinner = () => {
     if (!isDriver) return;
     openDriverModal(reward.recipient_id);

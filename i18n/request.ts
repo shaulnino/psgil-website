@@ -17,6 +17,7 @@ const NAMESPACES = [
   "schedule",
   "stats",
   "news",
+  "rewards",
   "forms",
   "stewards",
   "errors",

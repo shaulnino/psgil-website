@@ -8,7 +8,6 @@ import {
   formatNewsDate,
 } from "@/lib/newsData";
 import {
-  NEWS_CATEGORY_LABEL,
   NEWS_CATEGORY_ORDER,
   type NewsCategory,
 } from "@/lib/newsCategories";
@@ -20,7 +19,7 @@ export default async function NewsPage() {
   const { articles, error } = await fetchArticlesWithStatus();
   const grouped = NEWS_CATEGORY_ORDER.map((category) => ({
     category,
-    label: NEWS_CATEGORY_LABEL[category],
+    label: t(`categories.${category}`),
     items: articles.filter((article) => article.category === category),
   })).filter((section) => section.items.length > 0);
 

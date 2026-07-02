@@ -1,4 +1,9 @@
 {
+  "categories": {
+    "announcements": "League Announcements",
+    "race": "Race Previews & Recaps",
+    "hub": "F1 & Sim Hub"
+  },
   "index": {
     "title": "News",
     "description": "Race reports, highlights, and league updates from ISL.",
