@@ -12,10 +12,20 @@ type SectionProps = {
   brandTitle?: boolean;
   /** Optional language-neutral module index (e.g. "01") shown as a race-control tag. */
   index?: string;
+  /** Tighter vertical rhythm — used on the homepage so sections read as one
+   *  continuous page (≈48px mobile / 80px desktop between sections). */
+  compact?: boolean;
 };
 
-export default function Section({ id, title, description, headerRight, children, className = "", pageHeader, brandTitle, index }: SectionProps) {
+export default function Section({ id, title, description, headerRight, children, className = "", pageHeader, brandTitle, index, compact }: SectionProps) {
   const emphasizeTitle = pageHeader || brandTitle;
+
+  const sectionPad = pageHeader
+    ? "relative py-14 md:py-20"
+    : compact
+      ? "py-6 md:py-10"
+      : "py-12 md:py-16";
+  const headerMb = pageHeader ? "mb-12" : compact ? "mb-6 md:mb-8" : "mb-10";
 
   /* Race-control module index tag — a small mono gold marker above the title. */
   const IndexTag = index ? (
@@ -26,10 +36,10 @@ export default function Section({ id, title, description, headerRight, children,
   ) : null;
 
   return (
-    <section id={id} className={`${pageHeader ? "relative py-14 md:py-20" : "py-12 md:py-16"} ${className}`}>
+    <section id={id} className={`${sectionPad} ${className}`}>
       <div className="relative mx-auto w-full max-w-6xl px-6">
         {(title || description || headerRight) && (
-          <div className={pageHeader ? "mb-12" : "mb-10"}>
+          <div className={headerMb}>
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div className="max-w-2xl">
                 {title && pageHeader ? (

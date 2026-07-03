@@ -372,7 +372,7 @@ export default async function Home() {
         title={tHome("leagueFormat.title")}
         description={tHome("leagueFormat.description")}
         brandTitle
-        index="01"
+        index="01" compact
       >
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {(tHome.raw("leagueFormatItems") as { title: string; description: string }[]).map((item, i) => (
@@ -401,7 +401,7 @@ export default async function Home() {
         title={tHome("races.title")}
         description={tHome("races.description")}
         brandTitle
-        index="02"
+        index="02" compact
         headerRight={
           <Button href="/schedule" size="sm" variant="secondary">
             {tHome("races.fullSchedule")}
@@ -423,7 +423,7 @@ export default async function Home() {
         title={tHome("latestNews.title")}
         description={tHome("latestNews.description")}
         brandTitle
-        index="03"
+        index="03" compact
         headerRight={
           <Button href="/news" size="sm" variant="secondary">
             {tHome("latestNews.allNews")}
@@ -433,7 +433,7 @@ export default async function Home() {
         <NewsCarousel articles={latestNews} />
       </Section>
 
-      <Section title={tHome("about.title")} brandTitle index="04">
+      <Section title={tHome("about.title")} brandTitle index="04" compact>
         <Card chamfer cornerTicks className="p-6 md:p-8">
           <div className="isl-gold-rule mb-5 max-w-[120px]" />
           <p className="text-base leading-relaxed text-ink-2 md:text-lg">
@@ -449,7 +449,7 @@ export default async function Home() {
         title={tHome("contact.title")}
         description={tHome("contact.description")}
         brandTitle
-        index="05"
+        index="05" compact
       >
         <ContactSection />
       </Section>
