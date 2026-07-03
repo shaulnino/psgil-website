@@ -156,7 +156,9 @@
     "seasonAwardsPrefix": "Season",
     "seasonAwards": "Awards",
     "noStandingsForSeason": "No standings data available for this season yet.",
-    "loading": "Loading standings…"
+    "loading": "Loading standings…",
+    "standingsLockedTitle": "Standings Locked",
+    "standingsLockedBody": "Championship table unlocks after Round 1. Standings will appear once official race results are approved."
   },
   "seasonSelector": {
     "season": "Season"

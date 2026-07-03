@@ -658,16 +658,18 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
                       return (
                         <Tooltip key={stat.key} text={<><p>{stat.tooltipDesc}</p><p className="mt-1.5 text-meta">{getRankExplanation(statMode, compMode)}</p></>} triggerClassName="block" wide>
                           <div
-                            className={`relative cursor-help rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-4 py-3 ${!hasCompStats ? "opacity-40" : ""}`}
+                            className={`cursor-help rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-4 py-3 ${!hasCompStats ? "opacity-40" : ""}`}
                           >
-                            {rank && (
-                              <span className="num absolute end-2 top-2 text-xs font-medium text-meta">
-                                #{rank}
-                              </span>
-                            )}
-                            <p className="text-xs uppercase tracking-[0.2em] text-meta">
-                              {stat.label}
-                            </p>
+                            <div className="flex items-start justify-between gap-2">
+                              <p className="text-xs uppercase tracking-[0.2em] text-meta">
+                                {stat.label}
+                              </p>
+                              {rank && (
+                                <span className="num shrink-0 text-xs font-medium text-meta">
+                                  #{rank}
+                                </span>
+                              )}
+                            </div>
                             <p className="num font-display text-lg font-semibold text-ink">
                               {formatStatValue(value, stat.isDecimal)}
                             </p>

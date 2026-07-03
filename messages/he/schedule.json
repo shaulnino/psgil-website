@@ -156,7 +156,9 @@
     "seasonAwardsPrefix": "עונה",
     "seasonAwards": "פרסים",
     "noStandingsForSeason": "עדיין אין נתוני טבלאות זמינים לעונה זו.",
-    "loading": "טוען טבלאות…"
+    "loading": "טוען טבלאות…",
+    "standingsLockedTitle": "הטבלה נעולה",
+    "standingsLockedBody": "טבלת האליפות תיפתח לאחר הסבב הראשון. הדירוגים יופיעו לאחר אישור תוצאות המרוץ הרשמיות."
   },
   "seasonSelector": {
     "season": "עונה"

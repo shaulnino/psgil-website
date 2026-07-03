@@ -61,7 +61,8 @@ export default function StandingsSection({
           <h2 className="font-display text-xl font-bold tracking-[0.005em] leading-[1.05] text-ink md:text-2xl">
             {title}
           </h2>
-          <p className="mt-1 text-sm text-meta">{subtitle}</p>
+          <div className="isl-gold-rule mt-2 max-w-[100px]" />
+          <p className="mt-2 text-sm text-meta">{subtitle}</p>
         </div>
 
         {/* Only show toggle when BOTH table data AND an image exist */}
@@ -107,8 +108,8 @@ export default function StandingsSection({
       ) : hasTableData ? (
         <StandingsTable standings={usableData} type={type} />
       ) : (
-        <div className="flex items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream py-12">
-          <p className="text-sm text-meta">
+        <div className="isl-speed-lines flex items-center justify-center rounded-[2px] border border-dashed border-[color:var(--isl-hairline-strong)] bg-cream py-12">
+          <p className="font-isl-body text-xs font-semibold uppercase tracking-[0.2em] text-meta">
             {t("standingsSection.resultsNotUploaded")}
           </p>
         </div>

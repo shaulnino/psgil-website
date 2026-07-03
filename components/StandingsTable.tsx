@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, type ReactNode } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import ResultsTable, { type ColumnDef, type SectionGroup } from "@/components/ResultsTable";
 import type { StandingsRow } from "@/lib/resultsData";
+import { localizedDriverName } from "@/lib/driversData";
 import { useDriverLookup } from "@/components/DriverLookupProvider";
 
 type Translator = (key: string) => string;
@@ -39,7 +40,18 @@ function PosChange({ value }: { value: string }) {
 const buildCommonStandingsColumns = (t: Translator): ColumnDef<StandingsRow>[] => [
   {
     label: t("standingsTable.pos"),
-    accessor: (row) => <span className="num">{row.position}</span>,
+    accessor: (row) => {
+      const p = parseInt(row.position, 10);
+      const podium =
+        p === 1
+          ? "font-bold text-brass-ink"
+          : p === 2
+            ? "font-bold text-silver-ink"
+            : p === 3
+              ? "font-bold text-bronze-ink"
+              : "text-ink-2";
+      return <span className={`num ${podium}`}>{row.position}</span>;
+    },
     align: "center",
     mono: true,
     minWidth: 40,
@@ -211,7 +223,13 @@ function DriverNameCell({
   driverName: string;
 }) {
   const { getDriver, openDriverModal } = useDriverLookup();
-  const hasCard = !!driverId && !!getDriver(driverId);
+  const locale = useLocale();
+  const entry = driverId ? getDriver(driverId) : undefined;
+  const hasCard = !!entry;
+  // Prefer the localized (e.g. Hebrew) name from the drivers CSV when available.
+  const displayName = entry
+    ? localizedDriverName(entry.driver, locale) || driverName
+    : driverName;
 
   if (hasCard) {
     return (
@@ -223,12 +241,12 @@ function DriverNameCell({
         }}
         className="font-semibold text-ink transition-colors hover:text-oxblood hover:underline underline-offset-2 cursor-pointer"
       >
-        {driverName}
+        {displayName}
       </button>
     );
   }
 
-  return <span className="font-semibold text-ink">{driverName}</span>;
+  return <span className="font-semibold text-ink">{displayName}</span>;
 }
 
 /* ------------------------------------------------------------------ */
