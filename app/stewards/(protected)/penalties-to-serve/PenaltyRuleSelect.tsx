@@ -1,13 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 type Rule = { id: string; penaltyType: string; penaltyLabel: string; penaltyDescription: string };
 
 const inputCls =
-  "w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white/90 focus:border-steward-gold/50 focus:outline-none transition";
+  "w-full rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2 text-sm text-ink placeholder:text-faint focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]";
+
+const labelCls =
+  "mb-1 block text-xs font-semibold uppercase tracking-wider text-brass-ink";
 
 export default function PenaltyRuleSelect({ rules }: { rules: Rule[] }) {
+  const t = useTranslations("stewards");
   const [selected, setSelected] = useState<string>("");
   const isCustom = selected === "__custom__";
 
@@ -17,8 +22,8 @@ export default function PenaltyRuleSelect({ rules }: { rules: Rule[] }) {
     <div className="md:col-span-2 grid gap-3 md:grid-cols-2">
       {/* Dropdown — spans full width */}
       <label className="block md:col-span-2">
-        <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-white/60">
-          Penalty type *
+        <span className={labelCls}>
+          {t("penaltiesToServe.ruleSelect.penaltyType")}
         </span>
         <select
           value={selected}
@@ -26,14 +31,14 @@ export default function PenaltyRuleSelect({ rules }: { rules: Rule[] }) {
           required
           className={inputCls}
         >
-          <option value="">Select penalty…</option>
+          <option value="">{t("penaltiesToServe.ruleSelect.selectPenalty")}</option>
           {rules.map((r) => (
             <option key={r.id} value={r.id}>
               {r.penaltyLabel}
               {r.penaltyDescription ? ` — ${r.penaltyDescription}` : ""}
             </option>
           ))}
-          <option value="__custom__">Custom / Other…</option>
+          <option value="__custom__">{t("penaltiesToServe.ruleSelect.customOther")}</option>
         </select>
       </label>
 
@@ -50,22 +55,22 @@ export default function PenaltyRuleSelect({ rules }: { rules: Rule[] }) {
       {isCustom && (
         <>
           <label className="block">
-            <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-white/60">
-              Penalty label *
+            <span className={labelCls}>
+              {t("penaltiesToServe.ruleSelect.penaltyLabel")}
             </span>
-            <input name="penalty_label" required placeholder="e.g. Qualifying Ban" className={inputCls} />
+            <input name="penalty_label" required placeholder={t("penaltiesToServe.ruleSelect.penaltyLabelPlaceholder")} className={inputCls} />
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-white/60">
-              Type (internal key)
+            <span className={labelCls}>
+              {t("penaltiesToServe.ruleSelect.typeInternalKey")}
             </span>
-            <input name="penalty_type" placeholder="e.g. qualifying_ban" className={inputCls} />
+            <input name="penalty_type" placeholder={t("penaltiesToServe.ruleSelect.typePlaceholder")} className={inputCls} />
           </label>
           <label className="block md:col-span-2">
-            <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-white/60">
-              Description
+            <span className={labelCls}>
+              {t("penaltiesToServe.ruleSelect.description")}
             </span>
-            <input name="penalty_description" placeholder="Brief explanation" className={inputCls} />
+            <input name="penalty_description" placeholder={t("penaltiesToServe.ruleSelect.descriptionPlaceholder")} className={inputCls} />
           </label>
         </>
       )}

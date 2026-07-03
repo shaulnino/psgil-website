@@ -2,8 +2,8 @@ import { fetchArticles } from "@/lib/newsData";
 
 export const revalidate = 300;
 
-const FALLBACK_SITE_URL = "https://psgil.com";
-const DEFAULT_SOCIAL_IMAGE = "/psgil-logo.png";
+const FALLBACK_SITE_URL = "https://f1isl.com";
+const DEFAULT_SOCIAL_IMAGE = "/isl-social.png";
 
 function xmlEscape(value: string): string {
   return value
@@ -55,7 +55,7 @@ export async function GET() {
         baseUrl,
         article.coverImageUrl || DEFAULT_SOCIAL_IMAGE,
       );
-      const caption = `New on PSGiL News: ${article.title}\nRead more on our website.\n${articleUrl}`;
+      const caption = `New on ISL News: ${article.title}\nRead more on our website.\n${articleUrl}`;
       const mediaTag = imageUrl
         ? `\n      <media:content url="${xmlEscape(imageUrl)}" medium="image" />`
         : "";
@@ -81,9 +81,9 @@ export async function GET() {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
 <channel>
-  <title>PSGiL News</title>
+  <title>ISL News</title>
   <link>${xmlEscape(`${baseUrl}/news`)}</link>
-  <description>Latest PSGiL news articles and race updates.</description>
+  <description>Latest ISL news articles and race updates.</description>
   <language>en</language>
   <lastBuildDate>${now}</lastBuildDate>
 ${itemsXml}

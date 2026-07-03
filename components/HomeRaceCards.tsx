@@ -1,15 +1,17 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import Image from "next/image";
 import ZoomableImage from "@/components/ZoomableImage";
 import type { RaceGroup, RaceEvent } from "@/lib/scheduleData";
-import { toIsraelTimestamp } from "@/lib/scheduleData";
+import { toIsraelTimestamp, localizedRaceName } from "@/lib/scheduleData";
 import type { RaceResultRow } from "@/lib/resultsData";
 import type { Driver, Team } from "@/lib/driversData";
 import RaceResultsTable from "@/components/RaceResultsTable";
 import DriverLookupProvider from "@/components/DriverLookupProvider";
 import YouTubeEmbed from "@/components/YouTubeEmbed";
+import { Button } from "@/components/ui/button";
 import { getYouTubeVideoId } from "@/lib/youtube";
 import { gaClickWatchYouTube, gaClickRaceResults } from "@/lib/ga";
 
@@ -40,12 +42,12 @@ type HomeRaceCardsProps = {
 /* ------------------------------------------------------------------ */
 
 /** Short label for a race (tab/button text). */
-function raceLabel(event: RaceEvent): string {
-  return event.race_name || `Race #${event.race_number}`;
+function raceLabel(event: RaceEvent, locale: string): string {
+  return localizedRaceName(event, locale) || `Race #${event.race_number}`;
 }
 
 /** Collect unique youtube URLs from a group. */
-function uniqueYoutubeUrls(group: RaceGroup): { label: string; url: string }[] {
+function uniqueYoutubeUrls(group: RaceGroup, watchLabel: string): { label: string; url: string }[] {
   const seen = new Set<string>();
   const result: { label: string; url: string }[] = [];
   for (const e of group.events) {
@@ -54,13 +56,13 @@ function uniqueYoutubeUrls(group: RaceGroup): { label: string; url: string }[] {
     if (hasValidYoutube && !seen.has(youtubeUrl)) {
       seen.add(youtubeUrl);
       result.push({
-        label: group.events.length > 1 ? `Watch Race #${e.race_number}` : "Watch the Race",
+        label: group.events.length > 1 ? `Watch Race #${e.race_number}` : watchLabel,
         url: youtubeUrl,
       });
     }
   }
   // If all races share the same URL, use a single generic label
-  if (result.length === 1) result[0].label = "Watch the Race";
+  if (result.length === 1) result[0].label = watchLabel;
   return result;
 }
 
@@ -87,6 +89,7 @@ function HomeWatchModal({
   youtubeUrl: string;
   onClose: () => void;
 }) {
+  const t = useTranslations("home");
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -97,34 +100,35 @@ function HomeWatchModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[color:var(--isl-ink)]/70 p-4"
       onClick={onClose}
     >
       <div
-        className="relative mx-4 w-full max-w-4xl"
+        className="relative w-full max-w-4xl rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-4"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="mb-3 flex items-center justify-between">
+        <div className="mb-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#7020B0]/20 px-2.5 py-1 text-xs font-bold uppercase tracking-[0.15em] text-[#a855f7]">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#a855f7]" />
-              Race Broadcast
+            <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-oxblood px-2 py-0.5 text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-oxblood">
+              <span className="h-1.5 w-1.5 rounded-full bg-oxblood" />
+              {t("raceCards.raceBroadcast")}
             </span>
-            <h3 className="font-display text-sm font-semibold text-white/80 md:text-base">
+            <h3 className="font-display font-bold tracking-[0.005em] text-sm text-ink md:text-base">
               {label}
             </h3>
           </div>
           <button
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/80 transition hover:text-white"
+            aria-label={t("raceCards.close")}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] text-xl text-ink-2 transition-colors hover:border-ink hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
           >
             ×
           </button>
         </div>
 
         {/* Embed */}
-        <YouTubeEmbed youtubeUrl={youtubeUrl} title={`${label} – Race Broadcast`} />
+        <YouTubeEmbed youtubeUrl={youtubeUrl} title={`${label} – ${t("raceCards.raceBroadcast")}`} />
 
         {/* External link fallback */}
         <div className="mt-3 flex justify-end">
@@ -132,7 +136,7 @@ function HomeWatchModal({
             href={youtubeUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-medium text-white/50 transition hover:border-white/20 hover:text-white/80"
+            className="inline-flex items-center gap-1.5 rounded-[2px] border border-[color:var(--isl-hairline)] px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.08em] text-meta transition-colors hover:border-ink hover:text-ink"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -146,7 +150,7 @@ function HomeWatchModal({
                 clipRule="evenodd"
               />
             </svg>
-            Open on YouTube
+            {t("raceCards.openOnYouTube")}
           </a>
         </div>
       </div>
@@ -162,10 +166,10 @@ function LeagueBadge({ league }: { league: string }) {
   const isMain = league.toLowerCase() === "main";
   return (
     <span
-      className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-semibold uppercase leading-none tracking-wider ${
+      className={`inline-flex items-center justify-center rounded-[2px] border px-2 py-0.5 text-[0.75rem] font-semibold uppercase leading-none tracking-[0.2em] ${
         isMain
-          ? "border border-[#7020B0]/40 bg-[#7020B0]/20 text-[#a855f7]"
-          : "border border-[#D4AF37]/30 bg-[#D4AF37]/15 text-[#D4AF37]"
+          ? "border-[color:var(--isl-hairline-strong)] text-ink-2"
+          : "border-brass text-brass-ink"
       }`}
     >
       {isMain ? "MAIN" : "WILD"}
@@ -184,34 +188,39 @@ function RaceCountdown({
   targetMs: number;
   onReachedZero?: () => void;
 }) {
-  const [now, setNow] = useState(Date.now());
+  // Starts null so the server and the first client render match (the countdown
+  // is time-dependent — computing it during SSR would mismatch on hydration).
+  // The live value fills in immediately after mount.
+  const [now, setNow] = useState<number | null>(null);
   const calledRef = useRef(false);
 
   useEffect(() => {
+    setNow(Date.now());
     const id = setInterval(() => setNow(Date.now()), 1_000);
     return () => clearInterval(id);
   }, []);
 
-  const total = Math.max(0, targetMs - now);
+  const total = now === null ? null : Math.max(0, targetMs - now);
 
   useEffect(() => {
-    if (total <= 0 && !calledRef.current && onReachedZero) {
+    if (total !== null && total <= 0 && !calledRef.current && onReachedZero) {
       calledRef.current = true;
       onReachedZero();
     }
   }, [total, onReachedZero]);
 
-  if (total <= 0) return null;
+  if (total !== null && total <= 0) return null;
 
-  const days = Math.floor(total / 86_400_000);
-  const hours = Math.floor((total / 3_600_000) % 24);
-  const minutes = Math.floor((total / 60_000) % 60);
-  const seconds = Math.floor((total / 1_000) % 60);
+  const t = total ?? 0;
+  const days = Math.floor(t / 86_400_000);
+  const hours = Math.floor((t / 3_600_000) % 24);
+  const minutes = Math.floor((t / 60_000) % 60);
+  const seconds = Math.floor((t / 1_000) % 60);
 
   const pad = (v: number) => String(v).padStart(2, "0");
 
   return (
-    <div className="inline-flex h-[34px] items-center gap-1.5 rounded-full border border-[#7020B0]/30 bg-[#13111a] px-3 transition-all hover:border-[#7020B0]/50 hover:shadow-[0_0_10px_rgba(112,32,176,0.15)]">
+    <div dir="ltr" className="inline-flex h-[34px] items-center gap-1.5 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-3 transition-colors hover:border-[color:var(--isl-hairline-strong)]">
       {[
         { v: days, l: "d" },
         { v: hours, l: "h" },
@@ -220,13 +229,13 @@ function RaceCountdown({
       ].map((unit, i) => (
         <div key={unit.l} className="flex items-center gap-1">
           {i > 0 && (
-            <span className="text-[11px] font-bold text-white/15">:</span>
+            <span className="num text-[11px] font-bold text-faint">:</span>
           )}
           <div className="flex items-baseline gap-px">
-            <span className="font-display text-[13px] font-semibold leading-none text-[#D4AF37] tabular-nums">
-              {pad(unit.v)}
+            <span className="num text-[13px] font-semibold leading-none text-brass-ink">
+              {total === null ? "––" : pad(unit.v)}
             </span>
-            <span className="text-[9px] font-medium text-white/30">
+            <span className="text-[9px] font-medium uppercase text-meta">
               {unit.l}
             </span>
           </div>
@@ -242,8 +251,8 @@ function RaceCountdown({
 
 function LiveBadge() {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-[#D4AF37]/40 bg-[#D4AF37]/10 px-3 py-1 text-sm font-bold uppercase tracking-[0.15em] text-[#D4AF37]">
-      <span className="h-2 w-2 rounded-full bg-[#D4AF37] animate-[live-dot-pulse_1.5s_ease-in-out_infinite]" />
+    <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-oxblood px-2.5 py-1 text-sm font-semibold uppercase tracking-[0.2em] text-oxblood">
+      <span className="h-2 w-2 rounded-full bg-oxblood animate-[f1-tick_1s_step-end_infinite]" />
       LIVE
     </span>
   );
@@ -277,12 +286,14 @@ function RaceGroupCard({
   /** UTC ms when the race ends (for auto-reload after live). */
   endTimestamp?: number | null;
 }) {
+  const t = useTranslations("home");
+  const locale = useLocale();
   const isSingle = group.events.length === 1;
   const first = group.events[0];
   const poster = group.events.find((e) => !!e.poster_image) ?? first;
   const hasPoster = !!poster.poster_image;
   const completed = isGroupCompleted(group);
-  const youtubeLinks = uniqueYoutubeUrls(group);
+  const youtubeLinks = uniqueYoutubeUrls(group, t("raceCards.watchTheRace"));
   const hasYoutube = youtubeLinks.length > 0;
   const showResults = completed && hasAnyResults(group, raceResultsByEvent) && !!onShowResults;
   const isWild = group.league.toLowerCase() === "wild";
@@ -328,46 +339,46 @@ function RaceGroupCard({
 
   return (
     <div
-      className={`flex flex-col rounded-2xl border-2 p-5 transition-colors ${
+      className={`flex flex-col rounded-[2px] border border-t-2 border-t-oxblood p-5 transition-colors ${
         liveNow
-          ? "border-[#D4AF37]/50 bg-[#D4AF37]/5 animate-[live-gold-flash_2s_ease-in-out_infinite]"
-          : "border-white/10 bg-white/5"
+          ? "border-oxblood bg-cream"
+          : "border-[color:var(--isl-hairline)] bg-cream"
       }`}
     >
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           {liveNow ? (
             <LiveBadge />
           ) : (
-            <h3 className="font-display text-xl font-semibold text-white">{heading}</h3>
+            <h3 className="font-display font-bold tracking-[0.005em] leading-[1.05] text-xl text-oxblood">{heading}</h3>
           )}
           <LeagueBadge league={group.league} />
         </div>
         {liveNow ? (
-          <span className="text-sm font-medium text-[#D4AF37]">{group.date}</span>
+          <span className="num text-sm font-medium text-oxblood">{group.date}</span>
         ) : (
-          <span className="text-sm text-white/60">{group.date}</span>
+          <span className="num text-sm text-meta">{group.date}</span>
         )}
       </div>
 
       {/* Poster */}
-      <div className={`mt-4 overflow-hidden rounded-xl border bg-[#0B0B0E] ${
-        liveNow ? "border-[#D4AF37]/20" : "border-white/10"
+      <div className={`mt-4 overflow-hidden rounded-[2px] border bg-paper ${
+        liveNow ? "border-oxblood" : "border-[color:var(--isl-hairline)]"
       }`}>
         {hasPoster ? (
           <ZoomableImage
             src={poster.poster_image!}
-            alt={`${first.race_name} poster`}
+            alt={`${localizedRaceName(first, locale)} poster`}
             fill
             sizes="(max-width: 768px) 100vw, 50vw"
             triggerClassName="group relative aspect-video cursor-pointer"
             imageClassName="object-cover transition duration-200 group-hover:scale-[1.02]"
           />
         ) : (
-          <div className="flex aspect-video items-center justify-center bg-gradient-to-br from-[#111122] via-[#0B0B0E] to-[#1b0b2e]">
-            <span className="text-sm uppercase tracking-[0.2em] text-white/60">
-              Poster coming soon
+          <div className="flex aspect-video items-center justify-center bg-sink">
+            <span className="font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-meta">
+              {t("raceCards.posterComingSoon")}
             </span>
           </div>
         )}
@@ -376,18 +387,18 @@ function RaceGroupCard({
       {/* Description */}
       <div className="mt-4 space-y-1">
         {isSingle ? (
-          <p className="text-sm text-white/70">
-            Season {first.season} · Race #{first.race_number}, {first.race_name}
+          <p className="text-sm text-ink-2">
+            Season {first.season} · Race #{first.race_number}, {localizedRaceName(first, locale)}
             {isWild ? " · Wild Event" : ""} · {group.date}
           </p>
         ) : (
           <>
-            <p className="text-sm font-medium text-white/80">
+            <p className="text-sm font-medium text-ink">
               Season {group.season} · {isWild ? "Wild Event Day" : "Race Day"} · {group.date}
             </p>
             {group.events.map((e) => (
-              <p key={e.race_number} className="text-sm text-white/60">
-                Race #{e.race_number}: {e.race_name}
+              <p key={e.race_number} className="text-sm text-meta">
+                Race #{e.race_number}: {localizedRaceName(e, locale)}
               </p>
             ))}
           </>
@@ -398,55 +409,51 @@ function RaceGroupCard({
       <div className="mt-auto flex flex-wrap items-center gap-3 pt-5">
         {hasYoutube ? (
           youtubeLinks.map((yt) => (
-            <button
+            <Button
               key={yt.url}
               type="button"
               onClick={() => onWatch?.(yt.label, yt.url)}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-[#7020B0] px-4 py-2 text-sm font-semibold text-white shadow-[0_0_20px_rgba(112,32,176,0.35)] transition hover:-translate-y-0.5 hover:shadow-[0_0_28px_rgba(112,32,176,0.6)]"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
                 <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
               </svg>
               {yt.label}
-            </button>
+            </Button>
           ))
         ) : (
-          <button
+          <Button
             type="button"
             disabled
             aria-disabled="true"
-            title="YouTube link not available yet"
-            className="inline-flex cursor-not-allowed items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white/45"
+            title={t("raceCards.youtubeNotAvailable")}
+            variant="secondary"
+            className="cursor-not-allowed"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
               <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
             </svg>
-            Watch the Race
-          </button>
+            {t("raceCards.watchTheRace")}
+          </Button>
         )}
         {showResults && (
-          <button
-            type="button"
-            onClick={onShowResults}
-            className="inline-flex items-center justify-center rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white/90 transition hover:border-[#7020B0]/60 hover:text-white hover:shadow-[0_0_16px_rgba(112,32,176,0.35)]"
-          >
-            Race Results
-          </button>
+          <Button type="button" onClick={onShowResults} variant="secondary">
+            {t("raceCards.raceResults")}
+          </Button>
         )}
         {liveNow && (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-[#D4AF37]/40 bg-[#D4AF37]/10 px-4 py-2 text-sm font-semibold text-[#D4AF37] animate-[live-dot-pulse_1.5s_ease-in-out_infinite]">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#D4AF37]" />
-            Race in progress
+          <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-oxblood px-4 py-2 text-sm font-semibold uppercase tracking-[0.08em] text-oxblood">
+            <span className="h-1.5 w-1.5 rounded-full bg-oxblood animate-[f1-tick_1s_step-end_infinite]" />
+            {t("raceCards.raceInProgress")}
           </span>
         )}
         {!completed && !liveNow && (
-          <span className="inline-flex h-[34px] items-center gap-2 rounded-full border border-[#7020B0]/30 bg-[#13111a] px-3 transition-all hover:border-[#7020B0]/50 hover:shadow-[0_0_10px_rgba(112,32,176,0.15)]">
-            <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
-            <span className="text-[13px] font-medium text-white/90">Upcoming</span>
+          <span className="inline-flex h-[34px] items-center gap-2 rounded-[2px] border border-status-info px-3 text-status-info">
+            <span className="h-1.5 w-1.5 rounded-full bg-status-info" />
+            <span className="text-[13px] font-medium uppercase tracking-[0.08em]">{t("raceCards.upcoming")}</span>
           </span>
         )}
         {countdownTargetMs && !liveNow && (
-          <div className="ml-auto">
+          <div className="ms-auto">
             <RaceCountdown targetMs={countdownTargetMs} onReachedZero={handleCountdownZero} />
           </div>
         )}
@@ -469,6 +476,8 @@ function GroupResultsModal({
   raceResultsByEvent?: Record<string, RaceResultRow[]>;
   onClose: () => void;
 }) {
+  const t = useTranslations("home");
+  const locale = useLocale();
   // Events that have either a results image or CSV table data
   const withResults = group.events.filter(
     (e) => !!e.results_image || (raceResultsByEvent[e.event_id]?.length ?? 0) > 0,
@@ -508,15 +517,15 @@ function GroupResultsModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[color:var(--isl-ink)]/70 p-4"
       onClick={onClose}
     >
-      <div className="relative mx-4 w-full max-w-5xl" onClick={(e) => e.stopPropagation()}>
+      <div className="relative w-full max-w-5xl rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-4" onClick={(e) => e.stopPropagation()}>
         {/* Top bar */}
-        <div className="mb-3 flex items-center justify-between">
+        <div className="mb-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <h3 className="font-display text-sm font-semibold text-white/80 md:text-base">
-              {current.race_name}
+            <h3 className="font-display font-bold tracking-[0.005em] text-sm text-ink md:text-base">
+              {localizedRaceName(current, locale)}
             </h3>
             {hasTable && hasImage && (
               <button
@@ -524,15 +533,15 @@ function GroupResultsModal({
                   setShowImage((v) => !v);
                   setZoom(1);
                 }}
-                className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-medium uppercase tracking-wider text-white/50 transition hover:border-[#7020B0]/40 hover:text-white/80"
+                className="inline-flex items-center gap-1.5 rounded-[2px] border border-[color:var(--isl-hairline)] px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.08em] text-meta transition-colors hover:border-ink hover:text-ink"
               >
                 {showImage ? (
                   <>
-                    <span>📊</span> Show table
+                    <span>📊</span> {t("raceCards.showTable")}
                   </>
                 ) : (
                   <>
-                    <span>🖼️</span> Show image
+                    <span>🖼️</span> {t("raceCards.showImage")}
                   </>
                 )}
               </button>
@@ -540,7 +549,8 @@ function GroupResultsModal({
           </div>
           <button
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/80 transition hover:text-white"
+            aria-label={t("raceCards.close")}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] text-xl text-ink-2 transition-colors hover:border-ink hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
           >
             ×
           </button>
@@ -548,18 +558,18 @@ function GroupResultsModal({
 
         {/* Tab selector for multi-race groups */}
         {!isSingle && (
-          <div className="mb-3 flex items-center gap-1 rounded-full border border-white/10 bg-black/60 p-1 backdrop-blur-sm">
+          <div className="mb-3 flex items-center gap-1 rounded-[2px] border border-[color:var(--isl-hairline)] bg-sink p-1">
             {withResults.map((e, idx) => (
               <button
                 key={e.race_number}
                 onClick={() => setActiveIdx(idx)}
-                className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+                className={`rounded-[2px] px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] transition-colors ${
                   idx === activeIdx
-                    ? "bg-[#7020B0]/80 text-white shadow-[0_0_12px_rgba(112,32,176,0.3)]"
-                    : "text-white/50 hover:text-white/80"
+                    ? "bg-ink text-bone"
+                    : "text-meta hover:text-ink"
                 }`}
               >
-                {raceLabel(e)}
+                {raceLabel(e, locale)}
               </button>
             ))}
           </div>
@@ -570,22 +580,24 @@ function GroupResultsModal({
           <div className="mb-3 flex items-center gap-2">
             <button
               onClick={() => setZoom((z) => clamp(z - 0.25))}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/80 transition hover:text-white"
+              aria-label={t("raceCards.zoomOut")}
+              className="flex h-8 w-8 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] text-ink-2 transition-colors hover:border-ink hover:text-ink"
             >
               −
             </button>
-            <span className="text-xs text-white/60">{Math.round(zoom * 100)}%</span>
+            <span className="num text-xs text-meta">{Math.round(zoom * 100)}%</span>
             <button
               onClick={() => setZoom((z) => clamp(z + 0.25))}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/80 transition hover:text-white"
+              aria-label={t("raceCards.zoomIn")}
+              className="flex h-8 w-8 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] text-ink-2 transition-colors hover:border-ink hover:text-ink"
             >
               +
             </button>
             <button
               onClick={() => setZoom(1)}
-              className="flex h-8 items-center justify-center rounded-full border border-white/20 bg-black/60 px-3 text-xs text-white/80 transition hover:text-white"
+              className="flex h-8 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] px-3 text-xs uppercase tracking-[0.08em] text-ink-2 transition-colors hover:border-ink hover:text-ink"
             >
-              Reset
+              {t("raceCards.reset")}
             </button>
           </div>
         )}
@@ -594,7 +606,7 @@ function GroupResultsModal({
         {showImage && hasImage ? (
           <div
             ref={scrollRef}
-            className={`max-h-[85vh] overflow-auto rounded-2xl border border-white/10 bg-[#0B0B0E] p-3 shadow-[0_0_30px_rgba(0,0,0,0.4)] ${
+            className={`max-h-[85vh] overflow-auto rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-3 ${
               zoom > 1
                 ? isDragging
                   ? "cursor-grabbing"
@@ -630,7 +642,7 @@ function GroupResultsModal({
             <Image
               key={current.race_number}
               src={current.results_image!}
-              alt={`${current.race_name} results`}
+              alt={`${localizedRaceName(current, locale)} results`}
               width={2000}
               height={1200}
               sizes="100vw"
@@ -641,10 +653,10 @@ function GroupResultsModal({
             />
           </div>
         ) : hasTable ? (
-          <div className="max-h-[85vh] overflow-auto rounded-2xl border border-white/10 bg-[#0B0B0E] p-3 shadow-[0_0_30px_rgba(0,0,0,0.4)]">
+          <div className="max-h-[85vh] overflow-auto rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-3">
             <RaceResultsTable
               results={tableData}
-              caption={`${current.race_name} — Race Results`}
+              caption={`${localizedRaceName(current, locale)} — Race Results`}
             />
           </div>
         ) : null}
@@ -666,6 +678,7 @@ export default function HomeRaceCards({
   allDrivers = [],
   allTeams = [],
 }: HomeRaceCardsProps) {
+  const t = useTranslations("home");
   const [showResultsGroup, setShowResultsGroup] = useState<RaceGroup | null>(null);
   const [watchTarget, setWatchTarget] = useState<{ label: string; url: string } | null>(null);
 
@@ -683,8 +696,8 @@ export default function HomeRaceCards({
   // Nothing to show at all
   if (!lastGroup && !nextGroup && !liveGroup) {
     return (
-      <div className="flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 py-16">
-        <p className="text-sm text-white/50">Race schedule not available yet.</p>
+      <div className="flex items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream py-16">
+        <p className="text-sm text-meta">{t("raceCards.scheduleNotAvailable")}</p>
       </div>
     );
   }
@@ -699,7 +712,7 @@ export default function HomeRaceCards({
       <div className="grid gap-6 lg:grid-cols-2">
         {lastGroup ? (
           <RaceGroupCard
-            heading="Last Race"
+            heading={t("raceCards.lastRace")}
             group={lastGroup}
             raceResultsByEvent={raceResultsByEvent}
             onShowResults={
@@ -713,13 +726,13 @@ export default function HomeRaceCards({
             onWatch={handleWatch}
           />
         ) : (
-          <div className="flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 py-16">
-            <p className="text-sm text-white/50">No past races yet.</p>
+          <div className="flex items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream py-16">
+            <p className="text-sm text-meta">{t("raceCards.noPastRaces")}</p>
           </div>
         )}
         {rightCardGroup ? (
           <RaceGroupCard
-            heading="Next Race"
+            heading={t("raceCards.nextRace")}
             group={rightCardGroup}
             onWatch={handleWatch}
             showCountdown={!rightCardIsLive}
@@ -736,8 +749,8 @@ export default function HomeRaceCards({
             }
           />
         ) : (
-          <div className="flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 py-16">
-            <p className="text-sm text-white/50">Season complete — stay tuned!</p>
+          <div className="flex items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream py-16">
+            <p className="text-sm text-meta">{t("raceCards.seasonComplete")}</p>
           </div>
         )}
       </div>

@@ -1,0 +1,69 @@
+{
+  "contact": {
+    "intro": "Have a question, feedback, or interested in joining the league? Drop us a message and we'll get back to you.",
+    "copyEmail": "Copy email",
+    "honeypotLabel": "Leave empty",
+    "mode": {
+      "signup": "Sign Up",
+      "question": "Questions"
+    },
+    "signupHelper": "Leave your details and we'll reach out before the next season or when a seat opens.",
+    "labels": {
+      "name": "Name",
+      "email": "Email",
+      "dob": "Date of Birth",
+      "platform": "Platform",
+      "experience": "Sim Racing Experience",
+      "subject": "Subject",
+      "message": "Message"
+    },
+    "placeholders": {
+      "name": "Your name",
+      "email": "you@example.com",
+      "subject": "What is this about?",
+      "message": "Your message..."
+    },
+    "selectPlaceholder": "Select…",
+    "platform": {
+      "pc": "PC",
+      "ps5": "PS5",
+      "xbox": "Xbox"
+    },
+    "experience": {
+      "range0to4": "0–4 months",
+      "range4to1y": "4 months–1 year",
+      "range1to2y": "1–2 years",
+      "above2y": "Above 2 years"
+    },
+    "submit": {
+      "sending": "Sending…",
+      "signup": "Join ISL",
+      "question": "Send Message"
+    },
+    "errors": {
+      "generic": "Something went wrong.",
+      "failed": "Failed to send. Please try again."
+    },
+    "errorCodes": {
+      "rate-limited": "Too many requests. Please try again in a minute.",
+      "missing-name-email": "Name and email are required.",
+      "missing-message": "Message is required.",
+      "missing-signup-fields": "Birth date, platform, and experience are required.",
+      "email-not-configured": "Email service is not configured.",
+      "send-failed": "Failed to send message. Please try again."
+    }
+  },
+  "success": {
+    "signup": {
+      "title": "Welcome to ISL! 🏁",
+      "body": "You’re officially on the list. We’ll reach out to you by email soon with the next steps and availability.",
+      "note": "If you don’t see our email, check your spam/promotions folder.",
+      "button": "Awesome"
+    },
+    "question": {
+      "title": "Message received ✅",
+      "body": "Thanks — we got your question. We’ll reply to you by email as soon as possible.",
+      "button": "Got it"
+    }
+  }
+}

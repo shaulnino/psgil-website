@@ -3,6 +3,7 @@
 /*  the client-side countdown widget.                                  */
 /* ------------------------------------------------------------------ */
 
+import { getLocale } from "next-intl/server";
 import { fetchCsv, parseCsv } from "@/lib/csv";
 import {
   fetchSeasonsConfig,
@@ -13,12 +14,16 @@ import {
 import {
   mapRaceEvents,
   toIsraelTimestamp,
+  localizedRaceName,
+  localizedTrack,
   DEFAULT_RACE_DURATION_MS,
 } from "@/lib/scheduleData";
 import NextRaceWidget, { type NextRaceData } from "./NextRaceWidget";
 
 export default async function NextRaceWidgetServer() {
   try {
+    const locale = await getLocale();
+
     /* 1. Resolve current season */
     const allSeasons = await fetchSeasonsConfig();
     const currentSeason = resolveCurrentSeason(allSeasons);
@@ -49,11 +54,11 @@ export default async function NextRaceWidgetServer() {
         // This race is LIVE
         const raceData: NextRaceData = {
           eventId: e.event_id,
-          raceName: e.race_name,
+          raceName: localizedRaceName(e, locale),
           raceNumber: e.race_number,
           season: e.season,
           league: e.league,
-          track: e.track,
+          track: localizedTrack(e, locale),
           countryCode: e.country_code,
           posterImage: e.poster_image,
           date: e.date,
@@ -104,11 +109,11 @@ export default async function NextRaceWidgetServer() {
 
     const raceData: NextRaceData = {
       eventId: next.event.event_id,
-      raceName: next.event.race_name,
+      raceName: localizedRaceName(next.event, locale),
       raceNumber: next.event.race_number,
       season: next.event.season,
       league: next.event.league,
-      track: next.event.track,
+      track: localizedTrack(next.event, locale),
       countryCode: next.event.country_code,
       posterImage: next.event.poster_image,
       date: next.event.date,

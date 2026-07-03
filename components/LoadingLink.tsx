@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import NextLink from "next/link";
+import { useRouter as useNextRouter } from "next/navigation";
+import { Link as IntlLink, useRouter as useIntlRouter } from "@/i18n/navigation";
 import {
   useState,
   useTransition,
@@ -11,6 +12,22 @@ import {
   type AnchorHTMLAttributes,
 } from "react";
 import { gaClickJoinNow } from "@/lib/ga";
+
+/**
+ * Hrefs that must NOT be locale-prefixed: external, hash/anchor, the steward
+ * portal (unprefixed by design), API, and mailto. Everything else is a public
+ * content path and gets the active locale prefix via next-intl navigation.
+ */
+function isUnlocalizedHref(href: string): boolean {
+  return (
+    href.startsWith("http") ||
+    href.startsWith("#") ||
+    href.startsWith("/#") ||
+    href.startsWith("/stewards") ||
+    href.startsWith("/api") ||
+    href.startsWith("mailto:")
+  );
+}
 
 /* ---------- Tiny CSS spinner ---------- */
 function Spinner({ className = "" }: { className?: string }) {
@@ -76,10 +93,13 @@ export default function LoadingLink({
   hideSpinner = false,
   ...rest
 }: LoadingLinkProps) {
-  const router = useRouter();
+  const nextRouter = useNextRouter();
+  const intlRouter = useIntlRouter();
   const [isPending, startTransition] = useTransition();
   const [isClicked, setIsClicked] = useState(false);
 
+  const unlocalized = isUnlocalizedHref(href);
+  const LinkComponent = unlocalized ? NextLink : IntlLink;
   const isLoading = isPending || isClicked;
 
   const handleClick = useCallback(
@@ -99,17 +119,18 @@ export default function LoadingLink({
       setIsClicked(true);
 
       startTransition(() => {
-        router.push(href);
+        if (unlocalized) nextRouter.push(href);
+        else intlRouter.push(href);
       });
 
       // Safety: if transition doesn't resolve within 8s, re-enable
       setTimeout(() => setIsClicked(false), 8000);
     },
-    [href, router, isLoading, externalOnClick, startTransition],
+    [href, unlocalized, nextRouter, intlRouter, isLoading, externalOnClick, startTransition],
   );
 
   return (
-    <Link
+    <LinkComponent
       href={href}
       onClick={handleClick}
       className={className}
@@ -134,7 +155,7 @@ export default function LoadingLink({
       ) : (
         children
       )}
-    </Link>
+    </LinkComponent>
   );
 }
 

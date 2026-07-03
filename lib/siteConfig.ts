@@ -1,29 +1,21 @@
 /* ------------------------------------------------------------------ */
 /*  Site-wide static configuration                                     */
 /*  ----------------------------------------------------------------  */
-/*  Season-specific labels use {currentSeason} and {seasonCount}       */
-/*  tokens which are resolved at render time from the seasons config.  */
+/*  Display copy has been migrated to next-intl message catalogs       */
+/*  (messages/en/common.json + messages/en/home.json). This file now   */
+/*  holds only structural/code data: nav ids + hrefs, snapshot stat    */
+/*  ids + season-token values, social links, and dead legacy config.   */
+/*                                                                      */
+/*  Season-specific values use {currentSeason} / {seasonCount} tokens   */
+/*  which are resolved at render time via resolveTemplate().            */
 /* ------------------------------------------------------------------ */
 
 export type SiteConfig = {
-  leagueName: string;
   discordUrl: string;
-  seo: {
-    title: string;
-    description: string;
-  };
-  navigation: { label: string; href: string }[];
-  hero: {
-    title: string;
-    subtitle: string;
-    primaryCtaLabel: string;
-    secondaryCtaLabel: string;
-  };
-  trustChips: string[];
-  snapshotStats: { label: string; value: string }[];
+  navigation: { id: string; href: string }[];
+  snapshotStats: { id: string; value: string }[];
   aboutBullets: string[];
   whatYouGet: { title: string; description: string; icon: "shield" | "users" | "chart" }[];
-  leagueFormat: { title: string; description: string }[];
   joinCta: {
     title: string;
     description: string;
@@ -35,50 +27,29 @@ export type SiteConfig = {
 };
 
 export const siteConfig: SiteConfig = {
-  leagueName: "PSGiL",
   discordUrl: "https://discord.gg/v6zF6QME7J",
-  seo: {
-    title: "PSGiL – F1 Sim Racing League (Israel)",
-    description:
-      "PSGiL is Israel's premium F1 sim racing league. Competitive clean racing, full season stats, and a community-first Formula 1 league experience.",
-  },
   navigation: [
-    { label: "Schedule & Results", href: "/schedule" },
-    { label: "Tables", href: "/statistics" },
-    { label: "Drivers", href: "/drivers" },
-    { label: "Stats", href: "/stats" },
-    { label: "News", href: "/news" },
-    { label: "Stewards", href: "/stewards/login" },
-  ],
-  hero: {
-    title: "PSGiL – F1 Sim Racing League",
-    subtitle:
-      "Israel's largest F1 sim racing league, competing primarily on the EA Sports F1 series. Built on competition, respect, and an outstanding community.",
-    primaryCtaLabel: "Join Now",
-    secondaryCtaLabel: "Watch Last Race",
-  },
-  trustChips: [
-    "3+ years running",
-    "{currentSeason} live",
-    "No assists • 50% races",
-    "Fair & stewarded racing",
-    "Two seasons per year",
-    "Competitive grid",
-    "Full race stats & history",
-    "EA Sports F1 series",
+    { id: "schedule", href: "/schedule" },
+    { id: "tables", href: "/statistics" },
+    { id: "drivers", href: "/drivers" },
+    { id: "stats", href: "/stats" },
+    { id: "news", href: "/news" },
+    { id: "stewards", href: "/stewards/login" },
   ],
   snapshotStats: [
-    { label: "Seasons", value: "{seasonCount}" },
-    { label: "Races", value: "{totalRaces}" },
-    { label: "Total Drivers", value: "{totalDrivers}" },
-    { label: "Winners", value: "{uniqueWinners}" },
+    { id: "seasons", value: "{seasonCount}" },
+    { id: "races", value: "{totalRaces}" },
+    { id: "totalDrivers", value: "{totalDrivers}" },
+    { id: "winners", value: "{uniqueWinners}" },
   ],
+  // DEAD CONFIG — never rendered anywhere. Retained intentionally.
   aboutBullets: [
-    "3+ years active",
+    "Inaugural season",
     "Currently in {currentSeason}",
     "Community-first & respectful racing",
     "Full stats kept from the beginning",
   ],
+  // DEAD CONFIG — never rendered anywhere. Retained intentionally.
   whatYouGet: [
     {
       title: "Clean racing",
@@ -96,39 +67,11 @@ export const siteConfig: SiteConfig = {
       icon: "chart",
     },
   ],
-  leagueFormat: [
-    {
-      title: "EA SPORTS F1 series",
-      description:
-        "We race on the official EA Sports F1 titles with standardized settings for fair competition.",
-    },
-    {
-      title: "50% race length",
-      description:
-        "Half-distance races with real strategy—tyre wear, pit stops, and clean execution matter.",
-    },
-    {
-      title: "No assists",
-      description: "No driving assists. Full driver control for a competitive and authentic experience.",
-    },
-    {
-      title: "League championship",
-      description: "Season-long Drivers & Teams championships with consistent points, results, and standings.",
-    },
-    {
-      title: "Two seasons per year",
-      description:
-        "A reliable calendar with two structured seasons each year—consistent racing and progression.",
-    },
-    {
-      title: "Stewarding culture",
-      description: "Clear rules and active stewarding to keep racing fair, respectful, and clean.",
-    },
-  ],
+  // DEAD CONFIG — never rendered anywhere. Retained intentionally.
   joinCta: {
     title: "Ready to race with us?",
     description: "Join the community, get onboarded, and compete in organized events.",
-    buttonLabel: "Join PSGiL Discord",
+    buttonLabel: "Join ISL Discord",
     subtext: "New drivers welcome • Quick onboarding",
   },
   socials: [

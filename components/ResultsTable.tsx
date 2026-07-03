@@ -1,13 +1,14 @@
 "use client";
 
 import React from "react";
+import { useTranslations } from "next-intl";
 
 /* ------------------------------------------------------------------ */
-/*  Generic reusable data-table with PSGiL dark-theme styling          */
-/*  • Sticky header                                                     */
-/*  • Horizontal scroll on small screens                               */
-/*  • Zebra rows + subtle separators                                   */
-/*  • P1/P2/P3 highlighting (gold / silver / bronze)                   */
+/*  Generic reusable data-table — ISL "Qav Rishon" editorial styling   */
+/*  • Sticky header (gold-hairline thead, mono numerals)               */
+/*  • Horizontal scroll on small screens; frozen columns via hairline  */
+/*  • Zebra rows (solid cream) so sticky/frozen cells stay opaque       */
+/*  • P1/P2/P3 medal accent = metal hairline on the row start edge      */
 /* ------------------------------------------------------------------ */
 
 export type ColumnDef<T> = {
@@ -17,7 +18,7 @@ export type ColumnDef<T> = {
   accessor: keyof T | ((row: T, idx: number) => React.ReactNode);
   /** Text alignment (default "left") */
   align?: "left" | "center" | "right";
-  /** Use monospace font? (useful for times / gaps) */
+  /** Use monospace/tabular numerals? (times / gaps / points) */
   mono?: boolean;
   /** Extra className applied to <td> */
   className?: string;
@@ -61,35 +62,20 @@ type Props<T extends Record<string, unknown>> = {
   horizontalStickyCount?: number;
 };
 
-/* Medal colours (row: includes left accent; sticky cells use bg-only — see below) */
+/* Medal / highlight accent — a metal hairline on the row's inline-start edge
+   (no fill). P1 brass, P2 silver, P3 bronze, highlight oxblood. */
 const HIGHLIGHT_STYLES: Record<string, string> = {
-  p1: "bg-[#D4AF37]/10 border-l-2 border-l-[#D4AF37]",
-  p2: "bg-[#C0C0C0]/10 border-l-2 border-l-[#C0C0C0]",
-  p3: "bg-[#CD7F32]/10 border-l-2 border-l-[#CD7F32]",
-  highlight: "bg-[#7020B0]/10 border-l-2 border-l-[#7020B0]",
+  p1: "border-s-2 border-brass",
+  p2: "border-s-2 border-silver-ink",
+  p3: "border-s-2 border-bronze-ink",
+  highlight: "border-s-2 border-oxblood",
 };
 
-/**
- * Solid background hex values for sticky cells – pre-blended against the base
- * table background (#0B0B0E) so transparent colours don't let scrolled columns
- * bleed through.
- *
- * Formula: base + alpha*(colour - base), where alpha = row highlight opacity.
- * P1/P2/P3/highlight use 10 %; zebra uses 2 %.
- */
-const STICKY_CELL_BG: Record<string, string> = {
-  p1: "#1F1B12",        // #D4AF37 @ 10% on #0B0B0E
-  p2: "#1D1D20",        // #C0C0C0 @ 10% on #0B0B0E
-  p3: "#1E1712",        // #CD7F32 @ 10% on #0B0B0E
-  highlight: "#150D1E", // #7020B0 @ 10% on #0B0B0E
-  _zebra: "#101013",    // white  @  2% on #0B0B0E
-  _default: "#0B0B0E",
-};
-
-function stickyBodyCellBg(highlight: string | null, ri: number): string {
-  if (highlight && STICKY_CELL_BG[highlight]) return STICKY_CELL_BG[highlight];
-  if (ri % 2 === 1) return STICKY_CELL_BG._zebra;
-  return STICKY_CELL_BG._default;
+/** Opaque solid background for sticky/frozen cells (no blend math): paper for
+ *  even rows, cream for zebra rows — always opaque so scrolled columns never
+ *  bleed through. */
+function stickyBodyCellBg(ri: number): string {
+  return ri % 2 === 1 ? "var(--isl-cream)" : "var(--isl-paper)";
 }
 
 export default function ResultsTable<T extends Record<string, unknown>>({
@@ -101,6 +87,7 @@ export default function ResultsTable<T extends Record<string, unknown>>({
   groups,
   horizontalStickyCount,
 }: Props<T>) {
+  const t = useTranslations("schedule");
   const stickyN = Math.max(0, horizontalStickyCount ?? 0);
   const stickyLefts = computeStickyLeftPx(columns, stickyN);
 
@@ -109,8 +96,8 @@ export default function ResultsTable<T extends Record<string, unknown>>({
 
   if (effectiveRows.length === 0) {
     return (
-      <div className="flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 py-12">
-        <p className="text-sm text-white/50">No data available yet.</p>
+      <div className="flex items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper py-12">
+        <p className="text-sm text-meta">{t("resultsTable.noData")}</p>
       </div>
     );
   }
@@ -119,13 +106,14 @@ export default function ResultsTable<T extends Record<string, unknown>>({
   const renderRow = (row: T, ri: number) => {
     const highlight = rowHighlight?.(row, ri) ?? null;
     const hlClass = highlight ? HIGHLIGHT_STYLES[highlight] ?? "" : "";
-    const zebraClass =
-      !highlight && ri % 2 === 1 ? "bg-white/[0.02]" : "";
+    const zebra = ri % 2 === 1;
 
     return (
       <tr
         key={ri}
-        className={`border-b border-white/5 transition hover:bg-white/5 ${hlClass} ${zebraClass}`}
+        className={`border-b border-[color:var(--isl-hairline)] transition-colors hover:bg-sink/50 ${hlClass} ${
+          zebra ? "bg-cream" : ""
+        }`}
       >
         {columns.map((col, ci) => {
           const value =
@@ -139,22 +127,22 @@ export default function ResultsTable<T extends Record<string, unknown>>({
           return (
             <td
               key={ci}
-              className={`whitespace-nowrap px-3 py-2 text-white/80 ${
+              className={`whitespace-nowrap px-3 py-2 text-ink-2 ${
                 col.align === "center"
                   ? "text-center"
                   : col.align === "right"
-                    ? "text-right"
-                    : "text-left"
-              } ${col.mono ? "font-mono text-xs" : ""} ${col.className ?? ""} ${col.hideMobile ? "hidden md:table-cell" : ""} ${
+                    ? "text-end"
+                    : "text-start"
+              } ${col.mono ? "num" : ""} ${col.className ?? ""} ${col.hideMobile ? "hidden md:table-cell" : ""} ${
                 isHSticky
-                  ? `sticky z-[1] ${lastFrozen ? "shadow-[4px_0_10px_-2px_rgba(0,0,0,0.55)]" : ""}`
+                  ? `sticky z-[1] ${lastFrozen ? "border-e border-[color:var(--isl-hairline-strong)]" : ""}`
                   : ""
               }`}
               style={
                 isHSticky
                   ? {
-                      left: stickyLefts[ci],
-                      backgroundColor: stickyBodyCellBg(highlight, ri),
+                      insetInlineStart: stickyLefts[ci],
+                      backgroundColor: stickyBodyCellBg(ri),
                     }
                   : undefined
               }
@@ -169,11 +157,11 @@ export default function ResultsTable<T extends Record<string, unknown>>({
 
   return (
     <div
-      className={`overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(140deg,_rgba(255,255,255,0.06),_rgba(255,255,255,0.02))] ${className}`}
+      className={`overflow-hidden rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper ${className}`}
     >
       {caption && (
-        <div className="border-b border-white/5 px-4 py-2">
-          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-white/40">
+        <div className="border-b border-[color:var(--isl-hairline)] px-4 py-2">
+          <span className="font-isl-body text-xs font-semibold uppercase tracking-[0.2em] text-meta">
             {caption}
           </span>
         </div>
@@ -182,8 +170,8 @@ export default function ResultsTable<T extends Record<string, unknown>>({
       {/* Scrollable wrapper */}
       <div className="overflow-x-auto">
         <table className="w-full min-w-max border-collapse text-sm">
-          {/* Sticky header */}
-          <thead className="bg-[#111118]">
+          {/* Sticky header — gold (oxblood) top hairline + strong bottom rule */}
+          <thead className="bg-sink">
             <tr>
               {columns.map((col, ci) => {
                 const isHSticky = ci < stickyN;
@@ -191,20 +179,20 @@ export default function ResultsTable<T extends Record<string, unknown>>({
                 return (
                   <th
                     key={ci}
-                    className={`sticky top-0 z-10 border-b border-white/10 bg-[#111118] px-3 py-3 text-xs font-semibold uppercase leading-tight tracking-[0.12em] text-white/90 ${
+                    className={`sticky top-0 z-10 border-t-2 border-[color:var(--isl-oxblood)] border-b border-[color:var(--isl-hairline-strong)] bg-sink px-3 py-3 font-isl-body text-xs font-semibold uppercase leading-tight tracking-[0.12em] text-meta ${
                       col.align === "center"
                         ? "text-center"
                         : col.align === "right"
-                          ? "text-right"
-                          : "text-left"
+                          ? "text-end"
+                          : "text-start"
                     } ${col.hideMobile ? "hidden md:table-cell" : ""} ${
                       isHSticky
-                        ? `z-20 ${lastFrozen ? "shadow-[4px_0_10px_-2px_rgba(0,0,0,0.55)]" : ""}`
+                        ? `z-20 ${lastFrozen ? "border-e border-[color:var(--isl-hairline-strong)]" : ""}`
                         : ""
                     }`}
                     style={{
                       ...(col.minWidth ? { minWidth: col.minWidth } : {}),
-                      ...(isHSticky ? { left: stickyLefts[ci] } : {}),
+                      ...(isHSticky ? { insetInlineStart: stickyLefts[ci] } : {}),
                     }}
                   >
                     {col.label}
@@ -227,7 +215,7 @@ export default function ResultsTable<T extends Record<string, unknown>>({
                         <tr aria-hidden="true">
                           <td
                             colSpan={columns.length}
-                            className="h-3 border-b border-[#7020B0]/30 bg-transparent"
+                            className="h-3 border-b border-[color:var(--isl-hairline)] bg-transparent"
                           />
                         </tr>
                       )}
@@ -235,9 +223,9 @@ export default function ResultsTable<T extends Record<string, unknown>>({
                       <tr>
                         <td
                           colSpan={columns.length}
-                          className="border-b border-[#D4AF37]/20 bg-[#D4AF37]/[0.06] px-4 py-2.5"
+                          className="border-b border-[color:var(--isl-hairline)] bg-cream px-4 py-2.5"
                         >
-                          <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#D4AF37]">
+                          <span className="font-isl-body text-xs font-bold uppercase tracking-[0.18em] text-brass-ink">
                             {group.label}
                           </span>
                         </td>

@@ -17,14 +17,14 @@ type Props = {
 };
 
 /* ------------------------------------------------------------------ */
-/*  Shared Tailwind classes — match existing Button secondary/md       */
+/*  Shared Tailwind classes — ISL secondary/md button language         */
 /* ------------------------------------------------------------------ */
 
 const base =
-  "inline-flex items-center justify-center rounded-full font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7020B0]/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B0B0E]";
+  "inline-flex items-center justify-center gap-2 rounded-[2px] font-medium uppercase tracking-[0.08em] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]";
 const secondary =
-  "border border-[#7020B0]/50 bg-[#13111a] text-white hover:-translate-y-0.5 hover:border-[#7020B0]/70 hover:shadow-[0_0_16px_rgba(112,32,176,0.3)]";
-const md = "h-11 px-6 text-sm md:text-base";
+  "border border-oxblood text-oxblood hover:border-oxblood-deep hover:text-oxblood-deep bg-transparent";
+const md = "text-sm md:text-base px-6 py-2.5";
 const btnClass = `${base} ${secondary} ${md}`;
 
 /* ------------------------------------------------------------------ */
@@ -50,7 +50,7 @@ function WatchModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/70"
       onClick={onClose}
     >
       <div
@@ -60,17 +60,17 @@ function WatchModal({
         {/* Header */}
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#7020B0]/20 px-2.5 py-1 text-xs font-bold uppercase tracking-[0.15em] text-[#a855f7]">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#a855f7]" />
+            <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-oxblood px-2.5 py-1 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-oxblood">
+              <span className="h-1.5 w-1.5 rounded-full bg-oxblood" />
               Race Broadcast
             </span>
-            <h3 className="font-display text-sm font-semibold text-white/80 md:text-base">
+            <h3 className="font-display font-bold tracking-[0.005em] leading-[1.05] text-sm text-ink md:text-base">
               {label}
             </h3>
           </div>
           <button
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/80 transition hover:text-white"
+            className="flex h-8 w-8 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper text-ink-2 transition-colors hover:text-ink"
           >
             ×
           </button>
@@ -88,7 +88,7 @@ function WatchModal({
             href={youtubeUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-medium text-white/50 transition hover:border-white/20 hover:text-white/80"
+            className="inline-flex items-center gap-1.5 rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-1.5 text-[11px] font-medium text-oxblood transition-colors hover:text-oxblood-deep hover:border-ink"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -172,7 +172,7 @@ export default function WatchLastRaceButton({ links, label }: Props) {
         <button type="button" className={btnClass} onClick={() => setOpen((v) => !v)}>
           {label}
           <svg
-            className={`ml-1.5 h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`}
+            className={`ms-1.5 h-3.5 w-3.5 transition-transform rtl:scale-x-[-1] ${open ? "rotate-180" : ""}`}
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -183,18 +183,18 @@ export default function WatchLastRaceButton({ links, label }: Props) {
         </button>
 
         {open && (
-          <div className="absolute left-0 top-full z-50 mt-2 min-w-[220px] overflow-hidden rounded-xl border border-white/10 bg-[#151120] shadow-[0_8px_30px_rgba(0,0,0,0.5)]">
+          <div className="absolute start-0 top-full z-50 mt-2 min-w-[220px] overflow-hidden rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper">
             {links.map((link) => (
               <button
                 key={link.url}
                 type="button"
-                className="flex w-full items-center gap-2 px-4 py-3 text-sm text-white/80 transition hover:bg-[#7020B0]/20 hover:text-white"
+                className="flex w-full items-center gap-2 px-4 py-3 text-start text-sm text-ink-2 transition-colors hover:bg-cream hover:text-ink"
                 onClick={() => {
                   setOpen(false);
                   setWatchTarget(link);
                 }}
               >
-                <svg className="h-4 w-4 shrink-0 text-white/40" fill="currentColor" viewBox="0 0 24 24">
+                <svg className="h-4 w-4 shrink-0 text-oxblood" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M10 15l5.19-3L10 9v6m11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 2.19-.16 3.8-.44 4.83-.25.9-.83 1.48-1.73 1.73-.47.13-1.33.22-2.65.28-1.3.07-2.49.1-3.59.1L12 19c-4.19 0-6.8-.16-7.83-.44-.9-.25-1.48-.83-1.73-1.73-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L2 12c0-2.19.16-3.8.44-4.83.25-.9.83-1.48 1.73-1.73.47-.13 1.33-.22 2.65-.28 1.3-.07 2.49-.1 3.59-.1L12 5c4.19 0 6.8.16 7.83.44.9.25 1.48.83 1.73 1.73z" />
                 </svg>
                 {link.label}

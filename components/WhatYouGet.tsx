@@ -42,13 +42,13 @@ export default function WhatYouGet({ items }: { items: WhatYouGetItem[] }) {
       {items.map((item) => (
         <div
           key={item.title}
-          className="group rounded-2xl border border-white/10 bg-white/5 p-6 transition hover:border-[#7020B0]/60 hover:bg-white/10"
+          className="group rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-6 transition hover:border-oxblood"
         >
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-[#7020B0] transition group-hover:text-white">
+          <div className="flex h-12 w-12 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper text-ink transition group-hover:text-oxblood">
             {icons[item.icon]}
           </div>
-          <h3 className="mt-4 font-display text-lg font-semibold text-white">{item.title}</h3>
-          <p className="mt-2 text-sm text-white/70">{item.description}</p>
+          <h3 className="mt-4 font-display text-lg font-bold tracking-[0.005em] leading-[1.05] text-ink">{item.title}</h3>
+          <p className="mt-2 text-sm text-ink-2">{item.description}</p>
         </div>
       ))}
     </div>

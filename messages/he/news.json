@@ -1,0 +1,43 @@
+{
+  "categories": {
+    "announcements": "הודעות הליגה",
+    "race": "תצוגות מקדימות וסיכומי מרוצים",
+    "hub": "סים רייסינג ופורמולה"
+  },
+  "index": {
+    "title": "חדשות",
+    "description": "דיווחי מרוצים, רגעים נבחרים ועדכוני ליגה מ-ISL.",
+    "cachedNotice": "מציגים תוכן שמור או זמין.",
+    "empty": "אין עדיין חדשות שפורסמו."
+  },
+  "carousel": {
+    "empty": "אין עדיין כתבות שפורסמו.",
+    "storyOf": "כתבה {current} מתוך {total}",
+    "read": "קראו",
+    "prevAria": "הכתבה הקודמת",
+    "nextAria": "הכתבה הבאה",
+    "goToAria": "מעבר לכתבה {index}"
+  },
+  "article": {
+    "backToNews": "חזרה לחדשות",
+    "unavailableTitle": "הכתבה אינה זמינה",
+    "unavailableDescription": "לא הצלחנו למצוא את הכתבה הזו.",
+    "sourceUnavailable": "מקור החדשות אינו זמין באופן זמני. נסו שוב בקרוב.",
+    "notFound": "ייתכן שהכתבה הזו לא פורסמה או שהכתובת שגויה.",
+    "metaFallbackTitle": "כתבת חדשות | ISL",
+    "metaFallbackDescription": "כתבת חדשות של ISL.",
+    "metaSiteName": "ISL - F1 Israeli Super League",
+    "metaTitleSuffix": "{title} | חדשות ISL"
+  },
+  "actions": {
+    "watchRace": "צפו במרוץ",
+    "watchUnavailableTitle": "קישור YouTube עדיין אינו זמין",
+    "raceResults": "תוצאות המרוץ",
+    "driversChampionship": "אליפות הנהגים",
+    "constructorsChampionship": "אליפות הקבוצות",
+    "seasonTable": "טבלת העונה",
+    "closeModal": "סגירת החלון",
+    "resultsUnavailable": "התוצאות עדיין אינן זמינות עבור מרוץ זה.",
+    "broadcastTitle": "{label} — שידור המרוץ"
+  }
+}

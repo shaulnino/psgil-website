@@ -43,7 +43,7 @@ export default function Modal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[9999] overflow-y-auto bg-black/70 backdrop-blur-sm"
+      className="fixed inset-0 z-[9999] overflow-y-auto bg-[color:var(--isl-ink)]/70"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div className="flex min-h-full items-center justify-center p-4">

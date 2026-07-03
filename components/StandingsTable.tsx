@@ -1,21 +1,24 @@
 "use client";
 
 import { useMemo, type ReactNode } from "react";
+import { useTranslations } from "next-intl";
 import ResultsTable, { type ColumnDef, type SectionGroup } from "@/components/ResultsTable";
 import type { StandingsRow } from "@/lib/resultsData";
 import { useDriverLookup } from "@/components/DriverLookupProvider";
+
+type Translator = (key: string) => string;
 
 /** En-dash for empty / zero stats (Points column is exempt — see below). */
 function standingsStatCell(value: string | undefined): ReactNode {
   const s = (value ?? "").trim();
   if (s === "" || s === "-" || s === "—") {
-    return <span className="text-white/30">–</span>;
+    return <span className="text-faint">–</span>;
   }
   const n = Number(s.replace(/,/g, ""));
   if (!Number.isNaN(n) && n === 0) {
-    return <span className="text-white/30">–</span>;
+    return <span className="text-faint">–</span>;
   }
-  return s;
+  return <span className="num">{s}</span>;
 }
 
 /* ------------------------------------------------------------------ */
@@ -24,54 +27,58 @@ function standingsStatCell(value: string | undefined): ReactNode {
 
 function PosChange({ value }: { value: string }) {
   const n = parseInt(value, 10);
-  if (!value || isNaN(n) || n === 0) return <span className="text-white/30">–</span>;
-  if (n > 0) return <span className="text-emerald-400">▲{n}</span>;
-  return <span className="text-red-400">▼{Math.abs(n)}</span>;
+  if (!value || isNaN(n) || n === 0) return <span className="text-faint">–</span>;
+  if (n > 0) return <span className="num text-status-success">▲{n}</span>;
+  return <span className="num text-status-danger">▼{Math.abs(n)}</span>;
 }
 
 /* ------------------------------------------------------------------ */
 /*  Common standings columns                                            */
 /* ------------------------------------------------------------------ */
 
-const commonStandingsColumns: ColumnDef<StandingsRow>[] = [
+const buildCommonStandingsColumns = (t: Translator): ColumnDef<StandingsRow>[] => [
   {
-    label: "Pos",
-    accessor: "position",
+    label: t("standingsTable.pos"),
+    accessor: (row) => <span className="num">{row.position}</span>,
     align: "center",
+    mono: true,
     minWidth: 40,
   },
   {
-    label: "+/−",
+    label: t("standingsTable.posChange"),
     accessor: (row) => <PosChange value={row.position_change} />,
     align: "center",
+    mono: true,
     minWidth: 44,
   },
 ];
 
-const teamNameCol: ColumnDef<StandingsRow> = {
-  label: "Team",
-  accessor: "team",
+const buildTeamNameCol = (t: Translator): ColumnDef<StandingsRow> => ({
+  label: t("standingsTable.team"),
+  accessor: (row) => <span className="text-ink-2">{row.team}</span>,
   minWidth: 120,
-};
+});
 
-const pointsAndStats: ColumnDef<StandingsRow>[] = [
+const buildPointsAndStats = (t: Translator): ColumnDef<StandingsRow>[] => [
   {
-    label: "Points",
+    label: t("standingsTable.points"),
     accessor: (row) => (
-      <span className="font-semibold text-[#D4AF37]">{row.points || "0"}</span>
+      <span className="num font-semibold text-ink">{row.points || "0"}</span>
     ),
     align: "center",
+    mono: true,
     minWidth: 56,
   },
   {
-    label: "Gain",
+    label: t("standingsTable.gain"),
     accessor: (row) => standingsStatCell(row.gain),
     align: "center",
+    mono: true,
     minWidth: 44,
     hideMobile: true,
   },
   {
-    label: "Interval",
+    label: t("standingsTable.interval"),
     accessor: (row) => standingsStatCell(row.interval),
     align: "center",
     mono: true,
@@ -79,7 +86,7 @@ const pointsAndStats: ColumnDef<StandingsRow>[] = [
     hideMobile: true,
   },
   {
-    label: "Gap",
+    label: t("standingsTable.gap"),
     accessor: (row) => standingsStatCell(row.gap),
     align: "center",
     mono: true,
@@ -87,93 +94,106 @@ const pointsAndStats: ColumnDef<StandingsRow>[] = [
     hideMobile: true,
   },
   {
-    label: "Wins",
+    label: t("standingsTable.wins"),
     accessor: (row) => standingsStatCell(row.p1),
     align: "center",
+    mono: true,
     minWidth: 42,
     hideMobile: true,
   },
   {
-    label: "2nd",
+    label: t("standingsTable.second"),
     accessor: (row) => standingsStatCell(row.p2),
     align: "center",
+    mono: true,
     minWidth: 38,
     hideMobile: true,
   },
   {
-    label: "3rd",
+    label: t("standingsTable.third"),
     accessor: (row) => standingsStatCell(row.p3),
     align: "center",
+    mono: true,
     minWidth: 38,
     hideMobile: true,
   },
   {
-    label: "Top 5",
+    label: t("standingsTable.top5"),
     accessor: (row) => standingsStatCell(row.top5),
     align: "center",
+    mono: true,
     minWidth: 44,
     hideMobile: true,
   },
   {
-    label: "Top 10",
+    label: t("standingsTable.top10"),
     accessor: (row) => standingsStatCell(row.top10),
     align: "center",
+    mono: true,
     minWidth: 48,
     hideMobile: true,
   },
   {
-    label: "Best Finish",
+    label: t("standingsTable.bestFinish"),
     accessor: (row) => standingsStatCell(row.best_finish),
     align: "center",
+    mono: true,
     minWidth: 52,
     hideMobile: true,
   },
   {
-    label: "Best Grid",
+    label: t("standingsTable.bestGrid"),
     accessor: (row) => standingsStatCell(row.best_quali),
     align: "center",
+    mono: true,
     minWidth: 52,
     hideMobile: true,
   },
   {
-    label: "Fastest Laps",
+    label: t("standingsTable.fastestLaps"),
     accessor: (row) => standingsStatCell(row.fastest_laps),
     align: "center",
+    mono: true,
     minWidth: 52,
     hideMobile: true,
   },
   {
-    label: "Poles",
+    label: t("standingsTable.poles"),
     accessor: (row) => standingsStatCell(row.poles),
     align: "center",
+    mono: true,
     minWidth: 44,
     hideMobile: true,
   },
   {
-    label: "DOTD",
+    label: t("standingsTable.dotd"),
     accessor: (row) => standingsStatCell(row.dotd),
     align: "center",
+    mono: true,
     minWidth: 44,
     hideMobile: true,
   },
   {
-    label: "Penalty Pts",
+    label: t("standingsTable.penaltyPts"),
     accessor: (row) => standingsStatCell(row.penalty_points),
     align: "center",
+    mono: true,
     minWidth: 56,
     hideMobile: true,
   },
   {
-    label: "DNFs",
+    label: t("standingsTable.dnfs"),
     accessor: (row) => standingsStatCell(row.dnfs),
     align: "center",
+    mono: true,
     minWidth: 44,
     hideMobile: true,
   },
   {
-    label: "Races",
+    label: t("standingsTable.races"),
     accessor: (row) => standingsStatCell(row.races),
     align: "center",
+    mono: true,
     minWidth: 48,
     hideMobile: true,
   },
@@ -201,26 +221,33 @@ function DriverNameCell({
           e.stopPropagation();
           openDriverModal(driverId);
         }}
-        className="font-semibold text-white transition-colors hover:text-[#D4AF37] hover:underline decoration-[#D4AF37]/40 underline-offset-2 cursor-pointer"
+        className="font-semibold text-ink transition-colors hover:text-oxblood hover:underline underline-offset-2 cursor-pointer"
       >
         {driverName}
       </button>
     );
   }
 
-  return <span className="font-semibold text-white">{driverName}</span>;
+  return <span className="font-semibold text-ink">{driverName}</span>;
 }
 
 /* ------------------------------------------------------------------ */
 /*  Build final column list per type                                    */
 /* ------------------------------------------------------------------ */
 
-function getColumns(type: "drivers" | "constructors"): ColumnDef<StandingsRow>[] {
+function getColumns(
+  type: "drivers" | "constructors",
+  t: Translator,
+): ColumnDef<StandingsRow>[] {
+  const commonStandingsColumns = buildCommonStandingsColumns(t);
+  const teamNameCol = buildTeamNameCol(t);
+  const pointsAndStats = buildPointsAndStats(t);
+
   if (type === "drivers") {
     return [
       ...commonStandingsColumns,
       {
-        label: "Driver",
+        label: t("standingsTable.driver"),
         accessor: (row) => (
           <DriverNameCell driverId={row.driver_id} driverName={row.driver_name} />
         ),
@@ -236,7 +263,7 @@ function getColumns(type: "drivers" | "constructors"): ColumnDef<StandingsRow>[]
     {
       ...teamNameCol,
       accessor: (row) => (
-        <span className="font-semibold text-white">{row.team}</span>
+        <span className="font-semibold text-ink">{row.team}</span>
       ),
     },
     ...pointsAndStats,
@@ -258,6 +285,7 @@ export default function StandingsTable({
   caption,
   type,
 }: StandingsTableProps) {
+  const t = useTranslations("schedule");
   /* Detect if any rows carry bracket info (upper / lower) */
   const hasUpper = standings.some((r) => r.bracket === "upper");
   const hasLower = standings.some((r) => r.bracket === "lower");
@@ -269,8 +297,8 @@ export default function StandingsTable({
     const upper = standings.filter((r) => r.bracket === "upper" || (!r.bracket && !hasLower));
     const lower = standings.filter((r) => r.bracket === "lower");
     groups = [];
-    if (upper.length > 0) groups.push({ label: "Upper Bracket", rows: upper });
-    if (lower.length > 0) groups.push({ label: "Lower Bracket", rows: lower });
+    if (upper.length > 0) groups.push({ label: t("standingsTable.upperBracket"), rows: upper });
+    if (lower.length > 0) groups.push({ label: t("standingsTable.lowerBracket"), rows: lower });
   }
 
   const highlight = (row: StandingsRow) => {
@@ -281,9 +309,9 @@ export default function StandingsTable({
     return null;
   };
 
-  const columns = useMemo(() => getColumns(type), [type]);
+  const columns = useMemo(() => getColumns(type, t), [type, t]);
   const horizontalStickyCount =
-    columns.findIndex((c) => c.label === "Points") + 1;
+    columns.findIndex((c) => c.label === t("standingsTable.points")) + 1;
 
   return (
     <ResultsTable<StandingsRow>

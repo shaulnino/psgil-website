@@ -2,16 +2,18 @@
 
 import { useState, useRef } from "react";
 import { useFormStatus } from "react-dom";
+import { useTranslations } from "next-intl";
 import Modal from "@/app/stewards/components/Modal";
 import { submitAppealAction } from "@/app/stewards/actions";
+import { Button } from "@/components/ui/button";
 
 function SubmitBtn() {
   const { pending } = useFormStatus();
+  const t = useTranslations("stewards");
   return (
-    <button type="submit" disabled={pending}
-      className="rounded-full bg-[#7020B0] px-5 py-2.5 text-sm font-semibold shadow-[0_0_14px_rgba(112,32,176,0.3)] transition hover:bg-[#7c2ac3] disabled:opacity-50">
-      {pending ? "Submitting appeal…" : "Submit Appeal"}
-    </button>
+    <Button type="submit" disabled={pending} variant="primary" size="md">
+      {pending ? t("appeals.submitLoading") : t("appeals.submitIdle")}
+    </Button>
   );
 }
 
@@ -22,6 +24,7 @@ type Props = {
 };
 
 export default function AppealSubmitModal({ caseId, caseTitle, hoursRemaining }: Props) {
+  const t = useTranslations("stewards");
   const [step, setStep] = useState<"closed" | "confirm" | "form">("closed");
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -31,54 +34,62 @@ export default function AppealSubmitModal({ caseId, caseTitle, hoursRemaining }:
       <button
         type="button"
         onClick={() => setStep("confirm")}
-        className="rounded-full border border-amber-400/50 bg-amber-400/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-amber-200 transition hover:border-amber-400/80 hover:bg-amber-400/20"
+        className="rounded-[2px] border border-status-warning px-4 py-1.5 text-xs font-bold uppercase tracking-[0.08em] text-status-warning transition-colors hover:bg-cream focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
       >
-        Submit Appeal
+        {t("appeals.submitIdle")}
       </button>
 
       {/* Step 1 — Confirmation warning */}
       <Modal open={step === "confirm"} onClose={() => setStep("closed")}>
-        <div className="w-full max-w-md rounded-2xl border border-steward-gold/30 bg-[#13131f] shadow-[0_24px_60px_rgba(0,0,0,0.7)]">
-          <div className="border-b border-white/10 px-6 py-4 flex items-center justify-between">
+        <div className="w-full max-w-md rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper">
+          <div className="border-b border-[color:var(--isl-hairline)] px-6 py-4 flex items-center justify-between">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-amber-400/70">Before you continue</p>
-              <p className="mt-0.5 text-sm font-semibold text-white/90">Important — Appeal Cost</p>
+              <p className="font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-status-warning">{t("appeals.confirmEyebrow")}</p>
+              <p className="mt-0.5 text-sm font-semibold text-ink">{t("appeals.confirmTitle")}</p>
             </div>
             <button type="button" onClick={() => setStep("closed")}
-              className="text-lg leading-none text-white/40 hover:text-white transition">✕</button>
+              className="flex h-11 w-11 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper text-lg leading-none text-ink-2 transition-colors hover:border-ink hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]">✕</button>
           </div>
 
           <div className="px-6 py-5 space-y-4">
-            <div className="rounded-xl border border-amber-400/25 bg-amber-400/8 px-4 py-4">
-              <p className="text-sm font-semibold text-amber-200 mb-2">⚠ Unsuccessful appeals are penalised</p>
-              <p className="text-sm text-white/70 leading-relaxed">
-                If your appeal is <strong className="text-white/90">not upheld</strong>, you will receive an additional{" "}
-                <strong className="text-amber-200">1 license point</strong> as a penalty for an unsuccessful appeal.
+            <div className="rounded-[2px] border border-status-warning bg-cream px-4 py-4">
+              <p className="text-sm font-semibold text-status-warning mb-2">{t("appeals.confirmPenaltyHeading")}</p>
+              <p className="text-sm text-ink-2 leading-relaxed">
+                {t.rich("appeals.confirmPenaltyBody", {
+                  notUpheld: (chunks) => <strong className="text-ink">{chunks}</strong>,
+                  points: (chunks) => <strong className="text-status-warning num">{chunks}</strong>,
+                })}
               </p>
             </div>
-            <p className="text-sm text-white/65 leading-relaxed">
-              You are appealing the verdict in <strong className="text-white/90">Case: {caseTitle}</strong>.
-              The appeal window closes in approximately <strong className="text-white/90">{hoursRemaining} hours</strong>.
+            <p className="text-sm text-ink-2 leading-relaxed">
+              {t.rich("appeals.confirmContextBody", {
+                caseTitle,
+                hoursRemaining,
+                caseStrong: (chunks) => <strong className="text-ink">{chunks}</strong>,
+                hoursStrong: (chunks) => <strong className="text-ink num">{chunks}</strong>,
+              })}
             </p>
-            <p className="text-sm text-white/65">
-              Do you understand and wish to proceed with submitting an appeal?
+            <p className="text-sm text-ink-2">
+              {t("appeals.confirmProceed")}
             </p>
 
             <div className="flex items-center gap-3 pt-1">
-              <button
+              <Button
                 type="button"
                 onClick={() => setStep("form")}
-                className="rounded-full bg-[#7020B0] px-5 py-2.5 text-sm font-semibold shadow-[0_0_14px_rgba(112,32,176,0.3)] transition hover:bg-[#7c2ac3]"
+                variant="primary"
+                size="md"
               >
-                Yes, I understand — Continue
-              </button>
-              <button
+                {t("appeals.confirmContinue")}
+              </Button>
+              <Button
                 type="button"
                 onClick={() => setStep("closed")}
-                className="rounded-full border border-white/15 px-4 py-2.5 text-sm text-white/60 transition hover:border-white/30 hover:text-white"
+                variant="secondary"
+                size="md"
               >
-                Cancel
-              </button>
+                {t("appeals.confirmCancel")}
+              </Button>
             </div>
           </div>
         </div>
@@ -86,64 +97,63 @@ export default function AppealSubmitModal({ caseId, caseTitle, hoursRemaining }:
 
       {/* Step 2 — Appeal form */}
       <Modal open={step === "form"} onClose={() => setStep("closed")}>
-        <div className="w-full max-w-lg rounded-2xl border border-steward-gold/30 bg-[#13131f] shadow-[0_24px_60px_rgba(0,0,0,0.7)]">
-          <div className="border-b border-white/10 px-6 py-4 flex items-center justify-between">
+        <div className="w-full max-w-lg rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper">
+          <div className="border-b border-[color:var(--isl-hairline)] px-6 py-4 flex items-center justify-between">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-steward-gold/70">File an Appeal</p>
-              <p className="mt-0.5 text-sm font-semibold text-white/90 truncate max-w-xs">{caseTitle}</p>
+              <p className="font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-brass-ink">{t("appeals.formEyebrow")}</p>
+              <p className="mt-0.5 text-sm font-semibold text-ink truncate max-w-xs">{caseTitle}</p>
             </div>
             <button type="button" onClick={() => setStep("closed")}
-              className="text-lg leading-none text-white/40 hover:text-white transition">✕</button>
+              className="flex h-11 w-11 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper text-lg leading-none text-ink-2 transition-colors hover:border-ink hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]">✕</button>
           </div>
 
           <form ref={formRef} action={submitAppealAction} className="px-6 py-5 space-y-5">
             <input type="hidden" name="case_id" value={caseId} />
 
-            <div className="flex items-center gap-2 rounded-xl border border-amber-400/25 bg-amber-400/6 px-3 py-2">
-              <span className="text-amber-300 text-xs">⚠</span>
-              <p className="text-xs text-amber-200/80">
-                Appeal window closes in ~{hoursRemaining}h. Unsuccessful appeals cost 1 license point.
+            <div className="flex items-center gap-2 rounded-[2px] border border-status-warning bg-cream px-3 py-2">
+              <span className="text-status-warning text-xs">⚠</span>
+              <p className="text-xs text-ink-2">
+                {t("appeals.formWindowWarning", { hoursRemaining })}
               </p>
             </div>
 
             <label className="block">
-              <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">
-                Appeal Description <span className="text-red-400">*</span>
+              <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.08em] text-meta">
+                {t("appeals.descriptionLabel")} <span className="text-status-danger">*</span>
               </span>
-              <textarea name="description" required rows={5}
-                placeholder="Explain the grounds for your appeal. Be clear and specific about what was incorrect in the original verdict…"
-                className="w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2.5 text-sm text-white/90 focus:border-steward-gold/50 focus:outline-none transition placeholder:text-white/25" />
+              <textarea name="description" required rows={5} dir="auto"
+                placeholder={t("appeals.descriptionPlaceholder")}
+                className="w-full rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2.5 text-sm text-ink placeholder:text-faint focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]" />
             </label>
 
             {/* Evidence */}
-            <div className="rounded-xl border border-steward-gold/20 bg-black/20 p-4">
-              <h4 className="text-xs font-semibold uppercase tracking-wide text-steward-gold">
-                Evidence <span className="text-red-400">*</span>
+            <div className="rounded-[2px] border border-brass bg-cream p-4">
+              <h4 className="text-xs font-semibold uppercase tracking-[0.08em] text-brass-ink">
+                {t("appeals.evidenceLabel")} <span className="text-status-danger">*</span>
               </h4>
-              <p className="mt-1 text-xs text-white/50">
-                At least one piece of evidence is required. Upload files or add links/notes below.
+              <p className="mt-1 text-xs text-meta">
+                {t("appeals.evidenceHelper")}
               </p>
               <div className="mt-3 space-y-3">
                 <label className="block">
-                  <span className="mb-1 block text-xs text-white/60">Links / notes (one per line)</span>
-                  <textarea name="evidence_items" rows={3}
-                    placeholder="Paste links or add notes…"
-                    className="w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white/90 focus:border-steward-gold/50 focus:outline-none transition placeholder:text-white/25" />
+                  <span className="mb-1 block text-xs text-ink-2">{t("appeals.linksNotesLabel")}</span>
+                  <textarea name="evidence_items" rows={3} dir="auto"
+                    placeholder={t("appeals.linksNotesPlaceholder")}
+                    className="w-full rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2 text-sm text-ink placeholder:text-faint focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]" />
                 </label>
                 <label className="block">
-                  <span className="mb-1 block text-xs text-white/60">Attach files</span>
+                  <span className="mb-1 block text-xs text-ink-2">{t("appeals.attachFilesLabel")}</span>
                   <input type="file" name="attachment_files" multiple
-                    className="w-full text-xs text-white/60 file:mr-3 file:rounded-full file:border file:border-steward-gold/30 file:bg-steward-gold/10 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-steward-cream hover:file:bg-steward-gold/20" />
+                    className="w-full text-xs text-ink-2 file:me-3 file:rounded-[2px] file:border file:border-brass file:bg-cream file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-brass-ink hover:file:bg-paper" />
                 </label>
               </div>
             </div>
 
             <div className="flex items-center gap-3 pt-1">
               <SubmitBtn />
-              <button type="button" onClick={() => setStep("confirm")}
-                className="rounded-full border border-white/15 px-4 py-2.5 text-sm text-white/60 transition hover:border-white/30 hover:text-white">
-                Back
-              </button>
+              <Button type="button" onClick={() => setStep("confirm")} variant="secondary" size="md">
+                {t("appeals.formBack")}
+              </Button>
             </div>
           </form>
         </div>

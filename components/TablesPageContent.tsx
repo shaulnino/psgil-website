@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import SeasonSelector from "@/components/SeasonSelector";
 import StandingsSection from "@/components/StandingsSection";
@@ -14,9 +15,7 @@ import {
   type StandingsRow,
 } from "@/lib/resultsData";
 import {
-  DEFAULT_AWARD_LABELS,
   DEFAULT_AWARD_RANK,
-  DEFAULT_AWARD_TOOLTIPS,
   type Reward,
 } from "@/lib/rewardsData";
 import type { SeasonConfig } from "@/lib/seasonConfig";
@@ -49,14 +48,16 @@ export type TablesPageContentProps = {
 /*  Bracket label helper                                               */
 /* ------------------------------------------------------------------ */
 
-function bracketTitle(bracket: string): string {
+type Translator = (key: string) => string;
+
+function bracketTitle(bracket: string, t: Translator): string {
   switch (bracket) {
     case "upper":
-      return "Upper Bracket";
+      return t("tablesContent.upperBracket");
     case "lower":
-      return "Lower Bracket";
+      return t("tablesContent.lowerBracket");
     default:
-      return "Overall";
+      return t("tablesContent.overall");
   }
 }
 
@@ -74,12 +75,12 @@ function canonicalTeamName(value: string): string {
     .trim();
 }
 
-const COMPETITION_LABELS: Record<string, string> = {
-  main: "Main League",
-  lower: "Lower League",
-  wild: "Wild League",
-  constructors: "Constructors",
-  community: "Community",
+const COMPETITION_LABEL_KEYS: Record<string, string> = {
+  main: "tablesContent.mainLeague",
+  lower: "tablesContent.lowerLeague",
+  wild: "tablesContent.wildLeague",
+  constructors: "tablesContent.constructors",
+  community: "tablesContent.community",
 };
 
 /* ------------------------------------------------------------------ */
@@ -95,6 +96,7 @@ function TablesInner({
   rewards,
   placeholderSrc,
 }: TablesPageContentProps) {
+  const t = useTranslations("schedule");
   const searchParams = useSearchParams();
   const selectedSeasonKey =
     searchParams.get("season") || defaultSeasonKey;
@@ -182,14 +184,12 @@ function TablesInner({
       {/* Title row + season selector */}
       <div className="mb-12 flex flex-wrap items-center justify-between gap-4">
         <div className="max-w-2xl">
-          <h1 className="font-display text-4xl font-bold tracking-wider md:text-5xl">
-            <span className="bg-gradient-to-r from-[#7020B0] via-[#a855f7] to-[#D4AF37] bg-clip-text text-transparent drop-shadow-[0_0_24px_rgba(112,32,176,0.25)]">
-              Tables
-            </span>
+          <h1 className="font-display text-4xl font-bold tracking-[0.005em] leading-[1.05] text-ink md:text-5xl">
+            {t("tables.title")}
           </h1>
-          <div className="mt-3 h-[3px] w-36 rounded-full bg-gradient-to-r from-[#7020B0] to-[#D4AF37] shadow-[0_0_8px_rgba(112,32,176,0.4)]" />
-          <p className="mt-4 text-base tracking-wide text-white/85 md:text-lg">
-            Official championship standings, updated after each round.
+          <div className="mt-3 h-[2px] w-36 bg-oxblood" />
+          <p className="mt-4 text-base text-ink-2 md:text-lg">
+            {t("tables.description")}
           </p>
         </div>
         <SeasonSelector
@@ -201,11 +201,11 @@ function TablesInner({
       <div className="flex flex-col gap-12">
         {/* ============ SEASON NOTES BANNER ============ */}
         {notes && (
-          <div className="rounded-xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 px-5 py-4">
+          <div className="rounded-[2px] border border-[color:var(--isl-hairline)] border-s-2 border-s-oxblood bg-cream px-5 py-4">
             {notes.split("\n").map((line, i) => (
               <p
                 key={i}
-                className="text-sm font-medium leading-relaxed text-[#D4AF37]/90"
+                className="text-sm font-medium leading-relaxed text-ink-2"
               >
                 {line}
               </p>
@@ -219,13 +219,13 @@ function TablesInner({
           groupByBracket(data.driversMain).map(({ bracket, rows }) => (
             <StandingsSection
               key={bracket}
-              title={`Drivers Main Championship – ${bracketTitle(bracket)}`}
+              title={t("tablesContent.driversMainBracketTitle", { bracket: bracketTitle(bracket, t) })}
               subtitle={
                 bracket === "upper"
-                  ? "Top half of the grid."
+                  ? t("tablesContent.driversMainSubtitleUpper")
                   : bracket === "lower"
-                    ? "Bottom half of the grid."
-                    : "Current points table after the latest round."
+                    ? t("tablesContent.driversMainSubtitleLower")
+                    : t("tablesContent.driversMainSubtitleOverall")
               }
               image={{
                 src:
@@ -235,7 +235,7 @@ function TablesInner({
                     bracket,
                   ) ||
                   (seasonConfig?.fallback_image_drivers_main ?? ""),
-                alt: `Drivers Main Championship – ${bracketTitle(bracket)}`,
+                alt: t("tablesContent.driversMainBracketTitle", { bracket: bracketTitle(bracket, t) }),
               }}
               standingsData={rows}
               type="drivers"
@@ -243,11 +243,11 @@ function TablesInner({
           ))
         ) : (
           <StandingsSection
-            title="Drivers Main Championship standings"
-            subtitle="Current points table after the latest round."
+            title={t("tablesContent.driversMainTitle")}
+            subtitle={t("tablesContent.driversMainSubtitle")}
             image={{
               src: dMainImg,
-              alt: "Drivers Main Championship standings table",
+              alt: t("tablesContent.driversMainImageAlt"),
             }}
             standingsData={data.driversMain}
             type="drivers"
@@ -257,11 +257,11 @@ function TablesInner({
         {/* ============ CONSTRUCTORS MAIN ============ */}
         {showConstructors && (
           <StandingsSection
-            title="Constructors Main Championship standings"
-            subtitle="Team standings in the Main Championship."
+            title={t("tablesContent.constructorsMainTitle")}
+            subtitle={t("tablesContent.constructorsMainSubtitle")}
             image={{
               src: cMainImg,
-              alt: "Constructors Main Championship standings table",
+              alt: t("tablesContent.constructorsMainImageAlt"),
             }}
             standingsData={data.constructorsMain}
             type="constructors"
@@ -272,22 +272,22 @@ function TablesInner({
         {showWild && (
           <>
             <StandingsSection
-              title="Drivers Wild Championship standings"
-              subtitle="Points table for the Wild Championship."
+              title={t("tablesContent.driversWildTitle")}
+              subtitle={t("tablesContent.driversWildSubtitle")}
               image={{
                 src: dWildImg,
-                alt: "Drivers Wild Championship standings table",
+                alt: t("tablesContent.driversWildImageAlt"),
               }}
               standingsData={data.driversWild}
               type="drivers"
             />
             {showConstructors && (
               <StandingsSection
-                title="Constructors Wild Championship standings"
-                subtitle="Team standings in the Wild Championship."
+                title={t("tablesContent.constructorsWildTitle")}
+                subtitle={t("tablesContent.constructorsWildSubtitle")}
                 image={{
                   src: cWildImg,
-                  alt: "Constructors Wild Championship standings table",
+                  alt: t("tablesContent.constructorsWildImageAlt"),
                 }}
                 standingsData={data.constructorsWild}
                 type="constructors"
@@ -298,9 +298,9 @@ function TablesInner({
 
         {/* ============ SEASON REWARDS ============ */}
         {seasonRewards.length > 0 && (
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-            <h3 className="font-display text-2xl font-semibold text-white">
-              Season {seasonNumber} Awards
+          <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-5">
+            <h3 className="font-display text-2xl font-bold tracking-[0.005em] leading-[1.05] text-ink">
+              {t("tablesContent.seasonAwardsPrefix")} <span className="num">{seasonNumber}</span> {t("tablesContent.seasonAwards")}
             </h3>
             <div className="mt-4 space-y-4">
               {["main", "lower", "wild", "constructors", "community"].map((competition) => {
@@ -309,10 +309,10 @@ function TablesInner({
 
                 return (
                   <div key={competition}>
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.15em] text-white/55">
-                      {COMPETITION_LABELS[competition]}
+                    <p className="mb-2 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-brass-ink">
+                      {t(COMPETITION_LABEL_KEYS[competition])}
                     </p>
-                    <div className="overflow-hidden rounded-xl border border-white/10">
+                    <div className="overflow-hidden rounded-[2px] border border-[color:var(--isl-hairline)]">
                       {rows.map((reward, idx) => {
                         const winner =
                           reward.recipient_type === "driver"
@@ -353,9 +353,9 @@ function TablesInner({
           data.constructorsWild.length === 0 &&
           seasonRewards.length === 0 &&
           !notes && (
-            <div className="flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 py-16">
-              <p className="text-sm text-white/50">
-                No standings data available for this season yet.
+            <div className="flex items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream py-16">
+              <p className="text-sm text-meta">
+                {t("tablesContent.noStandingsForSeason")}
               </p>
             </div>
           )}
@@ -378,35 +378,36 @@ function RewardRow({
   isLast: boolean;
 }) {
   const { openDriverModal } = useDriverLookup();
-  const label = reward.award_label || DEFAULT_AWARD_LABELS[reward.award_code];
-  const tooltip = reward.tooltip || DEFAULT_AWARD_TOOLTIPS[reward.award_code];
+  const tr = useTranslations("rewards");
+  const label = reward.award_label || tr(`awards.${reward.award_code}.label`);
+  const tooltip = reward.tooltip || tr(`awards.${reward.award_code}.tooltip`);
   const onClickWinner = () => {
     if (!isDriver) return;
     openDriverModal(reward.recipient_id);
   };
 
   return (
-    <div className={`flex items-center gap-3 px-4 py-3 ${!isLast ? "border-b border-white/10" : ""}`}>
-      <span className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-white/10 bg-white/5">
+    <div className={`flex items-center gap-3 bg-paper px-4 py-3 ${!isLast ? "border-b border-[color:var(--isl-hairline)]" : ""}`}>
+      <span className="inline-flex h-8 w-8 items-center justify-center rounded-[2px] border border-brass bg-cream">
         {getAwardIcon(reward.award_code, 18, reward.competition)}
       </span>
       <div className="min-w-0 flex-1">
-        <div className="text-sm font-semibold text-white">{label}</div>
-        <div className="text-xs text-white/55">{tooltip}</div>
+        <div className="text-sm font-semibold text-ink">{label}</div>
+        <div className="text-xs text-meta">{tooltip}</div>
       </div>
       {isDriver ? (
         <button
           type="button"
           onClick={onClickWinner}
-          className="text-sm font-semibold text-[#D4AF37] transition hover:text-[#f1ce62]"
+          className="text-sm font-semibold text-brass-ink transition-colors hover:text-oxblood-deep"
         >
           {winner}
         </button>
       ) : (
-        <span className="text-right">
-          <span className="block text-sm font-semibold text-white/85">{winner}</span>
+        <span className="text-end">
+          <span className="block text-sm font-semibold text-brass-ink">{winner}</span>
           {teamDriversLabel ? (
-            <span className="block text-xs text-white/55">{teamDriversLabel}</span>
+            <span className="block text-xs text-meta">{teamDriversLabel}</span>
           ) : null}
         </span>
       )}
@@ -418,15 +419,18 @@ function RewardRow({
 /*  Exported wrapper (Suspense required for useSearchParams)            */
 /* ------------------------------------------------------------------ */
 
+function TablesFallback() {
+  const t = useTranslations("schedule");
+  return (
+    <div className="flex items-center justify-center py-24">
+      <p className="text-sm text-meta">{t("tablesContent.loading")}</p>
+    </div>
+  );
+}
+
 export default function TablesPageContent(props: TablesPageContentProps) {
   return (
-    <Suspense
-      fallback={
-        <div className="flex items-center justify-center py-24">
-          <p className="text-sm text-white/40">Loading standings…</p>
-        </div>
-      }
-    >
+    <Suspense fallback={<TablesFallback />}>
       <TablesInner {...props} />
     </Suspense>
   );

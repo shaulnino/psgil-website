@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 type Indicator = { id: string; label: string; count: number; href: string };
 
@@ -12,6 +13,7 @@ const ICON: Record<string, string> = {
 };
 
 export default function StewardNotifBadge() {
+  const t = useTranslations("stewards");
   const [total, setTotal]           = useState(0);
   const [items, setItems]           = useState<Indicator[]>([]);
   const [open, setOpen]             = useState(false);
@@ -50,51 +52,50 @@ export default function StewardNotifBadge() {
     <div ref={containerRef} className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 rounded-full border border-steward-gold/50 bg-steward-gold/15 px-2.5 py-1 text-xs font-bold text-steward-cream transition hover:border-steward-gold/80 hover:bg-steward-gold/25"
-        aria-label={`${total} pending steward action${total > 1 ? "s" : ""}`}
+        className="flex items-center gap-1.5 rounded-[2px] border border-brass bg-cream px-2.5 py-1 text-xs font-bold text-ink transition hover:bg-paper"
+        aria-label={t("shell.notif.ariaLabel", { count: total })}
       >
         <span className="relative flex h-2 w-2">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-steward-gold opacity-60" />
-          <span className="relative inline-flex h-2 w-2 rounded-full bg-steward-gold" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-oxblood animate-[f1-tick_1s_step-end_infinite]" />
         </span>
-        {total}
+        <span className="num">{total}</span>
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-72 overflow-hidden rounded-2xl border border-steward-gold/30 bg-[#111119] shadow-[0_12px_40px_rgba(0,0,0,0.5)]">
-          <div className="border-b border-white/10 px-4 py-2.5">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-steward-gold/80">
-              Pending Actions
+        <div className="absolute end-0 top-full z-50 mt-2 w-72 overflow-hidden rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper">
+          <div className="border-b border-[color:var(--isl-hairline)] px-4 py-2.5">
+            <p className="font-isl-body text-[10px] font-semibold uppercase tracking-[0.2em] text-brass-ink">
+              {t("shell.notif.pendingActions")}
             </p>
           </div>
-          <ul className="divide-y divide-white/8">
+          <ul className="divide-y divide-[color:var(--isl-hairline)]">
             {items.map((item) => (
               <li key={item.id}>
                 <Link
                   href={item.href}
                   onClick={() => setOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3 transition hover:bg-steward-gold/10"
+                  className="flex items-center gap-3 px-4 py-3 transition hover:bg-cream"
                 >
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-steward-gold/15 text-sm text-steward-cream">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream text-sm text-ink">
                     {ICON[item.id] ?? "●"}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm text-white/90">{item.label}</p>
+                    <p className="text-sm text-ink">{item.label}</p>
                   </div>
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-steward-gold/20 text-[10px] font-bold text-steward-cream">
+                  <span className="num flex h-5 w-5 shrink-0 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream text-[10px] font-bold text-ink">
                     {item.count}
                   </span>
                 </Link>
               </li>
             ))}
           </ul>
-          <div className="border-t border-white/10 px-4 py-2">
+          <div className="border-t border-[color:var(--isl-hairline)] px-4 py-2">
             <Link
               href="/stewards"
               onClick={() => setOpen(false)}
-              className="text-[11px] text-white/40 transition hover:text-steward-gold"
+              className="text-[11px] text-meta transition hover:text-oxblood-deep"
             >
-              Open Steward System →
+              {t("shell.notif.openSystem")}
             </Link>
           </div>
         </div>

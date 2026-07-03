@@ -1,0 +1,103 @@
+{
+  "hero": {
+    "keyFacts": "Key facts",
+    "followUs": "Follow us",
+    "contactUs": "Contact Us",
+    "title": "ISL – F1 Israeli Super League",
+    "subtitle": "One of the biggest sim racing leagues in the country, specializing in F1 on the EA Sports F1 series — two experienced leagues merged into one, setting the highest standard for sim racing.",
+    "joinNow": "Join Now",
+    "watchLastRace": "Watch Last Race",
+    "imageAlt": "ISL racing atmosphere"
+  },
+  "trustChips": [
+    "Inaugural season",
+    "{currentSeason} live",
+    "No assists • 50% races",
+    "Fair & stewarded racing",
+    "Two seasons per year",
+    "Competitive grid",
+    "Full race stats & history",
+    "EA Sports F1 series"
+  ],
+  "snapshotStats": {
+    "seasons": "Seasons",
+    "races": "Races",
+    "totalDrivers": "Total Drivers",
+    "winners": "Winners"
+  },
+  "leagueFormatItems": [
+    {
+      "title": "EA SPORTS F1 series",
+      "description": "We race on the official EA Sports F1 titles with standardized settings for fair competition."
+    },
+    {
+      "title": "50% race length",
+      "description": "Half-distance races with real strategy—tyre wear, pit stops, and clean execution matter."
+    },
+    {
+      "title": "No assists",
+      "description": "No driving assists. Full driver control for a competitive and authentic experience."
+    },
+    {
+      "title": "League championship",
+      "description": "Season-long Drivers & Teams championships with consistent points, results, and standings."
+    },
+    {
+      "title": "Two seasons per year",
+      "description": "A reliable calendar with two structured seasons each year—consistent racing and progression."
+    },
+    {
+      "title": "Stewarding culture",
+      "description": "Clear rules and active stewarding to keep racing fair, respectful, and clean."
+    }
+  ],
+  "featured": {
+    "featuredStory": "Featured Story",
+    "newsFlash": "News Flash",
+    "read": "Read",
+    "allNews": "All News"
+  },
+  "leagueFormat": {
+    "title": "League Format",
+    "description": "Structured racing built for consistency and clean results."
+  },
+  "races": {
+    "title": "Races",
+    "description": "Latest action and what is coming up next.",
+    "fullSchedule": "Full Schedule"
+  },
+  "latestNews": {
+    "title": "Latest News",
+    "description": "Fresh updates, race stories, and league highlights.",
+    "allNews": "All News"
+  },
+  "about": {
+    "title": "About Us",
+    "body": "ISL — the F1 Israeli Super League — is one of Israel's premier F1 sim racing leagues, formed by the merger of two established communities, PSGiL and F1IL, into a single grid. We race on the EA Sports F1 series at 50% distance with no driving assists — full driver control, real strategy, and results that are earned. ISL is built by drivers, for drivers: competitive grids, a supportive community, and a firm commitment to clean, respectful racing on and off the track. With two structured seasons a year, consistent stewarding, and full Drivers and Teams standings, ISL brings the experience of both leagues together to set a high standard for organized sim racing in Israel. We are currently racing in {season}."
+  },
+  "contact": {
+    "title": "Contact Us",
+    "description": "Get in touch with the league."
+  },
+  "raceCards": {
+    "lastRace": "Last Race",
+    "nextRace": "Next Race",
+    "watchTheRace": "Watch the Race",
+    "raceResults": "Race Results",
+    "raceBroadcast": "Race Broadcast",
+    "openOnYouTube": "Open on YouTube",
+    "close": "Close",
+    "posterComingSoon": "Poster coming soon",
+    "raceInProgress": "Race in progress",
+    "upcoming": "Upcoming",
+    "youtubeNotAvailable": "YouTube link not available yet",
+    "showTable": "Show table",
+    "showImage": "Show image",
+    "zoomOut": "Zoom out",
+    "zoomIn": "Zoom in",
+    "reset": "Reset",
+    "scheduleNotAvailable": "Race schedule not available yet.",
+    "noPastRaces": "No past races yet.",
+    "seasonComplete": "Season complete — stay tuned!"
+  }
+}

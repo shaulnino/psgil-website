@@ -1,13 +1,17 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useTranslations } from "next-intl";
+
+import { Button } from "@/components/ui/button";
 
 export default function AttachmentFilePicker() {
+  const t = useTranslations("stewards");
   const ref = useRef<HTMLInputElement | null>(null);
-  const [summary, setSummary] = useState("No files selected");
+  const [summary, setSummary] = useState(t("cases.attachments.noFiles"));
   return (
     <div>
-      <span className="mb-1 block text-sm text-white/80">Attachments (upload from computer)</span>
+      <span className="mb-1 block text-sm text-ink-2">{t("cases.attachments.label")}</span>
       <input
         ref={ref}
         type="file"
@@ -16,14 +20,14 @@ export default function AttachmentFilePicker() {
         className="hidden"
         onChange={(e) => {
           const files = e.currentTarget.files;
-          if (!files || files.length === 0) return setSummary("No files selected");
+          if (!files || files.length === 0) return setSummary(t("cases.attachments.noFiles"));
           if (files.length === 1) return setSummary(files[0].name);
-          setSummary(`${files.length} files selected`);
+          setSummary(t("cases.attachments.filesSelected", { count: files.length }));
         }}
       />
       <div className="flex flex-wrap items-center gap-3">
-        <button type="button" onClick={() => ref.current?.click()} className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white/90">Choose files</button>
-        <span className="text-xs text-white/60">{summary}</span>
+        <Button type="button" variant="secondary" size="sm" onClick={() => ref.current?.click()}>{t("cases.attachments.chooseFiles")}</Button>
+        <span className="text-xs text-meta">{summary}</span>
       </div>
     </div>
   );

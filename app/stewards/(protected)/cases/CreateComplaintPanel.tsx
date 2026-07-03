@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
+import { Button } from "@/components/ui/button";
 
 export default function CreateComplaintPanel({
   initiallyOpen = false,
@@ -9,18 +11,22 @@ export default function CreateComplaintPanel({
   initiallyOpen?: boolean;
   children: React.ReactNode;
 }) {
+  const t = useTranslations("stewards");
   const [open, setOpen] = useState(initiallyOpen);
   return (
-    <section className="steward-panel rounded-2xl p-5">
+    <section className="steward-panel rounded-[2px] p-5">
       <div className="flex items-center justify-between gap-3">
-        <h3 className="text-lg font-semibold">Create Complaint</h3>
-        <button
+        <h3 className="font-display font-bold tracking-[0.005em] leading-[1.05] text-ink text-lg">
+          {t("cases.create.title")}
+        </h3>
+        <Button
           type="button"
+          variant={open ? "secondary" : "primary"}
+          size="sm"
           onClick={() => setOpen((v) => !v)}
-          className="rounded-full bg-[#7020B0] px-4 py-2 text-sm font-semibold text-white transition hover:shadow-[0_0_14px_rgba(143,132,112,0.12)]"
         >
-          {open ? "Close" : "Create Complaint"}
-        </button>
+          {open ? t("cases.create.close") : t("cases.create.title")}
+        </Button>
       </div>
       {open && <div className="mt-4">{children}</div>}
     </section>

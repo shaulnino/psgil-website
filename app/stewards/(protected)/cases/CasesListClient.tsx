@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { fmtDateTime } from "@/app/stewards/lib/dates";
 import DeleteCaseForm from "@/app/stewards/(protected)/cases/DeleteCaseForm";
 
@@ -43,18 +44,19 @@ const EMPTY_FILTERS: Filters = { query: "", season: "", round: "", session: "", 
 /* ------------------------------------------------------------------ */
 
 const STATUS_CHIP: Record<string, string> = {
-  "Open":                 "bg-amber-400/20 text-amber-200 border-amber-400/50",
-  "Waiting for Response": "bg-blue-400/20  text-blue-200  border-blue-400/50",
-  "Under Review":         "bg-purple-400/20 text-purple-200 border-purple-400/50",
-  "Verdict Ready":        "bg-emerald-400/20 text-emerald-200 border-emerald-400/50",
-  "Closed":               "bg-green-500/20 text-green-200 border-green-500/50",
-  "Archived":             "bg-white/10 text-white/50 border-white/20",
+  "Open":                 "text-status-info border-status-info",
+  "Waiting for Response": "text-status-info border-status-info",
+  "Under Review":         "text-status-warning border-status-warning",
+  "Verdict Ready":        "text-brass-ink border-brass",
+  "Closed":               "text-status-success border-status-success",
+  "Archived":             "text-meta border-[color:var(--isl-hairline-strong)]",
 };
 
 function StatusChip({ status }: { status: string }) {
+  const t = useTranslations("stewards");
   return (
-    <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${STATUS_CHIP[status] ?? STATUS_CHIP["Open"]}`}>
-      {status}
+    <span className={`inline-flex items-center rounded-[2px] border px-2 py-0.5 font-isl-body text-[0.625rem] font-semibold uppercase tracking-[0.12em] leading-none ${STATUS_CHIP[status] ?? STATUS_CHIP["Open"]}`}>
+      {t(`cases.status.${status}`)}
     </span>
   );
 }
@@ -64,23 +66,24 @@ function StatusChip({ status }: { status: string }) {
 /* ------------------------------------------------------------------ */
 
 function SearchBar({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const t = useTranslations("stewards");
   return (
     <div className="relative">
-      <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+      <svg className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-faint" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
       </svg>
       <input
         type="search"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Filter by title, case #…"
-        className="w-full rounded-xl border border-white/10 bg-black/30 py-2 pl-9 pr-4 text-sm text-white placeholder:text-white/30 focus:border-steward-gold/40 focus:outline-none"
+        placeholder={t("cases.filter.searchPlaceholder")}
+        className="w-full rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper py-2 ps-9 pe-4 text-sm text-ink placeholder:text-faint focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
       />
       {value && (
         <button
           type="button"
           onClick={() => onChange("")}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/70"
+          className="absolute end-3 top-1/2 -translate-y-1/2 text-meta hover:text-ink"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
@@ -112,22 +115,22 @@ function FilterDropdown({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={`appearance-none rounded-lg border px-3 py-1.5 pr-7 text-xs focus:outline-none focus:border-steward-gold/40 transition cursor-pointer ${
+        className={`appearance-none rounded-[2px] border ps-3 pe-7 py-1.5 text-xs transition cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)] ${
           value
-            ? "border-steward-gold/50 bg-steward-gold/10 text-steward-gold font-semibold"
-            : "border-white/10 bg-black/30 text-white/60 hover:border-white/20"
+            ? "border-brass bg-cream text-brass-ink font-semibold"
+            : "border-[color:var(--isl-hairline)] bg-paper text-ink-2 hover:border-[color:var(--isl-hairline-strong)]"
         }`}
       >
         <option value="">{label}</option>
         {options.map((o) => (
-          <option key={o} value={o} className="bg-[#1a1a2e] text-white">
+          <option key={o} value={o} className="bg-paper text-ink">
             {o}
           </option>
         ))}
       </select>
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-white/30"
+        className="pointer-events-none absolute end-2 top-1/2 -translate-y-1/2 h-3 w-3 text-meta"
         fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"
       >
         <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
@@ -149,6 +152,7 @@ function FilterBar({
   onChange: (f: Filters) => void;
   allCases: CaseRow[];
 }) {
+  const t = useTranslations("stewards");
   const seasons = useMemo(
     () => [...new Set(allCases.map((r) => r.season))].sort().reverse(),
     [allCases],
@@ -184,25 +188,25 @@ function FilterBar({
       />
       <div className="flex flex-wrap items-center gap-2">
         <FilterDropdown
-          label="Season"
+          label={t("cases.filter.season")}
           value={filters.season}
           options={seasons}
           onChange={(v) => onChange({ ...filters, season: v, round: "" })}
         />
         <FilterDropdown
-          label="Round"
+          label={t("cases.filter.round")}
           value={filters.round}
           options={rounds}
           onChange={(v) => onChange({ ...filters, round: v })}
         />
         <FilterDropdown
-          label="Session"
+          label={t("cases.filter.session")}
           value={filters.session}
           options={sessions}
           onChange={(v) => onChange({ ...filters, session: v })}
         />
         <FilterDropdown
-          label="Status"
+          label={t("cases.filter.status")}
           value={filters.status}
           options={statuses}
           onChange={(v) => onChange({ ...filters, status: v })}
@@ -211,9 +215,9 @@ function FilterBar({
           <button
             type="button"
             onClick={() => onChange(EMPTY_FILTERS)}
-            className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/50 hover:border-white/20 hover:text-white/80 transition"
+            className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-3 py-1.5 text-xs text-meta hover:border-[color:var(--isl-hairline-strong)] hover:text-ink transition"
           >
-            Clear all
+            {t("cases.filter.clearAll")}
           </button>
         )}
       </div>
@@ -264,19 +268,19 @@ function SectionHeader({
     <button
       type="button"
       onClick={onToggle}
-      className="flex w-full items-center justify-between gap-3 rounded-lg px-1 py-1 text-left transition hover:bg-white/5"
+      className="flex w-full items-center justify-between gap-3 rounded-[2px] px-1 py-1 text-start transition hover:bg-cream"
     >
       <div className="flex items-center gap-2.5">
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className={`h-3.5 w-3.5 shrink-0 text-white/40 transition-transform duration-200 ${open ? "rotate-90" : ""}`}
+          className={`h-3.5 w-3.5 shrink-0 text-meta transition-transform duration-200 rtl:scale-x-[-1] ${open ? "rotate-90" : ""}`}
           fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"
         >
           <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
         </svg>
-        <span className="text-base font-semibold text-white/90">{title}</span>
-        {subtitle && <span className="text-xs text-white/40">{subtitle}</span>}
-        <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-white/50">
+        <span className="text-base font-semibold text-ink">{title}</span>
+        {subtitle && <span className="text-xs text-meta">{subtitle}</span>}
+        <span className="num rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-2 py-0.5 text-[11px] font-semibold text-meta">
           {count}
         </span>
       </div>
@@ -297,6 +301,7 @@ export function DriverCasesList({
   closedCases: CaseRow[];
   otherCases: CaseRow[];
 }) {
+  const t = useTranslations("stewards");
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     open: true,
@@ -324,28 +329,28 @@ export function DriverCasesList({
       <FilterBar filters={filters} onChange={setFilters} allCases={allCases} />
 
       {hasFilters && (
-        <p className="text-xs text-white/40">
-          {totalFiltered === 0 ? "No cases match your filter." : `${totalFiltered} case${totalFiltered !== 1 ? "s" : ""} match`}
+        <p className="text-xs text-meta">
+          {totalFiltered === 0 ? t("cases.filter.noMatch") : t("cases.filter.matchCount", { count: totalFiltered })}
         </p>
       )}
 
       {/* My Open Cases */}
       <div className="space-y-2">
         <SectionHeader
-          title="My Open Cases"
+          title={t("cases.sections.myOpen")}
           count={filteredOpen.length}
           open={openSections.open || hasFilters}
           onToggle={() => toggle("open")}
         />
         {(openSections.open || hasFilters) && (
-          <div className="space-y-2 pl-1">
+          <div className="space-y-2 ps-1">
             {filteredOpen.length === 0 ? (
-              <div className="steward-soft rounded-lg px-4 py-3 text-sm text-white/50">
-                {hasFilters ? "No open cases match." : "No open cases currently involve you."}
+              <div className="steward-soft rounded-[2px] px-4 py-3 text-sm text-ink-2">
+                {hasFilters ? t("cases.sections.noOpenMatch") : t("cases.sections.noOpenInvolve")}
               </div>
             ) : (
               filteredOpen.map((row) => (
-                <CaseCard key={row.id} row={row} dim={false} arrow="Open →" />
+                <CaseCard key={row.id} row={row} dim={false} arrow={t("cases.card.open")} />
               ))
             )}
           </div>
@@ -353,22 +358,22 @@ export function DriverCasesList({
       </div>
 
       {/* My Closed Cases */}
-      <div className="border-t border-white/10 pt-3 space-y-2">
+      <div className="border-t border-[color:var(--isl-hairline)] pt-3 space-y-2">
         <SectionHeader
-          title="My Closed Cases"
+          title={t("cases.sections.myClosed")}
           count={filteredClosed.length}
           open={openSections.closed || hasFilters}
           onToggle={() => toggle("closed")}
         />
         {(openSections.closed || hasFilters) && (
-          <div className="space-y-2 pl-1">
+          <div className="space-y-2 ps-1">
             {filteredClosed.length === 0 ? (
-              <div className="steward-soft rounded-lg px-4 py-3 text-sm text-white/50">
-                {hasFilters ? "No closed cases match." : "No closed cases found."}
+              <div className="steward-soft rounded-[2px] px-4 py-3 text-sm text-ink-2">
+                {hasFilters ? t("cases.sections.noClosedMatch") : t("cases.sections.noClosedFound")}
               </div>
             ) : (
               filteredClosed.map((row) => (
-                <CaseCard key={row.id} row={row} dim arrow="Open →" />
+                <CaseCard key={row.id} row={row} dim arrow={t("cases.card.open")} />
               ))
             )}
           </div>
@@ -377,23 +382,23 @@ export function DriverCasesList({
 
       {/* All Cases */}
       {(otherCases.length > 0 || hasFilters) && (
-        <div className="border-t border-white/10 pt-3 space-y-2">
+        <div className="border-t border-[color:var(--isl-hairline)] pt-3 space-y-2">
           <SectionHeader
-            title="All Cases"
-            subtitle="Cases you are not directly involved in"
+            title={t("cases.sections.allCases")}
+            subtitle={t("cases.sections.allCasesSubtitle")}
             count={filteredOther.length}
             open={openSections.other || hasFilters}
             onToggle={() => toggle("other")}
           />
           {(openSections.other || hasFilters) && (
-            <div className="space-y-2 pl-1">
+            <div className="space-y-2 ps-1">
               {filteredOther.length === 0 ? (
-                <div className="steward-soft rounded-lg px-4 py-3 text-sm text-white/50">
-                  {hasFilters ? "No other cases match." : "No other cases."}
+                <div className="steward-soft rounded-[2px] px-4 py-3 text-sm text-ink-2">
+                  {hasFilters ? t("cases.sections.noOtherMatch") : t("cases.sections.noOther")}
                 </div>
               ) : (
                 filteredOther.map((row) => (
-                  <CaseCard key={row.id} row={row} dim opacity arrow="View →" />
+                  <CaseCard key={row.id} row={row} dim opacity arrow={t("cases.card.view")} />
                 ))
               )}
             </div>
@@ -418,22 +423,22 @@ function CaseCard({
   return (
     <Link
       href={row.href}
-      className={`steward-soft group flex items-center justify-between gap-3 rounded-xl px-4 py-3 transition hover:border-steward-gold/50 ${opacity ? "opacity-80 hover:opacity-100" : ""}`}
+      className={`steward-soft group flex items-center justify-between gap-3 rounded-[2px] px-4 py-3 transition hover:border-brass ${opacity ? "opacity-80 hover:opacity-100" : ""}`}
     >
       <div className="min-w-0">
-        <p className={`font-semibold truncate ${dim ? "text-white/70 group-hover:text-white/90" : "text-white/90 group-hover:text-white"}`}>
-          <span className={`mr-2 font-mono ${dim ? "text-steward-gold/50" : "text-steward-gold/70"}`}>
+        <p className={`font-semibold truncate ${dim ? "text-ink-2 group-hover:text-ink" : "text-ink"}`}>
+          <span className={`num me-2 ${dim ? "text-brass-ink" : "text-brass-ink"}`}>
             #{row.caseNumber ?? "–"}
           </span>
           {row.title}
         </p>
-        <p className="mt-0.5 text-xs text-white/40 truncate">
+        <p className="mt-0.5 text-xs text-meta truncate">
           {row.season} · {row.round} · {row.weekendSession}
         </p>
       </div>
       <div className="flex shrink-0 items-center gap-3">
         <StatusChip status={row.status} />
-        <span className={`text-xs ${dim ? "text-white/30 group-hover:text-white/60" : "text-steward-gold/70 group-hover:text-steward-gold"}`}>
+        <span className={`text-xs ${dim ? "text-meta group-hover:text-ink-2" : "text-brass-ink group-hover:text-oxblood-deep"}`}>
           {arrow}
         </span>
       </div>
@@ -452,6 +457,7 @@ export function StewardCasesTable({
   cases: StewardCaseRow[];
   isAdmin: boolean;
 }) {
+  const t = useTranslations("stewards");
   const router = useRouter();
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
 
@@ -467,72 +473,72 @@ export function StewardCasesTable({
       <div className="px-5 pt-5">
         <FilterBar filters={filters} onChange={setFilters} allCases={cases} />
         {hasFilters && (
-          <p className="mt-2 text-xs text-white/40">
+          <p className="mt-2 text-xs text-meta">
             {filtered.length === 0
-              ? "No cases match."
-              : `${filtered.length} of ${cases.length} case${cases.length !== 1 ? "s" : ""}`}
+              ? t("cases.table.noMatch")
+              : t("cases.table.showing", { shown: filtered.length, total: cases.length })}
           </p>
         )}
       </div>
 
       <div className="overflow-x-auto">
-        <table className="steward-table min-w-full text-left text-sm">
-          <thead className="bg-white/5 text-white/80">
+        <table className="steward-table min-w-full text-start text-sm">
+          <thead className="bg-cream text-ink">
             <tr>
               <th className="px-4 py-3 w-12 text-center">#</th>
-              <th className="px-4 py-3">Case</th>
-              <th className="px-4 py-3">Season</th>
-              <th className="px-4 py-3">Round</th>
-              <th className="px-4 py-3">Session</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Created</th>
-              {isAdmin && <th className="px-4 py-3">Actions</th>}
+              <th className="px-4 py-3">{t("cases.table.case")}</th>
+              <th className="px-4 py-3">{t("cases.table.season")}</th>
+              <th className="px-4 py-3">{t("cases.table.round")}</th>
+              <th className="px-4 py-3">{t("cases.table.session")}</th>
+              <th className="px-4 py-3">{t("cases.table.status")}</th>
+              <th className="px-4 py-3">{t("cases.table.created")}</th>
+              {isAdmin && <th className="px-4 py-3">{t("cases.table.actions")}</th>}
             </tr>
           </thead>
           <tbody>
             {filtered.map((item) => {
               const rowCls = item.needsReview
-                ? "border-t border-purple-500/40 bg-purple-500/10"
+                ? "border-t border-[color:var(--isl-hairline)] border-s-2 border-s-status-warning bg-cream"
                 : item.verdictReady
-                  ? "border-t border-emerald-500/30 bg-emerald-500/8"
-                  : "border-t border-white/10";
+                  ? "border-t border-[color:var(--isl-hairline)] border-s-2 border-s-brass bg-cream"
+                  : "border-t border-[color:var(--isl-hairline)]";
               return (
                 <tr
                   key={item.id}
-                  className={`${rowCls} cursor-pointer hover:bg-white/5 transition-colors`}
+                  className={`${rowCls} cursor-pointer hover:bg-cream transition-colors`}
                   onClick={() => router.push(item.href)}
                 >
-                  <td className="px-4 py-3 text-center font-mono text-sm text-steward-gold/60 w-12">
+                  <td className="num px-4 py-3 text-center text-sm text-brass-ink w-12">
                     {item.caseNumber ?? "–"}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[#d4afff]">{item.title}</span>
+                      <span className="text-ink">{item.title}</span>
                       {item.needsReview && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-purple-500/25 border border-purple-400/60 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-purple-200">
-                          <span className="relative flex h-1.5 w-1.5"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-purple-300 opacity-70" /><span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-purple-300" /></span>
-                          Review Now
+                        <span className="inline-flex items-center gap-1 rounded-[2px] border border-status-warning px-2 py-0.5 font-isl-body text-[9px] font-semibold uppercase tracking-[0.12em] text-status-warning">
+                          <span className="inline-flex h-1.5 w-1.5 rounded-full bg-[color:var(--isl-warning)] animate-[f1-tick_1s_step-end_infinite]" />
+                          {t("cases.table.reviewNow")}
                         </span>
                       )}
                       {item.verdictReady && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 border border-emerald-400/50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-emerald-200">
-                          <span className="relative flex h-1.5 w-1.5"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-300 opacity-70" /><span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-300" /></span>
-                          Publish Verdict
+                        <span className="inline-flex items-center gap-1 rounded-[2px] border border-brass px-2 py-0.5 font-isl-body text-[9px] font-semibold uppercase tracking-[0.12em] text-brass-ink">
+                          <span className="inline-flex h-1.5 w-1.5 rounded-full bg-[color:var(--isl-brass)] animate-[f1-tick_1s_step-end_infinite]" />
+                          {t("cases.table.publishVerdict")}
                         </span>
                       )}
                     </div>
                   </td>
                   <td className="px-4 py-3">{item.season}</td>
-                  <td className="px-4 py-3">{item.round}</td>
+                  <td className="num px-4 py-3">{item.round}</td>
                   <td className="px-4 py-3">{item.weekendSession}</td>
                   <td className="px-4 py-3"><StatusChip status={item.status} /></td>
-                  <td className="px-4 py-3">{fmtDateTime(item.createdAt)}</td>
+                  <td className="num px-4 py-3">{fmtDateTime(item.createdAt)}</td>
                   {isAdmin && (
                     <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                       <DeleteCaseForm
                         caseId={item.id}
                         redirectTo="/stewards/cases?view=steward"
-                        className="rounded-full border border-red-500/50 px-3 py-1.5 text-xs text-red-200 hover:bg-red-500/15"
+                        className="rounded-[2px] border border-status-danger px-3 py-1.5 text-xs text-status-danger hover:bg-cream"
                       />
                     </td>
                   )}
@@ -541,8 +547,8 @@ export function StewardCasesTable({
             })}
             {filtered.length === 0 && (
               <tr>
-                <td className="px-4 py-5 text-white/60" colSpan={isAdmin ? 8 : 7}>
-                  {hasFilters ? "No cases match your filter." : "No cases yet."}
+                <td className="px-4 py-5 text-meta" colSpan={isAdmin ? 8 : 7}>
+                  {hasFilters ? t("cases.filter.noMatch") : t("cases.table.noCasesYet")}
                 </td>
               </tr>
             )}

@@ -2,16 +2,18 @@
 
 import { useRef, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { useTranslations } from "next-intl";
 import { upsertVerdictAction } from "@/app/stewards/actions";
+import { Button } from "@/components/ui/button";
 import type { DriverVerdictWithDriver } from "@/lib/stewards/repository";
 import type { Verdict, VerdictDecision } from "@/lib/stewards/types";
 
 const DECISIONS: { value: VerdictDecision; label: string; color: string }[] = [
-  { value: "Racing Incident",   label: "Racing Incident",   color: "text-sky-300" },
-  { value: "No Further Action", label: "No Further Action", color: "text-emerald-300" },
-  { value: "Penalty Imposed",   label: "Penalty Imposed",   color: "text-orange-300" },
-  { value: "Driver Reprimand",  label: "Driver Reprimand",  color: "text-amber-300" },
-  { value: "Other",             label: "Other",             color: "text-white/60" },
+  { value: "Racing Incident",   label: "Racing Incident",   color: "text-status-info" },
+  { value: "No Further Action", label: "No Further Action", color: "text-status-success" },
+  { value: "Penalty Imposed",   label: "Penalty Imposed",   color: "text-status-warning" },
+  { value: "Driver Reprimand",  label: "Driver Reprimand",  color: "text-brass-ink" },
+  { value: "Other",             label: "Other",             color: "text-meta" },
 ];
 
 type Driver = { id: string; name: string };
@@ -62,6 +64,7 @@ export default function VerdictForm({
   existingVerdict: Verdict | null;
   existingDriverVerdicts: DriverVerdictWithDriver[];
 }) {
+  const t = useTranslations("stewards");
   const [entries, setEntries] = useState<Entry[]>(() =>
     buildEntries(involvedDrivers, existingDriverVerdicts),
   );
@@ -124,7 +127,7 @@ export default function VerdictForm({
   };
 
   const inputCls =
-    "w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white/90 placeholder:text-white/30 focus:border-steward-gold/50 focus:outline-none transition";
+    "w-full rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2 text-sm text-ink placeholder:text-faint focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)] transition";
 
   return (
     <form ref={formRef} action={upsertVerdictAction} className="space-y-5">
@@ -136,18 +139,18 @@ export default function VerdictForm({
         {entries.map((entry) => (
           <div
             key={entry.key}
-            className="overflow-hidden rounded-xl border border-steward-gold/20 bg-black/20"
+            className="overflow-hidden rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream"
           >
             {/* driver header */}
-            <div className="flex items-center justify-between border-b border-white/10 bg-steward-gold/8 px-4 py-2.5">
-              <span className="text-sm font-semibold text-steward-cream">{entry.driverName}</span>
+            <div className="flex items-center justify-between border-b border-[color:var(--isl-hairline)] bg-sink px-4 py-2.5">
+              <span className="text-sm font-semibold text-ink">{entry.driverName}</span>
               {entries.length > 1 && (
                 <button
                   type="button"
                   onClick={() => removeEntry(entry.key)}
-                  className="rounded px-2 py-0.5 text-[10px] text-red-300/60 transition hover:bg-red-500/15 hover:text-red-200"
+                  className="rounded-[2px] px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-status-danger transition hover:bg-cream"
                 >
-                  Remove
+                  {t("cases.verdictForm.remove")}
                 </button>
               )}
             </div>
@@ -155,21 +158,21 @@ export default function VerdictForm({
             {/* penalty inputs */}
             <div className="grid gap-3 p-4 md:grid-cols-3">
               <label className="block">
-                <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-orange-300/80">
-                  License points
+                <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.2em] text-brass-ink">
+                  {t("cases.verdictForm.licensePoints")}
                 </span>
                 <input
                   type="number"
                   min={0}
                   value={entry.licensePoints}
                   onChange={(e) => updateEntry(entry.key, "licensePoints", e.target.value)}
-                  placeholder="e.g. 2"
+                  placeholder={t("cases.verdictForm.licensePointsPlaceholder")}
                   className={inputCls}
                 />
               </label>
               <label className="block">
-                <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-blue-300/80">
-                  Time penalty (s)
+                <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.2em] text-brass-ink">
+                  {t("cases.verdictForm.timePenalty")}
                 </span>
                 <input
                   type="number"
@@ -177,21 +180,20 @@ export default function VerdictForm({
                   min={0}
                   value={entry.timePenaltySeconds}
                   onChange={(e) => updateEntry(entry.key, "timePenaltySeconds", e.target.value)}
-                  placeholder="e.g. 5"
+                  placeholder={t("cases.verdictForm.timePenaltyPlaceholder")}
                   className={inputCls}
                 />
               </label>
               <label className="block">
-                <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-white/50">
-                  Warning text
+                <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.2em] text-meta">
+                  {t("cases.verdictForm.warningText")}
                 </span>
                 <input
                   type="text"
                   value={entry.warningText}
                   onChange={(e) => updateEntry(entry.key, "warningText", e.target.value)}
-                  placeholder="Optional"
+                  placeholder={t("cases.verdictForm.warningPlaceholder")}
                   className={inputCls}
-                  lang="he"
                   dir="auto"
                 />
               </label>
@@ -204,7 +206,7 @@ export default function VerdictForm({
       {allDrivers.filter((d) => !entries.some((e) => e.driverId === d.id)).length > 0 && (
         <div className="flex items-center gap-2">
           <select
-            className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white/70"
+            className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2 text-sm text-ink-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
             onChange={(e) => {
               if (e.target.value) {
                 addDriver(e.target.value);
@@ -214,7 +216,7 @@ export default function VerdictForm({
             defaultValue=""
           >
             <option value="" disabled>
-              + Add another driver…
+              {t("cases.verdictForm.addDriver")}
             </option>
             {allDrivers
               .filter((d) => !entries.some((e) => e.driverId === d.id))
@@ -228,23 +230,23 @@ export default function VerdictForm({
       )}
 
       {/* ── Case-level fields ── */}
-      <div className="grid gap-3 border-t border-white/10 pt-5 md:grid-cols-2">
+      <div className="grid gap-3 border-t border-[color:var(--isl-hairline)] pt-5 md:grid-cols-2">
         {/* Decision */}
         <div className="md:col-span-2">
-          <span className="mb-2 block text-xs text-white/70">Decision type</span>
+          <span className="mb-2 block text-xs text-ink-2">{t("cases.verdictForm.decisionType")}</span>
           <div className="flex flex-wrap gap-2">
             {DECISIONS.map((d) => (
               <button
                 key={d.value}
                 type="button"
                 onClick={() => setDecision(decision === d.value ? "" : d.value)}
-                className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+                className={`rounded-[2px] border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] transition-colors ${
                   decision === d.value
-                    ? "border-steward-gold/70 bg-steward-gold/20 text-steward-cream"
-                    : "border-white/15 bg-white/5 text-white/50 hover:border-white/30 hover:text-white/80"
+                    ? "border-ink bg-ink text-bone"
+                    : "border-[color:var(--isl-hairline)] text-meta hover:border-ink hover:text-ink hover:bg-cream"
                 }`}
               >
-                {d.label}
+                {t(`cases.decision.${d.value}`)}
               </button>
             ))}
           </div>
@@ -253,27 +255,26 @@ export default function VerdictForm({
 
         {/* Auto-generated summary — read-only preview */}
         <div className="md:col-span-2">
-          <span className="mb-1.5 block text-xs text-white/70">
-            Verdict summary{" "}
-            <span className="ml-1 rounded-full border border-steward-gold/40 bg-steward-gold/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-steward-gold/80">
-              auto
+          <span className="mb-1.5 block text-xs text-ink-2">
+            {t("cases.verdictForm.summary")}{" "}
+            <span className="ms-1 rounded-[2px] border border-brass px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.2em] text-brass-ink">
+              {t("cases.verdictForm.auto")}
             </span>
           </span>
-          <div className="flex items-center gap-2 rounded-lg border border-steward-gold/25 bg-steward-gold/5 px-3 py-2.5 text-sm text-white/85">
-            <span className="shrink-0 text-steward-gold/50">⚙</span>
+          <div className="flex items-center gap-2 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-3 py-2.5 text-sm text-ink">
+            <span className="shrink-0 text-brass-ink">⚙</span>
             <span dir="auto">{autoSummary}</span>
           </div>
           <input type="hidden" name="verdict_summary" value={autoSummary} />
         </div>
         <label className="block md:col-span-2">
-          <span className="mb-1 block text-xs text-white/70">Full verdict text <span className="text-red-400">*</span></span>
+          <span className="mb-1 block text-xs text-ink-2">{t("cases.verdictForm.fullText")} <span className="text-status-danger">*</span></span>
           <textarea
             name="verdict_full_text"
             required
             rows={5}
             value={fullText}
             onChange={(e) => setFullText(e.target.value)}
-            lang="he"
             dir="auto"
             className={`${inputCls} resize-y`}
           />
@@ -290,29 +291,21 @@ export default function VerdictForm({
 }
 
 function SaveButton() {
+  const t = useTranslations("stewards");
   const { pending } = useFormStatus();
   return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="rounded-full border border-white/20 bg-white/8 px-5 py-2.5 text-sm font-semibold transition hover:bg-white/15 disabled:opacity-60"
-    >
-      {pending ? "Saving…" : "Save Draft"}
-    </button>
+    <Button type="submit" variant="secondary" disabled={pending}>
+      {pending ? t("cases.verdictForm.saving") : t("cases.verdictForm.saveDraft")}
+    </Button>
   );
 }
 
 function PublishButton() {
+  const t = useTranslations("stewards");
   const { pending } = useFormStatus();
   return (
-    <button
-      type="submit"
-      name="is_published"
-      value="on"
-      disabled={pending}
-      className="rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-semibold shadow-[0_0_14px_rgba(16,185,129,0.25)] transition hover:bg-emerald-500 disabled:opacity-60"
-    >
-      {pending ? "Publishing…" : "Save & Publish Verdict"}
-    </button>
+    <Button type="submit" name="is_published" value="on" variant="primary" disabled={pending}>
+      {pending ? t("cases.verdictForm.publishing") : t("cases.verdictForm.savePublish")}
+    </Button>
   );
 }

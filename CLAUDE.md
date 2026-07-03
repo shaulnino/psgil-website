@@ -52,11 +52,11 @@ Create `.env.local` in the repo root. This file is gitignored.
 
 | Variable | Required | Where used | Description |
 |---|---|---|---|
-| `GMAIL_APP_PASSWORD` | **Yes** | `app/api/contact/route.ts`, `lib/stewards/notifications.ts` | Gmail App Password for `psgileague@gmail.com` |
+| `GMAIL_APP_PASSWORD` | **Yes** | `app/api/contact/route.ts`, `lib/stewards/notifications.ts` | Gmail App Password for `islf1league@gmail.com` |
 | `NEWS_SHEET_URL` | **Yes** | `lib/newsData.ts` | Public Google Sheets CSV URL for the `articles` tab |
 | `REWARDS_SHEET_URL` | No | `lib/seasonConfig.ts` | Override URL for rewards CSV (has default in code) |
 | `STEWARD_SESSION_SECRET` | **Yes (prod)** | `lib/stewards/auth.ts` | JWT signing secret. Falls back to `"dev-steward-secret-change-me"` locally — **must be set in Netlify** |
-| `NEXT_PUBLIC_SITE_URL` | No | `lib/stewards/notifications.ts` | Public base URL for steward email links. Defaults to `https://psgil.com` |
+| `NEXT_PUBLIC_SITE_URL` | No | `lib/stewards/notifications.ts` | Public base URL for steward email links. Defaults to `https://f1isl.com` |
 | `NEXT_PUBLIC_GA_ID` | No | `components/GoogleAnalytics.tsx` | Google Analytics 4 Measurement ID |
 
 > **Important:** `STEWARD_SESSION_SECRET` is not listed in README.md but is critical for production. If unset in production, a hardcoded dev secret is used and the code logs a critical error.
@@ -109,7 +109,6 @@ psgil-website/
 │   ├── driversData.ts          # Driver roster types + mappers + fetchers
 │   ├── scheduleData.ts         # Schedule types + mappers + fetchers
 │   ├── statsComputed.ts        # Core stats computation from raw race results
-│   ├── statsInsights.ts        # Intelligence layer: DNA, archetypes, tier, insights, rivals
 │   ├── statsMetricRegistry.ts  # Metric definitions, tab groupings, display config
 │   ├── statsData.ts            # LEGACY: old CSV-based stats fetchers (mostly unused)
 │   ├── h2h.ts                  # Head-to-head comparison engine + rivalry detection
@@ -217,7 +216,9 @@ Always use `matchesSeason(dataValue, seasonKey)` from `lib/seasonConfig.ts` when
 
 ## 7. Statistics Engine
 
-The statistics system lives in `lib/statsComputed.ts` and `lib/statsInsights.ts`.
+The statistics system lives in `lib/statsComputed.ts` (with head-to-head in `lib/h2h.ts`).
+
+> **Note:** an earlier "intelligence layer" (`lib/statsInsights.ts` — driver DNA, archetypes, tiers, auto-generated narrative sentences) was documented here but **does not exist in the codebase** (verified: no such file, and none of its functions are referenced anywhere). Do not plan around it. If narrative/insight generation is built for the new brand, build it i18n-aware from day one (see `docs/i18n-architecture.md`).
 
 ### Architecture
 
@@ -240,15 +241,7 @@ Raw CSV race results (all seasons, all events)
 | `computeCircuitStats` | `statsComputed.ts` | Per-circuit aggregates |
 | `computeLeagueStats` | `statsComputed.ts` | League-wide aggregate metrics |
 | `computeHomePageSnapshot` | `statsComputed.ts` | Homepage hero numbers |
-| `computeAutoInsights` | `statsInsights.ts` | Narrative insight strings for a driver |
-| `computeDriverArchetype` | `statsInsights.ts` | Classify driver into archetype tags |
-| `computePerformanceTier` | `statsInsights.ts` | Assign Elite/Front Runner/etc tier |
-| `computeDriverDNA` | `statsInsights.ts` | 6-axis normalized DNA scores (0–100) |
-| `computeMilestones` | `statsInsights.ts` | Upcoming achievement milestones |
-| `computeDriverCircuitStats` | `statsInsights.ts` | Per-circuit breakdown for one driver |
-| `computeTopRivals` | `h2h.ts` | Auto-detect top rivals (closest, most faced, nemesis) |
 | `computeH2H` | `h2h.ts` | Head-to-head record between two drivers |
-| `computeSeasonNarrative` | `statsInsights.ts` | Auto-generate season summary sentences |
 
 ### Legacy stats (`lib/statsData.ts`)
 
@@ -341,10 +334,10 @@ The site deploys as a Next.js application on Netlify. Netlify's Next.js runtime 
 ### Required Netlify environment variables (set in Netlify UI)
 
 ```
-GMAIL_APP_PASSWORD         → Gmail App Password for psgileague@gmail.com
+GMAIL_APP_PASSWORD         → Gmail App Password for islf1league@gmail.com
 NEWS_SHEET_URL             → Public Google Sheets CSV for articles tab
 STEWARD_SESSION_SECRET     → Random secret string (e.g. openssl rand -hex 32)
-NEXT_PUBLIC_SITE_URL       → https://psgil.com
+NEXT_PUBLIC_SITE_URL       → https://f1isl.com
 NEXT_PUBLIC_GA_ID          → G-SB7HKT6VSK (or new ID)
 REWARDS_SHEET_URL          → Optional: override for rewards CSV
 ```
@@ -367,7 +360,7 @@ To test Netlify Blobs locally, use `netlify dev` (requires Netlify CLI), which i
 - `.env.local` → secrets file, never read or display its contents
 
 ### CSV schema contract
-Column names in CSV data are the source of truth for metric keys throughout the stats engine. Metric keys like `"Avg. Final Position"` or `"Driver Rating"` flow through as raw strings from the CSV headers. Renaming a CSV column will break metric lookups throughout `statsComputed.ts`, `statsInsights.ts`, and `StatsPageContent.tsx`.
+Column names in CSV data are the source of truth for metric keys throughout the stats engine. Metric keys like `"Avg. Final Position"` or `"Driver Rating"` flow through as raw strings from the CSV headers. Renaming a CSV column will break metric lookups throughout `statsComputed.ts` and `StatsPageContent.tsx`.
 
 ### Season key convention
 Always use `"S6"` format (capital S + number) for `season_key`. Use `matchesSeason()` for comparisons — never `===` directly on raw CSV values.
@@ -426,7 +419,7 @@ These files exist for development and debugging purposes. Do not expose or enabl
 | Issue | Location | Severity | Notes |
 |---|---|---|---|
 | `STEWARD_SESSION_SECRET` undocumented in README | `lib/stewards/auth.ts` | High | Must be set in Netlify or JWT is signed with a public default — now added to README |
-| `NEXT_PUBLIC_SITE_URL` undocumented in README | `lib/stewards/notifications.ts` | Low | Defaults to `https://psgil.com` |
+| `NEXT_PUBLIC_SITE_URL` undocumented in README | `lib/stewards/notifications.ts` | Low | Defaults to `https://f1isl.com` |
 | `lib/statsData.ts` legacy file still imported | Multiple | Low | Types still used; fetch functions removed; safe to keep |
 | `driver_stats_gid` field deprecated | `lib/seasonConfig.ts` | Low | Marked `@deprecated`; can be removed when fully migrated |
 | `scripts/png-to-csv.ts` uses `tsx` and Tesseract | `scripts/` | Low | Not part of the app; standalone OCR utility; `tsx` not in devDependencies |
@@ -438,6 +431,16 @@ These files exist for development and debugging purposes. Do not expose or enabl
 Driver images live at `/public/drivers/{driver_id}.webp`. The `driver_id` is the stable snake_case identifier from the `csv_drivers` tab (e.g., `shaul_ezra`, `guy_cohen`). New drivers need a `.webp` image added manually.
 
 Event poster images live at `/public/events/{event_id}.webp` or `.jpg`.
+
+### Team logos (code-only)
+
+Team logos live in `/public/teams/` and are resolved **entirely from code** via the `TEAM_LOGOS` map in `lib/driversData.ts` (see `getTeamLogo(teamKey)`). The `logo_url` column in the `csv_teams` sheet is **intentionally not consulted** — do not re-wire logo rendering to read it.
+
+To add or change a team logo:
+1. Add the file to `public/teams/` (SVG preferred; PNG fine for raster-only marks).
+2. Add or update the team's entry in `TEAM_LOGOS`, keyed by `team_key`.
+
+Logos render against a white box on `/drivers`, so monochrome/dark marks are fine. Unmapped teams fall back to `/isl-mark.png`.
 
 ---
 
@@ -459,9 +462,9 @@ Event poster images live at `/public/events/{event_id}.webp` or `.jpg`.
 | Where is the current season defined? | `csv_seasons_config` tab → `is_current = TRUE` |
 | Where is steward data stored locally? | `data/stewards/store.json` (gitignored) |
 | Where are permissions defined? | `lib/stewards/auth.ts` → `PERMISSION_MATRIX` |
-| Where does stats computation happen? | `lib/statsComputed.ts` + `lib/statsInsights.ts` |
+| Where does stats computation happen? | `lib/statsComputed.ts` (H2H in `lib/h2h.ts`) |
 | Where are H2H and rivalries computed? | `lib/h2h.ts` |
 | Where is the standings calculation? | Google Apps Script in `scripts/standings/psgil-standings.gs` |
 | Where are metric display names defined? | `lib/statsMetricRegistry.ts` |
 | Where is site copy (nav, hero text)? | `lib/siteConfig.ts` |
-| Where do emails get sent from? | `psgileague@gmail.com` via nodemailer |
+| Where do emails get sent from? | `islf1league@gmail.com` via nodemailer |

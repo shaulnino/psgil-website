@@ -1,10 +1,11 @@
 "use client";
 
 import { Suspense, useState, useEffect, useRef, useMemo } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import type { RaceEvent } from "@/lib/scheduleData";
-import { toIsraelTimestamp } from "@/lib/scheduleData";
+import { toIsraelTimestamp, localizedRaceName } from "@/lib/scheduleData";
 import type { RaceResultRow } from "@/lib/resultsData";
 import type { Driver, Team } from "@/lib/driversData";
 import type { SeasonConfig } from "@/lib/seasonConfig";
@@ -15,6 +16,7 @@ import DriverLookupProvider from "@/components/DriverLookupProvider";
 import YouTubeEmbed from "@/components/YouTubeEmbed";
 import { gaClickWatchYouTube, gaClickRaceResults } from "@/lib/ga";
 import { getYouTubeVideoId } from "@/lib/youtube";
+import { Button } from "@/components/ui/button";
 
 /* ------------------------------------------------------------------ */
 /*  Country flag image (works on Windows, macOS, all browsers)         */
@@ -44,7 +46,7 @@ function CountryFlag({
   }
   return (
     <span
-      className={`inline-flex shrink-0 items-center justify-center overflow-hidden rounded-[3px] ${className}`}
+      className={`inline-flex shrink-0 items-center justify-center overflow-hidden rounded-[2px] border border-[color:var(--isl-hairline)] ${className}`}
       style={{ width, height }}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -87,6 +89,8 @@ function WatchModal({
   event: RaceEvent;
   onClose: () => void;
 }) {
+  const t = useTranslations("schedule");
+  const locale = useLocale();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -100,7 +104,7 @@ function WatchModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[color:var(--isl-ink)]/70"
       onClick={onClose}
     >
       <div
@@ -108,22 +112,22 @@ function WatchModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="mb-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#7020B0]/20 px-2.5 py-1 text-xs font-bold uppercase tracking-[0.15em] text-[#a855f7]">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#a855f7]" />
-              Race Broadcast
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="font-isl-body inline-flex items-center gap-1.5 text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-oxblood">
+              <span className="h-1.5 w-1.5 rounded-full bg-oxblood" />
+              {t("watchModal.eyebrow")}
             </span>
-            <h3 className="font-display text-base font-semibold text-white/80 md:text-lg">
-              {event.race_name}
+            <h3 className="font-display font-bold tracking-[0.005em] leading-[1.05] text-base text-ink md:text-lg">
+              {localizedRaceName(event, locale)}
             </h3>
             {timeState === "upcoming" && event.start_time && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-medium text-white/60">
+              <span className="inline-flex items-center gap-1 rounded-[2px] border border-status-info px-2.5 py-1 text-[11px] font-medium text-status-info">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 20 20"
                   fill="currentColor"
-                  className="h-3.5 w-3.5 text-white/40"
+                  className="h-3.5 w-3.5"
                 >
                   <path
                     fillRule="evenodd"
@@ -131,21 +135,22 @@ function WatchModal({
                     clipRule="evenodd"
                   />
                 </svg>
-                Stream starts at {event.start_time}
+                {t("watchModal.streamStartsAt")} <span className="num">{event.start_time}</span>
               </span>
             )}
             {timeState === "started" && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-400">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+              <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-oxblood px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-oxblood">
+                <span className="h-1.5 w-1.5 rounded-full bg-oxblood animate-[f1-tick_1s_step-end_infinite]" />
                 {event.status.toLowerCase() === "completed"
-                  ? "Replay available"
-                  : "Live / Replay"}
+                  ? t("watchModal.replayAvailable")
+                  : t("watchModal.liveOrReplay")}
               </span>
             )}
           </div>
           <button
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/80 transition hover:text-white"
+            aria-label={t("watchModal.closeBroadcast")}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper text-xl text-ink-2 transition-colors hover:border-ink hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
           >
             ×
           </button>
@@ -154,7 +159,7 @@ function WatchModal({
         {/* Embed or placeholder */}
         <YouTubeEmbed
           youtubeUrl={event.youtube_url}
-          title={`${event.race_name} – Race Broadcast`}
+          title={`${event.race_name} ${t("watchModal.broadcastTitleSuffix")}`}
         />
 
         {/* External link fallback */}
@@ -164,7 +169,7 @@ function WatchModal({
               href={event.youtube_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-medium text-white/50 transition hover:border-white/20 hover:text-white/80"
+              className="inline-flex items-center gap-1.5 rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-1.5 text-[11px] font-medium text-ink-2 transition-colors hover:border-ink hover:text-ink"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -178,7 +183,7 @@ function WatchModal({
                   clipRule="evenodd"
                 />
               </svg>
-              Open on YouTube
+              {t("watchModal.openOnYouTube")}
             </a>
           </div>
         )}
@@ -200,6 +205,8 @@ function ResultsModal({
   tableData: RaceResultRow[];
   onClose: () => void;
 }) {
+  const t = useTranslations("schedule");
+  const locale = useLocale();
   const hasTable = tableData.length > 0;
   const hasImage = !!event.results_image;
   const [showImage, setShowImage] = useState(!hasTable && hasImage);
@@ -222,7 +229,7 @@ function ResultsModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[color:var(--isl-ink)]/70"
       onClick={onClose}
     >
       <div
@@ -230,51 +237,59 @@ function ResultsModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top bar: close + toggle */}
-        <div className="mb-3 flex items-center justify-between">
+        <div className="mb-3 flex items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-3">
-            <h3 className="font-display text-sm font-semibold text-white/80 md:text-base">
-              {event.race_name}
+            <h3 className="font-display font-bold tracking-[0.005em] leading-[1.05] text-sm text-ink md:text-base">
+              {localizedRaceName(event, locale)}
             </h3>
             {/* Race format + playoff badges */}
             {event.race_format === "sprint" && (
-              <span className="inline-flex items-center rounded-full border border-orange-500/30 bg-orange-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-orange-300/90">
-                Sprint
+              <span className="inline-flex items-center rounded-[2px] border border-[color:var(--isl-hairline-strong)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-ink-2">
+                {t("resultsModal.sprint")}
               </span>
             )}
             {event.race_format === "25%" && (
-              <span className="inline-flex items-center rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-300/90">
-                25%
+              <span className="num inline-flex items-center rounded-[2px] border border-[color:var(--isl-hairline-strong)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-ink-2">
+                {t("resultsModal.quarterDistance")}
               </span>
             )}
             {event.is_playoff && (
-              <span className="inline-flex items-center rounded-full border border-[#D4AF37]/40 bg-[#D4AF37]/12 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#D4AF37]">
-                Playoff
+              <span className="inline-flex items-center rounded-[2px] border border-brass px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brass-ink">
+                {t("resultsModal.playoff")}
               </span>
             )}
             {/* Toggle between table and image when both exist */}
             {hasTable && hasImage && (
-              <button
-                onClick={() => {
-                  setShowImage((v) => !v);
-                  setZoom(1);
-                }}
-                className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-medium uppercase tracking-wider text-white/50 transition hover:border-[#7020B0]/40 hover:text-white/80"
-              >
-                {showImage ? (
-                  <>
-                    <span>📊</span> Show table
-                  </>
-                ) : (
-                  <>
-                    <span>🖼️</span> Show image
-                  </>
-                )}
-              </button>
+              <span className="inline-flex rounded-[2px] border border-[color:var(--isl-hairline)] bg-sink p-1">
+                <button
+                  onClick={() => {
+                    setShowImage(false);
+                    setZoom(1);
+                  }}
+                  className={`rounded-[2px] px-3 py-1 text-[11px] font-medium uppercase tracking-wider transition-colors ${
+                    showImage ? "text-ink-2 hover:text-ink" : "bg-ink text-bone"
+                  }`}
+                >
+                  {t("resultsModal.table")}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowImage(true);
+                    setZoom(1);
+                  }}
+                  className={`rounded-[2px] px-3 py-1 text-[11px] font-medium uppercase tracking-wider transition-colors ${
+                    showImage ? "bg-ink text-bone" : "text-ink-2 hover:text-ink"
+                  }`}
+                >
+                  {t("resultsModal.image")}
+                </button>
+              </span>
             )}
           </div>
           <button
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/80 transition hover:text-white"
+            aria-label={t("resultsModal.closeResults")}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper text-xl text-ink-2 transition-colors hover:border-ink hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
           >
             ×
           </button>
@@ -285,24 +300,26 @@ function ResultsModal({
           <div className="mb-3 flex items-center gap-2">
             <button
               onClick={() => setZoom((z) => clamp(z - 0.25))}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/80 transition hover:text-white"
+              aria-label={t("resultsModal.zoomOut")}
+              className="flex h-11 w-11 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper text-ink-2 transition-colors hover:border-ink hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
             >
               −
             </button>
-            <span className="text-xs text-white/60">
+            <span className="num text-xs text-meta">
               {Math.round(zoom * 100)}%
             </span>
             <button
               onClick={() => setZoom((z) => clamp(z + 0.25))}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/80 transition hover:text-white"
+              aria-label={t("resultsModal.zoomIn")}
+              className="flex h-11 w-11 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper text-ink-2 transition-colors hover:border-ink hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
             >
               +
             </button>
             <button
               onClick={() => setZoom(1)}
-              className="flex h-8 items-center justify-center rounded-full border border-white/20 bg-black/60 px-3 text-xs text-white/80 transition hover:text-white"
+              className="flex h-11 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 text-xs text-ink-2 transition-colors hover:border-ink hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
             >
-              Reset
+              {t("resultsModal.reset")}
             </button>
           </div>
         )}
@@ -311,7 +328,7 @@ function ResultsModal({
         {showImage && hasImage ? (
           <div
             ref={scrollRef}
-            className={`max-h-[85vh] overflow-auto rounded-2xl border border-white/10 bg-[#0B0B0E] p-3 shadow-[0_0_30px_rgba(0,0,0,0.4)] ${
+            className={`max-h-[85vh] overflow-auto rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-3 ${
               zoom > 1
                 ? isDragging
                   ? "cursor-grabbing"
@@ -359,16 +376,16 @@ function ResultsModal({
             />
           </div>
         ) : hasTable ? (
-          <div className="max-h-[85vh] overflow-auto rounded-2xl border border-white/10 bg-[#0B0B0E] p-3 shadow-[0_0_30px_rgba(0,0,0,0.4)]">
+          <div className="max-h-[85vh] overflow-auto rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-3">
             <RaceResultsTable
               results={tableData}
-              caption={`${event.race_name} — Race Results`}
+              caption={`${event.race_name} ${t("resultsModal.resultsCaptionSuffix")}`}
             />
           </div>
         ) : (
-          <div className="flex items-center justify-center rounded-2xl border border-white/10 bg-[#0B0B0E] py-16">
-            <p className="text-sm text-white/50">
-              Results not available yet.
+          <div className="flex items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper py-16">
+            <p className="text-sm text-meta">
+              {t("resultsModal.resultsNotAvailable")}
             </p>
           </div>
         )}
@@ -395,6 +412,8 @@ function PosterModal({
   onShowResults: () => void;
   onWatch: () => void;
 }) {
+  const t = useTranslations("schedule");
+  const locale = useLocale();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -411,7 +430,7 @@ function PosterModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[color:var(--isl-ink)]/70"
       onClick={onClose}
     >
       <div
@@ -420,14 +439,15 @@ function PosterModal({
       >
         <button
           onClick={onClose}
-          className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/80 transition hover:text-white"
+          aria-label={t("posterModal.closePoster")}
+          className="absolute end-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper text-xl text-ink-2 transition-colors hover:border-ink hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
         >
           ×
         </button>
 
-        <div className="max-h-[90vh] overflow-hidden overflow-y-auto rounded-2xl border border-white/10 bg-[#0B0B0E] shadow-[0_0_30px_rgba(0,0,0,0.4)]">
+        <div className="max-h-[90vh] overflow-hidden overflow-y-auto rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper">
           {/* Poster image */}
-          <div className="w-full overflow-hidden bg-gradient-to-br from-[#111122] via-[#0B0B0E] to-[#1b0b2e]">
+          <div className="w-full overflow-hidden border-b border-[color:var(--isl-hairline)] bg-cream">
             {hasPoster ? (
               <Image
                 src={event.poster_image!}
@@ -440,8 +460,8 @@ function PosterModal({
               />
             ) : (
               <div className="flex items-center justify-center py-20">
-                <span className="text-xs uppercase tracking-[0.2em] text-white/60">
-                  Poster not available
+                <span className="text-xs uppercase tracking-[0.2em] text-meta">
+                  {t("posterModal.posterNotAvailable")}
                 </span>
               </div>
             )}
@@ -455,47 +475,47 @@ function PosterModal({
                 width={30}
                 height={20}
               />
-              <h3 className="font-display text-lg font-semibold text-white">
-                {event.race_name}
+              <h3 className="font-display font-bold tracking-[0.005em] leading-[1.05] text-lg text-ink">
+                {localizedRaceName(event, locale)}
               </h3>
               <span
-                className={`inline-flex items-center justify-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                className={`inline-flex items-center justify-center rounded-[2px] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
                   event.league.toLowerCase() === "main"
-                    ? "bg-[#7020B0]/20 text-[#a855f7] border border-[#7020B0]/40"
-                    : "bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/30"
+                    ? "border border-[color:var(--isl-hairline-strong)] text-ink-2"
+                    : "border border-brass text-brass-ink"
                 }`}
               >
                 {event.league}
               </span>
               {/* Race format badge */}
               {event.race_format === "sprint" && (
-                <span className="inline-flex items-center rounded-full border border-orange-500/30 bg-orange-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-orange-300/90">
-                  Sprint
+                <span className="inline-flex items-center rounded-[2px] border border-[color:var(--isl-hairline-strong)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-ink-2">
+                  {t("posterModal.sprint")}
                 </span>
               )}
               {event.race_format === "25%" && (
-                <span className="inline-flex items-center rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-300/90">
-                  25%
+                <span className="num inline-flex items-center rounded-[2px] border border-[color:var(--isl-hairline-strong)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-ink-2">
+                  {t("posterModal.quarterDistance")}
                 </span>
               )}
               {/* Playoff badge */}
               {event.is_playoff && (
-                <span className="inline-flex items-center rounded-full border border-[#D4AF37]/40 bg-[#D4AF37]/12 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#D4AF37]">
-                  Playoff
+                <span className="inline-flex items-center rounded-[2px] border border-brass px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brass-ink">
+                  {t("posterModal.playoff")}
                 </span>
               )}
               {event.results_status === "provisional" && (
-                <Tooltip text="Provisional results — subject to steward decisions.">
-                  <span className="inline-flex items-center rounded-full border border-orange-400/30 bg-orange-400/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-orange-300/90">
-                    PROV
+                <Tooltip text={t("posterModal.provisionalTooltip")}>
+                  <span className="inline-flex items-center rounded-[2px] border border-status-warning px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-status-warning">
+                    {t("posterModal.provisional")}
                   </span>
                 </Tooltip>
               )}
             </div>
-            <p className="mt-1 text-sm text-white/50">
-              Season {event.season} · Race #{event.race_number} ·{" "}
-              {event.date}
-              {event.start_time && ` · ${event.start_time}`}
+            <p className="mt-1 text-sm text-meta">
+              {t("posterModal.season")} <span className="num">{event.season}</span> · {t("posterModal.race")}<span className="num">{event.race_number}</span> ·{" "}
+              <span className="num">{event.date}</span>
+              {event.start_time && <> · <span className="num">{event.start_time}</span></>}
             </p>
 
             {/* Action buttons */}
@@ -503,20 +523,14 @@ function PosterModal({
               <div className="mt-4 flex flex-wrap items-center gap-3">
                 {/* See result — only for completed races */}
                 {isCompleted && hasResults && (
-                  <button
-                    onClick={onShowResults}
-                    className="inline-flex items-center justify-center rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white/90 transition hover:border-[#7020B0]/60 hover:text-white hover:shadow-[0_0_16px_rgba(112,32,176,0.35)]"
-                  >
-                    See result
-                  </button>
+                  <Button variant="secondary" size="md" onClick={onShowResults}>
+                    {t("posterModal.seeResult")}
+                  </Button>
                 )}
 
                 {/* Watch the race — for any race with youtube_url */}
                 {hasYoutube && (
-                  <button
-                    onClick={onWatch}
-                    className="inline-flex items-center justify-center gap-2 rounded-full bg-[#7020B0] px-4 py-2 text-sm font-semibold text-white shadow-[0_0_20px_rgba(112,32,176,0.35)] transition hover:-translate-y-0.5 hover:shadow-[0_0_28px_rgba(112,32,176,0.6)]"
-                  >
+                  <Button variant="primary" size="md" onClick={onWatch}>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 20 20"
@@ -526,14 +540,14 @@ function PosterModal({
                       <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
                     </svg>
                     {timeState === "upcoming"
-                      ? "Watch live"
-                      : "Watch the race"}
-                  </button>
+                      ? t("posterModal.watchLive")
+                      : t("posterModal.watchTheRace")}
+                  </Button>
                 )}
 
                 {/* Upcoming race: show start time hint */}
                 {timeState === "upcoming" && event.start_time && (
-                  <span className="inline-flex items-center gap-1.5 text-xs text-white/40">
+                  <span className="inline-flex items-center gap-1.5 text-xs text-meta">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 20 20"
@@ -546,7 +560,7 @@ function PosterModal({
                         clipRule="evenodd"
                       />
                     </svg>
-                    Stream starts at {event.start_time}
+                    {t("posterModal.streamStartsAt")} <span className="num">{event.start_time}</span>
                   </span>
                 )}
               </div>
@@ -563,24 +577,52 @@ function PosterModal({
 /* ------------------------------------------------------------------ */
 
 function StatusBadge({ status }: { status: string }) {
-  const isCompleted = status.toLowerCase() === "completed";
-  const isCancelled = status.toLowerCase() === "cancelled";
+  const t = useTranslations("schedule");
+  const s = status.toLowerCase();
+  const isLive = s === "live";
+  const isCompleted = s === "completed";
+  const isCancelled = s === "cancelled";
+  const isPostponed = s === "postponed";
+
+  const STATUS_LABEL_KEYS: Record<string, string> = {
+    live: "status.live",
+    upcoming: "status.upcoming",
+    completed: "status.completed",
+    postponed: "status.postponed",
+    cancelled: "status.cancelled",
+    scheduled: "status.scheduled",
+  };
+  const statusLabel = STATUS_LABEL_KEYS[s] ? t(STATUS_LABEL_KEYS[s]) : status;
+
+  // Live → oxblood accent + ticking dot; others → status hue + shape/label.
+  const toneClass = isLive
+    ? "border-oxblood text-oxblood"
+    : isCompleted
+    ? "border-status-success text-status-success"
+    : isPostponed
+    ? "border-status-warning text-status-warning"
+    : isCancelled
+    ? "border-status-danger text-status-danger"
+    : "border-status-info text-status-info";
+
   return (
     <span
-      className={`inline-flex items-center justify-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider md:justify-self-center ${
-        isCompleted
-          ? "border border-emerald-500/30 bg-emerald-500/15 text-emerald-400"
-          : isCancelled
-          ? "border border-red-500/30 bg-red-500/15 text-red-400"
-          : "border border-white/10 bg-white/5 text-white/50"
-      }`}
+      className={`inline-flex items-center justify-center gap-1 rounded-[2px] border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider md:justify-self-center ${toneClass}`}
     >
-      <span
-        className={`h-1.5 w-1.5 shrink-0 rounded-full ${
-          isCompleted ? "bg-emerald-400" : isCancelled ? "bg-red-400" : "bg-white/40"
-        }`}
-      />
-      {status}
+      {/* Distinct glyph per state (shape, not hue alone) */}
+      {isCancelled ? (
+        <span aria-hidden className="shrink-0 leading-none">✕</span>
+      ) : isPostponed ? (
+        <span aria-hidden className="shrink-0 leading-none">‖</span>
+      ) : (
+        <span
+          aria-hidden
+          className={`h-1.5 w-1.5 shrink-0 rounded-full bg-current ${
+            isLive ? "animate-[f1-tick_1s_step-end_infinite]" : ""
+          }`}
+        />
+      )}
+      {statusLabel}
     </span>
   );
 }
@@ -599,7 +641,7 @@ function Tooltip({
   return (
     <span className="group/tip relative inline-flex">
       {children}
-      <span className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-[#1a1a2e] px-2.5 py-1 text-[11px] font-medium text-white/90 opacity-0 shadow-lg ring-1 ring-white/10 transition-opacity group-hover/tip:opacity-100">
+      <span className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2 whitespace-nowrap rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-2.5 py-1 text-[11px] font-medium text-ink opacity-0 transition-opacity group-hover/tip:opacity-100">
         {text}
       </span>
     </span>
@@ -688,6 +730,7 @@ function CloudSunRainIcon({ className = "" }: { className?: string }) {
 /* ------------------------------------------------------------------ */
 
 function RaceBadges({ event }: { event: RaceEvent }) {
+  const t = useTranslations("schedule");
   const weather = event.weather;
   const safetyCars = event.safety_cars ?? 0;
   const reverseGrid = event.reverse_grid === "yes";
@@ -702,78 +745,78 @@ function RaceBadges({ event }: { event: RaceEvent }) {
     <span className="inline-flex flex-wrap items-center gap-1.5">
       {/* Race format */}
       {raceFormat === "sprint" && (
-        <Tooltip text="Sprint Race (short format)">
-          <span className="inline-flex items-center gap-1 rounded-md border border-orange-500/30 bg-orange-500/10 px-1.5 py-0.5 text-xs font-bold leading-none text-orange-300/90">
-            Sprint
+        <Tooltip text={t("badges.sprintTooltip")}>
+          <span className="inline-flex items-center gap-1 rounded-[2px] border border-[color:var(--isl-hairline-strong)] px-1.5 py-0.5 text-xs font-bold leading-none text-ink-2">
+            {t("resultsModal.sprint")}
           </span>
         </Tooltip>
       )}
       {raceFormat === "25%" && (
-        <Tooltip text="25% Race distance">
-          <span className="inline-flex items-center gap-1 rounded-md border border-amber-400/30 bg-amber-400/10 px-1.5 py-0.5 text-xs font-bold leading-none text-amber-300/90">
-            25%
+        <Tooltip text={t("badges.quarterDistanceTooltip")}>
+          <span className="num inline-flex items-center gap-1 rounded-[2px] border border-[color:var(--isl-hairline-strong)] px-1.5 py-0.5 text-xs font-bold leading-none text-ink-2">
+            {t("resultsModal.quarterDistance")}
           </span>
         </Tooltip>
       )}
 
       {/* Playoff round */}
       {isPlayoff && (
-        <Tooltip text="Playoff round">
-          <span className="inline-flex items-center gap-1 rounded-md border border-[#D4AF37]/40 bg-[#D4AF37]/12 px-1.5 py-0.5 text-xs font-bold leading-none text-[#D4AF37]">
-            Playoff
+        <Tooltip text={t("badges.playoffTooltip")}>
+          <span className="inline-flex items-center gap-1 rounded-[2px] border border-brass px-1.5 py-0.5 text-xs font-bold leading-none text-brass-ink">
+            {t("resultsModal.playoff")}
           </span>
         </Tooltip>
       )}
 
       {/* Provisional results */}
       {isProvisional && (
-        <Tooltip text="Provisional results — subject to steward decisions.">
-          <span className="inline-flex items-center gap-1 rounded-md border border-orange-400/30 bg-orange-400/10 px-1.5 py-0.5 text-xs font-bold leading-none text-orange-300/90">
-            PROV
+        <Tooltip text={t("badges.provisionalTooltip")}>
+          <span className="inline-flex items-center gap-1 rounded-[2px] border border-status-warning px-1.5 py-0.5 text-xs font-bold leading-none text-status-warning">
+            {t("posterModal.provisional")}
           </span>
         </Tooltip>
       )}
 
       {/* Weather */}
       {weather === "dry" && (
-        <Tooltip text="Weather: Dry race">
-          <span className="inline-flex items-center gap-1 rounded-md border border-amber-500/25 bg-amber-500/10 px-1.5 py-0.5 text-xs font-medium leading-none text-amber-300/90">
+        <Tooltip text={t("badges.dryTooltip")}>
+          <span className="inline-flex items-center gap-1 rounded-[2px] border border-status-warning px-1.5 py-0.5 text-xs font-medium leading-none text-status-warning">
             <SunIcon className="shrink-0" />
-            Dry
+            {t("badges.dry")}
           </span>
         </Tooltip>
       )}
       {weather === "wet" && (
-        <Tooltip text="Weather: Wet race">
-          <span className="inline-flex items-center gap-1 rounded-md border border-sky-400/25 bg-sky-400/10 px-1.5 py-0.5 text-xs font-medium leading-none text-sky-300/90">
+        <Tooltip text={t("badges.wetTooltip")}>
+          <span className="inline-flex items-center gap-1 rounded-[2px] border border-status-info px-1.5 py-0.5 text-xs font-medium leading-none text-status-info">
             <CloudRainIcon className="shrink-0" />
-            Wet
+            {t("badges.wet")}
           </span>
         </Tooltip>
       )}
       {weather === "mixed" && (
-        <Tooltip text="Weather: Mixed conditions (dry & wet)">
-          <span className="inline-flex items-center gap-1 rounded-md border border-teal-400/25 bg-teal-400/10 px-1.5 py-0.5 text-xs font-medium leading-none text-teal-300/90">
+        <Tooltip text={t("badges.mixedTooltip")}>
+          <span className="inline-flex items-center gap-1 rounded-[2px] border border-[color:var(--isl-hairline-strong)] px-1.5 py-0.5 text-xs font-medium leading-none text-ink-2">
             <CloudSunRainIcon className="shrink-0" />
-            Mixed
+            {t("badges.mixed")}
           </span>
         </Tooltip>
       )}
 
       {/* Safety cars */}
       {safetyCars > 0 && (
-        <Tooltip text={`Safety Cars: ${safetyCars}`}>
-          <span className="inline-flex items-center gap-1 rounded-md border border-yellow-400/25 bg-yellow-400/10 px-1.5 py-0.5 text-xs font-bold leading-none text-yellow-300/90">
+        <Tooltip text={t("badges.safetyCarsTooltip", { count: safetyCars })}>
+          <span className="inline-flex items-center gap-1 rounded-[2px] border border-status-warning px-1.5 py-0.5 text-xs font-bold leading-none text-status-warning">
             SC
-            <span className="font-semibold">{safetyCars}</span>
+            <span className="num font-semibold">{safetyCars}</span>
           </span>
         </Tooltip>
       )}
 
       {/* Reverse grid */}
       {reverseGrid && (
-        <Tooltip text="Reverse grid was used for this race">
-          <span className="inline-flex items-center gap-1 rounded-md border border-[#a855f7]/30 bg-[#a855f7]/10 px-1.5 py-0.5 text-xs font-medium leading-none text-[#c084fc]/90">
+        <Tooltip text={t("badges.reverseGridTooltip")}>
+          <span className="inline-flex items-center gap-1 rounded-[2px] border border-[color:var(--isl-hairline-strong)] px-1.5 py-0.5 text-xs font-medium leading-none text-ink-2">
             RG
           </span>
         </Tooltip>
@@ -790,10 +833,10 @@ function LeagueBadge({ league }: { league: string }) {
   const isMain = league.toLowerCase() === "main";
   return (
     <span
-      className={`inline-flex items-center justify-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider md:justify-self-center ${
+      className={`inline-flex items-center justify-center rounded-[2px] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider md:justify-self-center ${
         isMain
-          ? "border border-[#7020B0]/40 bg-[#7020B0]/20 text-[#a855f7]"
-          : "border border-[#D4AF37]/30 bg-[#D4AF37]/15 text-[#D4AF37]"
+          ? "border border-[color:var(--isl-hairline-strong)] text-ink-2"
+          : "border border-brass text-brass-ink"
       }`}
     >
       {league}
@@ -824,6 +867,8 @@ function ScheduleListInner({
   allDrivers = [],
   allTeams = [],
 }: ScheduleListProps) {
+  const t = useTranslations("schedule");
+  const locale = useLocale();
   const searchParams = useSearchParams();
   const selectedSeasonKey =
     searchParams.get("season") || defaultSeasonKey;
@@ -882,9 +927,9 @@ function ScheduleListInner({
 
   if (seasonsConfig.length === 0) {
     return (
-      <div className="flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 py-16">
-        <p className="text-sm text-white/50">
-          No race events available yet.
+      <div className="flex items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream py-16">
+        <p className="text-sm text-meta">
+          {t("list.noEventsAvailable")}
         </p>
       </div>
     );
@@ -902,9 +947,9 @@ function ScheduleListInner({
       </div>
 
       {events.length === 0 && (
-        <div className="flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 py-16">
-          <p className="text-sm text-white/50">
-            No race events available for this season.
+        <div className="flex items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream py-16">
+          <p className="text-sm text-meta">
+            {t("list.noEventsForSeason")}
           </p>
         </div>
       )}
@@ -912,15 +957,15 @@ function ScheduleListInner({
       {events.length > 0 && (
         <div className="flex flex-col gap-10">
           <div>
-            <div className="overflow-hidden rounded-2xl border border-white/10">
+            <div className="overflow-hidden rounded-[2px] border border-[color:var(--isl-hairline)]">
               {/* Desktop header */}
-              <div className="hidden border-b border-white/10 bg-white/5 px-5 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white/40 md:grid md:grid-cols-[60px_1fr_120px_100px_100px_90px_36px]">
-                <span>#</span>
-                <span>Race</span>
-                <span className="text-center">Date</span>
-                <span className="text-center">League</span>
-                <span className="text-center">Status</span>
-                <span className="text-center">Flag</span>
+              <div className="hidden border-b border-[color:var(--isl-hairline)] bg-sink px-5 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-meta md:grid md:grid-cols-[60px_1fr_120px_100px_100px_90px_36px]">
+                <span>{t("list.headerNumber")}</span>
+                <span>{t("list.headerRace")}</span>
+                <span className="text-center">{t("list.headerDate")}</span>
+                <span className="text-center">{t("list.headerLeague")}</span>
+                <span className="text-center">{t("list.headerStatus")}</span>
+                <span className="text-center">{t("list.headerFlag")}</span>
                 <span />
               </div>
 
@@ -931,21 +976,21 @@ function ScheduleListInner({
                     id={event.event_id}
                     type="button"
                     onClick={() => setPosterEvent(event)}
-                    className="group relative flex w-full cursor-pointer flex-col gap-2 border-b border-white/5 px-5 py-4 text-left transition-colors hover:bg-white/[0.04] focus-visible:bg-white/[0.04] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[#7020B0]/60 md:grid md:grid-cols-[60px_1fr_120px_100px_100px_90px_36px] md:items-center md:gap-0"
+                    className="group relative flex w-full cursor-pointer flex-col gap-2 border-b border-[color:var(--isl-hairline)] bg-cream px-5 py-4 text-left transition-colors hover:bg-paper focus-visible:bg-paper focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[color:var(--isl-oxblood)] md:grid md:grid-cols-[60px_1fr_120px_100px_100px_90px_36px] md:items-center md:gap-0"
                   >
                     {/* Left accent bar — visible on hover/focus */}
-                    <span className="pointer-events-none absolute inset-y-0 left-0 w-[3px] rounded-r bg-[#7020B0] opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" />
+                    <span className="pointer-events-none absolute inset-y-0 start-0 w-[3px] bg-oxblood opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" />
 
                     {/* Race number */}
                     <div className="flex items-center gap-3 md:contents">
-                      <span className="font-display text-sm font-semibold text-[#D4AF37]">
+                      <span className="num font-display text-sm font-semibold text-oxblood">
                         #{event.race_number}
                       </span>
 
                       {/* Race name + metadata badges */}
-                      <span className="font-display text-sm font-semibold text-white md:text-base">
+                      <span className="font-display text-sm font-semibold text-ink md:text-base">
                         <span className="inline-flex flex-wrap items-center gap-2">
-                          {event.race_name}
+                          {localizedRaceName(event, locale)}
                           <RaceBadges event={event} />
                         </span>
                       </span>
@@ -953,12 +998,12 @@ function ScheduleListInner({
 
                     {/* Mobile: meta row */}
                     <div className="flex flex-wrap items-center gap-3 md:contents">
-                      <span className="text-xs text-white/50 md:text-center md:text-sm">
+                      <span className="num text-xs text-ink-2 md:text-center md:text-sm">
                         {event.date}
                       </span>
                       <LeagueBadge league={event.league} />
                       <StatusBadge status={event.status} />
-                      <span className="ml-auto md:ml-0 md:flex md:justify-center">
+                      <span className="ms-auto md:ms-0 md:flex md:justify-center">
                         <CountryFlag
                           code={event.country_code}
                           width={30}
@@ -969,14 +1014,14 @@ function ScheduleListInner({
 
                     {/* Chevron + Open label */}
                     <span className="hidden items-center justify-end gap-1 md:flex">
-                      <span className="text-[10px] font-medium uppercase tracking-wider text-white/0 transition-all group-hover:text-white/50 group-focus-visible:text-white/50">
-                        Open
+                      <span className="text-[10px] font-medium uppercase tracking-wider text-transparent transition-colors group-hover:text-meta group-focus-visible:text-meta">
+                        {t("list.open")}
                       </span>
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 20 20"
                         fill="currentColor"
-                        className="h-4 w-4 text-white/30 transition-all group-hover:translate-x-0.5 group-hover:text-white/80 group-focus-visible:translate-x-0.5 group-focus-visible:text-white/80"
+                        className="h-4 w-4 text-faint transition-all group-hover:translate-x-0.5 group-hover:text-ink group-focus-visible:translate-x-0.5 group-focus-visible:text-ink rtl:scale-x-[-1]"
                       >
                         <path fillRule="evenodd" d="M8.22 5.22a.75.75 0 011.06 0l4.25 4.25a.75.75 0 010 1.06l-4.25 4.25a.75.75 0 01-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 010-1.06z" clipRule="evenodd" />
                       </svg>
@@ -1042,15 +1087,18 @@ function ScheduleListInner({
 /*  Exported wrapper (Suspense required for useSearchParams)            */
 /* ------------------------------------------------------------------ */
 
+function ScheduleListFallback() {
+  const t = useTranslations("schedule");
+  return (
+    <div className="flex items-center justify-center py-16">
+      <p className="text-sm text-meta">{t("list.loading")}</p>
+    </div>
+  );
+}
+
 export default function ScheduleList(props: ScheduleListProps) {
   return (
-    <Suspense
-      fallback={
-        <div className="flex items-center justify-center py-16">
-          <p className="text-sm text-white/40">Loading schedule…</p>
-        </div>
-      }
-    >
+    <Suspense fallback={<ScheduleListFallback />}>
       <ScheduleListInner {...props} />
     </Suspense>
   );

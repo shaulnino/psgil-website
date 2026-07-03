@@ -1,7 +1,7 @@
 /**
  * GET /api/stats-export
  *
- * JSON data bridge for the PSGiL Editor agent.
+ * JSON data bridge for the ISL Editor agent.
  * Returns fully-computed driver stats, circuit stats, league stats,
  * and driver ratings — the same data that would previously have come
  * from the deprecated Google Sheets stats tabs.

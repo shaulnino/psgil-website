@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 type PastedImage = { id: string; file: File; previewUrl: string };
 
 export default function EvidencePasteBox() {
+  const t = useTranslations("stewards");
   const [images, setImages] = useState<PastedImage[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const dropZoneRef = useRef<HTMLDivElement | null>(null);
@@ -51,18 +53,18 @@ export default function EvidencePasteBox() {
   // drag-and-drop support
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    dropZoneRef.current?.classList.remove("border-steward-gold");
+    dropZoneRef.current?.classList.remove("border-oxblood");
     const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith("image/"));
     for (const f of files) addImageFile(f);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    dropZoneRef.current?.classList.add("border-steward-gold");
+    dropZoneRef.current?.classList.add("border-oxblood");
   };
 
   const handleDragLeave = () => {
-    dropZoneRef.current?.classList.remove("border-steward-gold");
+    dropZoneRef.current?.classList.remove("border-oxblood");
   };
 
   return (
@@ -84,11 +86,13 @@ export default function EvidencePasteBox() {
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
-        className="flex min-h-[72px] cursor-default items-center justify-center rounded-xl border border-dashed border-steward-gold/40 bg-black/20 px-4 py-4 text-center transition-colors duration-150"
+        className="flex min-h-[72px] cursor-default items-center justify-center rounded-[2px] border border-dashed border-[color:var(--isl-hairline-strong)] bg-cream px-4 py-4 text-center transition-colors duration-150"
       >
         {images.length === 0 ? (
-          <p className="text-sm text-white/50">
-            <span className="font-semibold text-steward-gold">Paste a screenshot</span> anywhere (Ctrl+V) or drop an image here
+          <p className="text-sm text-meta">
+            {t.rich("cases.evidence.pasteHint", {
+              strong: (chunks) => <span className="font-semibold text-oxblood">{chunks}</span>,
+            })}
           </p>
         ) : (
           <div className="flex flex-wrap gap-3">
@@ -98,32 +102,32 @@ export default function EvidencePasteBox() {
                 <img
                   src={img.previewUrl}
                   alt={img.file.name}
-                  className="h-20 w-28 rounded-lg border border-steward-gold/30 object-cover shadow-md"
+                  className="h-20 w-28 rounded-[2px] border border-[color:var(--isl-hairline)] object-cover"
                 />
                 <button
                   type="button"
                   onClick={() => removeImage(img.id)}
-                  className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white opacity-0 shadow transition-opacity group-hover:opacity-100"
-                  aria-label="Remove image"
+                  className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-oxblood text-[10px] font-bold text-bone opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
+                  aria-label={t("cases.evidence.removeImage")}
                 >
                   ✕
                 </button>
-                <p className="mt-1 max-w-[112px] truncate text-[10px] text-white/50">{img.file.name}</p>
+                <p className="mt-1 max-w-[112px] truncate text-[10px] text-meta">{img.file.name}</p>
               </div>
             ))}
             <button
               type="button"
               onClick={() => dropZoneRef.current?.dispatchEvent(new Event("click"))}
-              className="flex h-20 w-28 items-center justify-center rounded-lg border border-dashed border-steward-gold/30 text-xs text-white/40 hover:border-steward-gold/70 hover:text-white/70 transition-colors"
+              className="flex h-20 w-28 items-center justify-center rounded-[2px] border border-dashed border-[color:var(--isl-hairline)] text-xs text-faint transition-colors hover:border-oxblood hover:text-ink-2"
             >
-              + Add more
+              {t("cases.evidence.addMore")}
             </button>
           </div>
         )}
       </div>
 
-      <p className="text-[11px] text-white/45">
-        Screenshots pasted via Ctrl+V are attached automatically. You can also drag &amp; drop image files above.
+      <p className="text-[11px] text-faint">
+        {t("cases.evidence.pasteNote")}
       </p>
     </div>
   );

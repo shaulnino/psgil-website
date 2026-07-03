@@ -658,7 +658,7 @@ function computeDriverStreaks(
 /* ------------------------------------------------------------------ */
 /*  Rating computation (min-max normalization across all drivers)      */
 /*                                                                     */
-/*  Formulas provided by PSGiL:                                        */
+/*  Formulas provided by ISL:                                        */
 /*  Speed:       0.65×avgGrid_inv + 0.25×avgFinish_inv                 */
 /*               + 0.05×posChanges_norm + 0.05×poles_ratio_norm        */
 /*  Consistency: 100 − (0.5×posChangeAbs_norm + 0.5×dnfRate_norm) × 50*/

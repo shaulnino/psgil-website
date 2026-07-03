@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import LoadingLink from "@/components/LoadingLink";
 import NewsCategoryTag from "@/components/NewsCategoryTag";
 import NewsImage from "@/components/NewsImage";
@@ -14,6 +15,8 @@ type NewsCarouselProps = {
 const AUTO_ADVANCE_MS = 6000;
 
 export default function NewsCarousel({ articles }: NewsCarouselProps) {
+  const t = useTranslations("news");
+  const locale = useLocale();
   const [index, setIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
@@ -35,8 +38,8 @@ export default function NewsCarousel({ articles }: NewsCarouselProps) {
 
   if (total === 0 || !active) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-sm text-white/65">
-        No published articles yet.
+      <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-6 text-sm text-ink-2">
+        {t("carousel.empty")}
       </div>
     );
   }
@@ -46,7 +49,7 @@ export default function NewsCarousel({ articles }: NewsCarouselProps) {
 
   return (
     <div
-      className="relative rounded-2xl border border-white/10 bg-[#111118]/90"
+      className="relative rounded-[2px] border border-brass bg-cream"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onTouchStart={(e) => setTouchStartX(e.touches[0]?.clientX ?? null)}
@@ -61,39 +64,38 @@ export default function NewsCarousel({ articles }: NewsCarouselProps) {
         setTouchStartX(null);
       }}
     >
-      <LoadingLink href={`/news/${encodeURIComponent(active.slug)}`} className="block">
+      <LoadingLink href={`/news/${encodeURIComponent(active.slug)}`} className="group block">
         <div className="grid gap-0 md:grid-cols-2">
-          <div className="relative h-60 overflow-hidden rounded-t-2xl md:h-full md:rounded-l-2xl md:rounded-tr-none">
+          <div className="relative h-60 overflow-hidden rounded-t-[2px] border-b border-brass md:h-full md:rounded-none md:border-b-0 md:border-e md:border-brass">
             <NewsImage
               src={active.coverImageUrl}
               alt={active.title}
               loading="lazy"
               className="h-full w-full object-cover"
             />
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-black/20 to-transparent" />
           </div>
           <div className="flex flex-col justify-between p-6 md:p-7">
             <div>
               {total > 1 && (
-                <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/45">
-                  Story {index + 1} of {total}
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-meta">
+                  <span className="num">{t("carousel.storyOf", { current: index + 1, total })}</span>
                 </p>
               )}
               <div className="flex flex-wrap items-center gap-2">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#D4AF37]/70">
-                  {formatNewsDate(active.date)}
+                <p className="num-date text-xs font-semibold uppercase tracking-[0.16em] text-meta">
+                  {formatNewsDate(active.date, locale)}
                 </p>
                 <NewsCategoryTag category={active.category} />
               </div>
-              <h3 className="mt-3 font-display text-2xl font-bold tracking-wide text-white">
+              <h3 className="mt-3 font-display text-2xl font-bold tracking-[0.005em] leading-[1.05] text-ink">
                 {active.title}
               </h3>
-              <p className="mt-3 text-sm leading-6 text-white/70">
+              <p className="mt-3 text-sm leading-6 text-ink-2">
                 {active.excerpt}
               </p>
             </div>
-            <span className="mt-6 inline-flex w-fit items-center rounded-full bg-[#7020B0] px-4 py-2 text-sm font-semibold text-white shadow-[0_0_18px_rgba(112,32,176,0.35)]">
-              Read
+            <span className="mt-6 inline-flex w-fit items-center rounded-[2px] border-b border-transparent text-sm font-medium uppercase tracking-[0.08em] text-ink group-hover:border-oxblood">
+              {t("carousel.read")}
             </span>
           </div>
         </div>
@@ -104,20 +106,20 @@ export default function NewsCarousel({ articles }: NewsCarouselProps) {
           <button
             type="button"
             onClick={prev}
-            className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full border border-white/15 bg-black/45 p-2 text-white/90 transition hover:border-white/30 hover:bg-black/65"
-            aria-label="Previous article"
+            className="absolute start-3 top-1/2 -translate-y-1/2 rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-2 text-ink transition-colors hover:border-ink"
+            aria-label={t("carousel.prevAria")}
           >
-            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg className="h-4 w-4 rtl:scale-x-[-1]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 18l-6-6 6-6" />
             </svg>
           </button>
           <button
             type="button"
             onClick={next}
-            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full border border-white/15 bg-black/45 p-2 text-white/90 transition hover:border-white/30 hover:bg-black/65"
-            aria-label="Next article"
+            className="absolute end-3 top-1/2 -translate-y-1/2 rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-2 text-ink transition-colors hover:border-ink"
+            aria-label={t("carousel.nextAria")}
           >
-            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg className="h-4 w-4 rtl:scale-x-[-1]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 6l6 6-6 6" />
             </svg>
           </button>
@@ -127,10 +129,10 @@ export default function NewsCarousel({ articles }: NewsCarouselProps) {
                 key={article.id}
                 type="button"
                 onClick={() => setIndex(i)}
-                className={`h-2.5 w-2.5 rounded-full transition ${
-                  i === index ? "bg-[#D4AF37]" : "bg-white/35 hover:bg-white/60"
+                className={`h-2.5 w-2.5 rounded-full transition-colors ${
+                  i === index ? "bg-oxblood" : "bg-sink hover:bg-ink-2"
                 }`}
-                aria-label={`Go to article ${i + 1}`}
+                aria-label={t("carousel.goToAria", { index: i + 1 })}
               />
             ))}
           </div>
@@ -140,4 +142,3 @@ export default function NewsCarousel({ articles }: NewsCarouselProps) {
     </div>
   );
 }
-

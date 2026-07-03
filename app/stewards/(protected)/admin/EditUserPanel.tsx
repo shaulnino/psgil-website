@@ -2,41 +2,45 @@
 
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
+import { useTranslations } from "next-intl";
 import { editUserAction } from "@/app/stewards/actions";
 import Modal from "@/app/stewards/components/Modal";
+import { Button } from "@/components/ui/button";
 
 type Props = {
   user: { id: string; name: string; email: string; mustChangePassword: boolean };
 };
 
 export default function EditUserPanel({ user }: Props) {
+  const t = useTranslations("stewards");
   const [open, setOpen] = useState(false);
   const [showPw, setShowPw] = useState(false);
 
   const inputCls =
-    "w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white/90 focus:border-steward-gold/50 focus:outline-none transition";
+    "w-full rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2 text-sm text-ink placeholder:text-faint focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)] transition";
 
   return (
     <>
-      <button
+      <Button
         type="button"
+        variant="secondary"
+        size="sm"
         onClick={() => setOpen((v) => !v)}
-        className="rounded-full border border-steward-gold/40 bg-steward-gold/10 px-3 py-1 text-xs font-semibold text-steward-cream transition hover:border-steward-gold/70 hover:bg-steward-gold/20"
       >
-        Edit
-      </button>
+        {t("admin.editUser.trigger")}
+      </Button>
 
       <Modal open={open} onClose={() => setOpen(false)}>
-          <div className="w-full max-w-md rounded-2xl border border-steward-gold/30 bg-[#13131f] shadow-[0_24px_60px_rgba(0,0,0,0.6)] flex flex-col">
+          <div className="w-full max-w-md rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper flex flex-col">
             {/* header */}
-            <div className="border-b border-white/10 px-6 py-4 flex items-center justify-between">
+            <div className="border-b border-[color:var(--isl-hairline)] px-6 py-4 flex items-center justify-between">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-steward-gold/70">Edit User</p>
+                <p className="font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-brass-ink">{t("admin.editUser.heading")}</p>
                 <div className="mt-0.5 flex items-center gap-2">
-                  <p className="text-sm font-semibold text-white/90">{user.name}</p>
+                  <p className="text-sm font-semibold text-ink">{user.name}</p>
                   {user.mustChangePassword && (
-                    <span className="rounded-full bg-amber-500/15 border border-amber-500/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-300">
-                      Must change password
+                    <span className="rounded-[2px] border border-status-warning px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-status-warning">
+                      {t("admin.editUser.mustChangePassword")}
                     </span>
                   )}
                 </div>
@@ -44,7 +48,8 @@ export default function EditUserPanel({ user }: Props) {
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="text-white/40 hover:text-white transition text-lg leading-none"
+                aria-label={t("admin.editUser.close")}
+                className="flex h-11 w-11 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper text-lg leading-none text-ink-2 transition-colors hover:border-ink hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
               >
                 ✕
               </button>
@@ -61,56 +66,56 @@ export default function EditUserPanel({ user }: Props) {
               <input type="hidden" name="user_id" value={user.id} />
 
               <label className="block">
-                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">Name</span>
+                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-meta">{t("admin.editUser.name")}</span>
                 <input name="name" required defaultValue={user.name} className={inputCls} />
               </label>
 
               <label className="block">
-                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">Email</span>
+                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-meta">{t("admin.editUser.email")}</span>
                 <input name="email" type="email" required defaultValue={user.email} className={inputCls} />
               </label>
 
               <div>
                 <div className="mb-1.5 flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-white/60">
-                    Reset password
+                  <span className="text-xs font-semibold uppercase tracking-wider text-meta">
+                    {t("admin.editUser.resetPassword")}
                   </span>
-                  <span className="text-[10px] text-white/35">(leave blank to keep current)</span>
+                  <span className="text-[10px] text-faint">{t("admin.editUser.leaveBlank")}</span>
                 </div>
-                <p className="mb-2 text-[11px] text-amber-300/70">
-                  Setting a new password will force the user to change it on next login.
+                <p className="mb-2 text-[11px] text-status-warning">
+                  {t("admin.editUser.forceChangeNote")}
                 </p>
                 <div className="relative">
                   <input
                     name="password"
                     type={showPw ? "text" : "password"}
-                    placeholder="Enter new password…"
-                    className={`${inputCls} pr-16`}
+                    placeholder={t("admin.editUser.passwordPlaceholder")}
+                    className={`${inputCls} pe-16`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPw((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-steward-gold/70 hover:text-steward-gold transition"
+                    className="absolute end-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-brass-ink transition-colors hover:text-oxblood-deep"
                   >
-                    {showPw ? "HIDE" : "SHOW"}
+                    {showPw ? t("admin.editUser.hide") : t("admin.editUser.show")}
                   </button>
                 </div>
                 {showPw && (
-                  <p className="mt-1.5 text-[10px] text-amber-400/70">
-                    ⚠ Password is visible — share it securely with the user
+                  <p className="mt-1.5 text-[10px] text-status-warning">
+                    {t("admin.editUser.visibleWarning")}
                   </p>
                 )}
               </div>
 
               <div className="flex items-center gap-3 pt-2">
                 <SaveButton />
-                <button
+                <Button
                   type="button"
+                  variant="secondary"
                   onClick={() => setOpen(false)}
-                  className="rounded-full border border-white/15 px-5 py-2 text-sm text-white/60 transition hover:border-white/30 hover:text-white"
                 >
-                  Cancel
-                </button>
+                  {t("admin.editUser.cancel")}
+                </Button>
               </div>
             </form>
           </div>
@@ -120,14 +125,11 @@ export default function EditUserPanel({ user }: Props) {
 }
 
 function SaveButton() {
+  const t = useTranslations("stewards");
   const { pending } = useFormStatus();
   return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="rounded-full bg-[#7020B0] px-5 py-2 text-sm font-semibold shadow-[0_0_14px_rgba(112,32,176,0.3)] transition hover:bg-[#7c2ac3] disabled:opacity-60"
-    >
-      {pending ? "Saving…" : "Save Changes"}
-    </button>
+    <Button type="submit" variant="primary" disabled={pending}>
+      {pending ? t("admin.editUser.saving") : t("admin.editUser.saveChanges")}
+    </Button>
   );
 }

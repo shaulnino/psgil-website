@@ -1,0 +1,33 @@
+name: CI
+
+# Phase 0 regression net: fast, deterministic checks on every PR.
+# `tsc --noEmit` is the HARD gate (currently green). `next build` runs on
+# Netlify at deploy time (it fetches live CSV during prerender, which would
+# make CI network-flaky, so it's not run here).
+# Lint is NON-BLOCKING for now: the codebase carries a pre-existing lint
+# baseline (~36 errors on `main`, unrelated to the rebrand). Strict lint +
+# the color/RTL grep guards are turned into hard gates in roadmap Phase 10,
+# after the migration cleans that baseline — enforcing them now would fail
+# on pre-migration code. Until then the step still runs and surfaces output.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Type-check
+        run: npx tsc --noEmit
+      - name: Lint (non-blocking until Phase 10 — see header note)
+        run: npm run lint
+        continue-on-error: true

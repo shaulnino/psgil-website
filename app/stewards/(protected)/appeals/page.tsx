@@ -1,17 +1,26 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { fmtDate } from "@/app/stewards/lib/dates";
 import { can, requireStewardUser } from "@/lib/stewards/auth";
 import { listAppeals } from "@/lib/stewards/repository";
 import type { AppealStatus } from "@/lib/stewards/types";
 
 const STATUS_STYLE: Record<AppealStatus, string> = {
-  "Submitted":     "bg-amber-400/20 text-amber-200 border-amber-400/60",
-  "Under Review":  "bg-purple-400/20 text-purple-200 border-purple-400/60",
-  "Verdict Ready": "bg-emerald-400/20 text-emerald-200 border-emerald-400/60",
-  "Closed":        "bg-green-500/20 text-green-200 border-green-500/60",
+  "Submitted":     "text-status-info border-status-info",
+  "Under Review":  "text-status-warning border-status-warning",
+  "Verdict Ready": "text-brass-ink border-brass",
+  "Closed":        "text-status-success border-status-success",
+};
+
+const STATUS_KEY: Record<AppealStatus, string> = {
+  "Submitted":     "submitted",
+  "Under Review":  "underReview",
+  "Verdict Ready": "verdictReady",
+  "Closed":        "closed",
 };
 
 export default async function AppealsListPage() {
+  const t = await getTranslations("stewards");
   const user = await requireStewardUser();
   const canSeeAll = can(user, "view_internal_discussion");
   const all = await listAppeals();
@@ -26,49 +35,49 @@ export default async function AppealsListPage() {
 
   return (
     <div className="space-y-6">
-      <section className="steward-panel rounded-2xl p-5">
-        <h2 className="font-display text-2xl font-semibold">Appeals</h2>
-        <p className="mt-1 text-white/70">
+      <section className="steward-panel rounded-[2px] p-5">
+        <h2 className="font-display font-bold tracking-[0.005em] leading-[1.05] text-ink text-2xl">{t("appeals.title")}</h2>
+        <p className="mt-1 text-ink-2">
           {canSeeAll
-            ? "All appeals filed against published case verdicts."
-            : "Appeals you have submitted."}
+            ? t("appeals.subtitleAll")
+            : t("appeals.subtitleOwn")}
         </p>
       </section>
 
       {/* Active appeals */}
-      <section className="steward-panel overflow-hidden rounded-2xl">
-        <div className="border-b border-white/10 px-5 py-4">
-          <h3 className="text-base font-semibold">Active Appeals</h3>
+      <section className="steward-panel overflow-hidden rounded-[2px]">
+        <div className="border-b border-[color:var(--isl-hairline)] px-5 py-4">
+          <h3 className="text-base font-semibold text-ink">{t("appeals.activeHeading")}</h3>
         </div>
         {active.length === 0 ? (
-          <p className="px-5 py-6 text-sm text-white/50">No active appeals.</p>
+          <p className="px-5 py-6 text-sm text-meta">{t("appeals.emptyActive")}</p>
         ) : (
-          <div className="divide-y divide-white/8">
+          <div className="divide-y divide-[color:var(--isl-hairline)]">
             {active.map(({ appeal, originalCase, submittedBy }) => (
               <Link key={appeal.id} href={`/stewards/appeals/${appeal.id}`}
-                className="group flex items-center justify-between gap-4 px-5 py-4 transition hover:bg-steward-gold/5">
+                className="group flex items-center justify-between gap-4 px-5 py-4 transition hover:bg-cream">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-semibold text-white/90 group-hover:text-white truncate">
-                      Appeal — Case #{originalCase?.caseNumber ?? "–"}
+                    <span className="font-semibold text-ink truncate">
+                      {t("appeals.caseLabel", { caseNumber: originalCase?.caseNumber ?? "–" })}
                     </span>
                     {appeal.status === "Submitted" && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 border border-amber-400/50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-amber-200">
-                        <span className="relative flex h-1.5 w-1.5"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-300 opacity-70" /><span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-amber-300" /></span>
-                        Needs Review
+                      <span className="inline-flex items-center gap-1 rounded-[2px] border border-status-warning px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-status-warning">
+                        <span className="h-1.5 w-1.5 rounded-full bg-status-warning animate-[f1-tick_1s_step-end_infinite]" />
+                        {t("appeals.needsReviewBadge")}
                       </span>
                     )}
                   </div>
-                  <p className="mt-0.5 text-xs text-white/50 truncate">
-                    {originalCase?.title} · Appellant: {submittedBy?.name ?? "—"}
+                  <p className="mt-0.5 text-xs text-meta truncate">
+                    {t("appeals.listMetaActive", { title: originalCase?.title ?? "", appellant: submittedBy?.name ?? "—" })}
                   </p>
-                  <p className="text-xs text-white/35">{fmtDate(appeal.submittedAt)}</p>
+                  <p className="num text-xs text-faint">{fmtDate(appeal.submittedAt)}</p>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
-                  <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-widest ${STATUS_STYLE[appeal.status]}`}>
-                    {appeal.status}
+                  <span className={`inline-flex items-center rounded-[2px] border px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-widest ${STATUS_STYLE[appeal.status]}`}>
+                    {t(`appeals.status.${STATUS_KEY[appeal.status]}`)}
                   </span>
-                  <span className="text-xs text-steward-gold/60 group-hover:text-steward-gold">Open →</span>
+                  <span className="text-xs text-oxblood group-hover:text-oxblood-deep">{t("appeals.openAction")}</span>
                 </div>
               </Link>
             ))}
@@ -78,32 +87,32 @@ export default async function AppealsListPage() {
 
       {/* Closed appeals */}
       {closed.length > 0 && (
-        <section className="steward-panel overflow-hidden rounded-2xl">
-          <div className="border-b border-white/10 px-5 py-4">
-            <h3 className="text-base font-semibold text-white/60">Closed Appeals</h3>
+        <section className="steward-panel overflow-hidden rounded-[2px]">
+          <div className="border-b border-[color:var(--isl-hairline)] px-5 py-4">
+            <h3 className="text-base font-semibold text-ink-2">{t("appeals.closedHeading")}</h3>
           </div>
-          <div className="divide-y divide-white/8">
+          <div className="divide-y divide-[color:var(--isl-hairline)]">
             {closed.map(({ appeal, originalCase, submittedBy, verdict }) => {
               const changed = verdict?.outcomeType === "changed_decision";
               return (
                 <Link key={appeal.id} href={`/stewards/appeals/${appeal.id}`}
-                  className="group flex items-center justify-between gap-4 px-5 py-4 opacity-75 transition hover:bg-steward-gold/4 hover:opacity-100">
+                  className="group flex items-center justify-between gap-4 px-5 py-4 opacity-75 transition hover:bg-cream hover:opacity-100">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold text-white/70 group-hover:text-white/90 truncate">
-                        Appeal — Case #{originalCase?.caseNumber ?? "–"}
+                      <span className="font-semibold text-ink-2 group-hover:text-ink truncate">
+                        {t("appeals.caseLabel", { caseNumber: originalCase?.caseNumber ?? "–" })}
                       </span>
                       {changed ? (
-                        <span className="rounded-full border border-purple-400/50 bg-purple-400/12 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-purple-300">⚡ Decision Changed</span>
+                        <span className="rounded-[2px] border border-brass px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-brass-ink">{t("appeals.decisionChangedBadge")}</span>
                       ) : verdict?.is_published ? (
-                        <span className="rounded-full border border-emerald-400/40 bg-emerald-400/8 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-emerald-300">✓ Upheld</span>
+                        <span className="rounded-[2px] border border-status-success px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-status-success">{t("appeals.upheldBadgeShort")}</span>
                       ) : null}
                     </div>
-                    <p className="mt-0.5 text-xs text-white/40 truncate">
-                      {originalCase?.title} · {submittedBy?.name ?? "—"}
+                    <p className="mt-0.5 text-xs text-meta truncate">
+                      {t("appeals.listMetaClosed", { title: originalCase?.title ?? "", appellant: submittedBy?.name ?? "—" })}
                     </p>
                   </div>
-                  <span className="text-xs text-white/30 group-hover:text-white/60 shrink-0">View →</span>
+                  <span className="text-xs text-meta group-hover:text-oxblood shrink-0">{t("appeals.viewAction")}</span>
                 </Link>
               );
             })}

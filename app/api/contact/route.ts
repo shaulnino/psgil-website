@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 
-const LEAGUE_EMAIL = "psgileague@gmail.com";
+// ISL league email — also the nodemailer SMTP auth account (from/to for all contact-form mail).
+// NOTE: GMAIL_APP_PASSWORD must be an App Password generated for THIS exact Gmail account, or sending fails.
+const LEAGUE_EMAIL = "islf1league@gmail.com";
 
 // ---------------------------------------------------------------------------
 // Simple in-memory rate limiter (per serverless cold-start window)
@@ -30,7 +32,7 @@ export async function POST(req: NextRequest) {
       req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
     if (isRateLimited(ip)) {
       return NextResponse.json(
-        { error: "Too many requests. Please try again in a minute." },
+        { error: "rate-limited" },
         { status: 429 },
       );
     }
@@ -58,21 +60,21 @@ export async function POST(req: NextRequest) {
 
     if (!name?.trim() || !email?.trim()) {
       return NextResponse.json(
-        { error: "Name and email are required." },
+        { error: "missing-name-email" },
         { status: 400 },
       );
     }
 
     if (!isSignup && !message?.trim()) {
       return NextResponse.json(
-        { error: "Message is required." },
+        { error: "missing-message" },
         { status: 400 },
       );
     }
 
     if (isSignup && (!birthdate?.trim() || !platform?.trim() || !experience?.trim())) {
       return NextResponse.json(
-        { error: "Birth date, platform, and experience are required." },
+        { error: "missing-signup-fields" },
         { status: 400 },
       );
     }
@@ -85,7 +87,7 @@ export async function POST(req: NextRequest) {
     if (!appPassword) {
       console.error("GMAIL_APP_PASSWORD is not set");
       return NextResponse.json(
-        { error: "Email service is not configured." },
+        { error: "email-not-configured" },
         { status: 500 },
       );
     }
@@ -98,10 +100,10 @@ export async function POST(req: NextRequest) {
     // ------ Admin notification ------
     if (isSignup) {
       await transporter.sendMail({
-        from: `"PSGiL Website" <${LEAGUE_EMAIL}>`,
+        from: `"ISL Website" <${LEAGUE_EMAIL}>`,
         replyTo: `"${safeName}" <${safeEmail}>`,
         to: LEAGUE_EMAIL,
-        subject: `[PSGiL Sign-Up] ${safeName}`,
+        subject: `[ISL Sign-Up] ${safeName}`,
         text: [
           `New sign-up interest:`,
           `Name: ${name}`,
@@ -114,12 +116,12 @@ export async function POST(req: NextRequest) {
       });
     } else {
       await transporter.sendMail({
-        from: `"PSGiL Contact Form" <${LEAGUE_EMAIL}>`,
+        from: `"ISL Contact Form" <${LEAGUE_EMAIL}>`,
         replyTo: `"${safeName}" <${safeEmail}>`,
         to: LEAGUE_EMAIL,
         subject: safeSubject.trim()
-          ? `[PSGiL Contact] ${safeSubject.trim()}`
-          : `[PSGiL Contact] Message from ${safeName}`,
+          ? `[ISL Contact] ${safeSubject.trim()}`
+          : `[ISL Contact] Message from ${safeName}`,
         text: [
           `Name: ${name}`,
           `Email: ${email}`,
@@ -139,16 +141,16 @@ export async function POST(req: NextRequest) {
       await transporter.sendMail(
         isSignup
           ? {
-              from: `"PSGiL" <${LEAGUE_EMAIL}>`,
+              from: `"ISL" <${LEAGUE_EMAIL}>`,
               to: `"${safeName}" <${safeEmail}>`,
-              subject: "PSGiL — Sign up received 🏁",
+              subject: "ISL — Sign up received 🏁",
               text: autoReplySignupText(name),
               html: autoReplySignupHtml(name),
             }
           : {
-              from: `"PSGiL" <${LEAGUE_EMAIL}>`,
+              from: `"ISL" <${LEAGUE_EMAIL}>`,
               to: `"${safeName}" <${safeEmail}>`,
-              subject: "PSGiL — We got your message ✅",
+              subject: "ISL — We got your message ✅",
               text: autoReplyQuestionText(name),
               html: autoReplyQuestionHtml(name),
             },
@@ -162,7 +164,7 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error("Contact form error:", err);
     return NextResponse.json(
-      { error: "Failed to send message. Please try again." },
+      { error: "send-failed" },
       { status: 500 },
     );
   }
@@ -191,21 +193,21 @@ function emailShell(content: string): string {
 <!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#0e0e12;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0e0e12;padding:40px 16px">
+<body style="margin:0;padding:0;background:#f4efe4;font-family:Arial,Helvetica,sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4efe4;padding:40px 16px">
     <tr><td align="center">
-      <table width="100%" style="max-width:520px;background:#18181f;border-radius:16px;border:1px solid rgba(255,255,255,0.08);overflow:hidden">
-        <!-- Purple top bar -->
-        <tr><td style="height:4px;background:linear-gradient(90deg,#7020B0,#D4AF37)"></td></tr>
+      <table width="100%" style="max-width:520px;background:#fbf8f0;border:1px solid #ddd4c2">
+        <!-- Oxblood top rule -->
+        <tr><td style="height:2px;background:#7e2a1e"></td></tr>
         <tr><td style="padding:32px 28px 28px">
           ${content}
         </td></tr>
         <!-- Footer -->
         <tr><td style="padding:0 28px 24px">
-          <table width="100%" style="border-top:1px solid rgba(255,255,255,0.06);padding-top:16px">
-            <tr><td style="font-size:11px;color:rgba(255,255,255,0.3);line-height:1.5">
-              PSGiL — Premiere Sim Gaming Israeli League<br>
-              <a href="https://psgil.com" style="color:#7020B0;text-decoration:none">psgil.com</a>
+          <table width="100%" style="border-top:1px solid #ddd4c2;padding-top:16px">
+            <tr><td style="font-size:11px;color:#6e6455;line-height:1.5;font-family:Arial,Helvetica,sans-serif">
+              ISL — F1 Israeli Super League<br>
+              <a href="https://f1isl.com" style="color:#7e2a1e;text-decoration:none">f1isl.com</a>
             </td></tr>
           </table>
         </td></tr>
@@ -223,35 +225,35 @@ function autoReplySignupText(name: string): string {
   return [
     `Hi ${name},`,
     "",
-    "Thanks for signing up for PSGiL! We've got your details.",
+    "Thanks for signing up for ISL! We've got your details.",
     "",
     "We'll reach out to you by email before the next season starts or when a seat opens up.",
     "",
-    "In the meantime, check out our latest standings and schedule at psgil.com.",
+    "In the meantime, check out our latest standings and schedule at f1isl.com.",
     "",
     "See you on track!",
-    "— The PSGiL Team",
+    "— The ISL Team",
   ].join("\n");
 }
 
 function autoReplySignupHtml(name: string): string {
   return emailShell(`
-    <h1 style="margin:0 0 8px;font-size:22px;color:#fff">Welcome to PSGiL! 🏁</h1>
-    <p style="margin:0 0 20px;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6">
+    <h1 style="margin:0 0 8px;font-size:22px;color:#1c1712;font-family:Georgia,'Times New Roman',serif">Welcome to ISL! 🏁</h1>
+    <p style="margin:0 0 20px;font-size:14px;color:#3a322a;line-height:1.6;font-family:Arial,Helvetica,sans-serif">
       Hi ${escapeHtml(name)},
     </p>
-    <p style="margin:0 0 16px;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6">
+    <p style="margin:0 0 16px;font-size:14px;color:#3a322a;line-height:1.6;font-family:Arial,Helvetica,sans-serif">
       Thanks for signing up — we&rsquo;ve got your details. We&rsquo;ll reach out to you by email before the next season starts or when a seat opens up.
     </p>
-    <p style="margin:0 0 24px;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6">
+    <p style="margin:0 0 24px;font-size:14px;color:#3a322a;line-height:1.6;font-family:Arial,Helvetica,sans-serif">
       In the meantime, check out our latest standings and schedule:
     </p>
-    <table cellpadding="0" cellspacing="0"><tr><td style="background:#7020B0;border-radius:24px;padding:10px 28px">
-      <a href="https://psgil.com" style="color:#fff;text-decoration:none;font-size:14px;font-weight:600">Visit psgil.com</a>
+    <table cellpadding="0" cellspacing="0"><tr><td style="background:#7e2a1e;border-radius:2px;padding:10px 28px">
+      <a href="https://f1isl.com" style="color:#f4efe4;text-decoration:none;font-size:14px;font-weight:600;font-family:Arial,Helvetica,sans-serif">Visit f1isl.com</a>
     </td></tr></table>
-    <p style="margin:24px 0 0;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6">
+    <p style="margin:24px 0 0;font-size:14px;color:#3a322a;line-height:1.6;font-family:Arial,Helvetica,sans-serif">
       See you on track!<br>
-      <span style="color:rgba(255,255,255,0.35)">— The PSGiL Team</span>
+      <span style="color:#6e6455">— The ISL Team</span>
     </p>
   `);
 }
@@ -265,27 +267,27 @@ function autoReplyQuestionText(name: string): string {
     "",
     "Thanks for reaching out! We received your message and will reply to you by email as soon as possible.",
     "",
-    "If your matter is urgent you can also email us directly at psgileague@gmail.com.",
+    `If your matter is urgent you can also email us directly at ${LEAGUE_EMAIL}.`,
     "",
-    "— The PSGiL Team",
+    "— The ISL Team",
   ].join("\n");
 }
 
 function autoReplyQuestionHtml(name: string): string {
   return emailShell(`
-    <h1 style="margin:0 0 8px;font-size:22px;color:#fff">Message received &#x2705;</h1>
-    <p style="margin:0 0 20px;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6">
+    <h1 style="margin:0 0 8px;font-size:22px;color:#1c1712;font-family:Georgia,'Times New Roman',serif">Message received &#x2705;</h1>
+    <p style="margin:0 0 20px;font-size:14px;color:#3a322a;line-height:1.6;font-family:Arial,Helvetica,sans-serif">
       Hi ${escapeHtml(name)},
     </p>
-    <p style="margin:0 0 16px;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6">
+    <p style="margin:0 0 16px;font-size:14px;color:#3a322a;line-height:1.6;font-family:Arial,Helvetica,sans-serif">
       Thanks for reaching out! We received your message and will reply to you by email as soon as possible.
     </p>
-    <p style="margin:0 0 0;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6">
+    <p style="margin:0 0 0;font-size:14px;color:#3a322a;line-height:1.6;font-family:Arial,Helvetica,sans-serif">
       If your matter is urgent you can also email us directly at
-      <a href="mailto:psgileague@gmail.com" style="color:#7020B0;text-decoration:none">psgileague@gmail.com</a>.
+      <a href="mailto:${LEAGUE_EMAIL}" style="color:#7e2a1e;text-decoration:none">${LEAGUE_EMAIL}</a>.
     </p>
-    <p style="margin:24px 0 0;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6">
-      <span style="color:rgba(255,255,255,0.35)">— The PSGiL Team</span>
+    <p style="margin:24px 0 0;font-size:14px;color:#3a322a;line-height:1.6;font-family:Arial,Helvetica,sans-serif">
+      <span style="color:#6e6455">— The ISL Team</span>
     </p>
   `);
 }
@@ -301,21 +303,21 @@ function adminSignupHtml(
   experience?: string,
 ): string {
   const row = (label: string, value: string) =>
-    `<tr style="border-bottom:1px solid rgba(255,255,255,0.06)">
-      <td style="padding:10px 14px;font-size:12px;font-weight:600;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;width:130px">${label}</td>
-      <td style="padding:10px 14px;font-size:14px;color:#fff">${value}</td>
+    `<tr style="border-bottom:1px solid #ddd4c2">
+      <td style="padding:10px 14px;font-size:12px;font-weight:600;color:#6e6455;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;width:130px;font-family:Arial,Helvetica,sans-serif">${label}</td>
+      <td style="padding:10px 14px;font-size:14px;color:#1c1712;font-family:Arial,Helvetica,sans-serif">${value}</td>
     </tr>`;
 
   const platformBadge = platform
-    ? `<span style="display:inline-block;padding:2px 10px;border-radius:99px;font-size:12px;font-weight:700;background:${platform === "PC" ? "#1a3a5c" : platform === "PS5" ? "#00439c" : "#107c10"};color:#fff">${escapeHtml(platform)}</span>`
+    ? `<span style="display:inline-block;padding:2px 10px;border-radius:2px;font-size:12px;font-weight:700;background:${platform === "PC" ? "#9c7a3c" : platform === "PS5" ? "#2f5a6e" : "#3f6b3a"};color:#f4efe4;font-family:Arial,Helvetica,sans-serif">${escapeHtml(platform)}</span>`
     : "—";
 
   return emailShell(`
-    <h1 style="margin:0 0 4px;font-size:20px;color:#fff">New Sign-Up Interest 🏁</h1>
-    <p style="margin:0 0 20px;font-size:12px;color:rgba(255,255,255,0.35)">Someone wants to join PSGiL</p>
-    <table style="border-collapse:collapse;width:100%;background:rgba(255,255,255,0.03);border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.08)">
+    <h1 style="margin:0 0 4px;font-size:20px;color:#1c1712;font-family:Georgia,'Times New Roman',serif">New Sign-Up Interest 🏁</h1>
+    <p style="margin:0 0 20px;font-size:12px;color:#6e6455;font-family:Arial,Helvetica,sans-serif">Someone wants to join ISL</p>
+    <table style="border-collapse:collapse;width:100%;background:#eae2d0;border:1px solid #ddd4c2">
       ${row("Name", escapeHtml(name))}
-      ${row("Email", `<a href="mailto:${escapeHtml(email)}" style="color:#7020B0;text-decoration:none">${escapeHtml(email)}</a>`)}
+      ${row("Email", `<a href="mailto:${escapeHtml(email)}" style="color:#7e2a1e;text-decoration:none">${escapeHtml(email)}</a>`)}
       ${row("Date of Birth", birthdate ? escapeHtml(birthdate) : "—")}
       ${row("Platform", platformBadge)}
       ${row("Experience", experience ? escapeHtml(experience) : "—")}
@@ -330,13 +332,13 @@ function adminQuestionHtml(
   message: string,
 ): string {
   return `
-    <div style="font-family:sans-serif;max-width:600px">
-      <h2 style="color:#7020B0;margin-bottom:16px">New Contact Form Submission</h2>
+    <div style="font-family:Arial,Helvetica,sans-serif;max-width:600px;background:#fbf8f0;border:1px solid #ddd4c2;padding:24px">
+      <h2 style="color:#1c1712;margin:0 0 16px;font-family:Georgia,'Times New Roman',serif;border-top:2px solid #7e2a1e;padding-top:16px">New Contact Form Submission</h2>
       <table style="border-collapse:collapse;width:100%">
-        <tr><td style="padding:8px 12px;font-weight:bold;color:#555;width:80px">Name</td><td style="padding:8px 12px">${escapeHtml(name)}</td></tr>
-        <tr><td style="padding:8px 12px;font-weight:bold;color:#555">Email</td><td style="padding:8px 12px"><a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a></td></tr>
-        ${subject?.trim() ? `<tr><td style="padding:8px 12px;font-weight:bold;color:#555">Subject</td><td style="padding:8px 12px">${escapeHtml(subject)}</td></tr>` : ""}
+        <tr><td style="padding:8px 12px;font-weight:bold;color:#6e6455;width:80px">Name</td><td style="padding:8px 12px;color:#1c1712">${escapeHtml(name)}</td></tr>
+        <tr><td style="padding:8px 12px;font-weight:bold;color:#6e6455">Email</td><td style="padding:8px 12px;color:#1c1712"><a href="mailto:${escapeHtml(email)}" style="color:#7e2a1e;text-decoration:none">${escapeHtml(email)}</a></td></tr>
+        ${subject?.trim() ? `<tr><td style="padding:8px 12px;font-weight:bold;color:#6e6455">Subject</td><td style="padding:8px 12px;color:#1c1712">${escapeHtml(subject)}</td></tr>` : ""}
       </table>
-      <div style="margin-top:16px;padding:16px;background:#f5f5f5;border-radius:8px;white-space:pre-wrap">${escapeHtml(message)}</div>
+      <div style="margin-top:16px;padding:16px;background:#eae2d0;border:1px solid #ddd4c2;color:#3a322a;white-space:pre-wrap">${escapeHtml(message)}</div>
     </div>`;
 }

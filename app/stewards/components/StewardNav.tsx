@@ -9,7 +9,7 @@ export default function StewardNav({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
 
   return (
-    <nav className="border-b border-white/10 bg-[#0f0f14]">
+    <nav className="border-b border-[color:var(--isl-hairline)] bg-paper">
       <div className="mx-auto flex w-full max-w-6xl flex-wrap gap-2 px-6 py-3 text-sm">
         {items.map(({ href, label }) => {
           // Exact match for dashboard; for others require href to be followed
@@ -23,10 +23,10 @@ export default function StewardNav({ items }: { items: NavItem[] }) {
             <Link
               key={href}
               href={href}
-              className={`rounded-full px-3 py-1.5 font-medium transition ${
+              className={`rounded-[2px] px-3 py-1.5 font-medium transition ${
                 isActive
-                  ? "bg-steward-gold/15 text-steward-cream border border-steward-gold/40"
-                  : "text-white/70 hover:bg-steward-gold/10 hover:text-steward-cream"
+                  ? "bg-ink text-bone border border-ink"
+                  : "text-ink-2 hover:bg-cream hover:text-ink"
               }`}
             >
               {label}

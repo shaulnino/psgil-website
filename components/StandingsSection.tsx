@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import StandingsTable from "@/components/StandingsTable";
 import ZoomableImage from "@/components/ZoomableImage";
 import type { StandingsRow } from "@/lib/resultsData";
@@ -24,6 +25,7 @@ export default function StandingsSection({
   standingsData,
   type,
 }: StandingsSectionProps) {
+  const t = useTranslations("schedule");
   /* ---------- "not applicable" detection ---------- */
   const naRow = standingsData.find(
     (r) => r.competition_status === "not_applicable",
@@ -56,25 +58,25 @@ export default function StandingsSection({
       {/* Header + toggle */}
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="font-display text-xl font-semibold text-white md:text-2xl">
+          <h2 className="font-display text-xl font-bold tracking-[0.005em] leading-[1.05] text-ink md:text-2xl">
             {title}
           </h2>
-          <p className="mt-1 text-sm text-white/60">{subtitle}</p>
+          <p className="mt-1 text-sm text-meta">{subtitle}</p>
         </div>
 
         {/* Only show toggle when BOTH table data AND an image exist */}
         {hasTableData && hasImage && !isNotApplicable && (
           <button
             onClick={() => setShowImage((v) => !v)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-medium uppercase tracking-wider text-white/50 transition hover:border-[#7020B0]/40 hover:text-white/80"
+            className="inline-flex items-center gap-1.5 rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-1.5 text-[11px] font-medium uppercase tracking-wider text-ink-2 transition hover:border-ink hover:text-ink"
           >
             {showImage ? (
               <>
-                <span>📊</span> Show table
+                <span>📊</span> {t("standingsSection.showTable")}
               </>
             ) : (
               <>
-                <span>🖼️</span> Show image
+                <span>🖼️</span> {t("standingsSection.showImage")}
               </>
             )}
           </button>
@@ -83,14 +85,14 @@ export default function StandingsSection({
 
       {/* Content */}
       {isNotApplicable ? (
-        /* Gold "not applicable" note */
-        <div className="rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 px-5 py-6">
-          <p className="text-sm font-medium leading-relaxed text-[#D4AF37]/90">
+        /* "not applicable" note */
+        <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-5 py-6">
+          <p className="text-sm font-medium leading-relaxed text-ink-2">
             {notApplicableNote}
           </p>
         </div>
       ) : showImage && hasImage ? (
-        <div className="rounded-2xl border border-white/10 bg-[linear-gradient(140deg,_rgba(255,255,255,0.06),_rgba(255,255,255,0.02))] p-4 transition hover:border-[#7020B0]/40">
+        <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-4 transition hover:border-[color:var(--isl-hairline-strong)]">
           <ZoomableImage
             src={image.src}
             alt={image.alt}
@@ -98,16 +100,16 @@ export default function StandingsSection({
             height={900}
             sizes="100vw"
             quality={100}
-            triggerClassName="group relative overflow-hidden rounded-xl border border-white/10 bg-[#0B0B0E] transition hover:border-[#7020B0]/40 cursor-pointer"
+            triggerClassName="group relative overflow-hidden rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper transition hover:border-ink cursor-pointer"
             imageClassName="h-auto w-full object-contain transition duration-200 group-hover:scale-[1.01]"
           />
         </div>
       ) : hasTableData ? (
         <StandingsTable standings={usableData} type={type} />
       ) : (
-        <div className="flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 py-12">
-          <p className="text-sm text-white/50">
-            Results not uploaded yet.
+        <div className="flex items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream py-12">
+          <p className="text-sm text-meta">
+            {t("standingsSection.resultsNotUploaded")}
           </p>
         </div>
       )}

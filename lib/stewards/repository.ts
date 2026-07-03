@@ -175,6 +175,15 @@ export async function updateUserRoles(userId: string, roles: StewardRole[]) {
   await writeStore(store);
 }
 
+export async function setUserLocale(userId: string, locale: "en" | "he") {
+  const store = await readStore();
+  const user = store.users.find((u) => u.id === userId);
+  if (!user) return;
+  user.locale = locale;
+  user.updatedAt = new Date().toISOString();
+  await writeStore(store);
+}
+
 export async function removeUserById(userId: string, actorUserId: string): Promise<RemoveUserResult> {
   if (userId === actorUserId) return { ok: false, reason: "cannot-remove-self" };
   const store = await readStore();

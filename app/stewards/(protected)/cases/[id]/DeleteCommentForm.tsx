@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import { useFormStatus } from "react-dom";
+import { useTranslations } from "next-intl";
 import { deleteInternalCommentAction } from "@/app/stewards/actions";
 
 export default function DeleteCommentForm({
@@ -22,17 +23,18 @@ export default function DeleteCommentForm({
 }
 
 function DeleteButton({ formRef }: { formRef: React.RefObject<HTMLFormElement | null> }) {
+  const t = useTranslations("stewards");
   const { pending } = useFormStatus();
   return (
     <button
       type="button"
       disabled={pending}
       onClick={() => {
-        if (window.confirm("Delete this comment?")) formRef.current?.requestSubmit();
+        if (window.confirm(t("cases.comment.deleteConfirm"))) formRef.current?.requestSubmit();
       }}
-      className="rounded px-1.5 py-0.5 text-[10px] text-white/40 transition hover:bg-red-500/15 hover:text-red-300 disabled:opacity-50"
+      className="rounded-[2px] px-1.5 py-0.5 text-[10px] text-meta transition hover:bg-cream hover:text-status-danger disabled:opacity-50"
     >
-      {pending ? "…" : "Delete"}
+      {pending ? "…" : t("cases.comment.delete")}
     </button>
   );
 }

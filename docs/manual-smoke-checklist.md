@@ -1,6 +1,6 @@
 # Manual Smoke Checklist
 
-Use this checklist after each low-risk refactor phase to reduce regression risk.
+Use this checklist after each migration phase (see [implementation-roadmap.md](./implementation-roadmap.md)) to reduce regression risk. It covers every real route plus a steward lifecycle. Bilingual note: once Phase 9 lands, run the public sections in **both** `/en` and `/he` and confirm RTL layout.
 
 ## Preconditions
 
@@ -8,55 +8,69 @@ Use this checklist after each low-risk refactor phase to reduce regression risk.
 - Start dev server: `npm run dev`
 - Use a fresh browser tab to avoid stale UI state
 
-## Click-Through Checklist
+## Public routes
 
 ### 1) Home (`/`)
-
 - Page loads without errors.
 - Header navigation renders and links work.
-- Main home widgets/cards render (including race widgets and recent/next race areas).
+- Main home widgets/cards render (race widgets, next/last race areas, standings snapshot, news carousel).
 
 ### 2) Drivers (`/drivers`)
-
 - Drivers page loads with cards/list visible.
-- Search/filter interactions still work.
+- Search/filter interactions work.
 - Clicking a driver opens the driver modal.
 
 ### 3) Driver Modal (from Drivers / tables links)
+- Modal opens and closes (close button, backdrop, Escape).
+- Driver details, rating bars, and achievement medals render.
+- "Full Driver Stats" link navigates to the stats page.
 
-- Modal opens and closes (close button, backdrop, Escape if supported).
-- Driver details and stats render.
-- "Full Driver Stats" link/button still navigates to stats page.
+### 4) Schedule & standings (`/schedule`)
+- Schedule renders grouped race/event content; season switching works.
+- Standings tables (drivers main/wild, constructors) render here.
+- Driver links in tables open the driver modal; P1/P2/P3 row highlighting appears.
+- Race detail popups/modals open where applicable.
 
-### 4) Schedule (`/schedule`)
+### 5) Statistics (`/statistics`)
+- Historical stats render (drivers, circuits, league aggregates).
+- Season/category filtering works.
 
-- Schedule page renders grouped race/event content.
-- Season switching/filtering still works.
-- Any race detail popup/modal still opens where applicable.
+### 6) Stats dashboard (`/stats`)
+- Tabs switch correctly; driver select/compare controls work.
+- Charts and tables render without runtime errors.
+- H2H filters and race-row modal interactions work.
 
-### 5) Tables (`/tables`)
+### 7) News (`/news` and `/news/[slug]`)
+- News hub lists articles by category; carousel advances.
+- An article page opens, renders body/prose, YouTube embeds, and any race recap/preview widgets (standings/results).
+- "Back to news" and related-article links work.
 
-- Drivers/constructors standings tables render.
-- Driver links in tables still open driver modal.
-- Row highlighting for top positions (P1/P2/P3) still appears.
+### 8) Contact form (on `/`)
+- Both modes (Sign Up / Question) render their fields.
+- Submitting a valid form shows the success modal; a test email arrives.
+- Honeypot/validation errors surface correctly.
 
-### 6) Stats (`/stats`)
+### 9) Privacy (`/privacy`)
+- Static policy page renders with a single h1.
 
-- Tabs switch correctly (Drivers, Teams, Circuits, Head-to-Head).
-- Driver select/compare controls still work.
-- Charts/tables render without runtime errors.
-- H2H filters and race row modal interactions still work.
+### 10) Feeds (machine consumers — verify XML is well-formed)
+- `/news/rss.xml`, `/rss/race-alerts.xml`, `/rss/articles-instagram.xml`, `/rss/race-alerts-instagram.xml` all return valid XML with current data.
 
-## Build Gate (required after each phase)
+## Steward portal (`/stewards`) — full lifecycle
 
-Run:
+Log in with a steward account (dev seed users are created on first run).
 
-```bash
-npm run build
-```
+- **Auth:** login works; unauthenticated access to a protected route redirects to `/stewards/login`; forced password-change flow works for a `mustChangePassword` user; logout works.
+- **Case lifecycle:** create a complaint (with evidence) → responds/records → add an internal comment → draft and publish a verdict with per-driver penalties → confirm the case status transitions (Open → … → Closed).
+- **Penalties:** a published verdict that crosses a threshold generates a penalty-to-serve; the penalties-to-serve queue shows correct statuses; mark served / roll forward works.
+- **Appeals:** file an appeal within the window; add internal discussion; publish an appeal verdict; confirm it overrides the original penalties.
+- **Admin:** create/edit a user and update roles (admin only); attachment download works.
+- **Statuses:** every case/penalty/appeal status is distinguishable (post-redesign: by shape + label + position, not color alone).
 
-Pass criteria:
+## Verification gate (required after each phase)
 
-- Build completes successfully.
-- No TypeScript errors.
-- No new lint/type failures introduced by the phase.
+- **Type-check:** `npx tsc --noEmit` — no errors.
+- **Lint:** `npm run lint` — no new failures.
+- **CI:** the GitHub Actions workflow (`.github/workflows/ci.yml`) runs type-check + lint on every PR; it must be green before merge.
+- **Build:** production build runs on Netlify at deploy. Only run `npm run build` locally when explicitly verifying a deploy (it fetches live CSV during prerender and is slow).
+- **Visual (redesign phases):** compare against the screenshot baseline for the affected routes, desktop and mobile.

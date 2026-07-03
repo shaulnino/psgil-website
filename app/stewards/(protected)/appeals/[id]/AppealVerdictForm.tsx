@@ -2,22 +2,24 @@
 
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
+import { useTranslations } from "next-intl";
 import { upsertAppealVerdictAction } from "@/app/stewards/actions";
+import { Button } from "@/components/ui/button";
 import type { AppealVerdict, AppealDriverVerdict, StewardUser } from "@/lib/stewards/types";
 
 const inputCls =
-  "w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white/90 focus:border-steward-gold/50 focus:outline-none transition";
+  "w-full rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2 text-sm text-ink placeholder:text-faint focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]";
 
 type Driver = { id: string; name: string };
 type Entry = { driverId: string; licensePoints: string; timePenaltySeconds: string; warningText: string };
 
 function SaveBtn({ label }: { label: string }) {
   const { pending } = useFormStatus();
+  const t = useTranslations("stewards");
   return (
-    <button type="submit" disabled={pending}
-      className="rounded-full bg-[#7020B0] px-5 py-2 text-sm font-semibold transition hover:bg-[#7c2ac3] disabled:opacity-50">
-      {pending ? "Saving…" : label}
-    </button>
+    <Button type="submit" disabled={pending}>
+      {pending ? t("appeals.verdictSaving") : label}
+    </Button>
   );
 }
 
@@ -32,6 +34,7 @@ export default function AppealVerdictForm({
   existingVerdict: AppealVerdict | null;
   existingDriverVerdicts: (AppealDriverVerdict & { driver: StewardUser | null })[];
 }) {
+  const t = useTranslations("stewards");
   const [outcome, setOutcome] = useState<string>(existingVerdict?.outcomeType ?? "");
   const [entries, setEntries] = useState<Entry[]>(
     existingDriverVerdicts.length > 0
@@ -65,24 +68,22 @@ export default function AppealVerdictForm({
 
       {/* Outcome */}
       <div>
-        <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-white/60">
-          Appeal Outcome *
+        <span className="mb-2 block font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-oxblood">
+          {t("appeals.outcomeLabel")}
         </span>
         <div className="flex flex-wrap gap-2">
           {[
-            { value: "no_change", label: "No Change — Original Decision Upheld" },
-            { value: "changed_decision", label: "Changed Decision" },
+            { value: "no_change", label: t("appeals.outcomeNoChange") },
+            { value: "changed_decision", label: t("appeals.outcomeChanged") },
           ].map(({ value, label }) => (
             <button
               key={value}
               type="button"
               onClick={() => setOutcome(outcome === value ? "" : value)}
-              className={`rounded-full border px-4 py-1.5 text-xs font-semibold transition ${
+              className={`rounded-[2px] border px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] transition-colors ${
                 outcome === value
-                  ? value === "no_change"
-                    ? "border-emerald-400/70 bg-emerald-400/20 text-emerald-200"
-                    : "border-purple-400/70 bg-purple-400/20 text-purple-200"
-                  : "border-white/15 bg-white/5 text-white/60 hover:border-white/30"
+                  ? "border-ink bg-ink text-bone"
+                  : "border-[color:var(--isl-hairline)] text-ink-2 hover:bg-cream"
               }`}
             >
               {label}
@@ -95,52 +96,52 @@ export default function AppealVerdictForm({
       {outcome === "changed_decision" && (
         <div>
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-white/60">
-              New Penalties per Driver
+            <span className="font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-oxblood">
+              {t("appeals.newPenaltiesPerDriver")}
             </span>
             <button type="button" onClick={addEntry}
-              className="rounded-full border border-white/20 px-3 py-0.5 text-xs text-white/60 hover:border-white/40 hover:text-white transition">
-              + Add driver
+              className="rounded-[2px] border border-[color:var(--isl-hairline)] px-3 py-0.5 text-xs text-ink-2 transition-colors hover:border-ink hover:text-ink">
+              {t("appeals.addDriver")}
             </button>
           </div>
           <div className="space-y-3">
             {entries.map((entry, i) => (
-              <div key={i} className="rounded-xl border border-white/10 bg-white/3 p-3">
+              <div key={i} className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-3">
                 <div className="mb-2 flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-widest text-steward-gold/70">Driver {i + 1}</span>
+                  <span className="text-xs font-bold uppercase tracking-[0.2em] text-brass-ink">{t("appeals.driverEntryLabel")} <span className="num">{i + 1}</span></span>
                   {entries.length > 1 && (
                     <button type="button" onClick={() => removeEntry(i)}
-                      className="text-xs text-red-400/70 hover:text-red-300 transition">Remove</button>
+                      className="text-xs text-status-danger transition-colors hover:text-oxblood-deep">{t("appeals.removeDriver")}</button>
                   )}
                 </div>
                 <div className="grid gap-2 md:grid-cols-2">
                   <label className="block md:col-span-2">
-                    <span className="mb-1 block text-xs text-white/50">Driver *</span>
+                    <span className="mb-1 block text-xs text-meta">{t("appeals.driverField")}</span>
                     <select value={entry.driverId} required
                       onChange={(e) => updateEntry(i, "driverId", e.target.value)} className={inputCls}>
-                      <option value="">Select driver…</option>
+                      <option value="">{t("appeals.selectDriver")}</option>
                       {originalCaseDrivers.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
                     </select>
                   </label>
                   <label className="block">
-                    <span className="mb-1 block text-xs text-white/50">License points</span>
+                    <span className="mb-1 block text-xs text-meta">{t("appeals.licensePointsField")}</span>
                     <input type="number" min={0} max={12} step={1}
                       value={entry.licensePoints}
                       onChange={(e) => updateEntry(i, "licensePoints", e.target.value)}
-                      placeholder="e.g. 2" className={inputCls} />
+                      placeholder={t("appeals.licensePointsPlaceholder")} className={inputCls} />
                   </label>
                   <label className="block">
-                    <span className="mb-1 block text-xs text-white/50">Time penalty (s)</span>
+                    <span className="mb-1 block text-xs text-meta">{t("appeals.timePenaltyField")}</span>
                     <input type="number" min={0} step={1}
                       value={entry.timePenaltySeconds}
                       onChange={(e) => updateEntry(i, "timePenaltySeconds", e.target.value)}
-                      placeholder="e.g. 10" className={inputCls} />
+                      placeholder={t("appeals.timePenaltyPlaceholder")} className={inputCls} />
                   </label>
                   <label className="block md:col-span-2">
-                    <span className="mb-1 block text-xs text-white/50">Warning text</span>
+                    <span className="mb-1 block text-xs text-meta">{t("appeals.warningTextField")}</span>
                     <input value={entry.warningText}
                       onChange={(e) => updateEntry(i, "warningText", e.target.value)}
-                      placeholder="Leave blank if none" className={inputCls} />
+                      placeholder={t("appeals.warningTextPlaceholder")} className={inputCls} />
                   </label>
                 </div>
               </div>
@@ -151,25 +152,25 @@ export default function AppealVerdictForm({
 
       {/* Summary */}
       <label className="block">
-        <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-white/60">
-          Verdict Summary
+        <span className="mb-1 block font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-oxblood">
+          {t("appeals.verdictSummaryLabel")}
         </span>
         <input name="verdict_summary" defaultValue={existingVerdict?.verdict_summary ?? ""}
-          placeholder="Brief summary of the appeal decision…" className={inputCls} />
+          placeholder={t("appeals.verdictSummaryPlaceholder")} className={inputCls} />
       </label>
 
       {/* Full text */}
       <label className="block">
-        <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-white/60">
-          Full Reasoning (optional)
+        <span className="mb-1 block font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-oxblood">
+          {t("appeals.verdictFullTextLabel")}
         </span>
         <textarea name="verdict_full_text" rows={3}
           defaultValue={existingVerdict?.verdict_full_text ?? ""}
-          placeholder="Detailed steward reasoning…" className={inputCls} />
+          placeholder={t("appeals.verdictFullTextPlaceholder")} className={inputCls} />
       </label>
 
       <div className="flex items-center gap-3 pt-1">
-        <SaveBtn label="Save Draft" />
+        <SaveBtn label={t("appeals.saveDraft")} />
       </div>
     </form>
   );

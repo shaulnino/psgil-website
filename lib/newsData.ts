@@ -11,6 +11,8 @@ export type NewsArticle = {
   id: string;
   title: string;
   slug: string;
+  /** Row language ("en" | "he"); rows without a locale column default to "en". */
+  locale: string;
   date: string; // ISO YYYY-MM-DD
   author: string;
   excerpt: string;
@@ -31,7 +33,7 @@ type CacheState = FetchState & {
 };
 
 const CACHE_TTL_MS = 60 * 1000; // 60 seconds — news should appear quickly after sheet edits
-const DEFAULT_AUTHOR = "PSGiL";
+const DEFAULT_AUTHOR = "ISL";
 const NEWS_SHEET_URL = process.env.NEWS_SHEET_URL ?? "";
 const IS_DEV = process.env.NODE_ENV !== "production";
 
@@ -40,13 +42,14 @@ let cache: CacheState | null = null;
 const DEV_FALLBACK_ARTICLES: NewsArticle[] = [
   {
     id: "sample-news-1",
-    title: "PSGiL News Sample",
+    title: "ISL News Sample",
     slug: "psgil-news-sample",
+    locale: "en",
     date: "2026-03-02",
-    author: "PSGiL",
+    author: "ISL",
     excerpt:
       "This is a local development fallback article. Connect NEWS_SHEET_URL to show real Google Sheets content.",
-    coverImageUrl: "/psgil-banner.png",
+    coverImageUrl: "/isl-banner.png",
     tags: ["sample", "local"],
     category: NEWS_CATEGORY.HUB,
     youtubeUrl: "",
@@ -128,6 +131,7 @@ function mapArticleRow(row: Record<string, string>, index: number): NewsArticle 
     id: s(row.id) || String(index + 1),
     title,
     slug,
+    locale: (getField(row, ["locale", "lang", "language"]) || "en").toLowerCase(),
     date,
     author: s(row.author) || DEFAULT_AUTHOR,
     excerpt,
@@ -145,17 +149,18 @@ function sortByDateDesc(a: NewsArticle, b: NewsArticle): number {
   return b.date.localeCompare(a.date);
 }
 
-export function formatNewsDate(isoDate: string): string {
+export function formatNewsDate(isoDate: string, locale: string = "en"): string {
   const parsed = new Date(`${isoDate}T00:00:00`);
   if (Number.isNaN(parsed.getTime())) return isoDate;
-  return new Intl.DateTimeFormat("en-GB", {
+  const intlLocale = locale === "he" ? "he-IL" : "en-GB";
+  return new Intl.DateTimeFormat(intlLocale, {
     year: "numeric",
     month: "short",
     day: "numeric",
   }).format(parsed);
 }
 
-export async function fetchArticlesWithStatus(): Promise<FetchState> {
+async function fetchAllPublished(): Promise<FetchState> {
   const now = Date.now();
   if (cache && cache.expiresAt > now) {
     return { articles: cache.articles, error: cache.error };
@@ -205,21 +210,51 @@ export async function fetchArticlesWithStatus(): Promise<FetchState> {
   }
 }
 
-export async function fetchArticles(): Promise<NewsArticle[]> {
-  const { articles } = await fetchArticlesWithStatus();
+/**
+ * Pick one article per story for the requested locale. Stories are keyed by
+ * slug (the HE and EN versions of a story share a slug). When a story has no
+ * row in the requested locale, its other-locale row is used as a fallback, so
+ * a partially-translated site never drops articles.
+ */
+function selectForLocale(all: NewsArticle[], locale: string): NewsArticle[] {
+  const bySlug = new Map<string, NewsArticle[]>();
+  for (const a of all) {
+    const variants = bySlug.get(a.slug) ?? [];
+    variants.push(a);
+    bySlug.set(a.slug, variants);
+  }
+  const selected: NewsArticle[] = [];
+  for (const variants of bySlug.values()) {
+    selected.push(variants.find((v) => v.locale === locale) ?? variants[0]);
+  }
+  return selected.sort(sortByDateDesc);
+}
+
+export async function fetchArticlesWithStatus(locale: string = "en"): Promise<FetchState> {
+  const { articles, error } = await fetchAllPublished();
+  return { articles: selectForLocale(articles, locale), error };
+}
+
+export async function fetchArticles(locale: string = "en"): Promise<NewsArticle[]> {
+  const { articles } = await fetchArticlesWithStatus(locale);
   return articles;
 }
 
-export async function fetchLatestArticles(limit = 3): Promise<NewsArticle[]> {
-  const articles = await fetchArticles();
+export async function fetchLatestArticles(limit = 3, locale: string = "en"): Promise<NewsArticle[]> {
+  const articles = await fetchArticles(locale);
   return articles.slice(0, limit);
 }
 
-export async function fetchArticleBySlug(slug: string): Promise<NewsArticle | null> {
+export async function fetchArticleBySlug(
+  slug: string,
+  locale: string = "en",
+): Promise<NewsArticle | null> {
   const normalized = s(slug);
   if (!normalized) return null;
-  const articles = await fetchArticles();
-  return articles.find((article) => article.slug === normalized) ?? null;
+  const { articles } = await fetchAllPublished();
+  const variants = articles.filter((article) => article.slug === normalized);
+  if (variants.length === 0) return null;
+  return variants.find((v) => v.locale === locale) ?? variants[0];
 }
 
 export async function renderArticleBody(content: string): Promise<string> {

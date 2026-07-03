@@ -13,8 +13,8 @@ import {
 export const dynamic = "force-dynamic";
 
 const ALERT_WINDOW_MINUTES = 15;
-const FALLBACK_SITE_URL = "https://psgil.com";
-const DEFAULT_SOCIAL_IMAGE = "/psgil-logo.png";
+const FALLBACK_SITE_URL = "https://f1isl.com";
+const DEFAULT_SOCIAL_IMAGE = "/isl-social.png";
 
 function xmlEscape(value: string): string {
   return value
@@ -103,9 +103,9 @@ function createRssXml(baseUrl: string, itemXml: string): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
 <channel>
-  <title>PSGiL Race Alerts</title>
+  <title>ISL Race Alerts</title>
   <link>${xmlEscape(`${baseUrl}/schedule`)}</link>
-  <description>Automated countdown alerts before PSGiL race start.</description>
+  <description>Automated countdown alerts before ISL race start.</description>
   <language>en</language>
   <lastBuildDate>${now}</lastBuildDate>
 ${itemXml}
@@ -114,11 +114,11 @@ ${itemXml}
 }
 
 function createAlertItemXml(baseUrl: string, event: RaceEvent): string {
-  const title = `PSGiL Race Starting Soon — ${event.race_name}`;
+  const title = `ISL Race Starting Soon — ${event.race_name}`;
   const description = "The race will begin shortly. Watch it live here:";
   const link = buildWatchLink(baseUrl, event);
   const guid = buildAlertGuid(event);
-  const caption = `PSGiL goes live in 15 minutes! ${event.race_name}\nWatch on our website:\n${link}`;
+  const caption = `ISL goes live in 15 minutes! ${event.race_name}\nWatch on our website:\n${link}`;
   const pubDate = new Date().toUTCString();
   const posterUrl = resolveAbsoluteUrl(
     baseUrl,

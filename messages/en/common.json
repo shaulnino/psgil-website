@@ -1,0 +1,29 @@
+{
+  "leagueShort": "ISL",
+  "leagueFullName": "F1 Israeli Super League",
+  "footerNote": "Community-run league",
+  "nav": {
+    "home": "Home",
+    "schedule": "Schedule & Results",
+    "tables": "Tables",
+    "drivers": "Drivers",
+    "stats": "Stats",
+    "news": "News",
+    "stewards": "Stewards"
+  },
+  "footer": {
+    "league": "League",
+    "data": "Data",
+    "tagline": ". Israel's competitive Formula 1 simulation racing community.",
+    "copyright": "— F1 Israeli Super League. Not affiliated with Formula 1 or FOM."
+  },
+  "seo": {
+    "title": "ISL – F1 Israeli Super League",
+    "description": "One of Israel's biggest sim racing leagues, born from the merger of two experienced F1 leagues. Clean, competitive racing on the EA Sports F1 series, full season stats, and a community-first experience."
+  },
+  "joinNow": "Join Now",
+  "a11y": {
+    "toggleNav": "Toggle navigation",
+    "logoAlt": "ISL — Israeli Super League"
+  }
+}

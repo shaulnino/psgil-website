@@ -1,23 +1,25 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import type { Driver } from "@/lib/driversData";
 import {
-  DEFAULT_AWARD_LABELS,
   DEFAULT_AWARD_RANK,
-  DEFAULT_AWARD_TOOLTIPS,
   type AwardCode,
   type RewardCompetition,
 } from "@/lib/rewardsData";
+
+/** Rewards-namespace translator (subset of next-intl's t we use here). */
+type RewardsT = (key: string) => string;
 
 /* ------------------------------------------------------------------ */
 /*  Medal colours & types                                              */
 /* ------------------------------------------------------------------ */
 
 export const MEDAL_COLORS = {
-  gold: "#D4AF37",
-  silver: "#C0C0C0",
-  bronze: "#CD7F32",
+  gold: "#9c7a3c",
+  silver: "#5e5a52",
+  bronze: "#7a4b28",
 } as const;
 
 export type MedalTier = keyof typeof MEDAL_COLORS;
@@ -235,34 +237,38 @@ export type AchievementDef = {
   count: number;
 };
 
-function competitionLabel(competition: RewardCompetition): string {
+function competitionLabel(competition: RewardCompetition, t: RewardsT): string {
   switch (competition) {
     case "main":
-      return "Main League";
+      return t("competitions.main");
     case "lower":
-      return "Lower League";
+      return t("competitions.lower");
     case "wild":
-      return "Wild League";
+      return t("competitions.wild");
     case "constructors":
-      return "Constructors";
+      return t("competitions.constructors");
     case "community":
-      return "Community";
+      return t("competitions.community");
     default:
       return "";
   }
 }
 
-function placementLabel(awardCode: AwardCode, competition: RewardCompetition): string {
-  const comp = competitionLabel(competition);
+function placementLabel(
+  awardCode: AwardCode,
+  competition: RewardCompetition,
+  t: RewardsT,
+): string {
+  const comp = competitionLabel(competition, t);
   switch (awardCode) {
     case "champion":
-      return `${comp} Champion`;
+      return `${comp} ${t("placements.champion")}`;
     case "runner_up":
-      return `${comp} Runner-up`;
+      return `${comp} ${t("placements.runner_up")}`;
     case "third_place":
-      return `${comp} Third Place`;
+      return `${comp} ${t("placements.third_place")}`;
     default:
-      return DEFAULT_AWARD_LABELS[awardCode] ?? awardCode;
+      return t(`awards.${awardCode}.label`);
   }
 }
 
@@ -274,9 +280,9 @@ export function getAwardIcon(
   const colorGold = MEDAL_COLORS.gold;
   const colorSilver = MEDAL_COLORS.silver;
   const colorBronze = MEDAL_COLORS.bronze;
-  const purple = "#a855f7";
-  const blue = "#60a5fa";
-  const green = "#34d399";
+  const purple = "#1c1712";
+  const blue = "#1c1712";
+  const green = "#1c1712";
   let baseIcon: React.ReactNode;
   switch (awardCode) {
     case "champion":
@@ -346,7 +352,11 @@ export function getAwardIcon(
   return baseIcon;
 }
 
-export function buildAchievements(driver: Driver, iconSize = 18): AchievementDef[] {
+export function buildAchievements(
+  driver: Driver,
+  t: RewardsT,
+  iconSize = 18,
+): AchievementDef[] {
   const rewards = driver.rewards ?? [];
   if (rewards.length === 0) return [];
 
@@ -387,16 +397,15 @@ export function buildAchievements(driver: Driver, iconSize = 18): AchievementDef
       return a.competition.localeCompare(b.competition);
     })
     .map(([, info]) => {
-    const label = placementLabel(info.awardCode, info.competition);
+    const label = placementLabel(info.awardCode, info.competition, t);
     const seasonList = Array.from(new Set(info.seasons)).sort((a, b) => a - b);
-    const defaultTooltip =
-      DEFAULT_AWARD_TOOLTIPS[info.awardCode] ?? DEFAULT_AWARD_LABELS[info.awardCode] ?? label;
+    const defaultTooltip = t(`awards.${info.awardCode}.tooltip`);
     const tipParts = [
       label,
       info.tooltip || defaultTooltip,
-      `Seasons: ${seasonList.map((s) => `S${s}`).join(", ")}`,
+      `${t("badge.seasons")}: ${seasonList.map((s) => `S${s}`).join(", ")}`,
       info.notes.length > 0
-        ? `Notes: ${Array.from(new Set(info.notes)).join(" | ")}`
+        ? `${t("badge.notes")}: ${Array.from(new Set(info.notes)).join(" | ")}`
         : "",
     ].filter(Boolean);
 
@@ -461,16 +470,16 @@ function InlineTooltip({
       {children}
       {visible && (
         <span
-          className={`pointer-events-none absolute left-1/2 z-50 w-max max-w-[200px] -translate-x-1/2 rounded-lg border border-white/10 bg-[#1a1a1f] px-2.5 py-1.5 text-[10px] leading-relaxed text-white/80 shadow-lg ${
+          className={`pointer-events-none absolute start-1/2 z-50 w-max max-w-[200px] -translate-x-1/2 rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-2.5 py-1.5 text-[10px] leading-relaxed text-ink ${
             above ? "bottom-full mb-1.5" : "top-full mt-1.5"
           }`}
         >
           {text}
           <span
-            className={`absolute left-1/2 -translate-x-1/2 border-[4px] border-transparent ${
+            className={`absolute start-1/2 -translate-x-1/2 border-[4px] border-transparent ${
               above
-                ? "top-full border-t-[#1a1a1f]"
-                : "bottom-full border-b-[#1a1a1f]"
+                ? "top-full border-t-paper"
+                : "bottom-full border-b-paper"
             }`}
           />
         </span>
@@ -495,7 +504,8 @@ export function AchievementBadgeList({
   driver: Driver;
   iconSize?: number;
 }) {
-  const achievements = buildAchievements(driver, iconSize);
+  const t = useTranslations("rewards");
+  const achievements = buildAchievements(driver, t, iconSize);
   if (achievements.length === 0) return null;
   const maxVisible = 6;
   const visible = achievements.slice(0, maxVisible);
@@ -522,8 +532,8 @@ export function AchievementBadgeList({
         </InlineTooltip>
       ))}
       {hiddenCount > 0 && (
-        <InlineTooltip text={`More awards: ${hiddenTooltip}`}>
-          <span className="inline-flex cursor-help items-center justify-center rounded-full border border-white/15 bg-white/5 px-1.5 text-[10px] font-semibold text-white/75">
+        <InlineTooltip text={`${t("badge.moreAwards")}: ${hiddenTooltip}`}>
+          <span className="num inline-flex cursor-help items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-1.5 text-[10px] font-semibold text-meta">
             +{hiddenCount}
           </span>
         </InlineTooltip>
