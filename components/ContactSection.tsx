@@ -145,7 +145,7 @@ export default function ContactSection() {
       <form
         ref={formRef}
         onSubmit={handleSubmit}
-        className="space-y-4 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-5 md:p-6"
+        className="relative isl-corner-ticks space-y-4 rounded-[2px] border border-[color:var(--isl-hairline)] border-t-2 border-t-oxblood bg-cream p-6 md:p-7"
       >
         {/* Honeypot — hidden from real users, attracts bots */}
         <div aria-hidden="true" className="absolute -left-[9999px]">
@@ -160,9 +160,9 @@ export default function ContactSection() {
               key={m}
               type="button"
               onClick={() => switchMode(m)}
-              className={`flex-1 rounded-[2px] px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] transition-colors ${
+              className={`flex-1 rounded-[2px] px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] transition-colors ${
                 mode === m
-                  ? "bg-ink text-bone"
+                  ? "bg-oxblood text-bone"
                   : "text-meta hover:text-ink"
               }`}
             >
@@ -222,7 +222,7 @@ export default function ContactSection() {
                   type="date"
                   required
                   className={inputCls}
-                  style={{ colorScheme: "light" }}
+                  style={{ colorScheme: "dark" }}
                 />
               </div>
               <div>
