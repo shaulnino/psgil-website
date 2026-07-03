@@ -27,7 +27,7 @@ export default function DriverCard({ driver, team, placeholderSrc, onSelect }: D
     <button
       type="button"
       onClick={() => onSelect(driver, team)}
-      className="group flex w-full flex-col overflow-hidden rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream text-start transition-colors duration-200 hover:border-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-oxblood/60"
+      className="group flex w-full flex-col overflow-hidden rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream text-start transition-colors duration-200 hover:border-[color:var(--isl-oxblood)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-oxblood/60"
     >
       {/* Image area — shorter aspect ratio so the card is more compact */}
       <div className="relative aspect-[5/5] w-full overflow-hidden border-b border-[color:var(--isl-hairline)] bg-sink">
