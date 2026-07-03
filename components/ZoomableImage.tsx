@@ -123,7 +123,7 @@ export default function ZoomableImage({
 
       {isOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[color:var(--isl-ink)]/70"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
           onClick={() => setIsOpen(false)}
         >
           <div

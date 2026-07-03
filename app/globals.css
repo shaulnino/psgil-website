@@ -240,14 +240,17 @@
   border-color: var(--isl-oxblood);
   border-style: solid;
 }
+/* Pinned with PHYSICAL properties (top/left, bottom/right) so the L-bracket
+   orientation always matches its corner. Logical props would flip the position
+   in RTL but not the border sides, leaving the bracket mis-oriented. */
 .isl-corner-ticks::before {
-  inset-block-start: 0;
-  inset-inline-start: 0;
+  top: 0;
+  left: 0;
   border-width: 1px 0 0 1px;
 }
 .isl-corner-ticks::after {
-  inset-block-end: 0;
-  inset-inline-end: 0;
+  bottom: 0;
+  right: 0;
   border-width: 0 1px 1px 0;
 }
 

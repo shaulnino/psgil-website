@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { getLocale, getTranslations } from "next-intl/server";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import HomeRaceCards from "@/components/HomeRaceCards";
 import WatchLastRaceButton from "@/components/WatchLastRaceButton";
 import Section from "@/components/Section";
@@ -244,7 +245,7 @@ export default async function Home() {
           </div>
 
           {/* Broadcast-framed hero image */}
-          <div className="isl-corner-ticks relative mt-6 w-full overflow-hidden rounded-[2px] border border-[color:var(--isl-hairline-strong)] bg-ink">
+          <div className="isl-corner-ticks relative mt-6 w-full overflow-hidden rounded-[2px] border border-brass bg-ink">
             <Image
               src="/hero-new-era.png"
               alt={tHome("hero.imageAlt")}
@@ -310,7 +311,7 @@ export default async function Home() {
       {featuredNews && (
         <section className="py-4">
           <div className="mx-auto w-full max-w-6xl px-6">
-            <div className="overflow-hidden rounded-[2px] border border-brass bg-cream">
+            <div className="relative isl-corner-ticks overflow-hidden rounded-[2px] border border-brass bg-cream">
               <div className="grid gap-0 md:grid-cols-[240px_1fr]">
                 <LoadingLink
                   href={`/news/${encodeURIComponent(featuredNews.slug)}`}
@@ -371,17 +372,26 @@ export default async function Home() {
         title={tHome("leagueFormat.title")}
         description={tHome("leagueFormat.description")}
         brandTitle
+        index="01"
       >
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {(tHome.raw("leagueFormatItems") as { title: string; description: string }[]).map((item) => (
+          {(tHome.raw("leagueFormatItems") as { title: string; description: string }[]).map((item, i) => (
             <div
               key={item.title}
-              className="rounded-[2px] border border-[color:var(--isl-hairline)] border-t-2 border-t-oxblood bg-cream p-5 text-sm text-ink-2 transition-colors hover:border-t-oxblood-deep"
+              className="group isl-chamfer bg-hairline-strong p-px transition-colors hover:bg-oxblood"
             >
-              <h3 className="font-display text-lg font-bold tracking-[0.005em] text-oxblood">
-                {item.title}
-              </h3>
-              <p className="mt-2 text-ink-2">{item.description}</p>
+              <div className="isl-chamfer flex h-full flex-col bg-cream p-5">
+                <div className="flex items-center justify-between">
+                  <span className="num text-sm font-semibold text-oxblood">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span className="h-px w-8 bg-[color:var(--isl-hairline-strong)] transition-colors group-hover:bg-oxblood" />
+                </div>
+                <h3 className="mt-3 font-display text-lg font-bold tracking-[0.005em] text-ink">
+                  {item.title}
+                </h3>
+                <p className="mt-2 text-sm text-ink-2">{item.description}</p>
+              </div>
             </div>
           ))}
         </div>
@@ -391,6 +401,7 @@ export default async function Home() {
         title={tHome("races.title")}
         description={tHome("races.description")}
         brandTitle
+        index="02"
         headerRight={
           <Button href="/schedule" size="sm" variant="secondary">
             {tHome("races.fullSchedule")}
@@ -412,6 +423,7 @@ export default async function Home() {
         title={tHome("latestNews.title")}
         description={tHome("latestNews.description")}
         brandTitle
+        index="03"
         headerRight={
           <Button href="/news" size="sm" variant="secondary">
             {tHome("latestNews.allNews")}
@@ -421,12 +433,13 @@ export default async function Home() {
         <NewsCarousel articles={latestNews} />
       </Section>
 
-      <Section title={tHome("about.title")} brandTitle>
-        <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-6 md:p-8">
-          <p className="text-base text-ink-2 md:text-lg">
+      <Section title={tHome("about.title")} brandTitle index="04">
+        <Card chamfer cornerTicks className="p-6 md:p-8">
+          <div className="isl-gold-rule mb-5 max-w-[120px]" />
+          <p className="text-base leading-relaxed text-ink-2 md:text-lg">
             {tHome("about.body", { season: currentSeasonLabel.toLowerCase() })}
           </p>
-        </div>
+        </Card>
       </Section>
 
 
@@ -436,6 +449,7 @@ export default async function Home() {
         title={tHome("contact.title")}
         description={tHome("contact.description")}
         brandTitle
+        index="05"
       >
         <ContactSection />
       </Section>

@@ -75,7 +75,7 @@ export default function SuccessModal({ mode, open, onClose }: SuccessModalProps)
       ref={dialogRef}
       aria-labelledby="success-modal-title"
       onClick={handleBackdropClick}
-      className="fixed inset-0 z-50 m-auto max-w-md rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-0 text-ink backdrop:bg-[color:var(--isl-ink)]/60 open:animate-[f1-rise_0.5s_ease-out]"
+      className="fixed inset-0 z-50 m-auto max-w-md rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-0 text-ink backdrop:bg-black/70 open:animate-[f1-rise_0.5s_ease-out]"
     >
       <div className="flex flex-col items-center gap-4 px-6 py-8 text-center sm:px-8 sm:py-10">
         <h2
