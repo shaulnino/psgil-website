@@ -2,7 +2,7 @@ import Section from "@/components/Section";
 
 export default function NewsArticleLoading() {
   return (
-    <main className="bg-bone text-ink">
+    <main className="text-ink">
       <Section className="pt-8 md:pt-12">
         <div className="overflow-hidden rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream animate-pulse">
           <div className="h-64 bg-sink md:h-80" />

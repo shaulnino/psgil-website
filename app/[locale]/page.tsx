@@ -226,7 +226,7 @@ export default async function Home() {
   const featuredNews = latestNews[0] ?? null;
 
   return (
-    <main className="bg-bone text-ink-2">
+    <main className="text-ink-2">
       {/* ── Hero: "League Command Center" — broadcast-framed race image + ink headline on charcoal ── */}
       <section className="relative isl-speed-lines overflow-hidden border-b border-[color:var(--isl-hairline)]">
         <div className="mx-auto w-full max-w-[1240px] px-5 pb-10 pt-6">

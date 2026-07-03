@@ -47,7 +47,7 @@ function SectionRule({ label }: { label: string }) {
 
 export default function DesignPreviewPage() {
   return (
-    <main className="min-h-screen bg-bone font-isl-body text-ink-2">
+    <main className="min-h-screen font-isl-body text-ink-2">
       <div className="mx-auto w-full max-w-[1240px] px-5 py-10">
         {/* ── Masthead ── */}
         <header className="isl-speed-lines rounded-[2px] border border-hairline bg-paper p-6">

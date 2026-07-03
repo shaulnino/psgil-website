@@ -94,6 +94,9 @@ export default async function RootLayout({
       <body
         className={`${inter.variable} ${rajdhani.variable} ${oswald.variable} ${publicSans.variable} ${splineSansMono.variable} ${heebo.variable} ${assistant.variable} antialiased`}
       >
+        {/* Global "black + gold dust" atmosphere — one fixed layer behind all
+            routes. Pointer-events disabled; see .isl-global-bg in globals.css. */}
+        <div className="isl-global-bg" aria-hidden="true" />
         <NextIntlClientProvider messages={messages}>
         {/* ── Google Analytics 4 (production only) ── */}
         {GA_ID && process.env.NODE_ENV === "production" && (

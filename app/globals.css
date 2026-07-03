@@ -66,6 +66,9 @@
   --isl-info: #5a9ab5;
   /* Flat 2px radius token. */
   --radius: 2px;
+  /* Near-black base for the global "black + gold dust" atmosphere (below the
+     charcoal surfaces). See .isl-global-bg. */
+  --isl-void: #060606;
 }
 
 @theme inline {
@@ -306,7 +309,7 @@ html {
 }
 
 body {
-  background: var(--background); /* flat bone — no gradient/texture (editorial) */
+  background-color: var(--isl-void); /* near-black base; atmosphere in .isl-global-bg */
   color: var(--foreground);
   font-family: var(--font-public-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -315,6 +318,62 @@ body {
 
 .font-display {
   font-family: var(--font-oswald), "Arial Narrow", system-ui, sans-serif;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   GLOBAL "BLACK + GOLD DUST" ATMOSPHERE
+   One fixed layer rendered once in the root layout (<div class="isl-global-bg">),
+   so every route shares the same premium black/gold backdrop with no per-page
+   code. Pure CSS (no image): near-black base + corner gold nebula haze + an
+   outer vignette, plus a tiled gold-speck layer masked to fade out of the
+   center — dust concentrates at the edges/corners, the middle stays dark and
+   readable. Fully static (no animation) → cheap to composite; sits at z-index
+   -1 with pointer-events:none so it never affects layout or interaction.
+
+   TUNE LATER:
+   • Haze strength  → the % in the four corner radial-gradients below (~8–12%).
+   • Speck density  → add/remove points in ::before, or change background-size.
+   • Speck strength → ::before `opacity` (0.4 subtle … 0.8 stronger).
+   • Clean-center size → the `transparent NN%` stop in the ::before mask.
+   ═══════════════════════════════════════════════════════════════════════ */
+.isl-global-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: var(--isl-void);
+  background-repeat: no-repeat;
+  background-image:
+    radial-gradient(78% 70% at 0% 0%, color-mix(in srgb, var(--isl-oxblood) 20%, transparent), transparent 66%),
+    radial-gradient(72% 64% at 100% 2%, color-mix(in srgb, var(--isl-oxblood) 16%, transparent), transparent 64%),
+    radial-gradient(78% 72% at 2% 100%, color-mix(in srgb, var(--isl-oxblood) 20%, transparent), transparent 66%),
+    radial-gradient(74% 68% at 100% 100%, color-mix(in srgb, var(--isl-oxblood) 17%, transparent), transparent 66%),
+    radial-gradient(125% 125% at 50% 45%, transparent 60%, rgba(0, 0, 0, 0.5) 100%);
+}
+
+/* Fine gold speck dust — tiled tiny points, masked so they mostly appear toward
+   the edges (fainter center = little dust behind main content). */
+.isl-global-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 1;
+  background-repeat: repeat;
+  background-size: 190px 210px;
+  background-image:
+    radial-gradient(1.5px 1.5px at 22px 30px, rgba(232, 202, 128, 0.95), transparent 62%),
+    radial-gradient(1px 1px at 92px 120px, rgba(201, 162, 75, 0.75), transparent 62%),
+    radial-gradient(2px 2px at 158px 58px, rgba(232, 202, 128, 0.85), transparent 62%),
+    radial-gradient(1px 1px at 60px 186px, rgba(201, 162, 75, 0.7), transparent 62%),
+    radial-gradient(1.5px 1.5px at 178px 198px, rgba(226, 194, 116, 0.85), transparent 62%),
+    radial-gradient(1px 1px at 124px 14px, rgba(232, 202, 128, 0.7), transparent 62%),
+    radial-gradient(1px 1px at 40px 110px, rgba(201, 162, 75, 0.65), transparent 62%),
+    radial-gradient(2px 2px at 166px 140px, rgba(226, 194, 116, 0.8), transparent 62%),
+    radial-gradient(1px 1px at 110px 78px, rgba(201, 162, 75, 0.6), transparent 62%),
+    radial-gradient(1.5px 1.5px at 8px 160px, rgba(232, 202, 128, 0.75), transparent 62%);
+  -webkit-mask: radial-gradient(105% 98% at 50% 46%, transparent 12%, #000 66%);
+  mask: radial-gradient(105% 98% at 50% 46%, transparent 12%, #000 66%);
 }
 
 /* Global focus ring + selection — the single oxblood accent expression. */
@@ -516,7 +575,8 @@ body {
 @media print {
   header,
   footer,
-  .fixed {
+  .fixed,
+  .isl-global-bg {
     display: none !important;
   }
   body {

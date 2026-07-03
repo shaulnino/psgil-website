@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <main className="bg-bone text-ink-2">
+    <main className="text-ink-2">
       <Section
         title="Privacy Policy"
         description="Last updated: February 19, 2026"

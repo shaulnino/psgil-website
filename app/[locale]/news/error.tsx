@@ -10,7 +10,7 @@ export default function NewsError({
   reset: () => void;
 }) {
   return (
-    <main className="bg-bone text-ink">
+    <main className="text-ink">
       <Section title="News Unavailable" description="Something went wrong while loading news." pageHeader>
         <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-6 text-sm text-ink-2">
           Please try again in a moment.

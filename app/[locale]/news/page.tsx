@@ -71,7 +71,7 @@ export default async function NewsPage() {
   );
 
   return (
-    <main className="bg-bone text-ink-2">
+    <main className="text-ink-2">
       <Section
         title={t("index.title")}
         description={t("index.description")}
