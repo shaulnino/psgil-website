@@ -50,9 +50,9 @@
     "playoffTooltip": "סבב פלייאוף",
     "provisionalTooltip": "תוצאות זמניות — כפופות להחלטות השיפוט.",
     "dryTooltip": "מזג אוויר: מרוץ יבש",
-    "dry": "Dry",
+    "dry": "יבש",
     "wetTooltip": "מזג אוויר: מרוץ רטוב",
-    "wet": "Wet",
+    "wet": "רטוב",
     "mixedTooltip": "מזג אוויר: תנאים משתנים (יבש ורטוב)",
     "mixed": "משתנה",
     "safetyCarsTooltip": "מכוניות בטיחות: {count}",
@@ -60,8 +60,8 @@
   },
   "status": {
     "live": "חי",
-    "upcoming": "Upcoming",
-    "completed": "Completed",
+    "upcoming": "עתידי",
+    "completed": "הושלם",
     "postponed": "נדחה",
     "cancelled": "בוטל",
     "scheduled": "מתוכנן"
@@ -74,7 +74,7 @@
     "headerLeague": "ליגה",
     "headerStatus": "סטטוס",
     "headerFlag": "דגל",
-    "open": "Open",
+    "open": "פתח",
     "noEventsAvailable": "עדיין אין אירועי מרוץ זמינים.",
     "noEventsForSeason": "אין אירועי מרוץ זמינים לעונה זו.",
     "loading": "טוען לוח מרוצים…"
@@ -115,7 +115,7 @@
     "stops": "עצירות",
     "points": "נקודות",
     "status": "סטטוס",
-    "finished": "Finished",
+    "finished": "סיים",
     "fastestLap": "הקפה מהירה ביותר",
     "driverOfTheDay": "נהג היום",
     "polePosition": "עמדת זינוק ראשונה"

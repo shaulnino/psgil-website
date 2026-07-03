@@ -1,13 +1,13 @@
 "use client";
 
 import { Suspense, useMemo } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import SeasonSelector from "@/components/SeasonSelector";
 import StandingsSection from "@/components/StandingsSection";
 import DriverLookupProvider, { useDriverLookup } from "@/components/DriverLookupProvider";
 import { getAwardIcon } from "@/components/AchievementBadges";
-import type { Driver, Team } from "@/lib/driversData";
+import { localizedDriverName, type Driver, type Team } from "@/lib/driversData";
 import {
   filterBySeason,
   groupByBracket,
@@ -97,6 +97,7 @@ function TablesInner({
   placeholderSrc,
 }: TablesPageContentProps) {
   const t = useTranslations("schedule");
+  const locale = useLocale();
   const searchParams = useSearchParams();
   const selectedSeasonKey =
     searchParams.get("season") || defaultSeasonKey;
@@ -163,8 +164,8 @@ function TablesInner({
     !!notes;
 
   const driverNameById = useMemo(
-    () => new Map(drivers.map((d) => [d.driver_id, d.name])),
-    [drivers],
+    () => new Map(drivers.map((d) => [d.driver_id, localizedDriverName(d, locale)])),
+    [drivers, locale],
   );
   const teamNameById = useMemo(
     () => new Map(teams.map((t) => [t.team_key, t.team_name])),
