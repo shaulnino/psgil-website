@@ -2,8 +2,7 @@ import { fetchArticles } from "@/lib/newsData";
 
 export const revalidate = 300;
 
-// TODO(rebrand): swap to the new ISL domain when finalized — kept as psgil.com for now.
-const FALLBACK_SITE_URL = "https://psgil.com";
+const FALLBACK_SITE_URL = "https://f1isl.com";
 const DEFAULT_SOCIAL_IMAGE = "/isl-social.png";
 
 function xmlEscape(value: string): string {

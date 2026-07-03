@@ -339,7 +339,7 @@ function RaceGroupCard({
 
   return (
     <div
-      className={`flex flex-col rounded-[2px] border p-5 transition-colors ${
+      className={`flex flex-col rounded-[2px] border border-t-2 border-t-oxblood p-5 transition-colors ${
         liveNow
           ? "border-oxblood bg-cream"
           : "border-[color:var(--isl-hairline)] bg-cream"
@@ -351,7 +351,7 @@ function RaceGroupCard({
           {liveNow ? (
             <LiveBadge />
           ) : (
-            <h3 className="font-display font-bold tracking-[0.005em] leading-[1.05] text-xl text-ink">{heading}</h3>
+            <h3 className="font-display font-bold tracking-[0.005em] leading-[1.05] text-xl text-oxblood">{heading}</h3>
           )}
           <LeagueBadge league={group.league} />
         </div>

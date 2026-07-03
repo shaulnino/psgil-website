@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 
-// TODO(rebrand): move to the new ISL league email when finalized — kept as psgileague@gmail.com for now (tied to the GMAIL_APP_PASSWORD env var).
-const LEAGUE_EMAIL = "psgileague@gmail.com";
+// ISL league email — also the nodemailer SMTP auth account (from/to for all contact-form mail).
+// NOTE: GMAIL_APP_PASSWORD must be an App Password generated for THIS exact Gmail account, or sending fails.
+const LEAGUE_EMAIL = "islf1league@gmail.com";
 
 // ---------------------------------------------------------------------------
 // Simple in-memory rate limiter (per serverless cold-start window)
@@ -206,7 +207,7 @@ function emailShell(content: string): string {
           <table width="100%" style="border-top:1px solid #ddd4c2;padding-top:16px">
             <tr><td style="font-size:11px;color:#6e6455;line-height:1.5;font-family:Arial,Helvetica,sans-serif">
               ISL — F1 Israeli Super League<br>
-              <a href="https://psgil.com" style="color:#7e2a1e;text-decoration:none">psgil.com</a>
+              <a href="https://f1isl.com" style="color:#7e2a1e;text-decoration:none">f1isl.com</a>
             </td></tr>
           </table>
         </td></tr>
@@ -228,7 +229,7 @@ function autoReplySignupText(name: string): string {
     "",
     "We'll reach out to you by email before the next season starts or when a seat opens up.",
     "",
-    "In the meantime, check out our latest standings and schedule at psgil.com.",
+    "In the meantime, check out our latest standings and schedule at f1isl.com.",
     "",
     "See you on track!",
     "— The ISL Team",
@@ -248,7 +249,7 @@ function autoReplySignupHtml(name: string): string {
       In the meantime, check out our latest standings and schedule:
     </p>
     <table cellpadding="0" cellspacing="0"><tr><td style="background:#7e2a1e;border-radius:2px;padding:10px 28px">
-      <a href="https://psgil.com" style="color:#f4efe4;text-decoration:none;font-size:14px;font-weight:600;font-family:Arial,Helvetica,sans-serif">Visit psgil.com</a>
+      <a href="https://f1isl.com" style="color:#f4efe4;text-decoration:none;font-size:14px;font-weight:600;font-family:Arial,Helvetica,sans-serif">Visit f1isl.com</a>
     </td></tr></table>
     <p style="margin:24px 0 0;font-size:14px;color:#3a322a;line-height:1.6;font-family:Arial,Helvetica,sans-serif">
       See you on track!<br>
@@ -266,7 +267,7 @@ function autoReplyQuestionText(name: string): string {
     "",
     "Thanks for reaching out! We received your message and will reply to you by email as soon as possible.",
     "",
-    "If your matter is urgent you can also email us directly at psgileague@gmail.com.",
+    `If your matter is urgent you can also email us directly at ${LEAGUE_EMAIL}.`,
     "",
     "— The ISL Team",
   ].join("\n");
@@ -283,7 +284,7 @@ function autoReplyQuestionHtml(name: string): string {
     </p>
     <p style="margin:0 0 0;font-size:14px;color:#3a322a;line-height:1.6;font-family:Arial,Helvetica,sans-serif">
       If your matter is urgent you can also email us directly at
-      <a href="mailto:psgileague@gmail.com" style="color:#7e2a1e;text-decoration:none">psgileague@gmail.com</a>.
+      <a href="mailto:${LEAGUE_EMAIL}" style="color:#7e2a1e;text-decoration:none">${LEAGUE_EMAIL}</a>.
     </p>
     <p style="margin:24px 0 0;font-size:14px;color:#3a322a;line-height:1.6;font-family:Arial,Helvetica,sans-serif">
       <span style="color:#6e6455">— The ISL Team</span>

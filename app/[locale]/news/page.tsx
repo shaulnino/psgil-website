@@ -41,7 +41,7 @@ export default async function NewsPage() {
           </div>
           <div className="p-5">
             <div className="flex flex-wrap items-center gap-2">
-              <p className="num text-xs font-semibold uppercase tracking-[0.16em] text-meta">
+              <p className="num-date text-xs font-semibold uppercase tracking-[0.16em] text-meta">
                 {formatNewsDate(article.date, locale)}
               </p>
               <NewsCategoryTag category={category} />

@@ -44,7 +44,7 @@ export const siteConfig: SiteConfig = {
   ],
   // DEAD CONFIG — never rendered anywhere. Retained intentionally.
   aboutBullets: [
-    "3+ years active",
+    "Inaugural season",
     "Currently in {currentSeason}",
     "Community-first & respectful racing",
     "Full stats kept from the beginning",

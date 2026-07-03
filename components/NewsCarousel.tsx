@@ -49,7 +49,7 @@ export default function NewsCarousel({ articles }: NewsCarouselProps) {
 
   return (
     <div
-      className="relative rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream"
+      className="relative rounded-[2px] border border-brass bg-cream"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onTouchStart={(e) => setTouchStartX(e.touches[0]?.clientX ?? null)}
@@ -66,7 +66,7 @@ export default function NewsCarousel({ articles }: NewsCarouselProps) {
     >
       <LoadingLink href={`/news/${encodeURIComponent(active.slug)}`} className="group block">
         <div className="grid gap-0 md:grid-cols-2">
-          <div className="relative h-60 overflow-hidden rounded-t-[2px] border-b border-[color:var(--isl-hairline)] md:h-full md:rounded-none md:border-b-0 md:border-e md:border-[color:var(--isl-hairline)]">
+          <div className="relative h-60 overflow-hidden rounded-t-[2px] border-b border-brass md:h-full md:rounded-none md:border-b-0 md:border-e md:border-brass">
             <NewsImage
               src={active.coverImageUrl}
               alt={active.title}
@@ -82,7 +82,7 @@ export default function NewsCarousel({ articles }: NewsCarouselProps) {
                 </p>
               )}
               <div className="flex flex-wrap items-center gap-2">
-                <p className="num text-xs font-semibold uppercase tracking-[0.16em] text-meta">
+                <p className="num-date text-xs font-semibold uppercase tracking-[0.16em] text-meta">
                   {formatNewsDate(active.date, locale)}
                 </p>
                 <NewsCategoryTag category={active.category} />

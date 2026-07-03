@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import type { Driver, Team, TeamWithDrivers } from "@/lib/driversData";
-import { getTeamColor, localizedDriverName } from "@/lib/driversData";
+import { getTeamColor, getTeamLogo, localizedDriverName } from "@/lib/driversData";
 import DriverCard from "@/components/DriverCard";
 import DriverModal from "@/components/DriverModal";
 import { AchievementBadgeList } from "@/components/AchievementBadges";
@@ -62,12 +62,12 @@ export default function DriversGrid({ teams, reserves, historicDrivers, placehol
               <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-2">
                 <div className="flex h-full w-full items-center justify-center rounded-[2px] bg-white p-1">
                   <Image
-                    src={team.logo_url || "/isl-mark.png"}
+                    src={getTeamLogo(team.team_key)}
                     alt={`${team.team_name} logo`}
                     width={64}
                     height={64}
                     className="h-14 w-14 object-contain"
-                    unoptimized={!isRemote(team.logo_url || "/isl-mark.png")}
+                    unoptimized={!isRemote(getTeamLogo(team.team_key))}
                   />
                 </div>
               </div>

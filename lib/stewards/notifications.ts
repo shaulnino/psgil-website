@@ -4,10 +4,11 @@ import type { Appeal, AppealVerdict, PenaltyToServe, StewardCase, StewardUser, V
 // ---------------------------------------------------------------------------
 // Config
 // ---------------------------------------------------------------------------
-// TODO(rebrand): move to the new ISL league email when finalized — kept as psgileague@gmail.com for now (tied to the GMAIL_APP_PASSWORD env var).
-const LEAGUE_EMAIL = "psgileague@gmail.com";
-// TODO(rebrand): default falls back to psgil.com — set NEXT_PUBLIC_SITE_URL to the new ISL domain when finalized.
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://psgil.com").replace(/\/$/, "");
+// ISL league email — also the nodemailer SMTP auth account + "from" for all steward notifications.
+// NOTE: GMAIL_APP_PASSWORD must be an App Password generated for THIS exact Gmail account, or sending fails.
+const LEAGUE_EMAIL = "islf1league@gmail.com";
+// Falls back to f1isl.com; NEXT_PUBLIC_SITE_URL overrides it in Netlify.
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://f1isl.com").replace(/\/$/, "");
 
 function esc(str: string): string {
   return String(str)
@@ -245,7 +246,7 @@ function buildEmail(p: EmailParams): { html: string; text: string } {
     <td style="background:#eae2d0;border:1px solid #ddd4c2;border-top:1px solid #ddd4c2;border-radius:0 0 2px 2px;padding:14px 26px">
       <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#6e6455;line-height:1.6">
         ISL &mdash; F1 Israeli Super League &nbsp;&middot;&nbsp;
-        <a href="https://psgil.com" style="color:#7e2a1e;text-decoration:none">psgil.com</a><br>
+        <a href="https://f1isl.com" style="color:#7e2a1e;text-decoration:none">f1isl.com</a><br>
         This is an automated message from the Steward System. Please do not reply to this email.
       </p>
     </td>
@@ -282,7 +283,7 @@ function buildEmail(p: EmailParams): { html: string; text: string } {
     `${p.cta.label}: ${p.cta.url}`,
     ...(p.note ? ["", p.note] : []),
     "",
-    "— ISL Steward System · psgil.com",
+    "— ISL Steward System · f1isl.com",
   ];
 
   return { html, text: textLines.join("\n") };

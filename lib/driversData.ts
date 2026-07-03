@@ -289,7 +289,9 @@ const TEAM_COLORS: Record<string, string> = {
   "psgil-mclaren":  "#FF8000",   // McLaren papaya orange
   "psgil-williams": "#64C4FF",   // Williams blue
   "psgil-mercedes": "#27F4D2",   // Mercedes turquoise
-  "psgil-sauber":   "#52E252",   // Kick Sauber green
+  "psgil-sauber":   "#52E252",   // Kick Sauber green (historic)
+  "psgil-audi":     "#FF2D00",   // Audi F1 red (matches the logo mark)
+  "psgil-cadillac": "#0A1E3C",   // Cadillac dark navy — best-guess, adjust to final livery
 };
 
 const FALLBACK_TEAM_COLOR = "#7020B0"; // purple accent
@@ -297,6 +299,41 @@ const FALLBACK_TEAM_COLOR = "#7020B0"; // purple accent
 /** Return the primary border color for a given team_key. Falls back to purple. */
 export function getTeamColor(teamKey: string): string {
   return TEAM_COLORS[teamKey] ?? FALLBACK_TEAM_COLOR;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Team logos                                                         */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Team logos, keyed by team_key. This map is the single source of truth for
+ * team logos — the `logo_url` column in the Google Sheet is intentionally NOT
+ * consulted. To add or change a logo: drop the file in `public/teams/` and add
+ * or update its entry here. Files live in `public/teams/`.
+ */
+const TEAM_LOGOS: Record<string, string> = {
+  "psgil-alpine":   "/teams/alpine.svg",
+  "psgil-aston":    "/teams/aston martin.svg",
+  "psgil-ferrari":  "/teams/ferrari.svg",
+  "psgil-racingb":  "/teams/racing bulls.svg",
+  "psgil-haas":     "/teams/haas.svg",
+  "psgil-redbull":  "/teams/red bull.svg",
+  "psgil-mclaren":  "/teams/mclaren.svg",
+  "psgil-williams": "/teams/williams.svg",
+  "psgil-mercedes": "/teams/mercedes.svg",
+  "psgil-sauber":   "/teams/kick sauber.svg",
+  "psgil-audi":     "/teams/audi.svg",
+  "psgil-cadillac": "/teams/cadillac.png",
+};
+
+const FALLBACK_TEAM_LOGO = "/isl-mark.png";
+
+/**
+ * Resolve the logo for a team from the code-side `TEAM_LOGOS` map, falling
+ * back to the site mark for unmapped teams.
+ */
+export function getTeamLogo(teamKey: string): string {
+  return TEAM_LOGOS[teamKey] ?? FALLBACK_TEAM_LOGO;
 }
 
 /* ------------------------------------------------------------------ */

@@ -12,15 +12,16 @@ export const GA_ID = process.env.NEXT_PUBLIC_GA_ID ?? "";
  * Returns true only when:
  *  1. A GA measurement ID is configured
  *  2. The app is running in production mode
- *  3. The hostname contains "psgil.com"  (skips localhost & deploy previews)
+ *  3. The hostname is a production domain (skips localhost & deploy previews)
  */
 export function isGaEnabled(): boolean {
   if (!GA_ID) return false;
   if (typeof window === "undefined") return false;
   if (process.env.NODE_ENV !== "production") return false;
-  // TODO(rebrand): update "psgil.com" to the new ISL domain when finalized —
-  // GA will not fire on the new domain until this is changed.
-  return window.location.hostname.includes("psgil.com");
+  // f1isl.com is the live domain; psgil.com is retained during the migration
+  // (it 301-redirects to f1isl.com) so analytics never gap during cutover.
+  const host = window.location.hostname;
+  return host.endsWith("f1isl.com") || host.endsWith("psgil.com");
 }
 
 /* ------------------------------------------------------------------ */

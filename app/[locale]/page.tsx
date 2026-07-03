@@ -241,7 +241,7 @@ export default async function Home() {
           </div>
 
           <div className="mt-8 max-w-5xl">
-            <h1 className="font-display text-4xl font-bold leading-[1.03] tracking-[0.005em] text-ink md:text-5xl lg:text-6xl [text-wrap:balance]">
+            <h1 className="font-display text-4xl font-bold leading-[1.03] tracking-[0.005em] text-ink [-webkit-text-stroke:2px_#d4af37] [paint-order:stroke] md:text-5xl md:[-webkit-text-stroke-width:3px] lg:text-6xl [text-wrap:balance]">
               {tHome("hero.title")}
             </h1>
             <p className="mt-4 max-w-xl text-lg text-ink-2 md:text-xl">
@@ -255,7 +255,7 @@ export default async function Home() {
               />
             </div>
             <div className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] leading-relaxed">
-              <span className="me-1 font-isl-body font-semibold uppercase tracking-[0.18em] text-brass-ink">
+              <span className="me-1 font-isl-body font-semibold uppercase tracking-[0.18em] text-oxblood">
                 {tHome("hero.keyFacts")}
               </span>
               {trustChips.map((chip, i) => (
@@ -292,11 +292,11 @@ export default async function Home() {
       {featuredNews && (
         <section className="py-4">
           <div className="mx-auto w-full max-w-6xl px-6">
-            <div className="overflow-hidden rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream">
+            <div className="overflow-hidden rounded-[2px] border border-brass bg-cream">
               <div className="grid gap-0 md:grid-cols-[240px_1fr]">
                 <LoadingLink
                   href={`/news/${encodeURIComponent(featuredNews.slug)}`}
-                  className="group relative block h-44 border-b border-[color:var(--isl-hairline)] md:h-full md:border-b-0 md:border-e"
+                  className="group relative block h-44 border-b border-brass md:h-full md:border-b-0 md:border-e"
                 >
                   <Image
                     src={featuredNews.coverImageUrl || newsFallbackImage}
@@ -316,7 +316,7 @@ export default async function Home() {
                     <span className="inline-flex items-center rounded-[2px] border border-oxblood px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-oxblood">
                       {tHome("featured.newsFlash")}
                     </span>
-                    <span className="num text-[11px] font-semibold uppercase tracking-[0.13em] text-meta">
+                    <span className="num-date text-[11px] font-semibold uppercase tracking-[0.13em] text-meta">
                       {formatNewsDate(featuredNews.date, locale)}
                     </span>
                   </div>
@@ -358,9 +358,9 @@ export default async function Home() {
           {(tHome.raw("leagueFormatItems") as { title: string; description: string }[]).map((item) => (
             <div
               key={item.title}
-              className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-5 text-sm text-ink-2"
+              className="rounded-[2px] border border-[color:var(--isl-hairline)] border-t-2 border-t-oxblood bg-cream p-5 text-sm text-ink-2 transition-colors hover:border-t-oxblood-deep"
             >
-              <h3 className="font-display text-lg font-bold tracking-[0.005em] text-ink">
+              <h3 className="font-display text-lg font-bold tracking-[0.005em] text-oxblood">
                 {item.title}
               </h3>
               <p className="mt-2 text-ink-2">{item.description}</p>

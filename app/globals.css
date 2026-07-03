@@ -120,6 +120,16 @@
   unicode-bidi: isolate;
 }
 
+/* Localized dates: same tabular numerals, but follow the ambient text
+   direction so Hebrew dates read RTL (day–month–year, e.g. "2 במרץ 2026")
+   instead of being forced LTR like a countdown. */
+.num-date {
+  font-family: var(--font-spline-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  unicode-bidi: isolate;
+}
+
 /* ISL font-family utilities (consumed by the primitive library + showcase).
    Additive: the global body font is unchanged until the Phase 5 flip. */
 .font-isl-display {

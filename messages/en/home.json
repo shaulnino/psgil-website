@@ -10,7 +10,7 @@
     "imageAlt": "ISL racing atmosphere"
   },
   "trustChips": [
-    "3+ years running",
+    "Inaugural season",
     "{currentSeason} live",
     "No assists • 50% races",
     "Fair & stewarded racing",
@@ -73,7 +73,7 @@
   },
   "about": {
     "title": "About Us",
-    "body": "ISL — the F1 Israeli Super League — is one of the biggest sim racing leagues in the country, formed when two of Israel's most experienced F1 sim racing leagues merged into one. Racing primarily on the EA Sports F1 series and currently in its {season}, ISL is built by drivers, for drivers: a strong, supportive community, highly competitive grids, and a deep commitment to clean, respectful racing—both on and off the track. With structured seasons, consistent stewarding, and a culture that values fairness and sportsmanship, ISL sets the highest standard for organized sim racing in Israel."
+    "body": "ISL — the F1 Israeli Super League — is one of Israel's premier F1 sim racing leagues, formed by the merger of two established communities, PSGiL and F1IL, into a single grid. We race on the EA Sports F1 series at 50% distance with no driving assists — full driver control, real strategy, and results that are earned. ISL is built by drivers, for drivers: competitive grids, a supportive community, and a firm commitment to clean, respectful racing on and off the track. With two structured seasons a year, consistent stewarding, and full Drivers and Teams standings, ISL brings the experience of both leagues together to set a high standard for organized sim racing in Israel. We are currently racing in {season}."
   },
   "contact": {
     "title": "Contact Us",

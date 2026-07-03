@@ -60,8 +60,7 @@ function resolveSiteBaseUrl(): string {
     process.env.SITE_BASE_URL ||
     process.env.NEXT_PUBLIC_SITE_URL ||
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "");
-  // TODO(rebrand): final fallback is psgil.com — update to the new ISL domain when finalized.
-  return String(envBase || "").trim().replace(/\/+$/, "") || "https://psgil.com";
+  return String(envBase || "").trim().replace(/\/+$/, "") || "https://f1isl.com";
 }
 
 function resolveAbsoluteUrl(baseUrl: string, value: string): string {
@@ -287,7 +286,7 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
             />
           </div>
           <div className="border-b border-[color:var(--isl-hairline)] bg-cream p-6 md:p-8">
-            <p className="num text-xs font-semibold uppercase tracking-[0.16em] text-meta">
+            <p className="num-date text-xs font-semibold uppercase tracking-[0.16em] text-meta">
               {formatNewsDate(article.date, locale)}
               <span className="mx-2 text-faint">•</span>
               {article.author}

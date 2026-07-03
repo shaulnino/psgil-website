@@ -79,7 +79,7 @@ export default function PrivacyPage() {
             </h2>
             <p>
               To request access, correction, or deletion of personal data,
-              contact us at <a className="text-oxblood hover:text-oxblood-deep" href="mailto:psgileague@gmail.com">psgileague@gmail.com</a>.
+              contact us at <a className="text-oxblood hover:text-oxblood-deep" href="mailto:islf1league@gmail.com">islf1league@gmail.com</a>.
             </p>
           </section>
 
@@ -91,9 +91,9 @@ export default function PrivacyPage() {
               For privacy questions, email{" "}
               <a
                 className="text-oxblood hover:text-oxblood-deep"
-                href="mailto:psgileague@gmail.com"
+                href="mailto:islf1league@gmail.com"
               >
-                psgileague@gmail.com
+                islf1league@gmail.com
               </a>
               .
             </p>

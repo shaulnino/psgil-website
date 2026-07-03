@@ -27,13 +27,13 @@ Create a `.env.local` file with the following:
 | `NEWS_SHEET_URL`           | Yes          | Public Google Sheets CSV URL for the `articles` tab.                        |
 | `STEWARD_SESSION_SECRET`   | Yes (prod)   | Random secret for signing steward JWT sessions. Falls back to a public dev default if unset — **must be set in production**. Generate with: `openssl rand -hex 32` |
 | `REWARDS_SHEET_URL`        | No           | Public CSV URL for the `rewards` dataset (season awards).                   |
-| `NEXT_PUBLIC_SITE_URL`     | No           | Public base URL used in steward email notification links (defaults to `https://psgil.com`). |
-| `SITE_BASE_URL`            | No           | Public site base URL used for absolute RSS/OG links (defaults to `https://psgil.com`). |
+| `NEXT_PUBLIC_SITE_URL`     | No           | Public base URL used in steward email notification links (defaults to `https://f1isl.com`). |
+| `SITE_BASE_URL`            | No           | Public site base URL used for absolute RSS/OG links (defaults to `https://f1isl.com`). |
 | `NEXT_PUBLIC_GA_ID`        | No           | Google Analytics 4 Measurement ID (e.g. `G-XXXXXXXXXX`).                   |
 
 ### Gmail App Password setup
 
-1. Enable 2-Step Verification on the Gmail account (`psgileague@gmail.com`).
+1. Enable 2-Step Verification on the Gmail account (`islf1league@gmail.com`).
 2. Go to [Google App Passwords](https://myaccount.google.com/apppasswords).
 3. Generate a new app password for "Mail".
 4. Copy the 16-character password into `GMAIL_APP_PASSWORD`.
@@ -42,7 +42,7 @@ Create a `.env.local` file with the following:
 
 The contact form (`/api/contact`) sends two emails per submission:
 
-1. **Admin notification** — to `psgileague@gmail.com` with the form data.
+1. **Admin notification** — to `islf1league@gmail.com` with the form data.
 2. **Auto-reply** — to the user confirming receipt. The template varies by form mode:
    - *Sign-up*: "PSGiL — Sign up received 🏁"
    - *Question*: "PSGiL — We got your message ✅"
@@ -94,7 +94,7 @@ Images:
 Use the RSS feed to drive no-code automations (IFTTT, Zapier, Make, social schedulers):
 
 - Feed URL: `/news/rss.xml`
-- Full production example: `https://psgil.com/news/rss.xml`
+- Full production example: `https://f1isl.com/news/rss.xml`
 - Instagram-ready variant: `/rss/articles-instagram.xml`
 
 The feed is RSS 2.0 with media namespace and includes:
@@ -110,8 +110,8 @@ When a new article is marked `published` in the sheet, it appears in the feed au
 Race countdown alert feed (for social auto-posting without Facebook API):
 
 - Feed URL: `/rss/race-alerts.xml`
-- Full production example: `https://psgil.com/rss/race-alerts.xml`
-- Instagram-ready variant: `https://psgil.com/rss/race-alerts-instagram.xml`
+- Full production example: `https://f1isl.com/rss/race-alerts.xml`
+- Instagram-ready variant: `https://f1isl.com/rss/race-alerts-instagram.xml`
 - Emits one alert item only in the 15-minute pre-race window for the next scheduled race
 - Prevents duplicate alerts using persisted posted-state storage
 - Setup guide: `docs/race-alert-rss-zapier.md`

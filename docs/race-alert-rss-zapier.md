@@ -4,9 +4,9 @@ Use this dedicated feed to auto-post a "race starts soon" alert via Zapier.
 
 ## Feed URL
 
-- Production: `https://psgil.com/rss/race-alerts.xml`
+- Production: `https://f1isl.com/rss/race-alerts.xml`
 - Local: `http://localhost:3000/rss/race-alerts.xml`
-- Instagram-specific variant: `https://psgil.com/rss/race-alerts-instagram.xml`
+- Instagram-specific variant: `https://f1isl.com/rss/race-alerts-instagram.xml`
 
 ## How it works
 
@@ -26,7 +26,7 @@ Use this dedicated feed to auto-post a "race starts soon" alert via Zapier.
 
 1. Trigger app: **RSS by Zapier**
 2. Trigger event: **New Item in Feed**
-3. Feed URL: `https://psgil.com/rss/race-alerts.xml`
+3. Feed URL: `https://f1isl.com/rss/race-alerts.xml`
 4. Action app: **Facebook Pages** (or your chosen social app)
 5. Map fields:
    - Post text/title: RSS `title`
@@ -51,8 +51,8 @@ Use this dedicated feed to auto-post a "race starts soon" alert via Zapier.
 
 Examples:
 
-- `https://psgil.com/rss/race-alerts.xml?force=1`
-- `https://psgil.com/rss/race-alerts.xml?race_id=s6_r04_main&force=1`
-- `https://psgil.com/rss/race-alerts.xml?race_id=s6_r04_main&force=1&commit=1`
-- `https://psgil.com/rss/race-alerts-instagram.xml?force=1`
+- `https://f1isl.com/rss/race-alerts.xml?force=1`
+- `https://f1isl.com/rss/race-alerts.xml?race_id=s6_r04_main&force=1`
+- `https://f1isl.com/rss/race-alerts.xml?race_id=s6_r04_main&force=1&commit=1`
+- `https://f1isl.com/rss/race-alerts-instagram.xml?force=1`
 

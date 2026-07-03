@@ -5,8 +5,8 @@ import { useTranslations } from "next-intl";
 import SuccessModal from "./SuccessModal";
 import { Button } from "@/components/ui/button";
 
-// TODO(rebrand): move to the new ISL league email when finalized — kept as psgileague@gmail.com for now.
-const EMAIL = "psgileague@gmail.com";
+// ISL league contact email (display + mailto + copy button).
+const EMAIL = "islf1league@gmail.com";
 
 type FormState = "idle" | "sending" | "sent" | "error";
 type FormMode = "signup" | "question";

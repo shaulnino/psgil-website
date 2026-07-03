@@ -7,3 +7,18 @@
   # secrets scanning. These are intentionally public, read-only endpoints
   # and are not credentials.
   SECRETS_SCAN_SMART_DETECTION_OMIT_VALUES = "2PACX-.*"
+
+# Domain migration: permanently redirect the old domain to f1isl.com.
+# NOTE: this is the cutover. Only let this reach production AFTER f1isl.com's
+# SSL certificate is provisioned, or psgil.com visitors hit a cert error.
+[[redirects]]
+  from = "https://psgil.com/*"
+  to = "https://f1isl.com/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://www.psgil.com/*"
+  to = "https://f1isl.com/:splat"
+  status = 301
+  force = true
