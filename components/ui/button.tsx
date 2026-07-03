@@ -3,10 +3,10 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 /**
- * ISL "Qav Rishon" Button.
- * - primary   = ink fill / bone text (the press)
- * - secondary = ink hairline outline, no fill
- * - ghost     = ink text; a link becoming a rule (oxblood underline on hover)
+ * ISL "Race Control" Button (dark broadcast theme).
+ * - primary   = gold fill / charcoal text (the press)
+ * - secondary = gold hairline outline, no fill (gold text)
+ * - ghost     = ink text becoming a gold rule on hover
  * Sharp 2px corners, no shadow, no glow. Logical properties for RTL.
  * Supports both <a href> and <button>.
  */
@@ -15,11 +15,11 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary: "bg-ink text-bone hover:opacity-90",
+        primary: "bg-oxblood text-bone hover:bg-oxblood-deep",
         secondary:
-          "border border-hairline-strong text-ink hover:border-ink bg-transparent",
+          "border border-oxblood text-oxblood hover:border-oxblood-deep hover:text-oxblood-deep hover:bg-oxblood/10 bg-transparent",
         ghost:
-          "text-ink bg-transparent border-b border-transparent hover:border-oxblood",
+          "text-ink bg-transparent border-b border-transparent hover:border-oxblood hover:text-oxblood",
       },
       size: {
         sm: "text-xs px-3 py-1.5",
