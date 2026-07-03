@@ -2,7 +2,7 @@ import Section from "@/components/Section";
 
 export default function NewsLoading() {
   return (
-    <main className="bg-bone text-ink">
+    <main className="text-ink">
       <Section title="News" description="Loading latest articles..." pageHeader>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 3 }).map((_, idx) => (

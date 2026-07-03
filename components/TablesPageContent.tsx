@@ -1,13 +1,13 @@
 "use client";
 
 import { Suspense, useMemo } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import SeasonSelector from "@/components/SeasonSelector";
 import StandingsSection from "@/components/StandingsSection";
 import DriverLookupProvider, { useDriverLookup } from "@/components/DriverLookupProvider";
 import { getAwardIcon } from "@/components/AchievementBadges";
-import type { Driver, Team } from "@/lib/driversData";
+import { localizedDriverName, type Driver, type Team } from "@/lib/driversData";
 import {
   filterBySeason,
   groupByBracket,
@@ -97,6 +97,7 @@ function TablesInner({
   placeholderSrc,
 }: TablesPageContentProps) {
   const t = useTranslations("schedule");
+  const locale = useLocale();
   const searchParams = useSearchParams();
   const selectedSeasonKey =
     searchParams.get("season") || defaultSeasonKey;
@@ -147,9 +148,24 @@ function TablesInner({
       .sort((a, b) => (a.rank ?? DEFAULT_AWARD_RANK[a.award_code] ?? 999) - (b.rank ?? DEFAULT_AWARD_RANK[b.award_code] ?? 999));
   }, [rewards, seasonNumber]);
 
+  /* Does this season have anything to show (rows, fallback images, awards, notes)?
+     When it doesn't, we render a single premium "Standings Locked" board instead
+     of a stack of empty section placeholders. */
+  const hasContent =
+    data.driversMain.length > 0 ||
+    data.constructorsMain.length > 0 ||
+    data.driversWild.length > 0 ||
+    data.constructorsWild.length > 0 ||
+    !!dMainImg ||
+    !!cMainImg ||
+    !!dWildImg ||
+    !!cWildImg ||
+    seasonRewards.length > 0 ||
+    !!notes;
+
   const driverNameById = useMemo(
-    () => new Map(drivers.map((d) => [d.driver_id, d.name])),
-    [drivers],
+    () => new Map(drivers.map((d) => [d.driver_id, localizedDriverName(d, locale)])),
+    [drivers, locale],
   );
   const teamNameById = useMemo(
     () => new Map(teams.map((t) => [t.team_key, t.team_name])),
@@ -187,7 +203,7 @@ function TablesInner({
           <h1 className="font-display text-4xl font-bold tracking-[0.005em] leading-[1.05] text-ink md:text-5xl">
             {t("tables.title")}
           </h1>
-          <div className="mt-3 h-[2px] w-36 bg-oxblood" />
+          <div className="isl-gold-rule mt-4 max-w-[220px]" />
           <p className="mt-4 text-base text-ink-2 md:text-lg">
             {t("tables.description")}
           </p>
@@ -198,6 +214,21 @@ function TablesInner({
         />
       </div>
 
+      {!hasContent ? (
+        <div className="relative isl-corner-ticks isl-speed-lines flex flex-col items-center justify-center gap-3 rounded-[2px] border border-[color:var(--isl-hairline-strong)] bg-cream px-6 py-20 text-center">
+          <span className="inline-flex h-11 w-11 items-center justify-center rounded-[2px] border border-brass text-brass-ink">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
+              <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
+            </svg>
+          </span>
+          <h3 className="font-display text-2xl font-bold tracking-[0.005em] text-ink">
+            {t("tablesContent.standingsLockedTitle")}
+          </h3>
+          <p className="max-w-md text-sm leading-relaxed text-meta">
+            {t("tablesContent.standingsLockedBody")}
+          </p>
+        </div>
+      ) : (
       <div className="flex flex-col gap-12">
         {/* ============ SEASON NOTES BANNER ============ */}
         {notes && (
@@ -345,21 +376,8 @@ function TablesInner({
             </div>
           </div>
         )}
-
-        {/* No data at all for this season */}
-        {data.driversMain.length === 0 &&
-          data.constructorsMain.length === 0 &&
-          data.driversWild.length === 0 &&
-          data.constructorsWild.length === 0 &&
-          seasonRewards.length === 0 &&
-          !notes && (
-            <div className="flex items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream py-16">
-              <p className="text-sm text-meta">
-                {t("tablesContent.noStandingsForSeason")}
-              </p>
-            </div>
-          )}
       </div>
+      )}
     </DriverLookupProvider>
   );
 }

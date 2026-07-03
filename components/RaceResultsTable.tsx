@@ -1,8 +1,9 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import ResultsTable, { type ColumnDef } from "@/components/ResultsTable";
 import type { RaceResultRow } from "@/lib/resultsData";
+import { localizedDriverName } from "@/lib/driversData";
 import { useDriverLookup } from "@/components/DriverLookupProvider";
 
 type Translator = (key: string) => string;
@@ -58,7 +59,14 @@ function PoleBadge() {
 
 function DriverNameCell({ row }: { row: RaceResultRow }) {
   const { getDriver, openDriverModal } = useDriverLookup();
-  const hasCard = !!row.driver_id && !!getDriver(row.driver_id);
+  const locale = useLocale();
+  const entry = row.driver_id ? getDriver(row.driver_id) : undefined;
+  const hasCard = !!entry;
+  // Prefer the localized name from the drivers CSV (e.g. Hebrew) when the driver
+  // exists there; otherwise fall back to the raw results-row name.
+  const displayName = entry
+    ? localizedDriverName(entry.driver, locale) || row.driver_name
+    : row.driver_name;
 
   const badges = (
     <>
@@ -79,7 +87,7 @@ function DriverNameCell({ row }: { row: RaceResultRow }) {
           }}
           className="cursor-pointer font-semibold text-ink underline-offset-2 transition-colors hover:text-oxblood hover:underline hover:decoration-oxblood/50"
         >
-          {row.driver_name}
+          {displayName}
         </button>
         {badges}
       </span>
@@ -88,7 +96,7 @@ function DriverNameCell({ row }: { row: RaceResultRow }) {
 
   return (
     <span className="font-semibold text-ink">
-      {row.driver_name}
+      {displayName}
       {badges}
     </span>
   );

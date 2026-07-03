@@ -6,6 +6,8 @@
   "grid": {
     "mainDrivers": "Main drivers",
     "lineupComingSoon": "Driver lineup coming soon.",
+    "seat": "Seat",
+    "toBeRevealed": "To Be Revealed",
     "reserveDrivers": "Reserve Drivers",
     "reserveDescription": "Additional drivers available for substitution.",
     "reserveComingSoon": "Reserve roster coming soon.",

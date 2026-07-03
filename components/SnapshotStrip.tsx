@@ -12,7 +12,7 @@ export default function SnapshotStrip({ stats }: { stats: SnapshotStat[] }) {
             <span className="font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-brass-ink">
               {stat.label}
             </span>
-            <span className="num font-display text-3xl font-bold text-[#d4af37] md:text-4xl">
+            <span className="num font-display text-3xl font-bold text-oxblood md:text-4xl">
               {stat.value}
             </span>
           </div>

@@ -1,14 +1,14 @@
 @import "tailwindcss";
 
-/* ── Phase 5 theme flip: the site now runs the ISL "Qav Rishon" LIGHT theme.
-   The semantic tokens (--background/--foreground/--muted) are repointed to the
-   ISL light palette; fonts swap to Oswald / Public Sans. This is the
-   single-mode light theme (no dark twin). Route/content migration to the new
-   utilities proceeds route-by-route on this branch. ── */
+/* ── ISL "Race Control" DARK broadcast theme.
+   The semantic tokens (--background/--foreground/--muted) point to the dark
+   charcoal + gold broadcast palette. Fonts stay Oswald / Public Sans. This is
+   a single-mode dark theme (no light twin). Accent is a single restrained
+   metallic GOLD; red is reserved for semantic status only. ── */
 :root {
-  --background: #f4efe4; /* bone newsprint */
-  --foreground: #1c1712; /* brown-ink */
-  --muted: #6e6455; /* meta taupe */
+  --background: #0f1113; /* charcoal foundation */
+  --foreground: #f3f1ec; /* warm near-white ink */
+  --muted: #918c82; /* muted meta */
 }
 
 @theme inline {
@@ -38,34 +38,37 @@
    in Phase 5. The Recharts JS theme (Phase 5) reads the --isl- names directly
    via getComputedStyle. ═══════════════════════════════════════════════════ */
 :root {
-  /* Surfaces (opaque solids — back sticky/frozen table cells; §3.2 of spec) */
-  --isl-bone: #f4efe4; /* primary page bg */
-  --isl-paper: #fbf8f0; /* lightest surface — table bodies, panels, inputs */
-  --isl-cream: #eae2d0; /* alt band + card fill */
-  --isl-sink: #ded4bf; /* recessed wells — thead, disabled, pinned gutter */
-  /* Ink scale */
-  --isl-ink: #1c1712; /* primary text / headings / primary button fill */
-  --isl-ink-2: #3a322a; /* secondary text, table data values */
-  --isl-meta: #6e6455; /* meta/captions (AA on bone; use ink-2 on sink) */
-  --isl-faint: #9a8e79; /* tertiary/disabled — decorative/large only */
-  /* Accent — OXBLOOD (single primary; lines/text/small marks/thin fills only) */
-  --isl-oxblood: #7e2a1e;
-  --isl-oxblood-deep: #5a1d14; /* oxblood-as-text on darker grounds + hover */
-  /* Metals — record/earned/tier ONLY (1px lines), never a fill beside oxblood */
-  --isl-brass: #9c7a3c;
-  --isl-brass-ink: #6f5628;
-  --isl-silver-ink: #5e5a52;
-  --isl-bronze-ink: #7a4b28;
+  /* Surfaces (opaque dark solids — back sticky/frozen table cells) */
+  --isl-bone: #0f1113; /* primary page bg (charcoal) */
+  --isl-paper: #171a1e; /* raised surface — table bodies, panels, inputs */
+  --isl-cream: #1c2025; /* card fill + alt band (elevated panel) */
+  --isl-sink: #0a0b0d; /* recessed wells — thead, disabled, pinned gutter */
+  /* Ink scale (light on dark) */
+  --isl-ink: #f3f1ec; /* primary text / headings */
+  --isl-ink-2: #cbc7bf; /* secondary text, table data values */
+  --isl-meta: #918c82; /* meta/captions (AA on charcoal) */
+  --isl-faint: #6a655c; /* tertiary/disabled — decorative/large only */
+  /* Accent — GOLD (single primary; lines/text/small marks/fills) */
+  --isl-oxblood: #c9a24b; /* restrained metallic gold */
+  --isl-oxblood-deep: #e2c274; /* brighter gold for hover / emphasis on dark */
+  /* Metals — record/earned/tier ONLY (1px lines) */
+  --isl-brass: #b8934a;
+  --isl-brass-ink: #d8b45f;
+  --isl-silver-ink: #c2c6cc;
+  --isl-bronze-ink: #cf9366;
   /* Rules / chart ink / status (shape+label+position carry meaning too) */
-  --isl-hairline: rgba(28, 23, 18, 0.14);
-  --isl-hairline-strong: rgba(28, 23, 18, 0.3);
-  --isl-datum: #8a7e6a; /* non-semantic default chart series ink */
-  --isl-success: #3f6b3a;
-  --isl-warning: #b07a1e;
-  --isl-danger: #9a2b1c; /* also the shadcn --destructive value */
-  --isl-info: #2f5a6e;
-  /* Flat 2px radius token (wired into the rounded-* scale in Phase 5). */
+  --isl-hairline: rgba(240, 236, 228, 0.1);
+  --isl-hairline-strong: rgba(240, 236, 228, 0.22);
+  --isl-datum: #9a9488; /* non-semantic default chart series ink */
+  --isl-success: #5fa457;
+  --isl-warning: #d6a63c;
+  --isl-danger: #e0584a; /* status red — also the shadcn --destructive value */
+  --isl-info: #5a9ab5;
+  /* Flat 2px radius token. */
   --radius: 2px;
+  /* Near-black base for the global "black + gold dust" atmosphere (below the
+     charcoal surfaces). See .isl-global-bg. */
+  --isl-void: #060606;
 }
 
 @theme inline {
@@ -79,6 +82,11 @@
   --color-faint: var(--isl-faint);
   --color-oxblood: var(--isl-oxblood);
   --color-oxblood-deep: var(--isl-oxblood-deep);
+  /* Semantic gold aliases — same values as --isl-oxblood, but named for the
+     broadcast theme so new components read clearly (bg-gold / text-gold).
+     Legacy `*-oxblood` utilities keep working and also render gold. */
+  --color-gold: var(--isl-oxblood);
+  --color-gold-strong: var(--isl-oxblood-deep);
   --color-brass: var(--isl-brass);
   --color-brass-ink: var(--isl-brass-ink);
   --color-silver-ink: var(--isl-silver-ink);
@@ -178,6 +186,77 @@
   border-block-start: 2px solid var(--isl-oxblood);
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   BROADCAST MOTIFS (dark theme) — chamfered panels, the thin-gold
+   architectural line, and race-control corner ticks. All additive utilities;
+   opt-in per component. ═══════════════════════════════════════════════════ */
+
+/* Chamfered "tech panel" — a diagonal cut on the top-start and bottom-end
+   corners. Apply to a panel; for a hairline edge that follows the cut, wrap a
+   1px-padded parent with the same class (see components/ui/card.tsx). */
+.isl-chamfer {
+  clip-path: polygon(
+    10px 0, 100% 0, 100% calc(100% - 10px),
+    calc(100% - 10px) 100%, 0 100%, 0 10px
+  );
+}
+.isl-chamfer-lg {
+  clip-path: polygon(
+    16px 0, 100% 0, 100% calc(100% - 16px),
+    calc(100% - 16px) 100%, 0 100%, 0 16px
+  );
+}
+
+/* The recurring thin gold line — the ISL architectural motif. A 1px gold rule
+   that fades along the inline axis, with a solid bright tick at the start. */
+.isl-gold-rule {
+  position: relative;
+  height: 1px;
+  width: 100%;
+  background: linear-gradient(
+    to right,
+    color-mix(in srgb, var(--isl-oxblood) 70%, transparent),
+    color-mix(in srgb, var(--isl-oxblood) 18%, transparent) 45%,
+    transparent
+  );
+}
+.isl-gold-rule::before {
+  content: "";
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  width: 44px;
+  height: 1px;
+  background: var(--isl-oxblood);
+}
+
+/* Race-control corner ticks — small gold L-brackets at two opposite corners.
+   A broadcast framing detail for hero panels and feature cards. */
+.isl-corner-ticks::before,
+.isl-corner-ticks::after {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+  z-index: 1;
+  border-color: var(--isl-oxblood);
+  border-style: solid;
+}
+/* Pinned with PHYSICAL properties (top/left, bottom/right) so the L-bracket
+   orientation always matches its corner. Logical props would flip the position
+   in RTL but not the border sides, leaving the bracket mis-oriented. */
+.isl-corner-ticks::before {
+  top: 0;
+  left: 0;
+  border-width: 1px 0 0 1px;
+}
+.isl-corner-ticks::after {
+  bottom: 0;
+  right: 0;
+  border-width: 0 1px 1px 0;
+}
+
 /* Subtle 115deg gold "speed-lines" — hero / empty-state backdrops only. */
 .isl-speed-lines {
   background-image: repeating-linear-gradient(
@@ -230,7 +309,7 @@ html {
 }
 
 body {
-  background: var(--background); /* flat bone — no gradient/texture (editorial) */
+  background-color: var(--isl-void); /* near-black base; atmosphere in .isl-global-bg */
   color: var(--foreground);
   font-family: var(--font-public-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -239,6 +318,62 @@ body {
 
 .font-display {
   font-family: var(--font-oswald), "Arial Narrow", system-ui, sans-serif;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   GLOBAL "BLACK + GOLD DUST" ATMOSPHERE
+   One fixed layer rendered once in the root layout (<div class="isl-global-bg">),
+   so every route shares the same premium black/gold backdrop with no per-page
+   code. Pure CSS (no image): near-black base + corner gold nebula haze + an
+   outer vignette, plus a tiled gold-speck layer masked to fade out of the
+   center — dust concentrates at the edges/corners, the middle stays dark and
+   readable. Fully static (no animation) → cheap to composite; sits at z-index
+   -1 with pointer-events:none so it never affects layout or interaction.
+
+   TUNE LATER:
+   • Haze strength  → the % in the four corner radial-gradients below (~8–12%).
+   • Speck density  → add/remove points in ::before, or change background-size.
+   • Speck strength → ::before `opacity` (0.4 subtle … 0.8 stronger).
+   • Clean-center size → the `transparent NN%` stop in the ::before mask.
+   ═══════════════════════════════════════════════════════════════════════ */
+.isl-global-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: var(--isl-void);
+  background-repeat: no-repeat;
+  background-image:
+    radial-gradient(78% 70% at 0% 0%, color-mix(in srgb, var(--isl-oxblood) 20%, transparent), transparent 66%),
+    radial-gradient(72% 64% at 100% 2%, color-mix(in srgb, var(--isl-oxblood) 16%, transparent), transparent 64%),
+    radial-gradient(78% 72% at 2% 100%, color-mix(in srgb, var(--isl-oxblood) 20%, transparent), transparent 66%),
+    radial-gradient(74% 68% at 100% 100%, color-mix(in srgb, var(--isl-oxblood) 17%, transparent), transparent 66%),
+    radial-gradient(125% 125% at 50% 45%, transparent 60%, rgba(0, 0, 0, 0.5) 100%);
+}
+
+/* Fine gold speck dust — tiled tiny points, masked so they mostly appear toward
+   the edges (fainter center = little dust behind main content). */
+.isl-global-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 1;
+  background-repeat: repeat;
+  background-size: 190px 210px;
+  background-image:
+    radial-gradient(1.5px 1.5px at 22px 30px, rgba(232, 202, 128, 0.95), transparent 62%),
+    radial-gradient(1px 1px at 92px 120px, rgba(201, 162, 75, 0.75), transparent 62%),
+    radial-gradient(2px 2px at 158px 58px, rgba(232, 202, 128, 0.85), transparent 62%),
+    radial-gradient(1px 1px at 60px 186px, rgba(201, 162, 75, 0.7), transparent 62%),
+    radial-gradient(1.5px 1.5px at 178px 198px, rgba(226, 194, 116, 0.85), transparent 62%),
+    radial-gradient(1px 1px at 124px 14px, rgba(232, 202, 128, 0.7), transparent 62%),
+    radial-gradient(1px 1px at 40px 110px, rgba(201, 162, 75, 0.65), transparent 62%),
+    radial-gradient(2px 2px at 166px 140px, rgba(226, 194, 116, 0.8), transparent 62%),
+    radial-gradient(1px 1px at 110px 78px, rgba(201, 162, 75, 0.6), transparent 62%),
+    radial-gradient(1.5px 1.5px at 8px 160px, rgba(232, 202, 128, 0.75), transparent 62%);
+  -webkit-mask: radial-gradient(105% 98% at 50% 46%, transparent 12%, #000 66%);
+  mask: radial-gradient(105% 98% at 50% 46%, transparent 12%, #000 66%);
 }
 
 /* Global focus ring + selection — the single oxblood accent expression. */
@@ -440,7 +575,8 @@ body {
 @media print {
   header,
   footer,
-  .fixed {
+  .fixed,
+  .isl-global-bg {
     display: none !important;
   }
   body {

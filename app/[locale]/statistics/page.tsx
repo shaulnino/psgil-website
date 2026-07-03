@@ -97,7 +97,7 @@ export default async function TablesPage() {
   }
 
   return (
-    <main className="bg-bone text-ink">
+    <main className="text-ink">
       <section className="py-14 md:py-20">
         <div className="mx-auto w-full max-w-6xl px-6">
           <TablesPageContent

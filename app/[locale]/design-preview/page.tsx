@@ -18,24 +18,23 @@ import { StatTile } from "@/components/ui/stat-tile";
 import { StatusBadge } from "@/components/ui/status-badge";
 
 export const metadata: Metadata = {
-  title: "ISL Design Preview — Qav Rishon",
+  title: "ISL Design Preview — Race Control",
   robots: { index: false, follow: false },
 };
 
-/* Internal, non-navigable showcase of the ISL "Qav Rishon" primitive library
-   rendered in the light editorial theme. NOT linked in the site nav; exists so
-   the new design language can be reviewed before the Phase 5 route-by-route
-   flip. The live pages remain on the current dark theme. */
+/* Internal, non-navigable showcase of the ISL "Race Control" primitive library
+   rendered in the dark broadcast theme. NOT linked in the site nav; exists so
+   the design language can be reviewed in one place. */
 
 const PALETTE: { name: string; token: string; hex: string; text?: boolean }[] = [
-  { name: "Bone", token: "bg-bone", hex: "#F4EFE4" },
-  { name: "Paper", token: "bg-paper", hex: "#FBF8F0" },
-  { name: "Cream", token: "bg-cream", hex: "#EAE2D0" },
-  { name: "Sink", token: "bg-sink", hex: "#DED4BF" },
-  { name: "Ink", token: "bg-ink", hex: "#1C1712", text: true },
-  { name: "Ink-2", token: "bg-ink-2", hex: "#3A322A", text: true },
-  { name: "Oxblood", token: "bg-oxblood", hex: "#7E2A1E", text: true },
-  { name: "Brass", token: "bg-brass", hex: "#9C7A3C", text: true },
+  { name: "Charcoal", token: "bg-bone", hex: "#0F1113" },
+  { name: "Panel", token: "bg-paper", hex: "#171A1E" },
+  { name: "Card", token: "bg-cream", hex: "#1C2025" },
+  { name: "Sink", token: "bg-sink", hex: "#0A0B0D" },
+  { name: "Ink", token: "bg-ink", hex: "#F3F1EC", text: true },
+  { name: "Ink-2", token: "bg-ink-2", hex: "#CBC7BF", text: true },
+  { name: "Gold", token: "bg-oxblood", hex: "#C9A24B", text: true },
+  { name: "Brass", token: "bg-brass", hex: "#B8934A", text: true },
 ];
 
 function SectionRule({ label }: { label: string }) {
@@ -48,7 +47,7 @@ function SectionRule({ label }: { label: string }) {
 
 export default function DesignPreviewPage() {
   return (
-    <main className="min-h-screen bg-bone font-isl-body text-ink-2">
+    <main className="min-h-screen font-isl-body text-ink-2">
       <div className="mx-auto w-full max-w-[1240px] px-5 py-10">
         {/* ── Masthead ── */}
         <header className="isl-speed-lines rounded-[2px] border border-hairline bg-paper p-6">
@@ -161,6 +160,45 @@ export default function DesignPreviewPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* ── Broadcast motifs ── */}
+        <SectionRule label="Broadcast Motifs (chamfer · corner ticks · gold rule)" />
+        <div className="mt-4 grid gap-4 md:grid-cols-3">
+          <Card chamfer>
+            <CardHeader>
+              <Eyebrow>Chamfered Panel</Eyebrow>
+              <CardTitle>Tech Panel</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-ink-2">
+                Diagonal-cut corners with a hairline edge that follows the cut.
+              </p>
+            </CardContent>
+          </Card>
+          <Card cornerTicks>
+            <CardHeader>
+              <Eyebrow>Corner Ticks</Eyebrow>
+              <CardTitle>Race-Control Frame</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-ink-2">
+                Gold L-brackets at two corners — a broadcast framing detail.
+              </p>
+            </CardContent>
+          </Card>
+          <Card chamfer cornerTicks stamped>
+            <CardHeader>
+              <Eyebrow tone="brass">Combined</Eyebrow>
+              <CardTitle>Feature Tile</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-ink-2">
+                Chamfer + ticks + gold edge for hero and feature surfaces.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+        <div className="isl-gold-rule mt-6" />
 
         {/* ── Badges & Status ── */}
         <SectionRule label="Badges & Status (shape + label, not hue)" />

@@ -208,9 +208,9 @@ function TabBar({ tabs, active, onChange }: { tabs: readonly string[]; active: s
           <button
             key={tabId}
             onClick={() => onChange(tabId)}
-            className={`shrink-0 snap-start rounded-[2px] px-3 py-2 text-xs font-semibold transition sm:px-4 sm:text-sm ${
+            className={`shrink-0 snap-start rounded-[2px] px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] transition sm:px-4 sm:text-sm ${
               active === tabId
-                ? "bg-ink text-bone"
+                ? "bg-oxblood text-bone"
                 : "text-meta hover:bg-sink hover:text-ink"
             }`}
           >
@@ -362,8 +362,14 @@ function SearchableSelect({
 
 function EmptyState({ message }: { message: string }) {
   return (
-    <div className="flex items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream py-16">
-      <p className="text-sm text-meta">{message}</p>
+    <div className="isl-speed-lines flex flex-col items-center justify-center gap-3 rounded-[2px] border border-dashed border-[color:var(--isl-hairline-strong)] bg-cream px-6 py-16 text-center">
+      <span className="inline-flex h-10 w-10 items-center justify-center rounded-[2px] border border-brass text-brass-ink">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
+          <path d="M3 3.75A.75.75 0 013.75 3h.5a.75.75 0 01.75.75v12.5a.75.75 0 01-.75.75h-.5a.75.75 0 01-.75-.75V3.75z" />
+          <path d="M8 8.75A.75.75 0 018.75 8h.5a.75.75 0 01.75.75v7.5a.75.75 0 01-.75.75h-.5a.75.75 0 01-.75-.75v-7.5zM13 5.75a.75.75 0 01.75-.75h.5a.75.75 0 01.75.75v10.5a.75.75 0 01-.75.75h-.5a.75.75 0 01-.75-.75V5.75z" />
+        </svg>
+      </span>
+      <p className="max-w-md font-isl-body text-xs font-semibold uppercase tracking-[0.2em] text-meta">{message}</p>
     </div>
   );
 }
@@ -1927,7 +1933,7 @@ function DriversSection({
       {/* ---- All Metrics Modal ---- */}
       {showAllMetrics && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
           onClick={() => setShowAllMetrics(false)}
         >
           <div
@@ -3854,7 +3860,7 @@ function H2HSection({
           : meta?.raceName ?? resultsEventId;
         return (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
             onClick={() => setResultsEventId(null)}
           >
             <div

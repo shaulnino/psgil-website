@@ -55,47 +55,84 @@ export default function DriversGrid({ teams, reserves, historicDrivers, placehol
 
   return (
     <>
-      <div className="space-y-12">
-        {teams.map((team) => (
-          <section key={team.team_key} className="space-y-6">
-            <div className="flex flex-wrap items-center gap-6">
-              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-2">
-                <div className="flex h-full w-full items-center justify-center rounded-[2px] bg-white p-1">
-                  <Image
-                    src={getTeamLogo(team.team_key)}
-                    alt={`${team.team_name} logo`}
-                    width={64}
-                    height={64}
-                    className="h-14 w-14 object-contain"
-                    unoptimized={!isRemote(getTeamLogo(team.team_key))}
-                  />
+      <div className="space-y-6">
+        {teams.map((team) => {
+          const teamColor = getTeamColor(team.team_key);
+          return (
+          <section
+            key={team.team_key}
+            className="relative overflow-hidden rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream/40"
+          >
+            {/* Subtle team-colour accent pinned to the inline-start edge */}
+            <span aria-hidden className="absolute inset-y-0 start-0 w-1" style={{ backgroundColor: teamColor }} />
+            <div className="p-5 md:p-6">
+              {/* Team header */}
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-1.5">
+                  <div className="flex h-full w-full items-center justify-center rounded-[2px] bg-white p-1">
+                    <Image
+                      src={getTeamLogo(team.team_key)}
+                      alt={`${team.team_name} logo`}
+                      width={64}
+                      height={64}
+                      className="h-11 w-11 object-contain"
+                      unoptimized={!isRemote(getTeamLogo(team.team_key))}
+                    />
+                  </div>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-isl-body text-[0.7rem] font-semibold uppercase tracking-[0.24em] text-brass-ink">
+                    {t("grid.mainDrivers")}
+                  </p>
+                  <h2 className="mt-0.5 flex items-center gap-2 font-display text-2xl font-bold tracking-[0.005em] leading-[1.05] text-ink">
+                    <span aria-hidden className="inline-block h-4 w-1 shrink-0 rounded-[1px]" style={{ backgroundColor: teamColor }} />
+                    {team.team_name}
+                  </h2>
                 </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <h2 className="font-display text-2xl font-bold tracking-[0.005em] leading-[1.05]" style={{ color: getTeamColor(team.team_key) }}>{team.team_name}</h2>
-                <p className="mt-1 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-meta">{t("grid.mainDrivers")}</p>
-              </div>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {team.drivers.slice(0, 2).map((driver) => (
-                <DriverCard
-                  key={driver.driver_id || driver.name}
-                  driver={driver}
-                  team={team}
-                  placeholderSrc={placeholderSrc}
-                  onSelect={(selectedDriver, selectedTeam) =>
-                    selectDriver(selectedDriver, selectedTeam)
+
+              <div className="isl-gold-rule my-5" />
+
+              {/* Two driver seats — filled or "To Be Revealed" */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                {[0, 1].map((i) => {
+                  const driver = team.drivers[i];
+                  const seatNo = String(i + 1).padStart(2, "0");
+                  if (driver) {
+                    return (
+                      <DriverCard
+                        key={driver.driver_id || driver.name}
+                        driver={driver}
+                        team={team}
+                        placeholderSrc={placeholderSrc}
+                        onSelect={(selectedDriver, selectedTeam) =>
+                          selectDriver(selectedDriver, selectedTeam)
+                        }
+                      />
+                    );
                   }
-                />
-              ))}
-              {team.drivers.length === 0 && (
-                <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-6 text-sm text-meta">
-                  {t("grid.lineupComingSoon")}
-                </div>
-              )}
+                  return (
+                    <div
+                      key={`seat-${i}`}
+                      className="isl-speed-lines flex min-h-[240px] flex-col items-center justify-center gap-2 rounded-[2px] border border-dashed border-[color:var(--isl-hairline-strong)] bg-cream/30 p-6 text-center"
+                    >
+                      <span className="font-isl-body text-[0.65rem] font-semibold uppercase tracking-[0.24em] text-brass-ink">
+                        {t("grid.seat")} {seatNo}
+                      </span>
+                      <span className="num font-display text-4xl font-bold leading-none text-faint">
+                        {seatNo}
+                      </span>
+                      <span className="font-isl-body text-xs font-semibold uppercase tracking-[0.2em] text-meta">
+                        {t("grid.toBeRevealed")}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </section>
-        ))}
+          );
+        })}
       </div>
 
       <section className="mt-12 space-y-6">
@@ -123,8 +160,8 @@ export default function DriversGrid({ teams, reserves, historicDrivers, placehol
             );
           })}
           {reserves.length === 0 && (
-            <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-6 text-sm text-meta">
-              {t("grid.reserveComingSoon")}
+            <div className="isl-speed-lines flex items-center justify-center rounded-[2px] border border-dashed border-[color:var(--isl-hairline-strong)] bg-cream p-6 sm:col-span-2 lg:col-span-4">
+              <p className="font-isl-body text-xs font-semibold uppercase tracking-[0.2em] text-meta">{t("grid.reserveComingSoon")}</p>
             </div>
           )}
         </div>

@@ -100,7 +100,7 @@ function HomeWatchModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[color:var(--isl-ink)]/70 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
       onClick={onClose}
     >
       <div
@@ -251,8 +251,8 @@ function RaceCountdown({
 
 function LiveBadge() {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-oxblood px-2.5 py-1 text-sm font-semibold uppercase tracking-[0.2em] text-oxblood">
-      <span className="h-2 w-2 rounded-full bg-oxblood animate-[f1-tick_1s_step-end_infinite]" />
+    <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-status-danger px-2.5 py-1 text-sm font-semibold uppercase tracking-[0.2em] text-status-danger">
+      <span className="h-2 w-2 rounded-full bg-status-danger animate-[f1-tick_1s_step-end_infinite]" />
       LIVE
     </span>
   );
@@ -339,10 +339,10 @@ function RaceGroupCard({
 
   return (
     <div
-      className={`flex flex-col rounded-[2px] border border-t-2 border-t-oxblood p-5 transition-colors ${
+      className={`relative isl-corner-ticks flex flex-col rounded-[2px] border border-t-2 bg-cream p-5 transition-colors ${
         liveNow
-          ? "border-oxblood bg-cream"
-          : "border-[color:var(--isl-hairline)] bg-cream"
+          ? "border-status-danger border-t-status-danger"
+          : "border-[color:var(--isl-hairline)] border-t-oxblood"
       }`}
     >
       {/* Header */}
@@ -356,7 +356,7 @@ function RaceGroupCard({
           <LeagueBadge league={group.league} />
         </div>
         {liveNow ? (
-          <span className="num text-sm font-medium text-oxblood">{group.date}</span>
+          <span className="num text-sm font-medium text-status-danger">{group.date}</span>
         ) : (
           <span className="num text-sm text-meta">{group.date}</span>
         )}
@@ -441,8 +441,8 @@ function RaceGroupCard({
           </Button>
         )}
         {liveNow && (
-          <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-oxblood px-4 py-2 text-sm font-semibold uppercase tracking-[0.08em] text-oxblood">
-            <span className="h-1.5 w-1.5 rounded-full bg-oxblood animate-[f1-tick_1s_step-end_infinite]" />
+          <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-status-danger px-4 py-2 text-sm font-semibold uppercase tracking-[0.08em] text-status-danger">
+            <span className="h-1.5 w-1.5 rounded-full bg-status-danger animate-[f1-tick_1s_step-end_infinite]" />
             {t("raceCards.raceInProgress")}
           </span>
         )}
@@ -517,7 +517,7 @@ function GroupResultsModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[color:var(--isl-ink)]/70 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
       onClick={onClose}
     >
       <div className="relative w-full max-w-5xl rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-4" onClick={(e) => e.stopPropagation()}>
@@ -696,8 +696,8 @@ export default function HomeRaceCards({
   // Nothing to show at all
   if (!lastGroup && !nextGroup && !liveGroup) {
     return (
-      <div className="flex items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream py-16">
-        <p className="text-sm text-meta">{t("raceCards.scheduleNotAvailable")}</p>
+      <div className="isl-speed-lines flex items-center justify-center rounded-[2px] border border-dashed border-[color:var(--isl-hairline-strong)] bg-cream py-16">
+        <p className="font-isl-body text-xs font-semibold uppercase tracking-[0.2em] text-meta">{t("raceCards.scheduleNotAvailable")}</p>
       </div>
     );
   }
@@ -726,8 +726,8 @@ export default function HomeRaceCards({
             onWatch={handleWatch}
           />
         ) : (
-          <div className="flex items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream py-16">
-            <p className="text-sm text-meta">{t("raceCards.noPastRaces")}</p>
+          <div className="isl-speed-lines flex items-center justify-center rounded-[2px] border border-dashed border-[color:var(--isl-hairline-strong)] bg-cream py-16">
+            <p className="font-isl-body text-xs font-semibold uppercase tracking-[0.2em] text-meta">{t("raceCards.noPastRaces")}</p>
           </div>
         )}
         {rightCardGroup ? (
@@ -749,8 +749,8 @@ export default function HomeRaceCards({
             }
           />
         ) : (
-          <div className="flex items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream py-16">
-            <p className="text-sm text-meta">{t("raceCards.seasonComplete")}</p>
+          <div className="isl-speed-lines flex items-center justify-center rounded-[2px] border border-dashed border-[color:var(--isl-hairline-strong)] bg-cream py-16">
+            <p className="font-isl-body text-xs font-semibold uppercase tracking-[0.2em] text-meta">{t("raceCards.seasonComplete")}</p>
           </div>
         )}
       </div>

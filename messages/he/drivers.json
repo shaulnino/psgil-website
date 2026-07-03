@@ -6,6 +6,8 @@
   "grid": {
     "mainDrivers": "נהגים ראשיים",
     "lineupComingSoon": "מצבת הנהגים תפורסם בקרוב.",
+    "seat": "מושב",
+    "toBeRevealed": "ייחשף בקרוב",
     "reserveDrivers": "נהגי מילואים",
     "reserveDescription": "נהגים נוספים הזמינים לחילופים.",
     "reserveComingSoon": "מצבת המילואים תפורסם בקרוב.",

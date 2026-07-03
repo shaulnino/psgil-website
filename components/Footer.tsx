@@ -59,7 +59,9 @@ function SocialIcon({ icon }: { icon: string }) {
 export default function Footer() {
   const t = useTranslations("common");
   return (
-    <footer className="border-t border-[color:var(--isl-hairline)] bg-cream">
+    <footer className="relative">
+      {/* Thin gold divider — the recurring architectural line */}
+      <div className="isl-gold-rule" />
       <div className="mx-auto w-full max-w-[1240px] px-5 py-12">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-[2fr_1fr_1fr]">
           {/* Brand */}
@@ -78,7 +80,7 @@ export default function Footer() {
           {/* Nav columns */}
           {footerColumns.map((col) => (
             <div key={col.titleKey}>
-              <h3 className="mb-4 font-isl-body text-[10px] font-bold uppercase tracking-[0.2em] text-meta">
+              <h3 className="mb-4 font-isl-body text-[11px] font-bold uppercase tracking-[0.24em] text-brass-ink">
                 {t(`footer.${col.titleKey}`)}
               </h3>
               <ul className="space-y-2.5">

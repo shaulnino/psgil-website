@@ -92,7 +92,7 @@ export default async function SchedulePage() {
     : [];
 
   return (
-    <main className="bg-bone text-ink-2">
+    <main className="text-ink-2">
       <Section
         title={t("page.title")}
         description={t("page.description")}

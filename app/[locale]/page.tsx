@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { getLocale, getTranslations } from "next-intl/server";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import HomeRaceCards from "@/components/HomeRaceCards";
 import WatchLastRaceButton from "@/components/WatchLastRaceButton";
 import Section from "@/components/Section";
@@ -53,6 +54,7 @@ function isRemote(src?: string) {
 
 export default async function Home() {
   const tHome = await getTranslations("home");
+  const tCommon = await getTranslations("common");
   const locale = await getLocale();
 
   /* ---- Seasons config ---- */
@@ -224,11 +226,26 @@ export default async function Home() {
   const featuredNews = latestNews[0] ?? null;
 
   return (
-    <main className="bg-bone text-ink-2">
-      {/* ── Hero: editorial masthead — framed (desaturated) race image + ink headline on bone ── */}
-      <section className="isl-speed-lines border-b border-[color:var(--isl-hairline)]">
-        <div className="mx-auto w-full max-w-[1240px] px-5 pb-8 pt-10">
-          <div className="relative w-full overflow-hidden rounded-[2px] border border-[color:var(--isl-hairline)] bg-ink">
+    <main className="text-ink-2">
+      {/* ── Hero: "League Command Center" — broadcast-framed race image + ink headline on charcoal ── */}
+      <section className="relative isl-speed-lines overflow-hidden border-b border-[color:var(--isl-hairline)]">
+        <div className="mx-auto w-full max-w-[1240px] px-5 pb-10 pt-6">
+          {/* Race-control status strip */}
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[color:var(--isl-hairline)] pb-4">
+            <span className="inline-flex items-center gap-2 font-isl-body text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-oxblood">
+              <span
+                className="h-1.5 w-1.5 rounded-full bg-oxblood"
+                style={{ animation: "f1-tick 1.6s steps(1) infinite" }}
+              />
+              {tCommon("leagueFullName")}
+            </span>
+            <span className="num text-[0.7rem] uppercase tracking-[0.2em] text-meta">
+              {currentSeasonLabel} · GMT+3
+            </span>
+          </div>
+
+          {/* Broadcast-framed hero image */}
+          <div className="isl-corner-ticks relative mt-6 w-full overflow-hidden rounded-[2px] border border-brass bg-ink">
             <Image
               src="/hero-new-era.png"
               alt={tHome("hero.imageAlt")}
@@ -238,13 +255,18 @@ export default async function Home() {
               sizes="(max-width: 1240px) 100vw, 1240px"
               className="h-auto w-full"
             />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[color:var(--isl-bone)] to-transparent" />
           </div>
 
           <div className="mt-8 max-w-5xl">
-            <h1 className="font-display text-4xl font-bold leading-[1.03] tracking-[0.005em] text-ink [-webkit-text-stroke:2px_#d4af37] [paint-order:stroke] md:text-5xl md:[-webkit-text-stroke-width:3px] lg:text-6xl [text-wrap:balance]">
+            <p className="font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.24em] text-brass-ink">
+              {tHome("hero.keyFacts")}
+            </p>
+            <h1 className="mt-3 font-display text-4xl font-bold leading-[1.02] tracking-[0.005em] text-ink md:text-5xl lg:text-6xl [text-wrap:balance]">
               {tHome("hero.title")}
             </h1>
-            <p className="mt-4 max-w-xl text-lg text-ink-2 md:text-xl">
+            <div className="isl-gold-rule mt-5 max-w-[260px]" />
+            <p className="mt-5 max-w-xl text-lg text-ink-2 md:text-xl">
               {tHome("hero.subtitle")}
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
@@ -254,16 +276,13 @@ export default async function Home() {
                 label={tHome("hero.watchLastRace")}
               />
             </div>
-            <div className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] leading-relaxed">
-              <span className="me-1 font-isl-body font-semibold uppercase tracking-[0.18em] text-oxblood">
-                {tHome("hero.keyFacts")}
-              </span>
-              {trustChips.map((chip, i) => (
+            <div className="mt-7 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] leading-relaxed">
+              {trustChips.map((chip) => (
                 <span key={chip} className="inline-flex items-center gap-2 select-none">
-                  {i > 0 && (
-                    <span className="h-[3px] w-[3px] shrink-0 rounded-full bg-oxblood/60" />
-                  )}
-                  <span className="font-medium text-ink-2">{chip}</span>
+                  <span className="h-3 w-[2px] shrink-0 bg-oxblood/70" />
+                  <span className="font-isl-body font-medium uppercase tracking-[0.1em] text-ink-2">
+                    {chip}
+                  </span>
                 </span>
               ))}
             </div>
@@ -292,7 +311,7 @@ export default async function Home() {
       {featuredNews && (
         <section className="py-4">
           <div className="mx-auto w-full max-w-6xl px-6">
-            <div className="overflow-hidden rounded-[2px] border border-brass bg-cream">
+            <div className="relative isl-corner-ticks overflow-hidden rounded-[2px] border border-brass bg-cream">
               <div className="grid gap-0 md:grid-cols-[240px_1fr]">
                 <LoadingLink
                   href={`/news/${encodeURIComponent(featuredNews.slug)}`}
@@ -353,17 +372,26 @@ export default async function Home() {
         title={tHome("leagueFormat.title")}
         description={tHome("leagueFormat.description")}
         brandTitle
+        index="01" compact
       >
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {(tHome.raw("leagueFormatItems") as { title: string; description: string }[]).map((item) => (
+          {(tHome.raw("leagueFormatItems") as { title: string; description: string }[]).map((item, i) => (
             <div
               key={item.title}
-              className="rounded-[2px] border border-[color:var(--isl-hairline)] border-t-2 border-t-oxblood bg-cream p-5 text-sm text-ink-2 transition-colors hover:border-t-oxblood-deep"
+              className="group isl-chamfer bg-hairline-strong p-px transition-colors hover:bg-oxblood"
             >
-              <h3 className="font-display text-lg font-bold tracking-[0.005em] text-oxblood">
-                {item.title}
-              </h3>
-              <p className="mt-2 text-ink-2">{item.description}</p>
+              <div className="isl-chamfer flex h-full flex-col bg-cream p-5">
+                <div className="flex items-center justify-between">
+                  <span className="num text-sm font-semibold text-oxblood">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span className="h-px w-8 bg-[color:var(--isl-hairline-strong)] transition-colors group-hover:bg-oxblood" />
+                </div>
+                <h3 className="mt-3 font-display text-lg font-bold tracking-[0.005em] text-ink">
+                  {item.title}
+                </h3>
+                <p className="mt-2 text-sm text-ink-2">{item.description}</p>
+              </div>
             </div>
           ))}
         </div>
@@ -373,6 +401,7 @@ export default async function Home() {
         title={tHome("races.title")}
         description={tHome("races.description")}
         brandTitle
+        index="02" compact
         headerRight={
           <Button href="/schedule" size="sm" variant="secondary">
             {tHome("races.fullSchedule")}
@@ -394,6 +423,7 @@ export default async function Home() {
         title={tHome("latestNews.title")}
         description={tHome("latestNews.description")}
         brandTitle
+        index="03" compact
         headerRight={
           <Button href="/news" size="sm" variant="secondary">
             {tHome("latestNews.allNews")}
@@ -403,12 +433,13 @@ export default async function Home() {
         <NewsCarousel articles={latestNews} />
       </Section>
 
-      <Section title={tHome("about.title")} brandTitle>
-        <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-6 md:p-8">
-          <p className="text-base text-ink-2 md:text-lg">
+      <Section title={tHome("about.title")} brandTitle index="04" compact>
+        <Card chamfer cornerTicks className="p-6 md:p-8">
+          <div className="isl-gold-rule mb-5 max-w-[120px]" />
+          <p className="text-base leading-relaxed text-ink-2 md:text-lg">
             {tHome("about.body", { season: currentSeasonLabel.toLowerCase() })}
           </p>
-        </div>
+        </Card>
       </Section>
 
 
@@ -418,6 +449,7 @@ export default async function Home() {
         title={tHome("contact.title")}
         description={tHome("contact.description")}
         brandTitle
+        index="05" compact
       >
         <ContactSection />
       </Section>

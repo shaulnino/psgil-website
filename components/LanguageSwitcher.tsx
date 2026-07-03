@@ -30,7 +30,7 @@ export default function LanguageSwitcher({ className = "" }: { className?: strin
     <a
       href={href}
       aria-label={aria}
-      className={`inline-flex items-center rounded-[2px] border border-[color:var(--isl-hairline)] px-2.5 py-1 font-isl-body text-xs font-semibold uppercase tracking-[0.12em] text-meta transition-colors hover:border-ink hover:text-ink ${className}`}
+      className={`inline-flex items-center rounded-[2px] border border-[color:var(--isl-hairline)] px-2.5 py-1 font-isl-body text-xs font-semibold uppercase tracking-[0.12em] text-meta transition-colors hover:border-oxblood hover:text-oxblood ${className}`}
     >
       {label}
     </a>

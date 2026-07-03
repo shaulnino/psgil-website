@@ -104,7 +104,7 @@ function WatchModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[color:var(--isl-ink)]/70"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
       onClick={onClose}
     >
       <div
@@ -229,7 +229,7 @@ function ResultsModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[color:var(--isl-ink)]/70"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
       onClick={onClose}
     >
       <div
@@ -383,8 +383,8 @@ function ResultsModal({
             />
           </div>
         ) : (
-          <div className="flex items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper py-16">
-            <p className="text-sm text-meta">
+          <div className="isl-speed-lines flex items-center justify-center rounded-[2px] border border-dashed border-[color:var(--isl-hairline-strong)] bg-paper py-16">
+            <p className="font-isl-body text-xs font-semibold uppercase tracking-[0.2em] text-meta">
               {t("resultsModal.resultsNotAvailable")}
             </p>
           </div>
@@ -430,7 +430,7 @@ function PosterModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[color:var(--isl-ink)]/70"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
       onClick={onClose}
     >
       <div
@@ -594,9 +594,9 @@ function StatusBadge({ status }: { status: string }) {
   };
   const statusLabel = STATUS_LABEL_KEYS[s] ? t(STATUS_LABEL_KEYS[s]) : status;
 
-  // Live → oxblood accent + ticking dot; others → status hue + shape/label.
+  // Live → status-red accent + ticking dot; others → status hue + shape/label.
   const toneClass = isLive
-    ? "border-oxblood text-oxblood"
+    ? "border-status-danger text-status-danger"
     : isCompleted
     ? "border-status-success text-status-success"
     : isPostponed
@@ -927,8 +927,8 @@ function ScheduleListInner({
 
   if (seasonsConfig.length === 0) {
     return (
-      <div className="flex items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream py-16">
-        <p className="text-sm text-meta">
+      <div className="isl-speed-lines flex items-center justify-center rounded-[2px] border border-dashed border-[color:var(--isl-hairline-strong)] bg-cream py-16">
+        <p className="font-isl-body text-xs font-semibold uppercase tracking-[0.2em] text-meta">
           {t("list.noEventsAvailable")}
         </p>
       </div>
@@ -947,90 +947,90 @@ function ScheduleListInner({
       </div>
 
       {events.length === 0 && (
-        <div className="flex items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream py-16">
-          <p className="text-sm text-meta">
+        <div className="isl-speed-lines flex items-center justify-center rounded-[2px] border border-dashed border-[color:var(--isl-hairline-strong)] bg-cream py-16">
+          <p className="font-isl-body text-xs font-semibold uppercase tracking-[0.2em] text-meta">
             {t("list.noEventsForSeason")}
           </p>
         </div>
       )}
 
       {events.length > 0 && (
-        <div className="flex flex-col gap-10">
-          <div>
-            <div className="overflow-hidden rounded-[2px] border border-[color:var(--isl-hairline)]">
-              {/* Desktop header */}
-              <div className="hidden border-b border-[color:var(--isl-hairline)] bg-sink px-5 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-meta md:grid md:grid-cols-[60px_1fr_120px_100px_100px_90px_36px]">
-                <span>{t("list.headerNumber")}</span>
-                <span>{t("list.headerRace")}</span>
-                <span className="text-center">{t("list.headerDate")}</span>
-                <span className="text-center">{t("list.headerLeague")}</span>
-                <span className="text-center">{t("list.headerStatus")}</span>
-                <span className="text-center">{t("list.headerFlag")}</span>
-                <span />
-              </div>
-
-              {events.map((event, idx) => {
-                return (
-                  <button
-                    key={`${event.season}-${event.race_number}-${event.league}-${idx}`}
-                    id={event.event_id}
-                    type="button"
-                    onClick={() => setPosterEvent(event)}
-                    className="group relative flex w-full cursor-pointer flex-col gap-2 border-b border-[color:var(--isl-hairline)] bg-cream px-5 py-4 text-left transition-colors hover:bg-paper focus-visible:bg-paper focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[color:var(--isl-oxblood)] md:grid md:grid-cols-[60px_1fr_120px_100px_100px_90px_36px] md:items-center md:gap-0"
-                  >
-                    {/* Left accent bar — visible on hover/focus */}
-                    <span className="pointer-events-none absolute inset-y-0 start-0 w-[3px] bg-oxblood opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" />
-
-                    {/* Race number */}
-                    <div className="flex items-center gap-3 md:contents">
-                      <span className="num font-display text-sm font-semibold text-oxblood">
-                        #{event.race_number}
-                      </span>
-
-                      {/* Race name + metadata badges */}
-                      <span className="font-display text-sm font-semibold text-ink md:text-base">
-                        <span className="inline-flex flex-wrap items-center gap-2">
-                          {localizedRaceName(event, locale)}
-                          <RaceBadges event={event} />
-                        </span>
-                      </span>
-                    </div>
-
-                    {/* Mobile: meta row */}
-                    <div className="flex flex-wrap items-center gap-3 md:contents">
-                      <span className="num text-xs text-ink-2 md:text-center md:text-sm">
-                        {event.date}
-                      </span>
-                      <LeagueBadge league={event.league} />
-                      <StatusBadge status={event.status} />
-                      <span className="ms-auto md:ms-0 md:flex md:justify-center">
-                        <CountryFlag
-                          code={event.country_code}
-                          width={30}
-                          height={20}
-                        />
-                      </span>
-                    </div>
-
-                    {/* Chevron + Open label */}
-                    <span className="hidden items-center justify-end gap-1 md:flex">
-                      <span className="text-[10px] font-medium uppercase tracking-wider text-transparent transition-colors group-hover:text-meta group-focus-visible:text-meta">
-                        {t("list.open")}
-                      </span>
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                        className="h-4 w-4 text-faint transition-all group-hover:translate-x-0.5 group-hover:text-ink group-focus-visible:translate-x-0.5 group-focus-visible:text-ink rtl:scale-x-[-1]"
-                      >
-                        <path fillRule="evenodd" d="M8.22 5.22a.75.75 0 011.06 0l4.25 4.25a.75.75 0 010 1.06l-4.25 4.25a.75.75 0 01-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 010-1.06z" clipRule="evenodd" />
-                      </svg>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {events.map((event, idx) => {
+            const s = event.status.toLowerCase();
+            const isLive = s === "live";
+            const isCancelled = s === "cancelled";
+            const roundNum = String(event.race_number).padStart(2, "0");
+            return (
+              <button
+                key={`${event.season}-${event.race_number}-${event.league}-${idx}`}
+                id={event.event_id}
+                type="button"
+                onClick={() => setPosterEvent(event)}
+                className={`group relative flex cursor-pointer flex-col rounded-[2px] border border-t-2 bg-cream p-5 text-start transition-colors hover:bg-paper focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[color:var(--isl-oxblood)] ${
+                  isLive
+                    ? "isl-corner-ticks border-status-danger border-t-status-danger"
+                    : isCancelled
+                    ? "border-[color:var(--isl-hairline)] border-t-[color:var(--isl-hairline-strong)] opacity-70"
+                    : "border-[color:var(--isl-hairline)] border-t-oxblood hover:border-[color:var(--isl-oxblood)]/40"
+                }`}
+              >
+                {/* Top: round index + status */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex flex-col">
+                    <span className="font-isl-body text-[0.6rem] font-semibold uppercase tracking-[0.24em] text-brass-ink">
+                      {t("list.round")}
                     </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+                    <span className="num font-display text-[2rem] font-bold leading-none text-oxblood">
+                      {roundNum}
+                    </span>
+                  </div>
+                  <StatusBadge status={event.status} />
+                </div>
+
+                {/* Race name + flag */}
+                <div className="mt-5 flex items-start gap-3">
+                  <CountryFlag code={event.country_code} width={34} height={22} className="mt-0.5" />
+                  <h3 className="font-display text-lg font-bold leading-[1.08] tracking-[0.005em] text-ink">
+                    {localizedRaceName(event, locale)}
+                  </h3>
+                </div>
+
+                {/* Date / time */}
+                <div className="mt-3 flex items-center gap-2 text-sm text-meta">
+                  <span className="num-date">{event.date}</span>
+                  {event.start_time && (
+                    <>
+                      <span className="text-faint">·</span>
+                      <span className="num">{event.start_time}</span>
+                    </>
+                  )}
+                </div>
+
+                {/* Divider */}
+                <div className="isl-gold-rule my-4" />
+
+                {/* Footer: league + badges + open */}
+                <div className="mt-auto flex items-center justify-between gap-2">
+                  <span className="inline-flex flex-wrap items-center gap-1.5">
+                    <LeagueBadge league={event.league} />
+                    <RaceBadges event={event} />
+                  </span>
+                  <span className="inline-flex shrink-0 items-center gap-1 text-[10px] font-medium uppercase tracking-wider text-transparent transition-colors group-hover:text-meta group-focus-visible:text-meta">
+                    {t("list.open")}
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      className="h-4 w-4 text-faint transition-all group-hover:translate-x-0.5 group-hover:text-ink group-focus-visible:translate-x-0.5 group-focus-visible:text-ink rtl:scale-x-[-1]"
+                    >
+                      <path fillRule="evenodd" d="M8.22 5.22a.75.75 0 011.06 0l4.25 4.25a.75.75 0 010 1.06l-4.25 4.25a.75.75 0 01-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 010-1.06z" clipRule="evenodd" />
+                    </svg>
+                  </span>
+                </div>
+              </button>
+            );
+          })}
         </div>
       )}
 

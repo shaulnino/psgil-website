@@ -196,7 +196,7 @@ export default async function DriversPage() {
   }
 
   return (
-    <main className="bg-bone text-ink">
+    <main className="text-ink">
       <Section
         title={t("page.title")}
         description={t("page.description")}

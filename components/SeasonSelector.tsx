@@ -35,20 +35,14 @@ function SeasonLabel({
   label: string;
   highlight: boolean;
 }) {
+  // The "Season" / "עונה" word is already shown as the field label beside the
+  // control, so the value only needs the number. Non-numeric labels (rare) fall
+  // back to the full text.
   const parsed = parseLabel(label);
   if (parsed) {
     return (
-      <span className="flex items-baseline gap-1.5">
-        <span className={highlight ? "text-ink" : "text-ink-2"}>
-          {parsed.prefix}
-        </span>
-        <span
-          className={`num font-bold ${
-            highlight ? "text-ink" : "text-meta"
-          }`}
-        >
-          {parsed.number}
-        </span>
+      <span className={`num font-bold ${highlight ? "text-ink" : "text-meta"}`}>
+        {parsed.number}
       </span>
     );
   }
@@ -180,7 +174,7 @@ export default function SeasonSelector({
         onClick={() => setOpen((v) => !v)}
         onKeyDown={handleKeyDown}
         className={`
-          group relative flex min-w-[150px] cursor-pointer items-center justify-between gap-3
+          group relative flex min-w-[84px] cursor-pointer items-center justify-between gap-3
           rounded-[2px] border bg-paper px-4 py-2
           text-base font-semibold outline-none
           transition-colors duration-200
@@ -237,7 +231,7 @@ export default function SeasonSelector({
             focusIdx >= 0 ? `season-option-${focusIdx}` : undefined
           }
           className="
-            absolute end-0 top-full z-50 mt-2 min-w-[150px]
+            absolute end-0 top-full z-50 mt-2 min-w-[84px]
             overflow-hidden rounded-[2px] border border-[color:var(--isl-hairline-strong)]
             bg-sink
           "

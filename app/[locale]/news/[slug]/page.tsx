@@ -133,7 +133,7 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
 
   if (!article) {
     return (
-      <main className="bg-bone text-ink">
+      <main className="text-ink">
         <Section title={t("article.unavailableTitle")} description={t("article.unavailableDescription")} pageHeader>
           <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-6 text-sm text-meta">
             {error
@@ -264,7 +264,7 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
   const standingsLeagueLabel = articleId.includes("wild") ? "Wild" : "Main";
 
   return (
-    <main className="bg-bone text-ink">
+    <main className="text-ink">
       <Section className="pt-8 md:pt-12">
         <LoadingLink
           href="/news"
