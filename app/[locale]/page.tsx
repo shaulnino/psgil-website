@@ -244,18 +244,22 @@ export default async function Home() {
             </span>
           </div>
 
-          {/* Broadcast-framed hero image */}
-          <div className="isl-corner-ticks relative mt-6 w-full overflow-hidden rounded-[2px] border border-brass bg-ink">
-            <Image
-              src="/hero-new-era.png"
-              alt={tHome("hero.imageAlt")}
-              width={1264}
-              height={848}
-              priority
-              sizes="(max-width: 1240px) 100vw, 1240px"
-              className="h-auto w-full"
-            />
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[color:var(--isl-bone)] to-transparent" />
+          {/* Broadcast-framed hero image — see .isl-hero-frame in globals.css */}
+          <div className="isl-hero-frame mt-6 w-full">
+            <div className="isl-hero-frame__plate">
+              <div className="isl-hero-frame__inner bg-ink">
+                <Image
+                  src="/hero-new-era.png"
+                  alt={tHome("hero.imageAlt")}
+                  width={1264}
+                  height={848}
+                  priority
+                  sizes="(max-width: 1240px) 100vw, 1240px"
+                  className="h-auto w-full"
+                />
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[color:var(--isl-bone)] to-transparent" />
+              </div>
+            </div>
           </div>
 
           <div className="mt-8 max-w-5xl">

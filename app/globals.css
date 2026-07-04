@@ -257,6 +257,128 @@
   border-width: 0 1px 1px 0;
 }
 
+/* ------------------------------------------------------------------ */
+/*  Hero broadcast frame — cinematic F1 race-control display frame.    */
+/*  A chamfered metallic-gold plate holds the hero image, with HUD     */
+/*  corner-energy glow, top/bottom accent ticks, and an outward gold-  */
+/*  dust halo that melts into the global background (.isl-global-bg).   */
+/*                                                                      */
+/*  TUNE via the custom props below:                                    */
+/*    --hf-chamfer  corner cut size                                     */
+/*    --hf-border   thickness of the gold plate                         */
+/*    --hf-glow     outward halo strength      (0 = off, 1 = strong)    */
+/*    --hf-corner   corner-energy glow strength (0 = off, 1 = strong)   */
+/* ------------------------------------------------------------------ */
+.isl-hero-frame {
+  --hf-chamfer: 22px;
+  --hf-border: 1.5px;
+  --hf-glow: 0.55;
+  --hf-corner: 0.7;
+  position: relative;
+  isolation: isolate;
+}
+
+/* Shared chamfer geometry — cuts all four corners at --hf-chamfer. */
+.isl-hero-frame__plate,
+.isl-hero-frame__inner {
+  clip-path: polygon(
+    var(--hf-chamfer) 0,
+    calc(100% - var(--hf-chamfer)) 0,
+    100% var(--hf-chamfer),
+    100% calc(100% - var(--hf-chamfer)),
+    calc(100% - var(--hf-chamfer)) 100%,
+    var(--hf-chamfer) 100%,
+    0 calc(100% - var(--hf-chamfer)),
+    0 var(--hf-chamfer)
+  );
+}
+
+/* Outward gold-dust halo — behind the plate, unclipped, so it bleeds
+   into the page background. Strength controlled by --hf-glow. */
+.isl-hero-frame::before {
+  content: "";
+  position: absolute;
+  inset: -16px;
+  z-index: -1;
+  pointer-events: none;
+  opacity: var(--hf-glow);
+  background:
+    radial-gradient(42% 62% at 0% 0%, color-mix(in srgb, var(--isl-oxblood) 34%, transparent), transparent 72%),
+    radial-gradient(42% 62% at 100% 0%, color-mix(in srgb, var(--isl-oxblood) 34%, transparent), transparent 72%),
+    radial-gradient(42% 62% at 0% 100%, color-mix(in srgb, var(--isl-oxblood) 26%, transparent), transparent 72%),
+    radial-gradient(42% 62% at 100% 100%, color-mix(in srgb, var(--isl-oxblood) 26%, transparent), transparent 72%);
+  filter: blur(13px);
+}
+
+/* Metallic gold plate — a brushed-gold sheen gradient forms the border. */
+.isl-hero-frame__plate {
+  position: relative;
+  padding: var(--hf-border);
+  background: linear-gradient(
+    135deg,
+    var(--isl-oxblood-deep) 0%,
+    var(--isl-oxblood) 26%,
+    color-mix(in srgb, var(--isl-oxblood) 52%, #000) 52%,
+    var(--isl-oxblood) 78%,
+    var(--isl-oxblood-deep) 100%
+  );
+}
+
+/* Image holder — clips the image to the chamfer, carries the layered
+   inner hairline, corner-energy glow (::before) and edge ticks (::after). */
+.isl-hero-frame__inner {
+  position: relative;
+  overflow: hidden;
+  /* faint second line just inside the plate — the "double-line" detail */
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--isl-oxblood) 22%, transparent);
+}
+
+/* Corner-energy glow — bright gold hugging the four chamfers. */
+.isl-hero-frame__inner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: var(--hf-corner);
+  background:
+    radial-gradient(70px 70px at 0% 0%, color-mix(in srgb, var(--isl-oxblood-deep) 55%, transparent), transparent 68%),
+    radial-gradient(70px 70px at 100% 0%, color-mix(in srgb, var(--isl-oxblood-deep) 55%, transparent), transparent 68%),
+    radial-gradient(70px 70px at 0% 100%, color-mix(in srgb, var(--isl-oxblood-deep) 45%, transparent), transparent 68%),
+    radial-gradient(70px 70px at 100% 100%, color-mix(in srgb, var(--isl-oxblood-deep) 45%, transparent), transparent 68%);
+}
+
+/* Top & bottom center accent ticks — short gold lines fading at the ends. */
+.isl-hero-frame__inner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, transparent, color-mix(in srgb, var(--isl-oxblood) 85%, transparent), transparent)
+      center 6px / 168px 1px no-repeat,
+    linear-gradient(90deg, transparent, color-mix(in srgb, var(--isl-oxblood) 70%, transparent), transparent)
+      center calc(100% - 6px) / 168px 1px no-repeat;
+}
+
+/* Tighter geometry + softer glow on small screens. */
+@media (max-width: 640px) {
+  .isl-hero-frame {
+    --hf-chamfer: 14px;
+    --hf-glow: 0.4;
+    --hf-corner: 0.55;
+  }
+}
+
+/* Respect reduced-transparency / high-contrast preferences: drop the
+   soft halo so the frame stays crisp. */
+@media (prefers-contrast: more) {
+  .isl-hero-frame {
+    --hf-glow: 0;
+  }
+}
+
 /* Subtle 115deg gold "speed-lines" — hero / empty-state backdrops only. */
 .isl-speed-lines {
   background-image: repeating-linear-gradient(
