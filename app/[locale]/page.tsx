@@ -291,8 +291,12 @@ export default async function Home() {
       </section>
 
       <div className="mx-auto mt-4 flex w-full max-w-[1240px] items-center gap-3 px-5">
-        <span className="font-isl-body text-xs font-semibold uppercase tracking-[0.2em] text-meta">{tHome("hero.followUs")}</span>
-        <SocialLinks items={siteConfig.socials} variant="compact" />
+        {siteConfig.socials.length > 0 && (
+          <>
+            <span className="font-isl-body text-xs font-semibold uppercase tracking-[0.2em] text-meta">{tHome("hero.followUs")}</span>
+            <SocialLinks items={siteConfig.socials} variant="compact" />
+          </>
+        )}
         <a
           href="#contact-us"
           className="group/social relative inline-flex h-9 w-9 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] text-meta transition-colors hover:border-ink hover:text-ink"

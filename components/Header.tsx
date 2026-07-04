@@ -27,10 +27,10 @@ export default function Header() {
           className="group flex items-center"
         >
           <Image
-            src="/isl-logo.png"
+            src="/isl-logo.svg"
             alt={t("a11y.logoAlt")}
-            width={1299}
-            height={560}
+            width={1455}
+            height={569}
             className="h-9 w-auto transition group-aria-[busy=true]:opacity-60 md:h-10"
             priority
             unoptimized

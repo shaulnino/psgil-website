@@ -49,7 +49,7 @@ const DEV_FALLBACK_ARTICLES: NewsArticle[] = [
     author: "ISL",
     excerpt:
       "This is a local development fallback article. Connect NEWS_SHEET_URL to show real Google Sheets content.",
-    coverImageUrl: "/isl-banner.png",
+    coverImageUrl: "/hero-new-era.png",
     tags: ["sample", "local"],
     category: NEWS_CATEGORY.HUB,
     youtubeUrl: "",
@@ -67,6 +67,20 @@ When \`NEWS_SHEET_URL\` is configured, this fallback is automatically replaced b
 
 function s(value: string | undefined): string {
   return (value ?? "").trim();
+}
+
+/**
+ * Normalise a cover-image reference from the sheet into a usable src.
+ * Remote URLs (http/https, protocol-relative, data:) pass through untouched.
+ * Local paths are rooted at "/", stripping any "public/" prefix — a common
+ * authoring mistake, since Next.js serves the public/ folder from the root
+ * (e.g. `public/hero-new-era.png` must be referenced as `/hero-new-era.png`).
+ */
+function normalizeCoverImage(value: string | undefined): string {
+  const v = s(value);
+  if (!v) return "";
+  if (/^(https?:)?\/\//i.test(v) || v.startsWith("data:")) return v;
+  return "/" + v.replace(/^\/+/, "").replace(/^public\//, "");
 }
 
 function normalizeHeader(value: string): string {
@@ -135,7 +149,7 @@ function mapArticleRow(row: Record<string, string>, index: number): NewsArticle 
     date,
     author: s(row.author) || DEFAULT_AUTHOR,
     excerpt,
-    coverImageUrl: s(row.cover_image_url),
+    coverImageUrl: normalizeCoverImage(row.cover_image_url),
     tags: parseTags(s(row.tags)),
     category: normalizeNewsCategory(
       getField(row, ["category", "news_category", "article_category"]),

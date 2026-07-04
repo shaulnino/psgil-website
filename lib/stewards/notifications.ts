@@ -1,5 +1,17 @@
 import nodemailer from "nodemailer";
 import type { Appeal, AppealVerdict, PenaltyToServe, StewardCase, StewardUser, Verdict } from "@/lib/stewards/types";
+import {
+  C,
+  calloutCard,
+  ctaButton,
+  emailShell,
+  escapeHtml,
+  heading,
+  infoCard,
+  noteText,
+  paragraph,
+  statusBadge,
+} from "@/lib/email/theme";
 
 // ---------------------------------------------------------------------------
 // Config
@@ -10,13 +22,7 @@ const LEAGUE_EMAIL = "islf1league@gmail.com";
 // Falls back to f1isl.com; NEXT_PUBLIC_SITE_URL overrides it in Netlify.
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://f1isl.com").replace(/\/$/, "");
 
-function esc(str: string): string {
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
+const esc = escapeHtml;
 
 /** Strip simple tags/entities from steward email HTML fragments for plain-text fallback */
 function htmlToPlainText(html: string): string {
@@ -65,59 +71,28 @@ function caseUrl(caseId: string, view: "driver" | "steward") {
 }
 
 // ---------------------------------------------------------------------------
-// Design tokens
+// Status → badge tone (broadcast palette)
 // ---------------------------------------------------------------------------
-const STATUS_STYLES: Record<string, { bg: string; color: string }> = {
-  "Open":                 { bg: "#f6ecd6",  color: "#b07a1e" },  // warning
-  "Waiting for Response": { bg: "#e4edf1",  color: "#2f5a6e" },  // info
-  "Under Review":         { bg: "#efe6cf",  color: "#6f5628" },  // brass
-  "Verdict Ready":        { bg: "#efe6cf",  color: "#6f5628" },  // brass — on the record
-  "Closed":               { bg: "#e3ede1",  color: "#3f6b3a" },  // success
-  "Archived":             { bg: "#eae2d0",  color: "#6e6455" },  // muted
+const STATUS_TONE: Record<
+  string,
+  "gold" | "success" | "warning" | "info" | "danger" | "muted"
+> = {
+  "Open": "warning",
+  "Waiting for Response": "info",
+  "Under Review": "gold",
+  "Verdict Ready": "gold",
+  "Closed": "success",
+  "Archived": "muted",
+  "Appeal Submitted": "info",
+  "Decision Changed": "gold",
+  "Original Decision Upheld": "success",
 };
 
-// ---------------------------------------------------------------------------
-// Shared building blocks (inline-style, email-safe)
-// ---------------------------------------------------------------------------
-function statusBadge(status: string) {
-  const s = STATUS_STYLES[status] ?? STATUS_STYLES["Open"];
-  return `<span style="display:inline-block;background:${s.bg};color:${s.color};padding:3px 12px;border-radius:2px;font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase">${esc(status)}</span>`;
-}
-
-function ctaButton(label: string, url: string, bgColor = "#1c1712") {
-  return `
-<table cellpadding="0" cellspacing="0" style="margin:24px 0 8px">
-  <tr>
-    <td style="background:${bgColor};border-radius:2px">
-      <a href="${esc(url)}" style="display:inline-block;padding:13px 34px;color:#f4efe4;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;letter-spacing:.03em">${esc(label)}</a>
-    </td>
-  </tr>
-</table>`;
-}
-
-function actionNeededBlockPlain(plain: string) {
-  return `
-<table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0">
-  <tr>
-    <td style="background:#eae2d0;border-left:3px solid #7e2a1e;border-radius:0 2px 2px 0;padding:13px 16px">
-      <p style="margin:0 0 3px;font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;color:#7e2a1e;letter-spacing:.08em;text-transform:uppercase">⚑ Action Required</p>
-      <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#3a322a;line-height:1.55">${esc(plain)}</p>
-    </td>
-  </tr>
-</table>`;
-}
-
-/** Inner HTML only; caller must escape all dynamic values */
-function actionNeededBlockHtml(safeInnerHtml: string) {
-  return `
-<table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0">
-  <tr>
-    <td style="background:#eae2d0;border-left:3px solid #7e2a1e;border-radius:0 2px 2px 0;padding:13px 16px">
-      <p style="margin:0 0 3px;font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;color:#7e2a1e;letter-spacing:.08em;text-transform:uppercase">⚑ Action Required</p>
-      <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#3a322a;line-height:1.55">${safeInnerHtml}</p>
-    </td>
-  </tr>
-</table>`;
+/** Map the legacy per-CTA hex overrides onto the dark-theme button variants. */
+function ctaVariant(color?: string): "primary" | "success" | "neutral" {
+  if (color === "#3f6b3a") return "success"; // upheld / positive outcome
+  if (color === "#3a322a") return "neutral"; // informational, low emphasis
+  return "primary"; // gold — default / action-required
 }
 
 type CaseSummaryFields = {
@@ -133,36 +108,18 @@ type CaseSummaryFields = {
 };
 
 function caseSummaryCard(c: CaseSummaryFields) {
-  const row = (label: string, value: string) =>
-    `<tr>
-      <td style="padding:5px 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#6e6455;width:130px;vertical-align:top;white-space:nowrap">${esc(label)}</td>
-      <td style="padding:5px 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#1c1712;line-height:1.4">${value}</td>
-    </tr>`;
-
   const sessionVal = esc(c.weekendSession) + (c.incidentLap ? ` &middot; Lap ${c.incidentLap}` : "");
-
-  return `
-<table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;background:#fbf8f0;border:1px solid #ddd4c2;border-radius:2px;overflow:hidden">
-  <tr>
-    <td style="padding:11px 16px;background:#eae2d0;border-bottom:1px solid #ddd4c2">
-      <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:10px;font-weight:700;color:#6f5628;letter-spacing:.1em;text-transform:uppercase">
-        ${c.caseNumber ? `Case #${c.caseNumber}` : "Case"}
-      </p>
-      <p style="margin:4px 0 0;font-family:Georgia,'Times New Roman',serif;font-size:15px;font-weight:800;color:#1c1712;line-height:1.3">${esc(c.title)}</p>
-    </td>
-  </tr>
-  <tr>
-    <td style="padding:13px 16px">
-      <table width="100%" cellpadding="0" cellspacing="0">
-        ${row("Season / Round", `${esc(c.season)} &middot; ${esc(c.round)}`)}
-        ${row("Session", sessionVal)}
-        ${row("Complainant", esc(c.complainantName))}
-        ${row("Involved drivers", esc(c.involvedNames.join(", ") || "—"))}
-        ${row("Status", statusBadge(c.status))}
-      </table>
-    </td>
-  </tr>
-</table>`;
+  return infoCard({
+    label: c.caseNumber ? `Case #${c.caseNumber}` : "Case",
+    title: c.title,
+    rows: [
+      ["Season / Round", `${esc(c.season)} &middot; ${esc(c.round)}`],
+      ["Session", sessionVal],
+      ["Complainant", esc(c.complainantName)],
+      ["Involved drivers", esc(c.involvedNames.join(", ") || "—")],
+      ["Status", statusBadge(c.status, STATUS_TONE[c.status] ?? "gold")],
+    ],
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -183,80 +140,34 @@ type EmailParams = {
 };
 
 function buildEmail(p: EmailParams): { html: string; text: string } {
-  const summaryHtml  = p.summary ? caseSummaryCard(p.summary) : "";
+  const summaryHtml = p.summary ? caseSummaryCard(p.summary) : "";
   const actionHtml =
     typeof p.action === "object" && p.action
-      ? actionNeededBlockHtml(
-          `<strong>${esc(p.action.title)}</strong><br>${p.action.body}`,
-        )
+      ? calloutCard({
+          label: "⚑ Action Required",
+          bodyHtml: `<strong style="color:${C.ink}">${esc(p.action.title)}</strong><br>${p.action.body}`,
+        })
       : typeof p.action === "string" && p.action
-        ? actionNeededBlockPlain(p.action)
+        ? calloutCard({ label: "⚑ Action Required", bodyHtml: esc(p.action) })
         : "";
-  const extraHtml    = p.customHtml ?? "";
-  const noteHtml     = p.note
-    ? `<p style="margin:20px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#6e6455;line-height:1.6">${esc(p.note)}</p>`
-    : "";
+  const extraHtml = p.customHtml ?? "";
+  const noteHtml = p.note ? noteText(p.note) : "";
 
-  const html = `<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f4efe4;font-family:Arial,Helvetica,sans-serif">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4efe4;padding:36px 14px">
-<tr><td align="center">
-<table width="100%" style="max-width:540px">
-
-  <!-- Header bar -->
-  <tr>
-    <td style="background:#fbf8f0;border-radius:2px 2px 0 0;border:1px solid #ddd4c2;border-bottom:none;padding:20px 26px 18px">
-      <table width="100%" cellpadding="0" cellspacing="0">
-        <tr>
-          <td>
-            <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:10px;font-weight:700;color:#6f5628;letter-spacing:.14em;text-transform:uppercase">ISL Steward System</p>
-            <p style="margin:2px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#6e6455">F1 Israeli Super League &mdash; F1 Sim Racing</p>
-          </td>
-          <td align="right" style="padding-left:16px">
-            <div style="width:34px;height:34px;border-radius:2px;background:#eae2d0;border:1px solid #9c7a3c;text-align:center;line-height:34px;font-size:17px;color:#6f5628">⚖</div>
-          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-
-  <!-- Brass accent rule (official / on the record) -->
-  <tr>
-    <td style="height:2px;background:#9c7a3c;border-left:1px solid #ddd4c2;border-right:1px solid #ddd4c2;font-size:0;line-height:0">&nbsp;</td>
-  </tr>
-
-  <!-- Body -->
-  <tr>
-    <td style="background:#fbf8f0;border:1px solid #ddd4c2;border-top:none;border-bottom:none;padding:28px 26px 22px">
-      ${p.eyebrow ? `<p style="margin:0 0 7px;font-family:Arial,Helvetica,sans-serif;font-size:10px;font-weight:700;color:#6f5628;letter-spacing:.12em;text-transform:uppercase">${esc(p.eyebrow)}</p>` : ""}
-      <h1 style="margin:0 0 13px;font-family:Georgia,'Times New Roman',serif;font-size:21px;font-weight:800;color:#1c1712;line-height:1.25">${esc(p.title)}</h1>
-      <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#3a322a;line-height:1.65">${p.introHtml ?? esc(p.intro)}</p>
+  const body = `
+      ${heading(p.title, p.eyebrow)}
+      ${paragraph(p.introHtml ?? esc(p.intro))}
       ${summaryHtml}
       ${actionHtml}
       ${extraHtml}
-      ${ctaButton(p.cta.label, p.cta.url, p.cta.color ?? "#1c1712")}
-      ${noteHtml}
-    </td>
-  </tr>
+      ${ctaButton(p.cta.label, p.cta.url, ctaVariant(p.cta.color))}
+      ${noteHtml}`;
 
-  <!-- Footer -->
-  <tr>
-    <td style="background:#eae2d0;border:1px solid #ddd4c2;border-top:1px solid #ddd4c2;border-radius:0 0 2px 2px;padding:14px 26px">
-      <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#6e6455;line-height:1.6">
-        ISL &mdash; F1 Israeli Super League &nbsp;&middot;&nbsp;
-        <a href="https://f1isl.com" style="color:#7e2a1e;text-decoration:none">f1isl.com</a><br>
-        This is an automated message from the Steward System. Please do not reply to this email.
-      </p>
-    </td>
-  </tr>
-
-</table>
-</td></tr>
-</table>
-</body>
-</html>`;
+  const html = emailShell({
+    headerLabel: "Steward System",
+    bodyHtml: body,
+    preheader: p.intro,
+    footerNote: "Automated message from the Steward System — please do not reply.",
+  });
 
   // Plain-text fallback
   const textLines = [
@@ -487,16 +398,13 @@ export async function notifyVerdictPublished(caseItem: StewardCase, verdict: Ver
 const penaltiesUrl = () => `${SITE_URL}/stewards/penalties-to-serve`;
 
 function penaltySummaryBlock(p: PenaltyToServe): string {
-  const rows = [
-    ["Penalty",      esc(p.penaltyLabel)],
+  const rows: Array<[string, string]> = [
+    ["Penalty", esc(p.penaltyLabel)],
     ["Assigned race", esc(p.assignedRaceLabel ?? "To be confirmed")],
-    ["Status",        esc(p.status.replace(/_/g, " "))],
-    ...(p.penaltyDescription ? [["Details", esc(p.penaltyDescription)]] : []),
+    ["Status", esc(p.status.replace(/_/g, " "))],
+    ...(p.penaltyDescription ? ([["Details", esc(p.penaltyDescription)]] as Array<[string, string]>) : []),
   ];
-  const rowsHtml = rows
-    .map(([k, v]) => `<tr><td style="padding:4px 10px 4px 0;font-family:Arial,Helvetica,sans-serif;color:#6e6455;font-size:12px;white-space:nowrap">${k}</td><td style="padding:4px 0;font-family:Arial,Helvetica,sans-serif;color:#1c1712;font-size:13px;font-weight:600">${v}</td></tr>`)
-    .join("");
-  return `<table style="margin-top:12px;border-collapse:collapse">${rowsHtml}</table>`;
+  return infoCard({ label: "Penalty", rows });
 }
 
 /** Notify driver when a new penalty-to-serve is first assigned */
@@ -595,15 +503,10 @@ export async function notifyAppealSubmitted(
       involvedNames: [],
       status: "Appeal Submitted",
     },
-    customHtml: `
-<table width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0">
-  <tr>
-    <td style="background:#fbf8f0;border:1px solid #ddd4c2;border-radius:2px;padding:14px 16px">
-      <p style="margin:0 0 6px;font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;color:#6f5628;letter-spacing:.08em;text-transform:uppercase">Appeal Reason</p>
-      <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#3a322a;line-height:1.55">${esc(appeal.description.substring(0, 300))}${appeal.description.length > 300 ? "…" : ""}</p>
-    </td>
-  </tr>
-</table>`,
+    customHtml: calloutCard({
+      label: "Appeal Reason",
+      bodyHtml: `${esc(appeal.description.substring(0, 300))}${appeal.description.length > 300 ? "…" : ""}`,
+    }),
     action: "The appeal is now under steward review. Stewards will evaluate the submission and issue an appeal verdict.",
     cta: { label: "View Appeal", url: appealUrl(appeal.id), color: "#7e2a1e" },
     note: "This is an automated notification from the ISL Steward System.",
@@ -639,15 +542,13 @@ export async function notifyAppealVerdictPublished(
       involvedNames: [],
       status: changed ? "Decision Changed" : "Original Decision Upheld",
     },
-    customHtml: appealVerdict.verdict_summary ? `
-<table width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0">
-  <tr>
-    <td style="background:#fbf8f0;border:1px solid #ddd4c2;border-left:3px solid ${changed ? "#7e2a1e" : "#3f6b3a"};border-radius:0 2px 2px 0;padding:14px 16px">
-      <p style="margin:0 0 6px;font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;color:${changed ? "#9a2b1c" : "#3f6b3a"};letter-spacing:.08em;text-transform:uppercase">Appeal Verdict Summary</p>
-      <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#3a322a;line-height:1.55">${esc(appealVerdict.verdict_summary)}</p>
-    </td>
-  </tr>
-</table>` : undefined,
+    customHtml: appealVerdict.verdict_summary
+      ? calloutCard({
+          label: "Appeal Verdict Summary",
+          bodyHtml: esc(appealVerdict.verdict_summary),
+          tone: changed ? "gold" : "success",
+        })
+      : undefined,
     cta: { label: "View Full Verdict", url: appealUrl(appeal.id), color: changed ? "#7e2a1e" : "#3f6b3a" },
     note: "If you have questions about this decision, contact the ISL stewards.",
   });

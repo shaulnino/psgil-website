@@ -1,5 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
+import {
+  C,
+  ctaButton,
+  emailShell,
+  escapeHtml,
+  FONT_BODY,
+  FONT_MONO,
+  heading,
+  infoCard,
+  paragraph,
+} from "@/lib/email/theme";
 
 // ISL league email — also the nodemailer SMTP auth account (from/to for all contact-form mail).
 // NOTE: GMAIL_APP_PASSWORD must be an App Password generated for THIS exact Gmail account, or sending fails.
@@ -177,47 +188,6 @@ function sanitiseHeader(str: string): string {
   return str.replace(/[\r\n\0]/g, "").trim();
 }
 
-function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
-// ---------------------------------------------------------------------------
-// Shared email wrapper
-// ---------------------------------------------------------------------------
-function emailShell(content: string): string {
-  return `
-<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f4efe4;font-family:Arial,Helvetica,sans-serif">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4efe4;padding:40px 16px">
-    <tr><td align="center">
-      <table width="100%" style="max-width:520px;background:#fbf8f0;border:1px solid #ddd4c2">
-        <!-- Oxblood top rule -->
-        <tr><td style="height:2px;background:#7e2a1e"></td></tr>
-        <tr><td style="padding:32px 28px 28px">
-          ${content}
-        </td></tr>
-        <!-- Footer -->
-        <tr><td style="padding:0 28px 24px">
-          <table width="100%" style="border-top:1px solid #ddd4c2;padding-top:16px">
-            <tr><td style="font-size:11px;color:#6e6455;line-height:1.5;font-family:Arial,Helvetica,sans-serif">
-              ISL — F1 Israeli Super League<br>
-              <a href="https://f1isl.com" style="color:#7e2a1e;text-decoration:none">f1isl.com</a>
-            </td></tr>
-          </table>
-        </td></tr>
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`.trim();
-}
-
 // ---------------------------------------------------------------------------
 // Auto-reply: Sign-up
 // ---------------------------------------------------------------------------
@@ -237,25 +207,20 @@ function autoReplySignupText(name: string): string {
 }
 
 function autoReplySignupHtml(name: string): string {
-  return emailShell(`
-    <h1 style="margin:0 0 8px;font-size:22px;color:#1c1712;font-family:Georgia,'Times New Roman',serif">Welcome to ISL! 🏁</h1>
-    <p style="margin:0 0 20px;font-size:14px;color:#3a322a;line-height:1.6;font-family:Arial,Helvetica,sans-serif">
-      Hi ${escapeHtml(name)},
-    </p>
-    <p style="margin:0 0 16px;font-size:14px;color:#3a322a;line-height:1.6;font-family:Arial,Helvetica,sans-serif">
-      Thanks for signing up — we&rsquo;ve got your details. We&rsquo;ll reach out to you by email before the next season starts or when a seat opens up.
-    </p>
-    <p style="margin:0 0 24px;font-size:14px;color:#3a322a;line-height:1.6;font-family:Arial,Helvetica,sans-serif">
-      In the meantime, check out our latest standings and schedule:
-    </p>
-    <table cellpadding="0" cellspacing="0"><tr><td style="background:#7e2a1e;border-radius:2px;padding:10px 28px">
-      <a href="https://f1isl.com" style="color:#f4efe4;text-decoration:none;font-size:14px;font-weight:600;font-family:Arial,Helvetica,sans-serif">Visit f1isl.com</a>
-    </td></tr></table>
-    <p style="margin:24px 0 0;font-size:14px;color:#3a322a;line-height:1.6;font-family:Arial,Helvetica,sans-serif">
+  return emailShell({
+    headerLabel: "Sign-Up",
+    preheader: "Thanks for signing up for ISL — we've got your details.",
+    bodyHtml: `
+    ${heading("Welcome to ISL 🏁", "Registration Received")}
+    ${paragraph(`Hi ${escapeHtml(name)},`)}
+    ${paragraph("Thanks for signing up — we&rsquo;ve got your details. We&rsquo;ll reach out to you by email before the next season starts or when a seat opens up.")}
+    ${paragraph("In the meantime, check out our latest standings and schedule:")}
+    ${ctaButton("Visit f1isl.com", "https://f1isl.com", "primary")}
+    <p style="margin:24px 0 0;font-family:${FONT_BODY};font-size:14px;color:${C.ink2};line-height:1.6">
       See you on track!<br>
-      <span style="color:#6e6455">— The ISL Team</span>
-    </p>
-  `);
+      <span style="color:${C.meta}">— The ISL Team</span>
+    </p>`,
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -274,22 +239,18 @@ function autoReplyQuestionText(name: string): string {
 }
 
 function autoReplyQuestionHtml(name: string): string {
-  return emailShell(`
-    <h1 style="margin:0 0 8px;font-size:22px;color:#1c1712;font-family:Georgia,'Times New Roman',serif">Message received &#x2705;</h1>
-    <p style="margin:0 0 20px;font-size:14px;color:#3a322a;line-height:1.6;font-family:Arial,Helvetica,sans-serif">
-      Hi ${escapeHtml(name)},
-    </p>
-    <p style="margin:0 0 16px;font-size:14px;color:#3a322a;line-height:1.6;font-family:Arial,Helvetica,sans-serif">
-      Thanks for reaching out! We received your message and will reply to you by email as soon as possible.
-    </p>
-    <p style="margin:0 0 0;font-size:14px;color:#3a322a;line-height:1.6;font-family:Arial,Helvetica,sans-serif">
-      If your matter is urgent you can also email us directly at
-      <a href="mailto:${LEAGUE_EMAIL}" style="color:#7e2a1e;text-decoration:none">${LEAGUE_EMAIL}</a>.
-    </p>
-    <p style="margin:24px 0 0;font-size:14px;color:#3a322a;line-height:1.6;font-family:Arial,Helvetica,sans-serif">
-      <span style="color:#6e6455">— The ISL Team</span>
-    </p>
-  `);
+  return emailShell({
+    headerLabel: "Contact",
+    preheader: "We received your message and will reply as soon as possible.",
+    bodyHtml: `
+    ${heading("Message received ✅", "Contact Form")}
+    ${paragraph(`Hi ${escapeHtml(name)},`)}
+    ${paragraph("Thanks for reaching out! We received your message and will reply to you by email as soon as possible.")}
+    ${paragraph(`If your matter is urgent you can also email us directly at <a href="mailto:${LEAGUE_EMAIL}" style="color:${C.gold};text-decoration:none">${LEAGUE_EMAIL}</a>.`)}
+    <p style="margin:24px 0 0;font-family:${FONT_BODY};font-size:14px;color:${C.ink2};line-height:1.6">
+      <span style="color:${C.meta}">— The ISL Team</span>
+    </p>`,
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -302,27 +263,27 @@ function adminSignupHtml(
   platform?: string,
   experience?: string,
 ): string {
-  const row = (label: string, value: string) =>
-    `<tr style="border-bottom:1px solid #ddd4c2">
-      <td style="padding:10px 14px;font-size:12px;font-weight:600;color:#6e6455;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;width:130px;font-family:Arial,Helvetica,sans-serif">${label}</td>
-      <td style="padding:10px 14px;font-size:14px;color:#1c1712;font-family:Arial,Helvetica,sans-serif">${value}</td>
-    </tr>`;
-
+  const platformColor =
+    platform === "PC" ? C.gold : platform === "PS5" ? C.info : C.success;
   const platformBadge = platform
-    ? `<span style="display:inline-block;padding:2px 10px;border-radius:2px;font-size:12px;font-weight:700;background:${platform === "PC" ? "#9c7a3c" : platform === "PS5" ? "#2f5a6e" : "#3f6b3a"};color:#f4efe4;font-family:Arial,Helvetica,sans-serif">${escapeHtml(platform)}</span>`
+    ? `<span style="display:inline-block;font-family:${FONT_MONO};font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:${platformColor};border:1px solid ${platformColor};border-radius:2px;padding:3px 9px">${escapeHtml(platform)}</span>`
     : "—";
 
-  return emailShell(`
-    <h1 style="margin:0 0 4px;font-size:20px;color:#1c1712;font-family:Georgia,'Times New Roman',serif">New Sign-Up Interest 🏁</h1>
-    <p style="margin:0 0 20px;font-size:12px;color:#6e6455;font-family:Arial,Helvetica,sans-serif">Someone wants to join ISL</p>
-    <table style="border-collapse:collapse;width:100%;background:#eae2d0;border:1px solid #ddd4c2">
-      ${row("Name", escapeHtml(name))}
-      ${row("Email", `<a href="mailto:${escapeHtml(email)}" style="color:#7e2a1e;text-decoration:none">${escapeHtml(email)}</a>`)}
-      ${row("Date of Birth", birthdate ? escapeHtml(birthdate) : "—")}
-      ${row("Platform", platformBadge)}
-      ${row("Experience", experience ? escapeHtml(experience) : "—")}
-    </table>
-  `);
+  return emailShell({
+    headerLabel: "Sign-Up",
+    preheader: `New sign-up interest from ${name}`,
+    bodyHtml: `
+    ${heading("New Sign-Up Interest 🏁", "Someone wants to join ISL")}
+    ${infoCard({
+      rows: [
+        ["Name", escapeHtml(name)],
+        ["Email", `<a href="mailto:${escapeHtml(email)}" style="color:${C.gold};text-decoration:none">${escapeHtml(email)}</a>`],
+        ["Date of Birth", birthdate ? escapeHtml(birthdate) : "—"],
+        ["Platform", platformBadge],
+        ["Experience", experience ? escapeHtml(experience) : "—"],
+      ],
+    })}`,
+  });
 }
 
 function adminQuestionHtml(
@@ -331,14 +292,19 @@ function adminQuestionHtml(
   subject: string | undefined,
   message: string,
 ): string {
-  return `
-    <div style="font-family:Arial,Helvetica,sans-serif;max-width:600px;background:#fbf8f0;border:1px solid #ddd4c2;padding:24px">
-      <h2 style="color:#1c1712;margin:0 0 16px;font-family:Georgia,'Times New Roman',serif;border-top:2px solid #7e2a1e;padding-top:16px">New Contact Form Submission</h2>
-      <table style="border-collapse:collapse;width:100%">
-        <tr><td style="padding:8px 12px;font-weight:bold;color:#6e6455;width:80px">Name</td><td style="padding:8px 12px;color:#1c1712">${escapeHtml(name)}</td></tr>
-        <tr><td style="padding:8px 12px;font-weight:bold;color:#6e6455">Email</td><td style="padding:8px 12px;color:#1c1712"><a href="mailto:${escapeHtml(email)}" style="color:#7e2a1e;text-decoration:none">${escapeHtml(email)}</a></td></tr>
-        ${subject?.trim() ? `<tr><td style="padding:8px 12px;font-weight:bold;color:#6e6455">Subject</td><td style="padding:8px 12px;color:#1c1712">${escapeHtml(subject)}</td></tr>` : ""}
-      </table>
-      <div style="margin-top:16px;padding:16px;background:#eae2d0;border:1px solid #ddd4c2;color:#3a322a;white-space:pre-wrap">${escapeHtml(message)}</div>
-    </div>`;
+  const rows: Array<[string, string]> = [
+    ["Name", escapeHtml(name)],
+    ["Email", `<a href="mailto:${escapeHtml(email)}" style="color:${C.gold};text-decoration:none">${escapeHtml(email)}</a>`],
+  ];
+  if (subject?.trim()) rows.push(["Subject", escapeHtml(subject)]);
+
+  return emailShell({
+    headerLabel: "Contact",
+    preheader: `New message from ${name}`,
+    bodyHtml: `
+    ${heading("New Contact Submission", "Contact Form")}
+    ${infoCard({ rows })}
+    <p style="margin:0 0 8px;font-family:${FONT_MONO};font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:${C.gold}">Message</p>
+    <div style="padding:16px;background:${C.surfaceAlt};border:1px solid ${C.hairline};border-radius:3px;font-family:${FONT_BODY};font-size:14px;color:${C.ink2};line-height:1.6;white-space:pre-wrap">${escapeHtml(message)}</div>`,
+  });
 }

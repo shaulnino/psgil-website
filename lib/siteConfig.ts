@@ -74,19 +74,11 @@ export const siteConfig: SiteConfig = {
     buttonLabel: "Join ISL Discord",
     subtext: "New drivers welcome • Quick onboarding",
   },
-  socials: [
-    {
-      label: "Facebook",
-      href: "https://www.facebook.com/profile.php?id=61550314611661",
-      icon: "facebook",
-    },
-    { label: "Discord", href: "https://discord.gg/v6zF6QME7J", icon: "discord" },
-    { label: "YouTube", href: "https://www.youtube.com/@PSGiLF1", icon: "youtube" },
-    {
-      label: "Instagram",
-      href: "https://www.instagram.com/psgil_f1?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==",
-      icon: "instagram",
-    },
-  ],
+  // Social channels — intentionally empty until the new ISL accounts exist.
+  // The old links pointed at legacy PSGiL media and have been removed.
+  // To re-enable, add entries back here, e.g.:
+  //   { label: "Instagram", href: "https://instagram.com/…", icon: "instagram" }
+  // Icons render on the homepage hero and footer wherever this list is non-empty.
+  socials: [],
   footerNote: "Community-run league",
 };
