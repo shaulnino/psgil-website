@@ -61,6 +61,8 @@ export type Driver = {
   photo_url?: string;
   photo_position?: string; // CSS object-position value, e.g. "center", "bottom", "50% 70%"
   about?: string;
+  /** Optional Hebrew bio (csv column: about_he). Falls back to about. */
+  about_he?: string;
   // All-time stats
   points?: string;
   wins?: string;
@@ -142,6 +144,14 @@ export function localizedDriverName(
   locale: string,
 ): string {
   return locale === "he" && driver.name_he ? driver.name_he : driver.name;
+}
+
+/** Driver bio in the active locale — Hebrew when available, else English. */
+export function localizedAbout(
+  driver: Pick<Driver, "about" | "about_he">,
+  locale: string,
+): string | undefined {
+  return locale === "he" && driver.about_he ? driver.about_he : driver.about;
 }
 
 /* ------------------------------------------------------------------ */
@@ -246,6 +256,7 @@ export function mapDrivers(raw: Record<string, string>[]): Driver[] {
     photo_url: row.photo_url || undefined,
     photo_position: row.photo_position || undefined,
     about: row.about || undefined,
+    about_he: (row.about_he ?? "").trim() || undefined,
     rewards: [],
   }));
 }

@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import LoadingLink from "@/components/LoadingLink";
-import { localizedDriverName, type Driver, type CompetitionStats } from "@/lib/driversData";
+import { localizedAbout, localizedDriverName, type Driver, type CompetitionStats } from "@/lib/driversData";
 import { buildAchievements, getAwardIcon } from "@/components/AchievementBadges";
 import type { AwardCode, RewardCompetition } from "@/lib/rewardsData";
 
@@ -527,8 +527,8 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
                     </div>
                   )}
                 </div>
-                {driver.about && (
-                  <p className="mt-4 text-sm text-ink-2">{driver.about}</p>
+                {localizedAbout(driver, locale) && (
+                  <p className="mt-4 text-sm text-ink-2">{localizedAbout(driver, locale)}</p>
                 )}
 
                 {/* ---- League Standing (inline under About) ---- */}
