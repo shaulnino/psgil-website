@@ -12,7 +12,13 @@ import { siteConfig } from "@/lib/siteConfig";
 import { gaClickJoinNow } from "@/lib/ga";
 import StewardNotifBadge from "@/app/stewards/components/StewardNotifBadge";
 
-export default function Header({ authed = false }: { authed?: boolean }) {
+export default function Header({
+  authed = false,
+  canSteward = false,
+}: {
+  authed?: boolean;
+  canSteward?: boolean;
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const t = useTranslations("common");
@@ -58,12 +64,12 @@ export default function Header({ authed = false }: { authed?: boolean }) {
         </nav>
 
         <div className="flex items-center gap-3">
-          {authed && (
+          {canSteward && (
             <div className="hidden sm:block">
               <StewardNotifBadge />
             </div>
           )}
-          <AccountMenu authed={authed} className="hidden sm:block" />
+          <AccountMenu authed={authed} canSteward={canSteward} className="hidden sm:block" />
           <LanguageSwitcher className="hidden sm:inline-flex" />
           <div className="hidden sm:block">
             <Button href="/#contact-us" size="sm" onClick={gaClickJoinNow}>
@@ -106,7 +112,7 @@ export default function Header({ authed = false }: { authed?: boolean }) {
               );
             })}
             <div className="flex flex-col gap-2 pt-2">
-              <AccountMenu authed={authed} variant="mobile" />
+              <AccountMenu authed={authed} canSteward={canSteward} variant="mobile" />
               <LanguageSwitcher className="w-full justify-center py-2.5" />
               <Button href="/#contact-us" size="sm" onClick={gaClickJoinNow} className="w-full">
                 {t("joinNow")}

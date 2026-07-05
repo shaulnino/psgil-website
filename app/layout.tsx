@@ -20,6 +20,7 @@ import GoogleAnalytics from "@/components/GoogleAnalytics";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import { GA_ID } from "@/lib/ga";
 import { getCurrentUser } from "@/lib/auth/session";
+import { can } from "@/lib/stewards/auth";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -106,7 +107,11 @@ export default async function RootLayout({
   const messages = await getMessages();
   const locale = await getLocale();
   const dir = locale === "he" ? "rtl" : "ltr";
-  const authed = !!(await getCurrentUser());
+  const currentUser = await getCurrentUser();
+  const authed = !!currentUser;
+  // Only steward-area accounts (member/steward/admin) get the Stewards entry —
+  // otherwise the link would just bounce a regular account back to /account.
+  const canSteward = !!currentUser && can(currentUser, "view_steward_area");
   return (
     <html lang={locale} dir={dir} data-scroll-behavior="smooth">
       <body
@@ -141,7 +146,7 @@ export default async function RootLayout({
         </Suspense>
         <ServiceWorkerRegister />
 
-        <Header authed={authed} />
+        <Header authed={authed} canSteward={canSteward} />
         {children}
         <Footer />
         <Suspense fallback={null}>
