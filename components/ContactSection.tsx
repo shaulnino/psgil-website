@@ -6,7 +6,7 @@ import SuccessModal from "./SuccessModal";
 import { Button } from "@/components/ui/button";
 
 // ISL league contact email (display + mailto + copy button).
-const EMAIL = "islf1league@gmail.com";
+const EMAIL = "f1racingisl@gmail.com";
 
 type FormState = "idle" | "sending" | "sent" | "error";
 type FormMode = "signup" | "question";
