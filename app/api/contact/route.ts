@@ -14,7 +14,7 @@ import {
 
 // ISL league email — also the nodemailer SMTP auth account (from/to for all contact-form mail).
 // NOTE: GMAIL_APP_PASSWORD must be an App Password generated for THIS exact Gmail account, or sending fails.
-const LEAGUE_EMAIL = "islf1league@gmail.com";
+const LEAGUE_EMAIL = "f1racingisl@gmail.com";
 
 // ---------------------------------------------------------------------------
 // Simple in-memory rate limiter (per serverless cold-start window)
