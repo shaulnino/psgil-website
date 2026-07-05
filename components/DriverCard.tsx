@@ -13,8 +13,11 @@ type DriverCardProps = {
   onSelect: (driver: Driver, team: Team) => void;
 };
 
+// Bypass next/image optimization for remote photos and for dynamic uploaded
+// driver photos (PW-2e), which carry a ?v= cache-buster that next/image would
+// otherwise reject for local images.
 function isRemote(src?: string) {
-  return !!src && src.startsWith("http");
+  return !!src && (src.startsWith("http") || src.includes("?"));
 }
 
 export default function DriverCard({ driver, team, placeholderSrc, onSelect }: DriverCardProps) {

@@ -75,6 +75,7 @@ export async function createUser(input: NewUserInput): Promise<Account> {
     mustChangePassword: parsed.mustChangePassword ?? true,
     emailVerified: parsed.emailVerified ?? false,
     driverId: parsed.driverId ?? null,
+    driverPhotoUrl: null,
     createdAt: now,
     updatedAt: now,
   };
@@ -97,6 +98,15 @@ export async function setDriverId(userId: string, driverId: string | null): Prom
   const account = await getAccountById(userId);
   if (!account) return;
   account.driverId = driverId;
+  account.updatedAt = new Date().toISOString();
+  await putAccount(account);
+}
+
+/** Set (or clear with null) the uploaded driver photo URL. */
+export async function setDriverPhotoUrl(userId: string, url: string | null): Promise<void> {
+  const account = await getAccountById(userId);
+  if (!account) return;
+  account.driverPhotoUrl = url;
   account.updatedAt = new Date().toISOString();
   await putAccount(account);
 }

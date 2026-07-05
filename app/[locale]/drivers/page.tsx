@@ -17,6 +17,7 @@ import {
   computeAllScopeRanks,
   computeCompetitionRanks,
 } from "@/lib/driversData";
+import { applyUploadedDriverPhotos } from "@/lib/drivers/photoOverride";
 import { attachRewardsToDrivers, fetchRewards } from "@/lib/rewardsData";
 import {
   fetchSeasonsConfig,
@@ -179,6 +180,9 @@ export default async function DriversPage() {
       drivers = computeAllScopeRanks(drivers);
       drivers = computeCompetitionRanks(drivers);
     }
+
+    // Override CSV photo_url with any account-uploaded driver photos (PW-2e).
+    drivers = await applyUploadedDriverPhotos(drivers);
 
     const teamsData = mapTeams(parseCsv<Record<string, string>>(teamsCsv));
     teams = groupDriversByTeam(teamsData, drivers);

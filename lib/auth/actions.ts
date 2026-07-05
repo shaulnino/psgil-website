@@ -7,9 +7,12 @@ import {
   createUser,
   getUserByEmail,
   getUserById,
+  setDriverPhotoUrl,
   setEmailVerified,
   updateUser,
 } from "@/lib/accounts/repository";
+import { isDriverRole } from "@/lib/accounts/types";
+import { saveDriverPhoto } from "@/lib/drivers/photoStore";
 import {
   clearSessionCookie,
   createSession,
@@ -136,6 +139,24 @@ export async function updateProfileAction(_prev: FormState, formData: FormData):
   if (name.length < 1 || name.length > 120) return { error: "Please enter a valid name." };
   await updateUser(user.id, { name });
   redirect("/account?saved=1");
+}
+
+/** A linked driver uploads their profile photo (overrides CSV photo_url). */
+export async function uploadDriverPhotoAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  if (!isDriverRole(user.roles) || !user.driverId) {
+    return { error: "Only a linked driver can upload a photo." };
+  }
+  const file = formData.get("photo");
+  if (!(file instanceof File) || file.size === 0) return { error: "Please choose an image." };
+  try {
+    const url = await saveDriverPhoto(user.driverId, file, new Date().toISOString());
+    await setDriverPhotoUrl(user.id, url);
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Upload failed." };
+  }
+  redirect("/account?photo=1");
 }
 
 export async function changeOwnPasswordAction(_prev: FormState, formData: FormData): Promise<FormState> {

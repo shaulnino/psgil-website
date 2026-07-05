@@ -4,9 +4,11 @@ import Section from "@/components/Section";
 import { Button } from "@/components/ui/button";
 import { requireUser } from "@/lib/auth/session";
 import { logoutAction } from "@/lib/auth/actions";
+import { isDriverRole } from "@/lib/accounts/types";
 import ProfileForm from "./ProfileForm";
 import PasswordForm from "./PasswordForm";
 import ResendVerification from "./ResendVerification";
+import DriverPhotoForm from "./DriverPhotoForm";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("account.account");
@@ -19,13 +21,22 @@ const sectionHeading = "font-display text-lg font-bold tracking-[0.02em] text-in
 export default async function AccountPage({
   searchParams,
 }: {
-  searchParams: Promise<{ welcome?: string; saved?: string; pw?: string }>;
+  searchParams: Promise<{ welcome?: string; saved?: string; pw?: string; photo?: string }>;
 }) {
   const user = await requireUser("/account");
   const t = await getTranslations("account.account");
   const sp = await searchParams;
 
-  const flash = sp.welcome ? t("welcome") : sp.saved ? t("saved") : sp.pw ? t("passwordChanged") : null;
+  const flash = sp.welcome
+    ? t("welcome")
+    : sp.saved
+      ? t("saved")
+      : sp.pw
+        ? t("passwordChanged")
+        : sp.photo
+          ? t("photoUpdated")
+          : null;
+  const showDriverPhoto = isDriverRole(user.roles);
 
   return (
     <main className="text-ink-2">
@@ -66,6 +77,19 @@ export default async function AccountPage({
               </div>
             </dl>
           </div>
+
+          {showDriverPhoto && (
+            <div className={cardClass}>
+              <h2 className={sectionHeading}>{t("photoHeading")}</h2>
+              <div className="mt-4">
+                {user.driverId ? (
+                  <DriverPhotoForm currentPhotoUrl={user.driverPhotoUrl} />
+                ) : (
+                  <p className="text-sm text-meta">{t("photoNotLinked")}</p>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className={cardClass}>
             <h2 className={sectionHeading}>{t("security")}</h2>

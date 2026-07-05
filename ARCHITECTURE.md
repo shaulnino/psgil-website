@@ -242,7 +242,8 @@ No client-state library. Data is server-fetched and passed as props; mutations g
 
 | 2026-07-05 | **PW-2c (approval + platform admin console) implemented.** Account `status` lifecycle; registration → pending; `/[locale]/admin` console (approve→driver / reject / create / roles / driver-link / suspend / remove) under My Account; `driver` added to `view_steward_area`; `/stewards/admin` redirects to `/admin`. | Admin-gated membership; account admin is a platform concern outside the steward module |
 | 2026-07-05 | **PW-2d (steward↔driver-account integration) implemented.** `isDriverRole` (`driver` ∪ `member`) replaces every `member` participant check across the steward flows (pickers, complainant, `createComplaintAction`, notifications, dashboard, penalties). New drivers participate; `member` is a legacy alias (zero-regression, no blanket data migration). | "Driver count = driver-permission accounts"; unify the participant concept without misclassifying admins/stewards |
+| 2026-07-05 | **PW-2e (driver profile photo) implemented.** Linked-driver photo upload in `/account` → `lib/drivers/photoStore.ts` (per-driver Blob in prod / `public/uploads/drivers` in dev) + `/api/driver-photo/[driverId]`; account stores `driverPhotoUrl`. `applyUploadedDriverPhotos()` overrides CSV `photo_url` on the drivers page (fallback = CSV). | Drivers self-manage their photo; sheet stays the seed/fallback |
 
-> **Implementation status (2026-07-05):** PW-0, PW-1, PW-2a, PW-2b, PW-2c, **PW-2d** done. **Remaining:** PW-2e (driver profile & photo) → PW-2f (reset password) → PW-3 Attendance → PW-4 → PW-5.
+> **Implementation status (2026-07-05):** PW-0, PW-1, PW-2a–2e done. **Remaining:** PW-2f (reset password) → PW-3 Attendance → PW-4 → PW-5.
 
 *Last audited: 2026-07-05.*

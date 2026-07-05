@@ -60,6 +60,8 @@ export type Account = {
   emailVerified: boolean;
   /** Link to a CSV driver_id (PW-2c/d). null = unlinked. */
   driverId: string | null;
+  /** Uploaded driver photo URL (PW-2e); overrides the CSV photo_url. null = none. */
+  driverPhotoUrl: string | null;
   /** Preferred UI language. Absent = "en". */
   locale?: "en" | "he";
   createdAt: string;

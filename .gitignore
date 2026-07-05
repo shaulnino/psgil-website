@@ -43,6 +43,7 @@ next-env.d.ts
 # steward module — live data, never commit
 /data/stewards/
 /public/uploads/stewards/
+/public/uploads/drivers/
 
 # accounts store — live data (PW-2a), never commit
 /data/accounts/

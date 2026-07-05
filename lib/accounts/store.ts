@@ -41,6 +41,7 @@ function hydrate(raw: Partial<Account> & { id: string }): Account {
     mustChangePassword: raw.mustChangePassword ?? false,
     emailVerified: raw.emailVerified ?? true, // grandfather pre-existing users
     driverId: raw.driverId ?? null,
+    driverPhotoUrl: raw.driverPhotoUrl ?? null,
     locale: raw.locale,
     createdAt: raw.createdAt ?? new Date(0).toISOString(),
     updatedAt: raw.updatedAt ?? new Date(0).toISOString(),
