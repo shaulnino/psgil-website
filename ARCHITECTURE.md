@@ -131,7 +131,8 @@ Server Action (app/stewards/actions.ts)
 
 ## 5. Authentication & authorization (current)
 
-- **Only the steward portal has accounts.** There is no public registration/login. "Drivers" exist only as read-only CSV rows keyed by `driver_id` (snake_case, e.g. `shaul_ezra`), with **no link to any account**.
+- **Unified account model (PW-2a).** Identity lives in `lib/accounts/` — one `Account` type (id, name, email, roles, passwordHash, isActive, mustChangePassword, `emailVerified`, `driverId`, locale). `lib/stewards/types.ts` aliases `StewardUser = Account` / `StewardRole = AppRole`, so steward code is unchanged. Roles: `admin | steward | member | driver | registered_user` (no `team_manager`). Accounts persist in a **per-record store** (`lib/accounts/store.ts`): per-key Netlify Blobs (`acct/{id}` + `email/{email}` index) in prod, JSON file in dev. The steward monolith no longer owns users — `readStore()` **hydrates** `store.users` from the accounts store (derived, read-only), `writeStore()` never persists it, and a one-time migration imported existing steward users. This is the single source of truth for identity and the base for public accounts (PW-2b) and attendance (PW-3).
+- **Public registration/login: not yet** (PW-2b). Today accounts are still admin-provisioned via the steward admin panel; the model and store now support general accounts. "Drivers" exist as read-only CSV rows keyed by `driver_id` (snake_case, e.g. `shaul_ezra`); linking `account.driverId → driver_id` is admin-assign (PW-2d).
 - Session: `jose` JWT (HS256), stored in `steward_session` HTTP-only cookie (`sameSite: lax`, `secure` in prod only). 12h default / 10y "remember me".
 - Secret: `STEWARD_SESSION_SECRET`. Dev fallback `"dev-steward-secret-change-me"`. **⚠️ In production, a missing secret is only `console.error`-logged — the request continues with the known default secret (HIGH-severity issue; see §10).**
 - Passwords: **scrypt** (`crypto.ts`, 16-byte salt, keylen 64), `timingSafeEqual` verification. `mustChangePassword` forces a reset on first login.
@@ -229,7 +230,8 @@ No client-state library. Data is server-fetched and passed as props; mutations g
 | 2026-07-05 | **PW-0 (Stabilize) implemented.** `STEWARD_SESSION_SECRET` now hard-fails in prod; steward upload validation (10 MB/file + type allowlist); `site.webmanifest` corrected to F1ISL dark+gold; CLAUDE.md points to canonical docs. | Sound base before Identity/PWA; closes the HIGH security gap |
 
 | 2026-07-05 | **PW-1 (PWA shell) implemented.** Hand-rolled service worker (no `next-pwa`/Serwist dependency), network-first navigation + offline fallback, prod-only registration, PWA/viewport metadata. | Full control of the freshness policy; avoids a build-integration dependency on Tailwind v4 / Next 16 |
+| 2026-07-05 | **PW-2a (Identity foundation) implemented.** Unified `Account` model in `lib/accounts/`; per-record account store (per-key Blobs / dev file) behind a swappable repo; steward users migrated in; `zod` added for account input. Roles gain `driver`/`registered_user`; **`team_manager` dropped** (not needed). | One account model, no monolithic-write clobbering for future high-write collections; reuse existing JWT/scrypt |
 
-> **Implementation status (2026-07-05):** PW-0 + PW-1 done. **PW-2 … PW-5 not started.** Identity direction chosen (extend steward auth); PW-2 implementation deferred until requested.
+> **Implementation status (2026-07-05):** PW-0, PW-1, PW-2a done. **PW-2b–2d, PW-3 … PW-5 not started.** Next: PW-2b (public register/login/verify).
 
 *Last audited: 2026-07-05.*

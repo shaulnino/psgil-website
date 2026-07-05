@@ -1,4 +1,12 @@
-export type StewardRole = "admin" | "steward" | "member";
+import type { Account, AppRole } from "@/lib/accounts/types";
+
+/**
+ * Identity types are unified under the platform Account model (PW-2a).
+ * These aliases keep every existing steward import (`StewardUser`,
+ * `StewardRole`) working unchanged while there is now one account model.
+ */
+export type StewardRole = AppRole;
+export type StewardUser = Account;
 
 export type CaseStatus =
   | "Open"
@@ -13,21 +21,6 @@ export type WeekendSession = "Qualifying" | "Race" | "Sprint";
 export type AttachmentRef = {
   name: string;
   url: string;
-};
-
-export type StewardUser = {
-  id: string;
-  name: string;
-  email: string;
-  roles: StewardRole[];
-  passwordHash: string;
-  isActive: boolean;
-  /** Forces the user into the change-password flow on next login. */
-  mustChangePassword: boolean;
-  /** Steward portal UI language. Absent = "en". Set by the steward themselves. */
-  locale?: "en" | "he";
-  createdAt: string;
-  updatedAt: string;
 };
 
 export type CaseResponse = {

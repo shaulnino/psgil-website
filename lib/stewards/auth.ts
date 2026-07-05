@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { SignJWT, jwtVerify } from "jose";
 import { getUserById } from "@/lib/stewards/repository";
+import { ALL_ROLES } from "@/lib/accounts/types";
 import type { StewardRole, StewardUser } from "@/lib/stewards/types";
 
 const SESSION_COOKIE   = "steward_session";
@@ -14,8 +15,8 @@ type SessionPayload = { sub: string; roles: StewardRole[] };
 
 const normalizeRoles = (input: unknown): StewardRole[] => {
   const arr = Array.isArray(input) ? input : typeof input === "string" ? [input] : [];
-  const valid = arr.filter(
-    (r): r is StewardRole => r === "admin" || r === "steward" || r === "member",
+  const valid = arr.filter((r): r is StewardRole =>
+    (ALL_ROLES as string[]).includes(r as string),
   );
   return [...new Set(valid)];
 };

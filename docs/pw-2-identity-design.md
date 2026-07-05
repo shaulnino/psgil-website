@@ -37,7 +37,6 @@ Canonical roles stored in `account.roles[]` (superset of today's — additive, b
 | `admin` | League Administrator | Full control | **unchanged** |
 | `steward` | Steward | Case/verdict/appeal workflow | **unchanged** |
 | `driver` | Driver | A participant linked to a CSV `driver_id`; can submit **own** attendance; can file complaints/appeals | new; inherits participant permissions the old `member` had |
-| `team_manager` | Team Manager | Views/manages **their team's** attendance & roster | new (capabilities land mostly in PW-3) |
 | `registered_user` | Registered User | Signed-up account, no driver link (fan) | new; base authenticated role |
 | `member` | — | **Retained** legacy steward-portal participant role | keep so existing cases' `complainantId` users stay valid; new signups don't get it |
 | `guest` | Guest | **Not stored** — absence of a session; public read only | — |
@@ -52,7 +51,9 @@ Canonical roles stored in `account.roles[]` (superset of today's — additive, b
 
 **`PERMISSION_MATRIX` changes:**
 - Add `driver` to `view_steward_area`, `create_complaint`, `submit_response`, `submit_appeal` (so a driver gets exactly the participant abilities `member` has).
-- New permissions (scaffolded here; enforced fully in PW-3): `submit_own_attendance` → `[driver, admin]`; `manage_attendance` → `[admin]`; `view_team_attendance` → `[team_manager, admin]`; `manage_own_profile` → any authenticated.
+- New permissions (scaffolded here; enforced fully in PW-3): `submit_own_attendance` → `[driver, admin]`; `manage_attendance` → `[admin]`; `manage_own_profile` → any authenticated.
+
+> **`team_manager` role dropped (2026-07-05, Shaul):** not needed. Team-level attendance views, if ever wanted, become an admin capability or a later addition — not a role in this model.
 
 ---
 
@@ -63,7 +64,7 @@ Generalize `StewardUser` → the same shape with additions (keep the runtime obj
 ```ts
 export type AppRole =
   | "admin" | "steward" | "member"          // existing
-  | "driver" | "team_manager" | "registered_user"; // new
+  | "driver" | "registered_user"; // new
 export type StewardRole = AppRole;          // alias kept for back-compat
 
 export type Account = {
@@ -169,10 +170,10 @@ On-read migration (existing pattern in `store.ts`): default `emailVerified: true
 
 ## 12. Proposed sub-phases (each independently shippable)
 
-- **PW-2a** — Account model + `lib/accounts/` per-key store + repository abstraction + migrate steward users into it (no user-facing change; steward portal verified working).
+- **PW-2a** — ✅ **Done.** Account model (`lib/accounts/types.ts`) + per-record store (`lib/accounts/store.ts`, per-key Netlify Blobs / dev JSON) + repository (`lib/accounts/repository.ts`, zod-validated create). Steward users unified: `StewardUser`/`StewardRole` alias the account types; `readStore()` hydrates `users` from the accounts store; `writeStore()` no longer persists users; one-time migration imports the monolith's users. Verified: steward login → change-password works via the accounts store; migration produced `data/accounts/store.json` with the 3 users (emailVerified/driverId defaulted); no errors. Roles: `admin|steward|member|driver|registered_user` (no `team_manager`).
 - **PW-2b** — Public register/login/session + `/account` profile + email verification. Adds `Input`/`Label`/`Dialog` primitives + `account` i18n namespace.
 - **PW-2c** — Forgot/reset password (anti-enumeration).
-- **PW-2d** — Driver linking (admin-assign) + `driver`/`team_manager` roles + `PERMISSION_MATRIX` expansion. Unblocks PW-3 Attendance.
+- **PW-2d** — Driver linking (admin-assign) + `driver` role + `PERMISSION_MATRIX` expansion. Unblocks PW-3 Attendance.
 
 **Testing per sub-phase:** `tsc --noEmit` + lint; steward case→verdict→penalty→appeal lifecycle still works; register/verify/login/reset happy-path + failure-path; no email enumeration; existing sessions survive; RTL/Hebrew pass on new forms; Claude Preview verification of new routes.
 

@@ -44,5 +44,8 @@ next-env.d.ts
 /data/stewards/
 /public/uploads/stewards/
 
+# accounts store — live data (PW-2a), never commit
+/data/accounts/
+
 # Local Netlify folder
 .netlify

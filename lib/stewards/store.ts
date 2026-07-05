@@ -165,8 +165,27 @@ let _writeQueue = Promise.resolve();
 /*  Public API                                                          */
 /* ------------------------------------------------------------------ */
 
-export async function readStore(): Promise<StewardStore> {
+/**
+ * Raw steward store as persisted — WITHOUT hydrating users from the accounts
+ * store. Used only by the accounts migration (lib/accounts/store.ts) to read
+ * the legacy `users[]` as a one-time import source, avoiding a read cycle.
+ */
+export async function readRawStore(): Promise<StewardStore> {
   return isNetlifyEnv() ? readFromBlob() : readFromFile();
+}
+
+/**
+ * Public read. Users are the platform accounts (PW-2a): the accounts store is
+ * the source of truth, so we hydrate `store.users` from it on every read. This
+ * keeps every existing `store.users.find(...)` lookup in the repository working
+ * unchanged while there is a single source of truth for identity. The `users`
+ * array is a derived projection and is never written back (see writeStore).
+ */
+export async function readStore(): Promise<StewardStore> {
+  const store = await readRawStore();
+  const { listAccounts } = await import("@/lib/accounts/store");
+  store.users = await listAccounts();
+  return store;
 }
 
 /**
@@ -174,17 +193,20 @@ export async function readStore(): Promise<StewardStore> {
  * read-modify-write cycles don't clobber each other on the same instance.
  */
 export async function writeStore(store: StewardStore): Promise<void> {
+  // Users live in the accounts store (PW-2a) — never persist the hydrated
+  // projection back into the monolith, so there's no stale duplicate source.
+  const toPersist: StewardStore = { ...store, users: [] };
   _writeQueue = _writeQueue.then(async () => {
     if (isNetlifyEnv()) {
       const { getStore } = await import("@netlify/blobs");
-      await getStore(BLOB_STORE_NAME).setJSON(BLOB_KEY, store);
+      await getStore(BLOB_STORE_NAME).setJSON(BLOB_KEY, toPersist);
     } else {
       const { mkdir, writeFile } = await import("node:fs/promises");
       const path = await import("node:path");
       const DATA_DIR = path.join(process.cwd(), "data", "stewards");
       const STORE_PATH = path.join(DATA_DIR, "store.json");
       await mkdir(DATA_DIR, { recursive: true });
-      await writeFile(STORE_PATH, JSON.stringify(store, null, 2), "utf8");
+      await writeFile(STORE_PATH, JSON.stringify(toPersist, null, 2), "utf8");
     }
   });
   return _writeQueue;
