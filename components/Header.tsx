@@ -7,11 +7,12 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import LoadingLink from "@/components/LoadingLink";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import AccountMenu from "@/components/AccountMenu";
 import { siteConfig } from "@/lib/siteConfig";
 import { gaClickJoinNow } from "@/lib/ga";
 import StewardNotifBadge from "@/app/stewards/components/StewardNotifBadge";
 
-export default function Header() {
+export default function Header({ authed = false }: { authed?: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const t = useTranslations("common");
@@ -61,6 +62,7 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
+          <AccountMenu authed={authed} className="hidden sm:inline-flex" />
           <LanguageSwitcher className="hidden sm:inline-flex" />
           <div className="hidden sm:block">
             <Button href="/#contact-us" size="sm" onClick={gaClickJoinNow}>
@@ -103,6 +105,7 @@ export default function Header() {
               );
             })}
             <div className="flex flex-col gap-2 pt-2">
+              <AccountMenu authed={authed} className="px-3 py-2.5 text-base" />
               <LanguageSwitcher className="w-full justify-center py-2.5" />
               <Button href="/#contact-us" size="sm" onClick={gaClickJoinNow} className="w-full">
                 {t("joinNow")}

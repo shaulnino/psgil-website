@@ -96,6 +96,14 @@ export async function updateUserRoles(userId: string, roles: AppRole[]): Promise
   await putAccount(account);
 }
 
+export async function setEmailVerified(userId: string, verified: boolean): Promise<void> {
+  const account = await getAccountById(userId);
+  if (!account) return;
+  account.emailVerified = verified;
+  account.updatedAt = new Date().toISOString();
+  await putAccount(account);
+}
+
 export async function setUserLocale(userId: string, locale: "en" | "he"): Promise<void> {
   const account = await getAccountById(userId);
   if (!account) return;

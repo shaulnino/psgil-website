@@ -61,6 +61,8 @@ app/
     privacy/page.tsx            static
     articles/page.tsx           legacy redirect stub
     design-preview/page.tsx     internal design-system showcase
+    register/ login/ verify/    PW-2b public auth (register, login, email verify)
+    account/                    PW-2b profile (requireUser); profile + password + logout
 ```
 - Locales: `["he", "en"]`, **default `he`** (unprefixed at `/`), English at `/en/*`. `localePrefix: "as-needed"`, `localeDetection: false`. Config in `i18n/routing.ts`.
 - `dir="rtl"` when locale is `he`, set on `<html>` in `app/layout.tsx`.
@@ -132,7 +134,8 @@ Server Action (app/stewards/actions.ts)
 ## 5. Authentication & authorization (current)
 
 - **Unified account model (PW-2a).** Identity lives in `lib/accounts/` — one `Account` type (id, name, email, roles, passwordHash, isActive, mustChangePassword, `emailVerified`, `driverId`, locale). `lib/stewards/types.ts` aliases `StewardUser = Account` / `StewardRole = AppRole`, so steward code is unchanged. Roles: `admin | steward | member | driver | registered_user` (no `team_manager`). Accounts persist in a **per-record store** (`lib/accounts/store.ts`): per-key Netlify Blobs (`acct/{id}` + `email/{email}` index) in prod, JSON file in dev. The steward monolith no longer owns users — `readStore()` **hydrates** `store.users` from the accounts store (derived, read-only), `writeStore()` never persists it, and a one-time migration imported existing steward users. This is the single source of truth for identity and the base for public accounts (PW-2b) and attendance (PW-3).
-- **Public registration/login: not yet** (PW-2b). Today accounts are still admin-provisioned via the steward admin panel; the model and store now support general accounts. "Drivers" exist as read-only CSV rows keyed by `driver_id` (snake_case, e.g. `shaul_ezra`); linking `account.driverId → driver_id` is admin-assign (PW-2d).
+- **Public accounts (PW-2b): live.** Self-service register/login/verify/profile at locale-prefixed routes (`/register`, `/login`, `/account`, `/verify`). New sign-ups get role `registered_user`, `emailVerified: false`, and are auto-signed-in; the public site stays fully browsable either way (login only gates `/account`, the steward portal, and future attendance). Session/token/mailer live in `lib/auth/` (session helpers reuse the steward JWT/cookie; verification/reset tokens use the same secret via `getSessionSecret`; email verification via nodemailer, with a dev-console link fallback when `GMAIL_APP_PASSWORD` is unset). Input validated with `zod`. Header shows an account/sign-in link driven by an `authed` prop from the root layout.
+- **Known follow-ups:** server-action error strings are English-only (UI labels are localized); server redirects/links are unprefixed (default-locale Hebrew is correct; English users may land on the Hebrew equivalent). "Drivers" are still read-only CSV rows keyed by `driver_id`; linking `account.driverId → driver_id` is admin-assign (PW-2d, not yet built).
 - Session: `jose` JWT (HS256), stored in `steward_session` HTTP-only cookie (`sameSite: lax`, `secure` in prod only). 12h default / 10y "remember me".
 - Secret: `STEWARD_SESSION_SECRET`. Dev fallback `"dev-steward-secret-change-me"`. **⚠️ In production, a missing secret is only `console.error`-logged — the request continues with the known default secret (HIGH-severity issue; see §10).**
 - Passwords: **scrypt** (`crypto.ts`, 16-byte salt, keylen 64), `timingSafeEqual` verification. `mustChangePassword` forces a reset on first login.
@@ -231,7 +234,8 @@ No client-state library. Data is server-fetched and passed as props; mutations g
 
 | 2026-07-05 | **PW-1 (PWA shell) implemented.** Hand-rolled service worker (no `next-pwa`/Serwist dependency), network-first navigation + offline fallback, prod-only registration, PWA/viewport metadata. | Full control of the freshness policy; avoids a build-integration dependency on Tailwind v4 / Next 16 |
 | 2026-07-05 | **PW-2a (Identity foundation) implemented.** Unified `Account` model in `lib/accounts/`; per-record account store (per-key Blobs / dev file) behind a swappable repo; steward users migrated in; `zod` added for account input. Roles gain `driver`/`registered_user`; **`team_manager` dropped** (not needed). | One account model, no monolithic-write clobbering for future high-write collections; reuse existing JWT/scrypt |
+| 2026-07-05 | **PW-2b (public accounts) implemented.** `lib/auth/` (session helpers, purpose-scoped verify/reset tokens, mailer with dev fallback, zod schemas, server actions); routes register/login/account/verify; `Input`/`Label` primitives; Header account menu; `account` i18n namespace (en + he). Verified end-to-end in dev. | Reuse steward JWT/scrypt/nodemailer; one auth system; public site stays fully public |
 
-> **Implementation status (2026-07-05):** PW-0, PW-1, PW-2a done. **PW-2b–2d, PW-3 … PW-5 not started.** Next: PW-2b (public register/login/verify).
+> **Implementation status (2026-07-05):** PW-0, PW-1, PW-2a, PW-2b done. **PW-2c–2d, PW-3 … PW-5 not started.** Next: PW-2c (forgot/reset password), then PW-2d (driver linking).
 
 *Last audited: 2026-07-05.*

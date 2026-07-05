@@ -171,7 +171,7 @@ On-read migration (existing pattern in `store.ts`): default `emailVerified: true
 ## 12. Proposed sub-phases (each independently shippable)
 
 - **PW-2a** — ✅ **Done.** Account model (`lib/accounts/types.ts`) + per-record store (`lib/accounts/store.ts`, per-key Netlify Blobs / dev JSON) + repository (`lib/accounts/repository.ts`, zod-validated create). Steward users unified: `StewardUser`/`StewardRole` alias the account types; `readStore()` hydrates `users` from the accounts store; `writeStore()` no longer persists users; one-time migration imports the monolith's users. Verified: steward login → change-password works via the accounts store; migration produced `data/accounts/store.json` with the 3 users (emailVerified/driverId defaulted); no errors. Roles: `admin|steward|member|driver|registered_user` (no `team_manager`).
-- **PW-2b** — Public register/login/session + `/account` profile + email verification. Adds `Input`/`Label`/`Dialog` primitives + `account` i18n namespace.
+- **PW-2b** — ✅ **Done.** `lib/auth/` (session/tokens/mailer/schemas/actions); routes `/register`, `/login`, `/account`, `/verify`; `Input`+`Label` primitives (Dialog still deferred); Header account menu; `account` i18n namespace (en + he). New sign-ups → `registered_user`, `emailVerified:false`, auto-signed-in; verification via emailed token (dev logs the link). Verified in dev: register → verify → account → logout → login + error path, en & he. **Follow-ups:** localize server-action error strings; locale-aware redirects/links (default-he correct; en may land on he equivalent).
 - **PW-2c** — Forgot/reset password (anti-enumeration).
 - **PW-2d** — Driver linking (admin-assign) + `driver` role + `PERMISSION_MATRIX` expansion. Unblocks PW-3 Attendance.
 

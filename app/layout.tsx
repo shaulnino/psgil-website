@@ -19,6 +19,7 @@ import NextRaceWidgetServer from "@/components/NextRaceWidgetServer";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import { GA_ID } from "@/lib/ga";
+import { getCurrentUser } from "@/lib/auth/session";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -105,6 +106,7 @@ export default async function RootLayout({
   const messages = await getMessages();
   const locale = await getLocale();
   const dir = locale === "he" ? "rtl" : "ltr";
+  const authed = !!(await getCurrentUser());
   return (
     <html lang={locale} dir={dir} data-scroll-behavior="smooth">
       <body
@@ -139,7 +141,7 @@ export default async function RootLayout({
         </Suspense>
         <ServiceWorkerRegister />
 
-        <Header />
+        <Header authed={authed} />
         {children}
         <Footer />
         <Suspense fallback={null}>

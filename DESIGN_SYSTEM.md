@@ -115,8 +115,12 @@ All CVA-driven, composed with `cn()`, token-only colors, 2px corners, logical pr
 | **Eyebrow** | `tone: oxblood \| brass \| meta` | small uppercase tracked label above headings. |
 | **StatTile** | `{label, value, sub?}` | timing-tower figure; value in `.num`. |
 | **StatusBadge** | `icon: LucideIcon`, `tone: info \| warning \| success \| danger \| brass \| bronze \| muted` | **shape-first** — icon + label carry meaning, hue confirms. |
+| **Input** (PW-2b) | native input props | sunk surface (`bg-sink`), hairline border, gold focus ring, 2px corners, logical padding. |
+| **Label** (PW-2b) | native label props | small uppercase tracked meta label above a field (eyebrow-like). |
 
 New reusable UI must be added here, not inlined per feature. A live gallery exists at `/design-preview`.
+
+> **Form pattern (PW-2b):** auth forms (register/login/account) are client components using React 19 `useActionState` over server actions; errors render in a `role="alert"` danger box, success flashes via a `?query` banner. `Input`+`Label` are the building blocks. A `Dialog` primitive is still deferred until a real modal need arises.
 
 ---
 

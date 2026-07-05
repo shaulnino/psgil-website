@@ -41,6 +41,13 @@ const secret = () => {
   return new TextEncoder().encode(configured);
 };
 
+/**
+ * The HS256 signing key, shared with lib/auth (session cookie + email
+ * verification / password-reset tokens) so all tokens use the same secret and
+ * the same PW-0 production hard-fail. Exported rather than duplicated.
+ */
+export const getSessionSecret = secret;
+
 export async function createStewardSession(user: StewardUser, rememberMe = false) {
   const jwt = new SignJWT({ roles: user.roles })
     .setProtectedHeader({ alg: "HS256" })

@@ -1,0 +1,60 @@
+{
+  "menu": {
+    "signIn": "Sign in",
+    "account": "Account",
+    "register": "Register"
+  },
+  "register": {
+    "title": "Create your account",
+    "subtitle": "Join F1ISL to manage your driver profile and race attendance.",
+    "name": "Full name",
+    "email": "Email",
+    "password": "Password",
+    "confirm": "Confirm password",
+    "submit": "Create account",
+    "haveAccount": "Already have an account?",
+    "signInLink": "Sign in"
+  },
+  "login": {
+    "title": "Sign in",
+    "subtitle": "Sign in to your F1ISL account.",
+    "email": "Email",
+    "password": "Password",
+    "remember": "Stay signed in",
+    "submit": "Sign in",
+    "noAccount": "Don't have an account?",
+    "registerLink": "Create one",
+    "forgot": "Forgot your password?"
+  },
+  "account": {
+    "title": "Your account",
+    "welcome": "Welcome to F1ISL! Check your email to verify your address.",
+    "saved": "Your profile has been updated.",
+    "passwordChanged": "Your password has been changed.",
+    "verifiedBanner": "Email verified.",
+    "unverifiedBanner": "Your email isn't verified yet.",
+    "resend": "Resend verification email",
+    "resent": "Verification email sent — check your inbox.",
+    "profile": "Profile",
+    "name": "Full name",
+    "email": "Email",
+    "driverLink": "Linked driver",
+    "notLinked": "Not linked to a driver profile",
+    "roles": "Roles",
+    "save": "Save changes",
+    "security": "Security",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm new password",
+    "changePassword": "Change password",
+    "signOut": "Sign out"
+  },
+  "verify": {
+    "title": "Verifying your email",
+    "working": "Confirming your email address…",
+    "success": "Your email is verified. Thanks!",
+    "goToAccount": "Go to your account",
+    "invalid": "This verification link is invalid or has expired.",
+    "requestNew": "Sign in and request a new link from your account page."
+  }
+}
