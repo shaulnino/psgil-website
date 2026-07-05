@@ -175,11 +175,13 @@ No client-state library. Data is server-fetched and passed as props; mutations g
 
 ---
 
-## 9. PWA (current state)
+## 9. PWA (current state — PW-1)
 
-- `public/site.webmanifest` exists but is **stale**: `name: "ISL"`, `theme_color: #7e2a1e` (old purple), `background_color: #f4efe4` (old cream). Does not match the shipped F1ISL dark+gold identity.
-- Icons present: `android-chrome-192/512`, `apple-touch-icon`, favicons.
-- **No service worker, no offline handling, no install prompt, no `viewport`/`theme-color` metadata export.** Installability is nominal only.
+- `public/site.webmanifest` — F1ISL dark+gold identity (`name`, `short_name`, `description`, `theme_color`/`background_color` `#0f1113`, `scope`, `display: standalone`, `categories: ["sports"]`). Icons: `android-chrome-192/512`, `apple-touch-icon`, favicons.
+- **Service worker:** `public/sw.js`, registered by `components/ServiceWorkerRegister.tsx` (**production-only** — off in dev to avoid stale-cache confusion). Strategy: navigations **network-first** → cache → `/offline.html`; `/_next/static/*` **cache-first**; other same-origin GET network-first with cache fallback; **cross-origin (Sheets CSV, font CDNs, GA) not intercepted**. Versioned caches (`f1isl-v1-*`) with activate-time cleanup + `skipWaiting`/`clients.claim`, so a new deploy takes over immediately and dynamic league data never goes stale.
+- **Offline fallback:** `public/offline.html` — standalone branded (inline hex, since a SW-served page can't read app CSS vars), bilingual message.
+- **Metadata:** `viewport` export (`themeColor #0f1113`, `viewportFit: cover` for safe areas) + `appleWebApp`/`applicationName` in `app/layout.tsx`.
+- **Not yet:** custom install prompt UI, maskable/splash icon set, push (push is PW-4). Installability criteria (manifest + HTTPS + fetch-handling SW) are now met.
 
 ---
 
@@ -226,6 +228,8 @@ No client-state library. Data is server-fetched and passed as props; mutations g
 
 | 2026-07-05 | **PW-0 (Stabilize) implemented.** `STEWARD_SESSION_SECRET` now hard-fails in prod; steward upload validation (10 MB/file + type allowlist); `site.webmanifest` corrected to F1ISL dark+gold; CLAUDE.md points to canonical docs. | Sound base before Identity/PWA; closes the HIGH security gap |
 
-> **Implementation status (2026-07-05):** PW-0 done. **PW-1 … PW-5 not started.** Identity direction chosen (extend steward auth); implementation deferred until requested.
+| 2026-07-05 | **PW-1 (PWA shell) implemented.** Hand-rolled service worker (no `next-pwa`/Serwist dependency), network-first navigation + offline fallback, prod-only registration, PWA/viewport metadata. | Full control of the freshness policy; avoids a build-integration dependency on Tailwind v4 / Next 16 |
+
+> **Implementation status (2026-07-05):** PW-0 + PW-1 done. **PW-2 … PW-5 not started.** Identity direction chosen (extend steward auth); PW-2 implementation deferred until requested.
 
 *Last audited: 2026-07-05.*
