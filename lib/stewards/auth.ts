@@ -10,19 +10,6 @@ const MAX_AGE_REMEMBER = 60 * 60 * 24 * 365 * 10; // 10 years (≈ no limit)
 
 const DEV_FALLBACK_SECRET = "dev-steward-secret-change-me";
 
-// Warn loudly in production when the session secret has not been configured.
-// This appears immediately in Netlify function logs on first request.
-if (process.env.NODE_ENV === "production") {
-  const configured = process.env.STEWARD_SESSION_SECRET;
-  if (!configured || configured === DEV_FALLBACK_SECRET) {
-    console.error(
-      "[steward-auth] CRITICAL: STEWARD_SESSION_SECRET is not set (or uses the default dev " +
-      "value). The JWT signing secret is publicly known. Set this environment variable in " +
-      "your Netlify site settings immediately.",
-    );
-  }
-}
-
 type SessionPayload = { sub: string; roles: StewardRole[] };
 
 const normalizeRoles = (input: unknown): StewardRole[] => {
@@ -33,8 +20,25 @@ const normalizeRoles = (input: unknown): StewardRole[] => {
   return [...new Set(valid)];
 };
 
-const secret = () =>
-  new TextEncoder().encode(process.env.STEWARD_SESSION_SECRET ?? DEV_FALLBACK_SECRET);
+// Resolve the JWT signing secret. In production we REFUSE to fall back to the
+// publicly-known dev secret: signing/verifying sessions with it would make the
+// steward portal trivially forgeable. Failing loudly here (on the first login
+// or session check) turns a silent security hole into an obvious outage that
+// forces STEWARD_SESSION_SECRET to be set in Netlify. Dev keeps the fallback.
+const secret = () => {
+  const configured = process.env.STEWARD_SESSION_SECRET;
+  if (!configured || configured === DEV_FALLBACK_SECRET) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        "[steward-auth] STEWARD_SESSION_SECRET is not configured in production. " +
+        "Refusing to sign or verify sessions with the publicly-known dev fallback. " +
+        "Set STEWARD_SESSION_SECRET in the Netlify site environment settings.",
+      );
+    }
+    return new TextEncoder().encode(DEV_FALLBACK_SECRET);
+  }
+  return new TextEncoder().encode(configured);
+};
 
 export async function createStewardSession(user: StewardUser, rememberMe = false) {
   const jwt = new SignJWT({ roles: user.roles })

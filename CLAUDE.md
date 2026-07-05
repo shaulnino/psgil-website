@@ -3,6 +3,13 @@
 > **Read this before touching any file.**
 > This document is the canonical reference for Claude Code operating on this repository.
 
+> **Canonical companion docs (root):**
+> - [PROJECT_VISION.md](./PROJECT_VISION.md) — **stable** product vision. Do not edit unless the product vision itself changes.
+> - [ARCHITECTURE.md](./ARCHITECTURE.md) — **living** technical reference. Update it in the same change whenever architecture, routing, backend, APIs, auth, permissions, PWA behavior, deployment, or a major implementation decision changes.
+> - [DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md) — **living** visual reference. Update it in the same change whenever reusable UI, styling, components, layouts, responsive behavior, or accessibility decisions change.
+>
+> The `docs/*` migration files are **historical** (they describe an earlier light-editorial theme that was superseded by the shipped dark "Race Control" theme). Treat ARCHITECTURE.md / DESIGN_SYSTEM.md as current truth.
+
 ---
 
 ## 1. Project Overview

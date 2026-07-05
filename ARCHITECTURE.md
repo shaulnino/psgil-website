@@ -194,22 +194,22 @@ No client-state library. Data is server-fetched and passed as props; mutations g
 
 ## 11. Open security & quality items (audit 2026-07-05)
 
-| # | Severity | Item | Location |
-|---|---|---|---|
-| 1 | **HIGH** | Missing `STEWARD_SESSION_SECRET` in prod silently uses known dev secret (logged, not fatal) | `lib/stewards/auth.ts` |
-| 2 | MED | File uploads: no MIME/extension allowlist, no per-file size cap (only 20 MB action-body limit) | `app/stewards/actions.ts` `saveAttachments()` |
-| 3 | MED | `view_internal_discussion` enforced at render, not at data fetch | `repository.ts` / `auth.ts` |
-| 4 | MED | Contact rate-limiter is in-memory (resets on cold start; not cross-instance) | `app/api/contact/route.ts` |
-| 5 | LOW | Several `next/image` uses set `unoptimized` for remote images | multiple components |
-| 6 | LOW | Lint baseline ~36 errors; lint is non-blocking in CI | CI |
+| # | Severity | Item | Location | Status |
+|---|---|---|---|---|
+| 1 | **HIGH** | Missing `STEWARD_SESSION_SECRET` in prod silently uses known dev secret | `lib/stewards/auth.ts` | ✅ **Fixed (PW-0)** — `secret()` now throws in production instead of falling back |
+| 2 | MED | File uploads: no MIME/extension allowlist, no per-file size cap (only 20 MB action-body limit) | `app/stewards/actions.ts` `saveAttachments()` | ✅ **Fixed (PW-0)** — 10 MB/file cap + type allowlist, validated before any write |
+| 3 | MED | `view_internal_discussion` enforced at render, not at data fetch | `repository.ts` / `auth.ts` | Open |
+| 4 | MED | Contact rate-limiter is in-memory (resets on cold start; not cross-instance) | `app/api/contact/route.ts` | Open |
+| 5 | LOW | Several `next/image` uses set `unoptimized` for remote images | multiple components | Open |
+| 6 | LOW | Lint baseline ~36 errors; lint is non-blocking in CI | CI | Open |
 
 ---
 
 ## 12. Doc drift (reconcile deliberately)
 
-- `docs/design-spec.md` + `docs/design-system-migration.md` describe a **light "Motorsong Editorial"** theme. The site **shipped dark "Race Control" broadcast** (charcoal + gold). The design docs are historical; **DESIGN_SYSTEM.md is the current visual truth.**
-- `CLAUDE.md §7` references `lib/statsInsights.ts` — **does not exist.**
-- `docs/implementation-roadmap.md` Phases 0–10 describe the **completed** rebrand/redesign/i18n effort. Its phase numbering is unrelated to (and predates) the PROJECT_VISION.md phases. To avoid collision, **platform-evolution work uses the roadmap in §11 of this file's companion review, not the vision's phase numbers.**
+- `docs/design-spec.md` + `docs/design-system-migration.md` describe a **light "Motorsong Editorial"** theme. The site **shipped dark "Race Control" broadcast** (charcoal + gold). The design docs are historical; **DESIGN_SYSTEM.md is the current visual truth.** CLAUDE.md now points to the canonical docs and flags `docs/*` as historical (PW-0).
+- `lib/statsInsights.ts` (referenced in older notes) **does not exist**; CLAUDE.md §7 already records this. No action outstanding.
+- `docs/implementation-roadmap.md` Phases 0–10 describe the **completed** rebrand/redesign/i18n effort. Its phase numbering is unrelated to (and predates) the PROJECT_VISION.md phases. To avoid collision, **platform-evolution work uses the PW-0…PW-5 roadmap in the decision log, not the vision's phase numbers.**
 
 ---
 
@@ -224,6 +224,8 @@ No client-state library. Data is server-fetched and passed as props; mutations g
 | 2026-07-05 | **Platform evolution roadmap = PW-0…PW-5** (Stabilize → PWA shell → Identity → Attendance → Notifications → Mobile polish). Renumbered from PROJECT_VISION.md's Phase 1–8 to avoid collision with the shipped rebrand Phase 0–10. | Dependency-honest ordering (identity before attendance; SW before push); adds the security/hardening prereq the vision omitted |
 | 2026-07-05 | **Public identity = extend the existing steward auth** (generalize JWT + scrypt + `PERMISSION_MATRIX` into one account model; add `registered_user`/`driver`/`team_manager`; link account ↔ CSV `driver_id`). **Not** a third-party auth (Auth.js/Clerk/Supabase). | "One authentication system"; reuse proven code; no new external dependency. **Consequence:** high-write collections (accounts, attendance) must move off the monolithic single-blob store to per-record keys or a real datastore — the steward case store stays as-is. |
 
-> **Implementation status (2026-07-05):** roadmap approved in principle; identity direction chosen. **No PW-phase code written yet** — deliverables to date are docs only (this file, DESIGN_SYSTEM.md, the audit). Implementation deferred until requested.
+| 2026-07-05 | **PW-0 (Stabilize) implemented.** `STEWARD_SESSION_SECRET` now hard-fails in prod; steward upload validation (10 MB/file + type allowlist); `site.webmanifest` corrected to F1ISL dark+gold; CLAUDE.md points to canonical docs. | Sound base before Identity/PWA; closes the HIGH security gap |
+
+> **Implementation status (2026-07-05):** PW-0 done. **PW-1 … PW-5 not started.** Identity direction chosen (extend steward auth); implementation deferred until requested.
 
 *Last audited: 2026-07-05.*
