@@ -4,7 +4,7 @@ import FormActionButton from "@/app/stewards/components/FormActionButton";
 import StewardNav from "@/app/stewards/components/StewardNav";
 import ChangePasswordModal from "@/app/stewards/components/ChangePasswordModal";
 import StewardLocaleToggle from "@/app/stewards/components/StewardLocaleToggle";
-import { can, requireStewardUser } from "@/lib/stewards/auth";
+import { requireStewardUser } from "@/lib/stewards/auth";
 
 export default async function StewardProtectedLayout({
   children,
@@ -48,7 +48,6 @@ export default async function StewardProtectedLayout({
         { href: "/stewards/appeals",            label: t("shell.nav.appeals") },
         { href: "/stewards/penalties",          label: t("shell.nav.penalties") },
         { href: "/stewards/penalties-to-serve", label: t("shell.nav.penaltiesToServe") },
-        ...(can(user, "manage_users") ? [{ href: "/stewards/admin", label: t("shell.nav.admin") }] : []),
       ]} />
 
       <div className="mx-auto w-full max-w-6xl px-6 py-8">{children}</div>

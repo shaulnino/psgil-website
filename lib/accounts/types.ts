@@ -25,6 +25,15 @@ export const ALL_ROLES: AppRole[] = [
   "registered_user",
 ];
 
+/**
+ * Account approval lifecycle (Identity v2). Distinct from `isActive`:
+ *   - status  = where the account is in the join flow (admin approval).
+ *   - isActive = whether an approved account is enabled or suspended.
+ * New public registrations start `pending`; existing/admin-provisioned
+ * accounts are `approved`.
+ */
+export type AccountStatus = "pending" | "approved" | "rejected";
+
 export type Account = {
   id: string;
   name: string;
@@ -32,11 +41,13 @@ export type Account = {
   roles: AppRole[];
   passwordHash: string;
   isActive: boolean;
+  /** Approval lifecycle (Identity v2). Grandfathered "approved" on migration. */
+  status: AccountStatus;
   /** Forces the change-password flow on next login. */
   mustChangePassword: boolean;
   /** Whether the email has been verified (PW-2b). Grandfathered true on migration. */
   emailVerified: boolean;
-  /** Link to a CSV driver_id (PW-2d). null = unlinked. */
+  /** Link to a CSV driver_id (PW-2c/d). null = unlinked. */
   driverId: string | null;
   /** Preferred UI language. Absent = "en". */
   locale?: "en" | "he";
@@ -68,11 +79,14 @@ export const emailSchema = z
 /** Input accepted by `createUser`. Kept shape-compatible with the old steward
  *  `NewUserInput` (name/email/passwordHash/roles/mustChangePassword) plus the
  *  new optional account fields. */
+export const statusSchema = z.enum(["pending", "approved", "rejected"]);
+
 export const newAccountSchema = z.object({
   name: z.string().trim().min(1, "Name is required.").max(120),
   email: emailSchema,
   passwordHash: z.string().min(1),
   roles: z.array(roleSchema),
+  status: statusSchema.optional(),
   mustChangePassword: z.boolean().optional(),
   emailVerified: z.boolean().optional(),
   driverId: z.string().trim().min(1).nullable().optional(),

@@ -9,6 +9,7 @@
  */
 import { redirect } from "next/navigation";
 import {
+  can,
   clearStewardSessionCookie,
   createStewardSession,
   getCurrentStewardUser,
@@ -33,5 +34,15 @@ export async function requireUser(next?: string): Promise<Account> {
   if (!user || !user.isActive) {
     redirect(`/login${next ? `?next=${encodeURIComponent(next)}` : ""}`);
   }
+  return user;
+}
+
+/**
+ * Require an admin (platform admin console). Sends guests to /login and
+ * non-admins to /account. Admin is the `manage_users` permission.
+ */
+export async function requireAdmin(next?: string): Promise<Account> {
+  const user = await requireUser(next);
+  if (!can(user, "manage_users")) redirect("/account");
   return user;
 }

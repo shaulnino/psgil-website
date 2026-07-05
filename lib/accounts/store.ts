@@ -37,6 +37,7 @@ function hydrate(raw: Partial<Account> & { id: string }): Account {
     roles: Array.isArray(raw.roles) ? raw.roles : [],
     passwordHash: raw.passwordHash ?? "",
     isActive: raw.isActive ?? true,
+    status: raw.status ?? "approved", // grandfather pre-existing/migrated users
     mustChangePassword: raw.mustChangePassword ?? false,
     emailVerified: raw.emailVerified ?? true, // grandfather pre-existing users
     driverId: raw.driverId ?? null,

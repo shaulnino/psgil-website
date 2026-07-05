@@ -112,6 +112,7 @@ export default async function RootLayout({
   // Only steward-area accounts (member/steward/admin) get the Stewards entry —
   // otherwise the link would just bounce a regular account back to /account.
   const canSteward = !!currentUser && can(currentUser, "view_steward_area");
+  const canAdmin = !!currentUser && can(currentUser, "manage_users");
   return (
     <html lang={locale} dir={dir} data-scroll-behavior="smooth">
       <body
@@ -146,7 +147,7 @@ export default async function RootLayout({
         </Suspense>
         <ServiceWorkerRegister />
 
-        <Header authed={authed} canSteward={canSteward} />
+        <Header authed={authed} canSteward={canSteward} canAdmin={canAdmin} />
         {children}
         <Footer />
         <Suspense fallback={null}>

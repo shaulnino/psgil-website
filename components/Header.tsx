@@ -15,9 +15,11 @@ import StewardNotifBadge from "@/app/stewards/components/StewardNotifBadge";
 export default function Header({
   authed = false,
   canSteward = false,
+  canAdmin = false,
 }: {
   authed?: boolean;
   canSteward?: boolean;
+  canAdmin?: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
@@ -69,7 +71,7 @@ export default function Header({
               <StewardNotifBadge />
             </div>
           )}
-          <AccountMenu authed={authed} canSteward={canSteward} className="hidden sm:block" />
+          <AccountMenu authed={authed} canSteward={canSteward} canAdmin={canAdmin} className="hidden sm:block" />
           <LanguageSwitcher className="hidden sm:inline-flex" />
           <div className="hidden sm:block">
             <Button href="/#contact-us" size="sm" onClick={gaClickJoinNow}>
@@ -112,7 +114,7 @@ export default function Header({
               );
             })}
             <div className="flex flex-col gap-2 pt-2">
-              <AccountMenu authed={authed} canSteward={canSteward} variant="mobile" />
+              <AccountMenu authed={authed} canSteward={canSteward} canAdmin={canAdmin} variant="mobile" />
               <LanguageSwitcher className="w-full justify-center py-2.5" />
               <Button href="/#contact-us" size="sm" onClick={gaClickJoinNow} className="w-full">
                 {t("joinNow")}

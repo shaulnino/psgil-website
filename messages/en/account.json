@@ -5,6 +5,7 @@
     "register": "Register",
     "profile": "Profile",
     "stewards": "Stewards",
+    "admin": "Admin",
     "signOut": "Sign out"
   },
   "register": {
@@ -32,6 +33,7 @@
   "account": {
     "title": "Your account",
     "welcome": "Welcome to F1ISL! Check your email to verify your address.",
+    "pendingBanner": "Your account is awaiting admin approval. You'll get access once an admin approves it.",
     "saved": "Your profile has been updated.",
     "passwordChanged": "Your password has been changed.",
     "verifiedBanner": "Email verified.",

@@ -37,6 +37,12 @@ export default async function AccountPage({
             </p>
           )}
 
+          {user.status === "pending" && (
+            <p className="rounded-[2px] border border-[color:var(--isl-warning)] bg-[color:var(--isl-warning)]/10 px-4 py-3 text-sm text-ink">
+              {t("pendingBanner")}
+            </p>
+          )}
+
           {!user.emailVerified && (
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-[2px] border border-[color:var(--isl-warning)] bg-[color:var(--isl-warning)]/10 px-4 py-3 text-sm text-ink">
               <span>{t("unverifiedBanner")}</span>

@@ -17,17 +17,19 @@ import { logoutAction } from "@/lib/auth/actions";
 export default function AccountMenu({
   authed,
   canSteward = false,
+  canAdmin = false,
   variant = "desktop",
   className = "",
 }: {
   authed: boolean;
   canSteward?: boolean;
+  canAdmin?: boolean;
   variant?: "desktop" | "mobile";
   className?: string;
 }) {
   if (!authed) return <GuestSignIn className={className} />;
-  if (variant === "mobile") return <AccountMobile canSteward={canSteward} />;
-  return <AccountDropdown canSteward={canSteward} className={className} />;
+  if (variant === "mobile") return <AccountMobile canSteward={canSteward} canAdmin={canAdmin} />;
+  return <AccountDropdown canSteward={canSteward} canAdmin={canAdmin} className={className} />;
 }
 
 function GuestSignIn({ className }: { className: string }) {
@@ -45,7 +47,15 @@ function GuestSignIn({ className }: { className: string }) {
 const menuItem =
   "block w-full rounded-[2px] px-3 py-2 text-start font-isl-body text-sm text-ink-2 transition-colors hover:bg-cream hover:text-ink";
 
-function AccountDropdown({ className, canSteward }: { className: string; canSteward: boolean }) {
+function AccountDropdown({
+  className,
+  canSteward,
+  canAdmin,
+}: {
+  className: string;
+  canSteward: boolean;
+  canAdmin: boolean;
+}) {
   const t = useTranslations("account.menu");
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -85,6 +95,11 @@ function AccountDropdown({ className, canSteward }: { className: string; canStew
               {t("stewards")}
             </LoadingLink>
           )}
+          {canAdmin && (
+            <LoadingLink href="/admin" onClick={() => setOpen(false)} className={menuItem}>
+              {t("admin")}
+            </LoadingLink>
+          )}
           <div className="my-1 border-t border-[color:var(--isl-hairline)]" />
           <form action={logoutAction}>
             <button type="submit" className={menuItem}>
@@ -97,7 +112,7 @@ function AccountDropdown({ className, canSteward }: { className: string; canStew
   );
 }
 
-function AccountMobile({ canSteward }: { canSteward: boolean }) {
+function AccountMobile({ canSteward, canAdmin }: { canSteward: boolean; canAdmin: boolean }) {
   const t = useTranslations("account.menu");
   return (
     <div className="flex flex-col gap-1">
@@ -110,6 +125,11 @@ function AccountMobile({ canSteward }: { canSteward: boolean }) {
       {canSteward && (
         <LoadingLink href="/stewards" className={menuItem}>
           {t("stewards")}
+        </LoadingLink>
+      )}
+      {canAdmin && (
+        <LoadingLink href="/admin" className={menuItem}>
+          {t("admin")}
         </LoadingLink>
       )}
       <form action={logoutAction}>

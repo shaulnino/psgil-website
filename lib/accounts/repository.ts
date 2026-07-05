@@ -14,7 +14,13 @@ import {
   listAccounts,
   putAccount,
 } from "@/lib/accounts/store";
-import { ALL_ROLES, newAccountSchema, type Account, type AppRole } from "@/lib/accounts/types";
+import {
+  ALL_ROLES,
+  newAccountSchema,
+  type Account,
+  type AccountStatus,
+  type AppRole,
+} from "@/lib/accounts/types";
 
 export type RemoveUserResult =
   | { ok: true }
@@ -29,8 +35,10 @@ export type NewUserInput = {
   mustChangePassword?: boolean;
   /** PW-2b: public registration sets this false and verifies by email. */
   emailVerified?: boolean;
-  /** PW-2d: driver linking. */
+  /** PW-2c: driver linking. */
   driverId?: string | null;
+  /** PW-2c: public registration sets "pending"; admin-provisioned defaults "approved". */
+  status?: AccountStatus;
 };
 
 const normalizeRoles = (roles: AppRole[]): AppRole[] =>
@@ -63,6 +71,7 @@ export async function createUser(input: NewUserInput): Promise<Account> {
     roles: normalizeRoles(parsed.roles as AppRole[]),
     passwordHash: parsed.passwordHash,
     isActive: true,
+    status: parsed.status ?? "approved",
     mustChangePassword: parsed.mustChangePassword ?? true,
     emailVerified: parsed.emailVerified ?? false,
     driverId: parsed.driverId ?? null,
@@ -71,6 +80,34 @@ export async function createUser(input: NewUserInput): Promise<Account> {
   };
   await putAccount(account);
   return account;
+}
+
+/** Approve or reject a pending account. Approving optionally sets the roles the
+ *  admin chose (default handled by the caller); rejecting just flips status. */
+export async function setAccountStatus(userId: string, status: AccountStatus): Promise<void> {
+  const account = await getAccountById(userId);
+  if (!account) return;
+  account.status = status;
+  account.updatedAt = new Date().toISOString();
+  await putAccount(account);
+}
+
+/** Link/unlink an account to a CSV driver_id. Pass null to unlink. */
+export async function setDriverId(userId: string, driverId: string | null): Promise<void> {
+  const account = await getAccountById(userId);
+  if (!account) return;
+  account.driverId = driverId;
+  account.updatedAt = new Date().toISOString();
+  await putAccount(account);
+}
+
+/** Enable/suspend an approved account (isActive), independent of approval status. */
+export async function setAccountActive(userId: string, isActive: boolean): Promise<void> {
+  const account = await getAccountById(userId);
+  if (!account) return;
+  account.isActive = isActive;
+  account.updatedAt = new Date().toISOString();
+  await putAccount(account);
 }
 
 export async function updateUser(

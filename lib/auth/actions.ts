@@ -67,14 +67,19 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
     name,
     email,
     passwordHash: hashPassword(password),
+    // Pending accounts hold the base role so the session resolves, but the
+    // `pending` status blocks every privileged area until an admin approves
+    // (approval upgrades them to `driver` by default).
     roles: ["registered_user"],
+    status: "pending",
     mustChangePassword: false,
     emailVerified: false,
   });
 
   await sendVerification(account.id, account.name, account.email);
 
-  // Auto sign-in (unverified users may browse; sensitive actions gate on verified).
+  // Auto sign-in into the "awaiting approval" state (they can verify their
+  // email and see status; they get no driver/steward abilities until approved).
   const token = await createSession(account, false);
   await setSessionCookie(token, false);
   redirect("/account?welcome=1");

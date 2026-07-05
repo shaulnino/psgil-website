@@ -99,9 +99,10 @@ export async function requireStewardUser(): Promise<StewardUser> {
   if (!user || !user.isActive) redirect("/stewards/login");
   if (user.mustChangePassword) redirect("/stewards/change-password");
   // Now that public accounts exist (PW-2b), being signed in is not enough to
-  // enter the steward area — the account must hold a steward-area role. Plain
-  // registered_users / drivers are sent to their account page.
-  if (!can(user, "view_steward_area")) redirect("/account");
+  // enter the steward area — the account must be approved AND hold a
+  // steward-area role. Pending/rejected or plain registered_users are sent to
+  // their account page.
+  if (user.status !== "approved" || !can(user, "view_steward_area")) redirect("/account");
   return user;
 }
 
@@ -153,10 +154,12 @@ export type StewardPermission =
   | "reset_password";
 
 const PERMISSION_MATRIX: Record<StewardPermission, StewardRole[]> = {
-  view_steward_area:        ["member", "steward", "admin"],
-  create_complaint:         ["member", "admin"],
-  submit_response:          ["member", "admin"],
-  submit_appeal:            ["member", "admin"],
+  // `driver` is the Identity-v2 participant role; `member` is kept for legacy
+  // accounts/cases until the member→driver migration (PW-2d).
+  view_steward_area:        ["driver", "member", "steward", "admin"],
+  create_complaint:         ["driver", "member", "admin"],
+  submit_response:          ["driver", "member", "admin"],
+  submit_appeal:            ["driver", "member", "admin"],
   view_internal_discussion: ["steward", "admin"],
   comment_internally:       ["steward", "admin"],
   edit_verdict:             ["steward", "admin"],
