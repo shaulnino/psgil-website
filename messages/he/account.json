@@ -2,7 +2,10 @@
   "menu": {
     "signIn": "התחברות",
     "account": "החשבון שלי",
-    "register": "הרשמה"
+    "register": "הרשמה",
+    "profile": "פרופיל",
+    "stewards": "שיפוט",
+    "signOut": "התנתקות"
   },
   "register": {
     "title": "יצירת חשבון",

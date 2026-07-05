@@ -34,7 +34,6 @@ export const siteConfig: SiteConfig = {
     { id: "drivers", href: "/drivers" },
     { id: "stats", href: "/stats" },
     { id: "news", href: "/news" },
-    { id: "stewards", href: "/stewards/login" },
   ],
   snapshotStats: [
     { id: "seasons", value: "{seasonCount}" },

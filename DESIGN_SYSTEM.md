@@ -130,7 +130,7 @@ New reusable UI must be added here, not inlined per feature. A live gallery exis
 - **StandingsTable / RaceResultsTable / TablesPageContent** — build on ResultsTable.
 - **DriverModal / DriverCard / DriversGrid** — roster UI with rating breakdowns.
 - **StatsPageContent** (large) — filter pills, Recharts bar/radar/line, H2H, leaderboards. Charts use a **JS theme object** reading `--isl-*` (Recharts can't read Tailwind classes).
-- **Header / Footer / BottomNav** — shell; Header has `md:hidden` hamburger drawer.
+- **Header / Footer / BottomNav** — shell; Header has `md:hidden` hamburger drawer. Public content nav (Schedule/Tables/Drivers/Stats/News) + a single **"My Account"** hub (`AccountMenu`): a desktop dropdown / mobile stacked list holding Profile, Stewards, and Sign out; guests see "Sign in". All authenticated areas live under this hub.
 - **NextRaceWidget / HomeRaceCards / ScheduleList** — live-race indicators (`f1-tick` pulse), LTR-isolated countdowns.
 - **SuccessModal** — native `<dialog>` + confetti; the standard modal pattern.
 - **AchievementBadges** — hand-drawn SVG medal ladder (Trophy/Plate/Lion/etc.), tiered gold/silver/bronze.

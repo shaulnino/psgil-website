@@ -48,6 +48,7 @@ Canonical roles stored in `account.roles[]` (superset of today's — additive, b
 - **Guest (no account):** full read access to the entire public site — home, schedule, results, standings, drivers, teams, news, stats. Unchanged from today.
 - **Login required only for:** the existing **steward portal** (`/stewards/*`), the personal **account/profile** page, **driver attendance submission** (PW-3), and future per-user notifications (PW-4).
 - Registering is **optional** for a visitor; it only unlocks personalized/participatory features. Nothing currently public becomes gated.
+- **Nav model (2026-07-05):** "My Account" is the single header hub for all signed-in areas — Profile, the **Steward module** (nested), and future driver-only areas. Stewards is not a top-level nav link. The steward area is **role-gated**: `requireStewardUser()` requires `view_steward_area` (member/steward/admin) and redirects other signed-in accounts to `/account`.
 
 **`PERMISSION_MATRIX` changes:**
 - Add `driver` to `view_steward_area`, `create_complaint`, `submit_response`, `submit_appeal` (so a driver gets exactly the participant abilities `member` has).

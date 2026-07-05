@@ -40,29 +40,30 @@ export default function Header({ authed = false }: { authed?: boolean }) {
 
         <nav className="hidden items-center gap-1 md:flex">
           {siteConfig.navigation.map((link) => {
-            const isStewards = link.id === "stewards";
-            const active =
-              pathname === link.href || (isStewards && pathname.startsWith("/stewards"));
+            const active = pathname === link.href;
             return (
-              <div key={link.href} className="relative flex items-center gap-1.5">
-                <LoadingLink
-                  href={link.href}
-                  className={`border-b-2 px-3 py-2 font-isl-body text-sm font-medium transition-colors ${
-                    active
-                      ? "border-oxblood text-ink"
-                      : "border-transparent text-meta hover:text-ink"
-                  }`}
-                >
-                  {t(`nav.${link.id}`)}
-                </LoadingLink>
-                {isStewards && <StewardNotifBadge />}
-              </div>
+              <LoadingLink
+                key={link.href}
+                href={link.href}
+                className={`border-b-2 px-3 py-2 font-isl-body text-sm font-medium transition-colors ${
+                  active
+                    ? "border-oxblood text-ink"
+                    : "border-transparent text-meta hover:text-ink"
+                }`}
+              >
+                {t(`nav.${link.id}`)}
+              </LoadingLink>
             );
           })}
         </nav>
 
         <div className="flex items-center gap-3">
-          <AccountMenu authed={authed} className="hidden sm:inline-flex" />
+          {authed && (
+            <div className="hidden sm:block">
+              <StewardNotifBadge />
+            </div>
+          )}
+          <AccountMenu authed={authed} className="hidden sm:block" />
           <LanguageSwitcher className="hidden sm:inline-flex" />
           <div className="hidden sm:block">
             <Button href="/#contact-us" size="sm" onClick={gaClickJoinNow}>
@@ -105,7 +106,7 @@ export default function Header({ authed = false }: { authed?: boolean }) {
               );
             })}
             <div className="flex flex-col gap-2 pt-2">
-              <AccountMenu authed={authed} className="px-3 py-2.5 text-base" />
+              <AccountMenu authed={authed} variant="mobile" />
               <LanguageSwitcher className="w-full justify-center py-2.5" />
               <Button href="/#contact-us" size="sm" onClick={gaClickJoinNow} className="w-full">
                 {t("joinNow")}

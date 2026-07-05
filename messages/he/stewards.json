@@ -6,7 +6,9 @@
     "role": {
       "member": "חבר",
       "steward": "שופט",
-      "admin": "מנהל"
+      "admin": "מנהל",
+      "driver": "נהג",
+      "registered_user": "משתמש רשום"
     },
     "badge": {
       "pwReset": "איפוס סיסמה"
@@ -655,7 +657,9 @@
     "role": {
       "admin": "מנהל",
       "steward": "שופט",
-      "member": "חבר"
+      "member": "חבר",
+      "driver": "נהג",
+      "registered_user": "משתמש רשום"
     },
     "nav": {
       "dashboard": "לוח בקרה",

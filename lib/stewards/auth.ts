@@ -98,6 +98,10 @@ export async function requireStewardUser(): Promise<StewardUser> {
   const user = await getCurrentStewardUser();
   if (!user || !user.isActive) redirect("/stewards/login");
   if (user.mustChangePassword) redirect("/stewards/change-password");
+  // Now that public accounts exist (PW-2b), being signed in is not enough to
+  // enter the steward area — the account must hold a steward-area role. Plain
+  // registered_users / drivers are sent to their account page.
+  if (!can(user, "view_steward_area")) redirect("/account");
   return user;
 }
 

@@ -1,8 +1,11 @@
 {
   "menu": {
     "signIn": "Sign in",
-    "account": "Account",
-    "register": "Register"
+    "account": "My Account",
+    "register": "Register",
+    "profile": "Profile",
+    "stewards": "Stewards",
+    "signOut": "Sign out"
   },
   "register": {
     "title": "Create your account",
