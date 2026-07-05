@@ -1,6 +1,6 @@
 # PW-2 — Identity Foundation (Design Doc)
 
-> **Status:** ✅ **Approved 2026-07-05** (all §10 decisions confirmed). Ready to implement, starting with sub-phase PW-2a (§12). No code written yet.
+> **Status:** PW-2a + PW-2b **shipped**; **refined to "Identity v2" on 2026-07-05** (§13) — adds an approval workflow, makes *driver* the default approved role, treats driver-permission accounts as the steward module's drivers, moves account administration out of the steward module, and adds driver photo upload. PW-2b needs adjustment (§14). Remaining sub-phases revised in §12.
 >
 > **Roadmap context:** [ARCHITECTURE.md](../ARCHITECTURE.md) decision log; roadmap PW-0 (done) → PW-1 (done) → **PW-2 (this)** → PW-3 Attendance → PW-4 Notifications → PW-5 polish.
 >
@@ -29,6 +29,8 @@ Give F1ISL a **single, unified account system** — the keystone the vision hang
 ---
 
 ## 3. Role model
+
+> **Superseded where it differs by §13 (Identity v2, 2026-07-05):** driver becomes the *default approved* role and the steward module's participant set; `member` is migrated into `driver`; `view_steward_area` includes `driver`; account administration moves out of the steward module. Read §13 as current intent; the below is the original PW-2a/2b model as shipped.
 
 Canonical roles stored in `account.roles[]` (superset of today's — additive, backward-compatible):
 
@@ -157,6 +159,15 @@ On-read migration (existing pattern in `store.ts`): default `emailVerified: true
 4. **Email-verification gating:** ✅ **Browse, gate sensitive actions** — unverified users can log in and browse with a verify banner; specific actions require verification.
 5. **Access model:** ✅ Public site stays fully public; login required only for steward portal, account/profile, attendance, notifications (see §3 Access model).
 
+### Identity v2 decisions (confirmed 2026-07-05)
+
+6. **Approval workflow:** ✅ New registrations are **pending** until an admin approves. No auto-granted access.
+7. **Pending capability:** ✅ A pending account **can log in** and verify email, but sees only an "awaiting approval" state — no driver/steward abilities.
+8. **Approval role:** ✅ Approval makes the account a **Driver by default** (driver permissions + steward participation); admin can downgrade to a `registered_user` (fan) or up to steward/admin.
+9. **Email verification:** ✅ **Kept alongside approval** — two independent gates (verify = proves the email; approval = grants access/role).
+10. **Driver photo:** ✅ An uploaded driver photo **overrides** the sheet's `photo_url`; CSV stays as fallback/seed.
+11. **Admin console location:** ✅ Account administration is a **separate platform function under the "My Account" menu**, not inside the steward module.
+
 ---
 
 ## 11. Risks
@@ -173,11 +184,46 @@ On-read migration (existing pattern in `store.ts`): default `emailVerified: true
 
 - **PW-2a** — ✅ **Done.** Account model (`lib/accounts/types.ts`) + per-record store (`lib/accounts/store.ts`, per-key Netlify Blobs / dev JSON) + repository (`lib/accounts/repository.ts`, zod-validated create). Steward users unified: `StewardUser`/`StewardRole` alias the account types; `readStore()` hydrates `users` from the accounts store; `writeStore()` no longer persists users; one-time migration imports the monolith's users. Verified: steward login → change-password works via the accounts store; migration produced `data/accounts/store.json` with the 3 users (emailVerified/driverId defaulted); no errors. Roles: `admin|steward|member|driver|registered_user` (no `team_manager`).
 - **PW-2b** — ✅ **Done.** `lib/auth/` (session/tokens/mailer/schemas/actions); routes `/register`, `/login`, `/account`, `/verify`; `Input`+`Label` primitives (Dialog still deferred); Header account menu; `account` i18n namespace (en + he). New sign-ups → `registered_user`, `emailVerified:false`, auto-signed-in; verification via emailed token (dev logs the link). Verified in dev: register → verify → account → logout → login + error path, en & he. **Follow-ups:** localize server-action error strings; locale-aware redirects/links (default-he correct; en may land on he equivalent).
-- **PW-2c** — Forgot/reset password (anti-enumeration).
-- **PW-2d** — Driver linking (admin-assign) + `driver` role + `PERMISSION_MATRIX` expansion. Unblocks PW-3 Attendance.
+- **PW-2c** — **Accounts: approval + platform admin console** (expands the old "driver linking + admin" step). Account `status` lifecycle (`pending`/`approved`/`rejected`); registration → pending (§14 adjusts PW-2b); pending "awaiting approval" UX; a **platform admin console under "My Account"** (moved out of `/stewards/admin`): pending-approval queue, approve (default → driver) / reject, set roles/permissions, link account ↔ CSV `driver_id`. Finalize role model: `driver` added to `view_steward_area`; `member` migrated to `driver`.
+- **PW-2d** — **Steward ↔ driver-account integration.** Steward "involved drivers" / complainant options are sourced from **driver-permission accounts** (using the driver link), replacing the `role === "member"` filter in the cases + admin flows. Migrate existing `member` accounts to `driver`; legacy cases (which reference account ids) are preserved unchanged.
+- **PW-2e** — **Driver profile & photo.** Driver-editable profile in `/account` including **photo upload** stored dynamically (Netlify Blobs, per PW-0 upload validation); the public drivers rendering (`driversData` + DriverCard/DriverModal) **prefers the uploaded photo, falling back to `photo_url`**. Requires the account↔driver link (PW-2c).
+- **PW-2f** — Forgot/reset password (anti-enumeration). Token + mailer already exist from PW-2b.
 
-**Testing per sub-phase:** `tsc --noEmit` + lint; steward case→verdict→penalty→appeal lifecycle still works; register/verify/login/reset happy-path + failure-path; no email enumeration; existing sessions survive; RTL/Hebrew pass on new forms; Claude Preview verification of new routes.
+**Testing per sub-phase:** `tsc --noEmit` + lint; steward case→verdict→penalty→appeal lifecycle still works; register→pending→approve→driver flow; a pending account sees only the awaiting-approval state; driver appears as a steward participant after approval; uploaded photo shows on the drivers page; existing sessions survive; RTL/Hebrew pass; Claude Preview verification.
 
 ---
 
-*Drafted 2026-07-05. Awaiting approval of §10 before implementation.*
+## 13. Identity v2 — refined model (2026-07-05)
+
+Refinement from Shaul. Supersedes §3/§4/§7 where they differ.
+
+**Account lifecycle.**
+1. **Register → `pending`.** Account created with `status: "pending"`, no effective permissions, email-verification sent. The person **can log in** but sees only an "awaiting approval" screen (+ a "verify your email" prompt).
+2. **Admin approves** (in the platform admin console, §below) → `status: "approved"` and, **by default, the `driver` role** (driver permissions + steward participation). Admin may instead set `registered_user` (approved fan, no driver perms) or grant `steward`/`admin`. If the person is a real driver, admin **links the account to a CSV `driver_id`** at approval.
+3. **Reject** → `status: "rejected"` (kept for audit; cannot access).
+4. Email verification is a **separate, independent gate** — proving the address, orthogonal to approval.
+
+**Model change:** add `status: "pending" | "approved" | "rejected"` to `Account` (keep `isActive` for suspend/disable of an approved account; a distinct concept). Existing migrated users are grandfathered `status: "approved"`.
+
+**Driver = approved account with driver permission.** The steward module's "drivers" (involved drivers, complainant options) are **driver-permission accounts**, not `member`-role accounts. So *driver count = accounts with the driver role*. `member` is migrated into `driver` and retired. `view_steward_area` includes `driver`, so drivers can enter the steward area to file complaints / see verdicts (the Stewards menu entry shows for them).
+
+**Admin console — separate from the steward module.** Account administration (pending queue, approve/reject, roles/permissions, driver linking, later driver profiles) lives at a **new platform admin area reached from the "My Account" dropdown** (admin-gated), e.g. `/admin` or `/account/admin`. The user-management UI currently at `/stewards/(protected)/admin` **moves here**; the steward module keeps only adjudication (cases/verdicts/appeals/penalties).
+
+**Driver profile & photo.** An approved, driver-linked account can edit its profile and **upload a photo** in `/account`. Stored dynamically (Blobs) and served via a resolver that **prefers the uploaded photo over the sheet's `photo_url`** (matched by `driverId → driver_id`), so the public drivers page/modal update automatically. CSV `photo_url` remains the fallback/seed.
+
+---
+
+## 14. Adjustments to already-shipped work (PW-2a/PW-2b + nav)
+
+Consequences of Identity v2 for what's on the `PAW` branch — folded into PW-2c/2d/2e (no hot-patching):
+
+- **Account model (PW-2a):** add `status` field + on-read/migration default `approved` for existing users.
+- **Registration (PW-2b):** stop auto-activating. Create `status: "pending"` (no `driver`/participant perms); keep auto-login into the pending state; `/account` shows "awaiting approval". Keep email verification.
+- **Access gate + Stewards menu:** add `driver` to `view_steward_area` so drivers reach the steward module and see the menu entry (currently member/steward/admin only). Gate must also block `pending` accounts from privileged areas.
+- **Steward driver source (PW-2d):** replace the `role === "member"` filter (cases page + admin page + `createComplaintAction` validation) with driver-permission accounts.
+- **Admin relocation:** move `/stewards/(protected)/admin` user management to the platform admin console; add an **Admin** entry to the My Account menu (admin-gated). The role editor there must handle the full role set (fixes the earlier member/steward/admin-only limitation) and add approve/reject + driver-link controls.
+- **Docs drift:** CLAUDE.md §15 "driver image = `/public/drivers/{id}.webp` convention" is **inaccurate** — images come from the CSV `photo_url` column; correct it (and describe the upload-override once PW-2e lands).
+
+---
+
+*Drafted 2026-07-05; refined to Identity v2 same day. Sub-phases PW-2c→2f pending build.*
