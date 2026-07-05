@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import FormActionButton from "@/app/stewards/components/FormActionButton";
 import { can, requireStewardUser } from "@/lib/stewards/auth";
+import { isDriverRole } from "@/lib/accounts/types";
 import { aggregateDriverPenalties, listHistoricalCases, listUsers } from "@/lib/stewards/repository";
 import HistoricalPenaltyForm from "@/app/stewards/(protected)/admin/HistoricalPenaltyForm";
 import EditHistoricalCaseModal from "./EditHistoricalCaseModal";
@@ -52,7 +53,7 @@ export default async function StewardPenaltiesPage({ searchParams }: { searchPar
     isAdmin ? listHistoricalCases() : Promise.resolve([]),
     isAdmin ? getAllSeasonRoundOptions() : Promise.resolve([]),
   ]);
-  const memberDrivers = allUsers.filter((u) => u.roles.includes("member"));
+  const memberDrivers = allUsers.filter((u) => isDriverRole(u.roles));
 
   // Distinct seasons and drivers from actual data for dropdown options
   const seasonOptions = [...new Set(rows.map((r) => r.season))]

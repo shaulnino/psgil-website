@@ -180,7 +180,7 @@ export const can = (user: StewardUser, permission: StewardPermission): boolean =
 // ----------------------------------------------------------------
 
 export const canCreateComplaint = (roles: StewardRole[]) =>
-  roles.includes("member") || roles.includes("admin");
+  roles.includes("driver") || roles.includes("member") || roles.includes("admin");
 
 export const canCommentInternally = (roles: StewardRole[]) =>
   roles.includes("steward") || roles.includes("admin");

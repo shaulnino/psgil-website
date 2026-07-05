@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { isDriverRole } from "@/lib/accounts/types";
 import { readStore, writeStore } from "@/lib/stewards/store";
 import type {
   Appeal,
@@ -1127,7 +1128,7 @@ export async function getPendingIndicatorsForUser(user: StewardUser): Promise<Pe
   const respondedCaseIds = new Set(
     store.responses.filter((r) => r.userId === user.id).map((r) => r.caseId),
   );
-  if (user.roles.includes("member")) {
+  if (isDriverRole(user.roles)) {
     const pendingResponse = activeCases.filter(
       (c) => c.involvedDriverIds.includes(user.id) && !respondedCaseIds.has(c.id),
     ).length;

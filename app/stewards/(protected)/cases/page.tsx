@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { createComplaintAction } from "@/app/stewards/actions";
-import { can, canCreateComplaint, hasRole, requireStewardUser } from "@/lib/stewards/auth";
+import { can, canCreateComplaint, requireStewardUser } from "@/lib/stewards/auth";
+import { isDriverRole } from "@/lib/accounts/types";
 import { getCaseById, listCases, listUsers } from "@/lib/stewards/repository";
 import { fetchCsv, parseCsv } from "@/lib/csv";
 import { GLOBAL_CSV_URLS } from "@/lib/seasonConfig";
@@ -25,7 +26,7 @@ export default async function StewardCasesPage({ searchParams }: { searchParams:
   const forceOpen = params.open === "1";
   const user = await requireStewardUser();
   const isAdmin = can(user, "manage_users");
-  const hasDriverRole = hasRole(user, "member");
+  const hasDriverRole = isDriverRole(user.roles);
   const hasStewardRole = can(user, "view_internal_discussion");
   const hasDual = hasDriverRole && hasStewardRole;
   const view: "driver" | "steward" = hasDual
@@ -39,7 +40,7 @@ export default async function StewardCasesPage({ searchParams }: { searchParams:
   const cases = await listCases();
   const users = await listUsers();
   const memberOptions = users
-    .filter((u) => u.roles.includes("member"))
+    .filter((u) => isDriverRole(u.roles))
     .map((u) => ({ id: u.id, name: u.name, email: u.email }));
   const seasonRoundOptions = await getSeasonRoundOptions();
 

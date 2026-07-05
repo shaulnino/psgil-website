@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { can, hasRole, requireStewardUser } from "@/lib/stewards/auth";
+import { can, requireStewardUser } from "@/lib/stewards/auth";
+import { isDriverRole } from "@/lib/accounts/types";
 import { listCases, listPenaltiesToServe, listUsers } from "@/lib/stewards/repository";
 
 export default async function StewardDashboardPage() {
@@ -89,7 +90,7 @@ export default async function StewardDashboardPage() {
         <h3 className="text-lg font-display font-bold tracking-[0.005em] leading-[1.05] text-ink">{t("shell.dashboard.quickLinks.heading")}</h3>
         <div className="mt-3 flex flex-wrap gap-2">
           <Link href="/stewards/cases" className="rounded-[2px] bg-ink px-4 py-2 text-sm font-medium uppercase tracking-[0.08em] text-bone transition-opacity hover:opacity-90">{t("shell.dashboard.quickLinks.openCases")}</Link>
-          {hasRole(user, "member") && (
+          {isDriverRole(user.roles) && (
             <Link
               href="/stewards/cases?open=1"
               className="rounded-[2px] border border-oxblood px-4 py-2 text-sm font-semibold uppercase tracking-[0.08em] text-oxblood transition-colors hover:bg-cream hover:text-oxblood-deep"

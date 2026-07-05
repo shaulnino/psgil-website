@@ -63,6 +63,7 @@ import {
   notifyVerdictPublished,
 } from "@/lib/stewards/notifications";
 import type { CaseStatus, StewardRole, VerdictDecision, WeekendSession } from "@/lib/stewards/types";
+import { isDriverRole } from "@/lib/accounts/types";
 
 const parseLines = (value: FormDataEntryValue | null) =>
   typeof value === "string"
@@ -225,8 +226,8 @@ export async function createComplaintAction(formData: FormData) {
   const attachmentUrls = await saveAttachments(uploadedFiles);
 
   const users = await listUsers();
-  const memberIds = new Set(users.filter((u) => u.roles.includes("member")).map((u) => u.id));
-  const involvedDriverIds = requestedInvolved.filter((id) => memberIds.has(id));
+  const driverIds = new Set(users.filter((u) => isDriverRole(u.roles)).map((u) => u.id));
+  const involvedDriverIds = requestedInvolved.filter((id) => driverIds.has(id));
 
   const isRaceLike = weekendSession === "Race" || weekendSession === "Sprint";
   const incidentLapNumber =

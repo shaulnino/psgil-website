@@ -34,6 +34,17 @@ export const ALL_ROLES: AppRole[] = [
  */
 export type AccountStatus = "pending" | "approved" | "rejected";
 
+/**
+ * True if these roles make the account a racing driver — i.e. a steward-case
+ * participant (involved driver / complainant). `driver` is the Identity-v2
+ * role; `member` is the retained legacy equivalent (treated as driver so no
+ * pre-existing account is dropped from the steward flows). Defined here (no
+ * deps) so both `lib/stewards/*` and route components can import it without a
+ * circular import.
+ */
+export const isDriverRole = (roles: AppRole[]): boolean =>
+  roles.includes("driver") || roles.includes("member");
+
 export type Account = {
   id: string;
   name: string;
