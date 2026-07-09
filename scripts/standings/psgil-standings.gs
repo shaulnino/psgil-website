@@ -49,8 +49,12 @@ const CONFIG_TAB = {
   brackets:    'standings_brackets',
 };
 
-/** Seasons strictly below this number are treated as static and never overwritten. */
-const MIN_AUTO_SEASON = 6;
+/**
+ * Seasons strictly below this number are treated as static and never overwritten.
+ * Set to 1 for the rebranded league relaunch: Season 1 is the live season and
+ * must be auto-computed (there are no static historical seasons in this sheet).
+ */
+const MIN_AUTO_SEASON = 1;
 
 /**
  * Output column order — must match StandingsRow in lib/resultsData.ts.
