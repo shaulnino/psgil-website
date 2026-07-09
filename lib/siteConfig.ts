@@ -74,11 +74,15 @@ export const siteConfig: SiteConfig = {
     buttonLabel: "Join ISL Discord",
     subtext: "New drivers welcome • Quick onboarding",
   },
-  // Social channels — intentionally empty until the new ISL accounts exist.
-  // The old links pointed at legacy PSGiL media and have been removed.
-  // To re-enable, add entries back here, e.g.:
+  // Social channels — icons render on the homepage hero and footer
+  // wherever this list is non-empty. Add more entries as accounts go live, e.g.:
   //   { label: "Instagram", href: "https://instagram.com/…", icon: "instagram" }
-  // Icons render on the homepage hero and footer wherever this list is non-empty.
-  socials: [],
+  socials: [
+    {
+      label: "YouTube",
+      href: "https://www.youtube.com/@ISL-F1IsraeliSuperLeague",
+      icon: "youtube",
+    },
+  ],
   footerNote: "Community-run league",
 };
