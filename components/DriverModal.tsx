@@ -540,7 +540,7 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
                 )}
 
                 {/* ---- League Standing (inline under About) ---- */}
-                {(driver.league_rank_main || driver.league_rank_wild) && (
+                {(driver.league_rank_main || (hasWild && driver.league_rank_wild)) && (
                   <div className="mt-4 flex items-center gap-4">
                     <h4 className="font-isl-body text-xs font-semibold uppercase tracking-[0.2em] text-meta">
                       {t("modal.leagueStanding")}
@@ -552,12 +552,14 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
                           {driver.league_rank_main ? `#${driver.league_rank_main}` : "—"}
                         </span>
                       </span>
-                      <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-3 py-1.5 text-xs">
-                        <span className="text-meta">{t("modal.leagueWild")}</span>
-                        <span className="num font-semibold text-ink">
-                          {driver.league_rank_wild ? `#${driver.league_rank_wild}` : "—"}
+                      {hasWild && (
+                        <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-3 py-1.5 text-xs">
+                          <span className="text-meta">{t("modal.leagueWild")}</span>
+                          <span className="num font-semibold text-ink">
+                            {driver.league_rank_wild ? `#${driver.league_rank_wild}` : "—"}
+                          </span>
                         </span>
-                      </span>
+                      )}
                     </div>
                   </div>
                 )}
