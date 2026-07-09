@@ -42,6 +42,7 @@ import {
   fetchSeasonsConfig,
   resolveCurrentSeason,
   resolveTemplate,
+  seasonHasWild,
   matchesSeason,
   GLOBAL_CSV_URLS,
 } from "@/lib/seasonConfig";
@@ -424,6 +425,7 @@ export default async function Home() {
           raceResultsByEvent={raceResultsByEvent}
           allDrivers={allDrivers}
           allTeams={allTeams}
+          hasWild={seasonHasWild(seasonsConfig)}
         />
       </Section>
 

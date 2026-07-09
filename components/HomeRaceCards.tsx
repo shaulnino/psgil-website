@@ -35,6 +35,7 @@ type HomeRaceCardsProps = {
   raceResultsByEvent?: Record<string, RaceResultRow[]>;
   allDrivers?: Driver[];
   allTeams?: Team[];
+  hasWild?: boolean;
 };
 
 /* ------------------------------------------------------------------ */
@@ -677,6 +678,7 @@ export default function HomeRaceCards({
   raceResultsByEvent = {},
   allDrivers = [],
   allTeams = [],
+  hasWild,
 }: HomeRaceCardsProps) {
   const t = useTranslations("home");
   const [showResultsGroup, setShowResultsGroup] = useState<RaceGroup | null>(null);
@@ -761,6 +763,7 @@ export default function HomeRaceCards({
           drivers={allDrivers}
           teams={allTeams}
           placeholderSrc="/placeholders/driver.png"
+          hasWild={hasWild}
         >
           <GroupResultsModal
             group={showResultsGroup}

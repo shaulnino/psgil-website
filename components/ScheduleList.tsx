@@ -9,7 +9,7 @@ import { toIsraelTimestamp, localizedRaceName } from "@/lib/scheduleData";
 import type { RaceResultRow } from "@/lib/resultsData";
 import type { Driver, Team } from "@/lib/driversData";
 import type { SeasonConfig } from "@/lib/seasonConfig";
-import { getSeasonsForDropdown, matchesSeason } from "@/lib/seasonConfig";
+import { getSeasonsForDropdown, matchesSeason, seasonHasWild } from "@/lib/seasonConfig";
 import SeasonSelector from "@/components/SeasonSelector";
 import RaceResultsTable from "@/components/RaceResultsTable";
 import DriverLookupProvider from "@/components/DriverLookupProvider";
@@ -1063,6 +1063,7 @@ function ScheduleListInner({
           drivers={allDrivers}
           teams={allTeams}
           placeholderSrc="/placeholders/driver.png"
+          hasWild={seasonHasWild(seasonsConfig)}
         >
           <ResultsModal
             event={resultsEvent}
