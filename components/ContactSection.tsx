@@ -147,8 +147,11 @@ export default function ContactSection() {
         onSubmit={handleSubmit}
         className="relative isl-corner-ticks space-y-4 rounded-[2px] border border-[color:var(--isl-hairline)] border-t-2 border-t-oxblood bg-cream p-6 md:p-7"
       >
-        {/* Honeypot — hidden from real users, attracts bots */}
-        <div aria-hidden="true" className="absolute -left-[9999px]">
+        {/* Honeypot — hidden from real users, attracts bots. Uses sr-only
+            (clip) rather than an off-screen offset: a physical -left-[9999px]
+            offset creates a huge horizontal scroll region in RTL, where the
+            left side is the inline-end edge. */}
+        <div aria-hidden="true" className="sr-only">
           <label htmlFor="contact-hp">{t("contact.honeypotLabel")}</label>
           <input id="contact-hp" name="_hp" type="text" tabIndex={-1} autoComplete="off" />
         </div>
