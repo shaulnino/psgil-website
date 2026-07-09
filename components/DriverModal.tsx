@@ -14,6 +14,8 @@ type DriverModalProps = {
   placeholderSrc: string;
   onClose: () => void;
   currentSeasonLabel?: string;
+  /** Whether the Wild competition scope is offered. Defaults to true. */
+  hasWild?: boolean;
 };
 
 type StatMode = "alltime" | "season";
@@ -263,12 +265,18 @@ function Tooltip({ text, children, triggerClassName, wide }: { text: React.React
 /*  DriverModal                                                        */
 /* ------------------------------------------------------------------ */
 
-export default function DriverModal({ driver, placeholderSrc, onClose, currentSeasonLabel }: DriverModalProps) {
+export default function DriverModal({ driver, placeholderSrc, onClose, currentSeasonLabel, hasWild = true }: DriverModalProps) {
   const t = useTranslations("drivers");
   const tr = useTranslations("rewards");
   const locale = useLocale();
   const [statMode, setStatMode] = useState<StatMode>("alltime");
   const [compMode, setCompMode] = useState<CompMode>("all");
+  const compModes: CompMode[] = hasWild ? ["all", "main", "wild"] : ["all", "main"];
+
+  // Never leave the modal stuck on a hidden Wild scope.
+  useEffect(() => {
+    if (!hasWild && compMode === "wild") setCompMode("all");
+  }, [hasWild, compMode]);
   const [portalEl, setPortalEl] = useState<HTMLDivElement | null>(null);
   const [scrollEl, setScrollEl] = useState<HTMLDivElement | null>(null);
   const photoSrc = driver.photo_url || placeholderSrc;
@@ -634,7 +642,7 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
                     </div>
                     {/* Competition scope */}
                     <div className="flex rounded-[2px] border border-[color:var(--isl-hairline)] bg-sink p-1">
-                      {(["all", "main", "wild"] as CompMode[]).map((c) => (
+                      {compModes.map((c) => (
                         <button
                           key={c}
                           type="button"

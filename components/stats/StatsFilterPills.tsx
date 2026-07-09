@@ -39,6 +39,7 @@ export default function StatsFilterPills({
   onCompetition,
   onRoundType,
   onClearAll,
+  showWild = true,
 }: {
   formatFilter: Format;
   competitionFilter: Comp;
@@ -47,6 +48,7 @@ export default function StatsFilterPills({
   onCompetition: (v: Comp) => void;
   onRoundType: (v: Round) => void;
   onClearAll: () => void;
+  showWild?: boolean;
 }) {
   const t = useTranslations("stats");
 
@@ -80,9 +82,11 @@ export default function StatsFilterPills({
         <Pill active={competitionFilter === "main"} onClick={() => onCompetition("main")}>
           {t("filters.main")}
         </Pill>
-        <Pill active={competitionFilter === "wild"} onClick={() => onCompetition("wild")}>
-          {t("filters.wild")}
-        </Pill>
+        {showWild && (
+          <Pill active={competitionFilter === "wild"} onClick={() => onCompetition("wild")}>
+            {t("filters.wild")}
+          </Pill>
+        )}
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <span className="font-isl-body text-[10px] font-semibold uppercase tracking-[0.2em] text-oxblood">{t("filters.round")}</span>

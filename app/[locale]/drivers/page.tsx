@@ -21,6 +21,7 @@ import { attachRewardsToDrivers, fetchRewards } from "@/lib/rewardsData";
 import {
   fetchSeasonsConfig,
   resolveCurrentSeason,
+  seasonHasWild,
   GLOBAL_CSV_URLS,
 } from "@/lib/seasonConfig";
 import { fetchAllRaceResults, fetchStandings } from "@/lib/resultsData";
@@ -122,6 +123,7 @@ export default async function DriversPage() {
   let reserves: ReturnType<typeof mapDrivers> = [];
   let historic: ReturnType<typeof mapDrivers> = [];
   let currentSeasonLabel = "";
+  let hasWild = true;
 
   try {
     // All fetches run in parallel — seasonsConfig is no longer pre-fetched in series.
@@ -147,6 +149,7 @@ export default async function DriversPage() {
 
     const currentSeason = resolveCurrentSeason(seasonsConfig);
     currentSeasonLabel = currentSeason.season_label;
+    hasWild = seasonHasWild(seasonsConfig);
 
     let drivers = mapDrivers(parseCsv<Record<string, string>>(driversCsv));
 
@@ -208,6 +211,7 @@ export default async function DriversPage() {
           historicDrivers={historic}
           placeholderSrc={PLACEHOLDER_PHOTO}
           currentSeasonLabel={currentSeasonLabel}
+          hasWild={hasWild}
         />
       </Section>
     </main>

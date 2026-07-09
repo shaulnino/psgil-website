@@ -19,7 +19,7 @@ import {
   type Reward,
 } from "@/lib/rewardsData";
 import type { SeasonConfig } from "@/lib/seasonConfig";
-import { getSeasonsForDropdown } from "@/lib/seasonConfig";
+import { getSeasonsForDropdown, seasonHasWild } from "@/lib/seasonConfig";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -196,6 +196,7 @@ function TablesInner({
       drivers={drivers}
       teams={teams}
       placeholderSrc={placeholderSrc}
+      hasWild={seasonHasWild(seasonsConfig)}
     >
       {/* Title row + season selector */}
       <div className="mb-12 flex flex-wrap items-center justify-between gap-4">
