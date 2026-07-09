@@ -44,5 +44,9 @@ next-env.d.ts
 /data/stewards/
 /public/uploads/stewards/
 
+# accounts + driver uploads — live data (emails, password hashes, photos), never commit
+/data/accounts/
+/public/uploads/drivers/
+
 # Local Netlify folder
 .netlify
