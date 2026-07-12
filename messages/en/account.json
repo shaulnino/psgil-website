@@ -28,7 +28,8 @@
     "submit": "Sign in",
     "noAccount": "Don't have an account?",
     "registerLink": "Create one",
-    "forgot": "Forgot your password?"
+    "forgot": "Forgot your password?",
+    "resetDone": "Your password has been reset. Sign in with your new password."
   },
   "account": {
     "title": "Your account",
@@ -69,5 +70,22 @@
     "goToAccount": "Go to your account",
     "invalid": "This verification link is invalid or has expired.",
     "requestNew": "Sign in and request a new link from your account page."
+  },
+  "forgot": {
+    "title": "Reset your password",
+    "subtitle": "Enter your email and we'll send you a link to reset your password.",
+    "email": "Email",
+    "submit": "Send reset link",
+    "sent": "If an account exists for that email, we've sent a link to reset your password. Check your inbox.",
+    "backToLogin": "Back to sign in"
+  },
+  "reset": {
+    "title": "Choose a new password",
+    "subtitle": "Enter a new password for your account.",
+    "password": "New password",
+    "confirm": "Confirm new password",
+    "submit": "Update password",
+    "invalid": "This reset link is invalid or has expired.",
+    "requestNew": "Request a new reset link"
   }
 }
