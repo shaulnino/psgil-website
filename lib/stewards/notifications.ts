@@ -18,7 +18,7 @@ import {
 // ---------------------------------------------------------------------------
 // ISL league email — also the nodemailer SMTP auth account + "from" for all steward notifications.
 // NOTE: GMAIL_APP_PASSWORD must be an App Password generated for THIS exact Gmail account, or sending fails.
-const LEAGUE_EMAIL = "islf1league@gmail.com";
+const LEAGUE_EMAIL = "f1racingisl@gmail.com";
 // Falls back to f1isl.com; NEXT_PUBLIC_SITE_URL overrides it in Netlify.
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://f1isl.com").replace(/\/$/, "");
 

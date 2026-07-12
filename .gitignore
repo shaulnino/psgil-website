@@ -48,5 +48,9 @@ next-env.d.ts
 # accounts store — live data (PW-2a), never commit
 /data/accounts/
 
+# accounts + driver uploads — live data (emails, password hashes, photos), never commit
+/data/accounts/
+/public/uploads/drivers/
+
 # Local Netlify folder
 .netlify

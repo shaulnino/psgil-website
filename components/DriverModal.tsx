@@ -14,6 +14,8 @@ type DriverModalProps = {
   placeholderSrc: string;
   onClose: () => void;
   currentSeasonLabel?: string;
+  /** Whether the Wild competition scope is offered. Defaults to true. */
+  hasWild?: boolean;
 };
 
 type StatMode = "alltime" | "season";
@@ -265,12 +267,18 @@ function Tooltip({ text, children, triggerClassName, wide }: { text: React.React
 /*  DriverModal                                                        */
 /* ------------------------------------------------------------------ */
 
-export default function DriverModal({ driver, placeholderSrc, onClose, currentSeasonLabel }: DriverModalProps) {
+export default function DriverModal({ driver, placeholderSrc, onClose, currentSeasonLabel, hasWild = true }: DriverModalProps) {
   const t = useTranslations("drivers");
   const tr = useTranslations("rewards");
   const locale = useLocale();
   const [statMode, setStatMode] = useState<StatMode>("alltime");
   const [compMode, setCompMode] = useState<CompMode>("all");
+  const compModes: CompMode[] = hasWild ? ["all", "main", "wild"] : ["all", "main"];
+
+  // Never leave the modal stuck on a hidden Wild scope.
+  useEffect(() => {
+    if (!hasWild && compMode === "wild") setCompMode("all");
+  }, [hasWild, compMode]);
   const [portalEl, setPortalEl] = useState<HTMLDivElement | null>(null);
   const [scrollEl, setScrollEl] = useState<HTMLDivElement | null>(null);
   const photoSrc = driver.photo_url || placeholderSrc;
@@ -534,7 +542,7 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
                 )}
 
                 {/* ---- League Standing (inline under About) ---- */}
-                {(driver.league_rank_main || driver.league_rank_wild) && (
+                {(driver.league_rank_main || (hasWild && driver.league_rank_wild)) && (
                   <div className="mt-4 flex items-center gap-4">
                     <h4 className="font-isl-body text-xs font-semibold uppercase tracking-[0.2em] text-meta">
                       {t("modal.leagueStanding")}
@@ -546,12 +554,14 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
                           {driver.league_rank_main ? `#${driver.league_rank_main}` : "—"}
                         </span>
                       </span>
-                      <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-3 py-1.5 text-xs">
-                        <span className="text-meta">{t("modal.leagueWild")}</span>
-                        <span className="num font-semibold text-ink">
-                          {driver.league_rank_wild ? `#${driver.league_rank_wild}` : "—"}
+                      {hasWild && (
+                        <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-3 py-1.5 text-xs">
+                          <span className="text-meta">{t("modal.leagueWild")}</span>
+                          <span className="num font-semibold text-ink">
+                            {driver.league_rank_wild ? `#${driver.league_rank_wild}` : "—"}
+                          </span>
                         </span>
-                      </span>
+                      )}
                     </div>
                   </div>
                 )}
@@ -636,7 +646,7 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
                     </div>
                     {/* Competition scope */}
                     <div className="flex rounded-[2px] border border-[color:var(--isl-hairline)] bg-sink p-1">
-                      {(["all", "main", "wild"] as CompMode[]).map((c) => (
+                      {compModes.map((c) => (
                         <button
                           key={c}
                           type="button"

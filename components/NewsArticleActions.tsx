@@ -27,6 +27,7 @@ type NewsArticleActionsProps = {
   constructorsTableCaption?: string;
   drivers: Driver[];
   teams: Team[];
+  hasWild?: boolean;
 };
 
 function ModalShell({
@@ -86,6 +87,7 @@ export default function NewsArticleActions({
   constructorsTableCaption = "Main Constructors Standings",
   drivers,
   teams,
+  hasWild,
 }: NewsArticleActionsProps) {
   const t = useTranslations("news");
   const [watchTarget, setWatchTarget] = useState<{ label: string; url: string } | null>(null);
@@ -231,6 +233,7 @@ export default function NewsArticleActions({
               drivers={drivers}
               teams={teams}
               placeholderSrc="/placeholders/driver.png"
+              hasWild={hasWild}
             >
               {currentResults.rows.length > 0 ? (
                 <RaceResultsTable results={currentResults.rows} caption={resultsCaption} />
@@ -249,6 +252,7 @@ export default function NewsArticleActions({
               drivers={drivers}
               teams={teams}
               placeholderSrc="/placeholders/driver.png"
+              hasWild={hasWild}
             >
               <StandingsTable
                 standings={seasonStandingsRows}
@@ -267,6 +271,7 @@ export default function NewsArticleActions({
               drivers={drivers}
               teams={teams}
               placeholderSrc="/placeholders/driver.png"
+              hasWild={hasWild}
             >
               <StandingsTable
                 standings={constructorsStandingsRows}

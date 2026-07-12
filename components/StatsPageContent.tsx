@@ -50,6 +50,7 @@ import type { RaceEvent } from "@/lib/scheduleData";
 import { localizedRaceName, localizedTrack } from "@/lib/scheduleData";
 import type { Reward } from "@/lib/rewardsData";
 import type { SeasonConfig } from "@/lib/seasonConfig";
+import { seasonHasWild } from "@/lib/seasonConfig";
 import { computeDriverStats } from "@/lib/statsComputed";
 import type { StatsFilters } from "@/lib/statsComputed";
 import RaceResultsTable from "@/components/RaceResultsTable";
@@ -1403,6 +1404,15 @@ function DriversSection({
 
   const anyFilterActive = !!(formatFilter || competitionFilter || roundTypeFilter);
 
+  // Only offer the Wild scope when the relevant season(s) actually have it.
+  const wildAvailable = useMemo(
+    () => seasonHasWild(seasons ?? [], mode === "Season" ? season : undefined),
+    [seasons, mode, season],
+  );
+  useEffect(() => {
+    if (!wildAvailable && competitionFilter === "wild") setCompetitionFilter(undefined);
+  }, [wildAvailable, competitionFilter]);
+
   useEffect(() => {
     const next = new URLSearchParams(searchParams.toString());
     if (!filterQueryHydrated.current) {
@@ -1676,6 +1686,7 @@ function DriversSection({
             setCompetitionFilter(undefined);
             setRoundTypeFilter(undefined);
           }}
+          showWild={wildAvailable}
         />
       </div>
 
@@ -2616,6 +2627,15 @@ function RankingsSection({
 
   const anyFilterActive = !!(formatFilter || competitionFilter || roundTypeFilter);
 
+  // Only offer the Wild scope when the relevant season(s) actually have it.
+  const wildAvailable = useMemo(
+    () => seasonHasWild(seasons ?? [], mode === "Season" ? season : undefined),
+    [seasons, mode, season],
+  );
+  useEffect(() => {
+    if (!wildAvailable && competitionFilter === "wild") setCompetitionFilter(undefined);
+  }, [wildAvailable, competitionFilter]);
+
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -2799,6 +2819,7 @@ function RankingsSection({
             setCompetitionFilter(undefined);
             setRoundTypeFilter(undefined);
           }}
+          showWild={wildAvailable}
         />
       </div>
 
@@ -3466,9 +3487,11 @@ function H2HWinBar({ winsA, winsB, ties }: { winsA: number; winsB: number; ties:
 function H2HSection({
   raceResults,
   events,
+  seasons,
 }: {
   raceResults: Record<string, RaceResultRow[]>;
   events: RaceEvent[];
+  seasons?: SeasonConfig[];
 }) {
   const t = useTranslations("stats");
   const locale = useLocale();
@@ -3521,6 +3544,20 @@ function H2HSection({
     () => driverNames.filter((n) => n !== driverA),
     [driverNames, driverA],
   );
+
+  // Only offer the Wild league when the selected season(s) actually have it.
+  const wildAvailable = useMemo(() => {
+    if (seasonFilters.length > 0) {
+      return seasonFilters.some((sk) => seasonHasWild(seasons ?? [], sk));
+    }
+    return seasonHasWild(seasons ?? []);
+  }, [seasons, seasonFilters]);
+  useEffect(() => {
+    if (!wildAvailable && competitionFilter === "wild") setCompetitionFilter("");
+  }, [wildAvailable, competitionFilter]);
+  const competitionOptions = wildAvailable
+    ? ["All Leagues", "Main", "Wild"]
+    : ["All Leagues", "Main"];
 
   const activeFilterCount = seasonFilters.length + circuitFilters.length + weatherFilters.length
     + (formatFilter ? 1 : 0) + (competitionFilter ? 1 : 0) + (roundTypeFilter ? 1 : 0);
@@ -3644,7 +3681,7 @@ function H2HSection({
 
         <div className="w-36">
           <SearchableSelect
-            options={["All Leagues", "Main", "Wild"]}
+            options={competitionOptions}
             value={competitionFilter === "main" ? "Main" : competitionFilter === "wild" ? "Wild" : ""}
             onChange={(v) => {
               const s = v as string;
@@ -3992,7 +4029,7 @@ export default function StatsPageContent({ data, raceResults, events, seasons, r
         <CircuitsSection circuits={data.circuits} />
       )}
       {tab === "Head-to-Head" && raceResults && events && (
-        <H2HSection raceResults={raceResults} events={events} />
+        <H2HSection raceResults={raceResults} events={events} seasons={seasons} />
       )}
       {tab === "Head-to-Head" && (!raceResults || !events) && (
         <EmptyState message="Race results data is not available." />

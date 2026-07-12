@@ -59,7 +59,7 @@ Create `.env.local` in the repo root. This file is gitignored.
 
 | Variable | Required | Where used | Description |
 |---|---|---|---|
-| `GMAIL_APP_PASSWORD` | **Yes** | `app/api/contact/route.ts`, `lib/stewards/notifications.ts` | Gmail App Password for `islf1league@gmail.com` |
+| `GMAIL_APP_PASSWORD` | **Yes** | `app/api/contact/route.ts`, `lib/stewards/notifications.ts` | Gmail App Password for `f1racingisl@gmail.com` |
 | `NEWS_SHEET_URL` | **Yes** | `lib/newsData.ts` | Public Google Sheets CSV URL for the `articles` tab |
 | `REWARDS_SHEET_URL` | No | `lib/seasonConfig.ts` | Override URL for rewards CSV (has default in code) |
 | `STEWARD_SESSION_SECRET` | **Yes (prod)** | `lib/stewards/auth.ts` | JWT signing secret. Falls back to `"dev-steward-secret-change-me"` locally — **must be set in Netlify** |
@@ -341,7 +341,7 @@ The site deploys as a Next.js application on Netlify. Netlify's Next.js runtime 
 ### Required Netlify environment variables (set in Netlify UI)
 
 ```
-GMAIL_APP_PASSWORD         → Gmail App Password for islf1league@gmail.com
+GMAIL_APP_PASSWORD         → Gmail App Password for f1racingisl@gmail.com
 NEWS_SHEET_URL             → Public Google Sheets CSV for articles tab
 STEWARD_SESSION_SECRET     → Random secret string (e.g. openssl rand -hex 32)
 NEXT_PUBLIC_SITE_URL       → https://f1isl.com
@@ -476,4 +476,4 @@ Logos render against a white box on `/drivers`, so monochrome/dark marks are fin
 | Where is the standings calculation? | Google Apps Script in `scripts/standings/psgil-standings.gs` |
 | Where are metric display names defined? | `lib/statsMetricRegistry.ts` |
 | Where is site copy (nav, hero text)? | `lib/siteConfig.ts` |
-| Where do emails get sent from? | `islf1league@gmail.com` via nodemailer |
+| Where do emails get sent from? | `f1racingisl@gmail.com` via nodemailer |

@@ -216,6 +216,27 @@ export function resolveCurrentSeason(configs: SeasonConfig[]): SeasonConfig {
   return sorted[0] ?? createFallbackSeason();
 }
 
+/**
+ * Whether the Wild league/competition should be surfaced in the UI.
+ *  - Without a seasonKey: true when ANY season has wild (league-wide).
+ *  - With a seasonKey: that specific season's `has_wild` flag (falls back
+ *    to the league-wide check when the season isn't found).
+ *
+ * Defaults to `true` when no config is available, preserving the pre-flag
+ * behaviour where Wild was always shown.
+ */
+export function seasonHasWild(
+  configs: SeasonConfig[],
+  seasonKey?: string,
+): boolean {
+  if (!configs || configs.length === 0) return true;
+  if (seasonKey) {
+    const match = configs.find((c) => matchesSeason(c.season_key, seasonKey));
+    if (match) return match.has_wild;
+  }
+  return configs.some((c) => c.has_wild);
+}
+
 /** Build the list for season dropdown (newest first). */
 export function getSeasonsForDropdown(
   configs: SeasonConfig[],

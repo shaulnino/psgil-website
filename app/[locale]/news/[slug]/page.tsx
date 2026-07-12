@@ -16,7 +16,7 @@ import {
   youtubeWatchLinksForGroup,
   type RaceGroup,
 } from "@/lib/scheduleData";
-import { GLOBAL_CSV_URLS } from "@/lib/seasonConfig";
+import { GLOBAL_CSV_URLS, fetchSeasonsConfig, seasonHasWild } from "@/lib/seasonConfig";
 import {
   fetchAllRaceResults,
   fetchStandings,
@@ -170,6 +170,7 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
   let modalDrivers: Driver[] = [];
   let modalTeams: Team[] = [];
   let recapRaceGroup: RaceGroup | null = null;
+  let hasWild = true;
 
   const shouldLoadSchedule =
     eventIdsFromArticle.length > 0 ||
@@ -183,6 +184,9 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
       const events = scheduleCsv
         ? mapRaceEvents(parseCsv<Record<string, string>>(scheduleCsv))
         : [];
+
+      const seasonsConfig = await fetchSeasonsConfig();
+      hasWild = seasonHasWild(seasonsConfig, seasonKey ?? undefined);
 
       recapRaceGroup = resolveRecapRaceGroupForNewsArticle(events, {
         articleId: article.id,
@@ -346,6 +350,7 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
                   ? `Season ${seasonKey.replace(/^S/i, "")} — ${standingsLeagueLabel} Constructors Standings`
                   : `Season — ${standingsLeagueLabel} Constructors Standings`
               }
+              hasWild={hasWild}
               drivers={modalDrivers}
               teams={modalTeams}
             />
