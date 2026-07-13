@@ -250,10 +250,10 @@ export default async function Home() {
             <div className="isl-hero-frame__plate">
               <div className="isl-hero-frame__inner bg-ink">
                 <Image
-                  src="/hero-new-era.png"
+                  src="/hero-season-opener.png"
                   alt={tHome("hero.imageAlt")}
-                  width={1264}
-                  height={848}
+                  width={1024}
+                  height={576}
                   priority
                   sizes="(max-width: 1240px) 100vw, 1240px"
                   className="h-auto w-full"

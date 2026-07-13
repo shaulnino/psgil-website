@@ -26,7 +26,7 @@ export default function Header({
   const t = useTranslations("common");
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[color:var(--isl-hairline)] bg-bone/95 backdrop-blur-sm">
+    <header className="sticky top-0 z-50 border-b border-[color:var(--isl-hairline)] bg-bone/95 pt-[env(safe-area-inset-top)] backdrop-blur-sm">
       <div className="isl-gold-rule" />
       <div className="mx-auto flex h-16 w-full max-w-[1240px] items-center justify-between px-5">
         <LoadingLink
