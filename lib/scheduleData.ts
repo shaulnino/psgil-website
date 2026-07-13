@@ -48,6 +48,12 @@ export type RaceEvent = {
    * Populated from the "is_playoff" column (TRUE/FALSE) in the schedule CSV.
    */
   is_playoff: boolean;
+  /**
+   * Pin this race's poster as the homepage hero banner (override).
+   * Populated from a "hero" column (TRUE/YES/1/X) in the schedule CSV. When no
+   * race is flagged, the hero falls back to the next (then last) race poster.
+   */
+  is_hero: boolean;
 };
 
 /** Grand Prix name in the active locale — Hebrew when available, else English. */
@@ -182,6 +188,9 @@ export function mapRaceEvents(raw: Record<string, string>[]): RaceEvent[] {
       results_status: (row.results_status ?? "").trim().toLowerCase() || undefined,
       race_format: raceFormat,
       is_playoff: (row.is_playoff ?? "").trim().toUpperCase() === "TRUE",
+      is_hero: ["TRUE", "YES", "1", "X"].includes(
+        (row.hero ?? row.hero_banner ?? row.is_hero ?? "").trim().toUpperCase(),
+      ),
     };
   });
 }

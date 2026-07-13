@@ -49,8 +49,16 @@ import {
 
 const newsFallbackImage = "/isl-banner.png";
 
+// Shown only when no upcoming/recent race carries a poster (e.g. between seasons).
+const DEFAULT_HERO_POSTER = "/hero-new-era.png";
+
 function isRemote(src?: string) {
   return !!src && src.startsWith("http");
+}
+
+/** First event in a race-day group that carries a poster image. */
+function groupPoster(group: RaceGroup | null): string | undefined {
+  return group?.events.find((e) => !!e.poster_image)?.poster_image;
 }
 
 export default async function Home() {
@@ -115,6 +123,15 @@ export default async function Home() {
   } catch {
     // CSV not available — cards will show fallback
   }
+
+  // Hero banner poster: a race flagged `hero` in the schedule CSV pins its poster
+  // (manual override); otherwise auto-populate from the next race's poster, then
+  // the most recent race's, then a fixed default.
+  const heroPoster =
+    allEventsGlob.find((e) => e.is_hero && e.poster_image)?.poster_image ??
+    groupPoster(nextGroup) ??
+    groupPoster(lastGroup) ??
+    DEFAULT_HERO_POSTER;
 
   let allDrivers = driversCsv
     ? mapDrivers(parseCsv<Record<string, string>>(driversCsv))
@@ -248,17 +265,16 @@ export default async function Home() {
           {/* Broadcast-framed hero image — see .isl-hero-frame in globals.css */}
           <div className="isl-hero-frame mt-6 w-full">
             <div className="isl-hero-frame__plate">
-              <div className="isl-hero-frame__inner bg-ink">
+              <div className="isl-hero-frame__inner relative aspect-[16/9] bg-ink">
                 <Image
-                  src="/hero-season-opener.png"
+                  src={heroPoster}
                   alt={tHome("hero.imageAlt")}
-                  width={1024}
-                  height={576}
+                  fill
                   priority
                   sizes="(max-width: 1240px) 100vw, 1240px"
-                  className="h-auto w-full"
+                  className="object-cover"
+                  unoptimized={isRemote(heroPoster)}
                 />
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[color:var(--isl-bone)] to-transparent" />
               </div>
             </div>
           </div>

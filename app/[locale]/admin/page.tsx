@@ -9,8 +9,10 @@ import { mapDrivers } from "@/lib/driversData";
 import { GLOBAL_CSV_URLS } from "@/lib/seasonConfig";
 import {
   createAccountAction,
+  editAccountAction,
   linkDriverAction,
   removeAccountAction,
+  resetPasswordAction,
   setActiveAction,
   setRolesAction,
 } from "./actions";
@@ -30,11 +32,18 @@ const btnDanger = "rounded-[2px] border border-[color:var(--isl-danger)] px-3 py
 export default async function AdminPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; ok?: string }>;
 }) {
   await requireAdmin("/admin");
-  const { error } = await searchParams;
+  const { error, ok } = await searchParams;
   const users = await listUsers();
+
+  const okMessage =
+    ok === "reset"
+      ? "Password reset. The user must set a new password on next sign-in."
+      : ok === "saved"
+        ? "Account updated."
+        : null;
 
   // CSV driver roster for linking (best-effort; empty on fetch failure).
   const driverCsv = await fetchCsv(GLOBAL_CSV_URLS.drivers).catch(() => "");
@@ -44,7 +53,7 @@ export default async function AdminPage({
 
   return (
     <main className="text-ink-2">
-      <Section title="Account Administration" description="Create accounts, set roles, and link drivers." pageHeader>
+      <Section title="Account Administration" description="Create accounts, edit details, reset passwords, set roles, and link drivers." pageHeader>
         <div className="mx-auto max-w-5xl space-y-6">
           <LoadingLink
             href="/admin/attendance"
@@ -56,6 +65,12 @@ export default async function AdminPage({
           {error && (
             <p className="rounded-[2px] border border-[color:var(--isl-danger)] px-3 py-2 text-sm text-[color:var(--isl-danger)]">
               {error === "email-taken" ? "An account with that email already exists." : "Please check the form and try again."}
+            </p>
+          )}
+
+          {okMessage && (
+            <p className="rounded-[2px] border border-[color:var(--isl-success)] bg-[color:var(--isl-success)]/10 px-3 py-2 text-sm text-ink">
+              {okMessage}
             </p>
           )}
 
@@ -94,9 +109,13 @@ export default async function AdminPage({
                 {users.map((u) => (
                   <tr key={u.id} className="border-t border-[color:var(--isl-hairline)] align-top">
                     <td className="py-3 pe-3">
-                      <div className="text-ink">{u.name}</div>
-                      <div className="text-meta">{u.email}</div>
-                      {!u.isActive && <span className="text-[10px] uppercase text-[color:var(--isl-danger)]">suspended</span>}
+                      <form action={editAccountAction} className="flex flex-col gap-1.5">
+                        <input type="hidden" name="user_id" value={u.id} />
+                        <input name="name" defaultValue={u.name} required aria-label="Full name" className={input + " w-48"} />
+                        <input name="email" type="email" defaultValue={u.email} required aria-label="Email" className={input + " w-48"} />
+                        {!u.isActive && <span className="text-[10px] uppercase text-[color:var(--isl-danger)]">suspended</span>}
+                        <button type="submit" className={btn + " self-start"}>Save details</button>
+                      </form>
                     </td>
                     <td className="py-3 pe-3">
                       <form action={setRolesAction} className="flex flex-col gap-1">
@@ -124,6 +143,19 @@ export default async function AdminPage({
                     </td>
                     <td className="py-3">
                       <div className="flex flex-col gap-2">
+                        <form action={resetPasswordAction} className="flex flex-col gap-1">
+                          <input
+                            name="password"
+                            type="text"
+                            placeholder="New temp password (min 8)"
+                            required
+                            minLength={8}
+                            aria-label="New temporary password"
+                            className={input + " w-52"}
+                          />
+                          <input type="hidden" name="user_id" value={u.id} />
+                          <button type="submit" className={btn + " self-start"}>Reset password</button>
+                        </form>
                         <form action={setActiveAction}>
                           <input type="hidden" name="user_id" value={u.id} />
                           <input type="hidden" name="active" value={u.isActive ? "false" : "true"} />
