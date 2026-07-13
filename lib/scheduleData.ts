@@ -567,6 +567,27 @@ export function getLastRaceGroup(events: RaceEvent[]): RaceGroup | null {
 }
 
 /**
+ * A stable identifier for a race-day group: the event_id of its earliest race
+ * (events within a group are sorted by race_number ascending). Used as the
+ * attendance key so a double-header night is a single RSVP (PW-3).
+ */
+export function raceGroupAnchorId(group: RaceGroup): string {
+  return group.events[0]?.event_id ?? "";
+}
+
+/**
+ * All upcoming race-day groups that haven't started yet, earliest first.
+ * Cancelled groups are excluded. Used by the attendance surfaces (PW-3).
+ */
+export function getUpcomingRaceGroups(events: RaceEvent[]): RaceGroup[] {
+  const nowUTC = Date.now();
+  const future = buildGroups(events).filter(
+    (g) => groupTimestamp(g) > nowUTC && !g.events.some((e) => e.status.toLowerCase() === "cancelled"),
+  );
+  return future.sort((a, b) => groupTimestamp(a) - groupTimestamp(b));
+}
+
+/**
  * Return the next upcoming race-day group that hasn't started yet.
  * Uses start_time for time-aware comparison.
  * Among ties, prefer groups with Scheduled events.

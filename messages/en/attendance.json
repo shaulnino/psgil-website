@@ -1,0 +1,15 @@
+{
+  "heading": "Race attendance",
+  "hint": "Let the league know if you'll be racing. You can change your answer any time until the race starts.",
+  "noRaces": "No upcoming races to respond to right now.",
+  "doubleHeader": "double-header",
+  "status": {
+    "going": "Going",
+    "maybe": "Maybe",
+    "out": "Can't make it"
+  },
+  "adminTitle": "Race Attendance",
+  "adminDescription": "Who's racing in the upcoming rounds.",
+  "backToAdmin": "← Account administration",
+  "respondedCount": "{count} responded"
+}

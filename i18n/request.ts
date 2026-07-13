@@ -23,6 +23,7 @@ const NAMESPACES = [
   "stewards",
   "errors",
   "account",
+  "attendance",
 ] as const;
 
 type Dict = Record<string, unknown>;
