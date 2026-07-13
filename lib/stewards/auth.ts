@@ -98,11 +98,10 @@ export async function requireStewardUser(): Promise<StewardUser> {
   const user = await getCurrentStewardUser();
   if (!user || !user.isActive) redirect("/stewards/login");
   if (user.mustChangePassword) redirect("/stewards/change-password");
-  // Now that public accounts exist (PW-2b), being signed in is not enough to
-  // enter the steward area — the account must be approved AND hold a
-  // steward-area role. Pending/rejected or plain registered_users are sent to
-  // their account page.
-  if (user.status !== "approved" || !can(user, "view_steward_area")) redirect("/account");
+  // Being signed in is not enough to enter the steward area — the account must
+  // hold a steward-area role. Plain registered_users are sent to their account
+  // page. (Accounts are admin-provisioned; suspended accounts fail isActive above.)
+  if (!can(user, "view_steward_area")) redirect("/account");
   return user;
 }
 
@@ -151,7 +150,9 @@ export type StewardPermission =
   | "delete_case"
   | "manage_users"
   | "manage_penalties"
-  | "reset_password";
+  | "reset_password"
+  | "submit_own_attendance"
+  | "manage_attendance";
 
 const PERMISSION_MATRIX: Record<StewardPermission, StewardRole[]> = {
   // `driver` is the Identity-v2 participant role; `member` is kept for legacy
@@ -169,6 +170,10 @@ const PERMISSION_MATRIX: Record<StewardPermission, StewardRole[]> = {
   manage_users:             ["admin"],
   manage_penalties:         ["admin"],
   reset_password:           ["admin"],
+  // PW-3 attendance: a linked driver RSVPs to their own races; admins manage
+  // and view the full roster.
+  submit_own_attendance:    ["driver", "member", "admin"],
+  manage_attendance:        ["admin"],
 };
 
 /** True if the user is allowed to perform the named action. */

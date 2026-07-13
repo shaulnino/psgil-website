@@ -52,5 +52,8 @@ next-env.d.ts
 /data/accounts/
 /public/uploads/drivers/
 
+# attendance store — live data (PW-3), never commit
+/data/attendance/
+
 # Local Netlify folder
 .netlify

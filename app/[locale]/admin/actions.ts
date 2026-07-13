@@ -9,7 +9,6 @@ import {
   getUserByEmail,
   removeUserById,
   setAccountActive,
-  setAccountStatus,
   setDriverId,
   updateUserRoles,
 } from "@/lib/accounts/repository";
@@ -24,27 +23,6 @@ const rolesFrom = (formData: FormData): AppRole[] =>
     .getAll("roles")
     .filter((r): r is string => typeof r === "string")
     .filter((r): r is AppRole => (ALL_ROLES as string[]).includes(r));
-
-/** Approve a pending account → approved + driver role by default; optionally link a driver. */
-export async function approveAccountAction(formData: FormData) {
-  await requireAdmin();
-  const userId = uid(formData);
-  if (!userId) redirect(ADMIN_PATH);
-  await setAccountStatus(userId, "approved");
-  await updateUserRoles(userId, ["driver"]);
-  const driverId = String(formData.get("driver_id") ?? "").trim();
-  if (driverId) await setDriverId(userId, driverId);
-  revalidatePath(ADMIN_PATH);
-  redirect(ADMIN_PATH);
-}
-
-export async function rejectAccountAction(formData: FormData) {
-  await requireAdmin();
-  const userId = uid(formData);
-  if (userId) await setAccountStatus(userId, "rejected");
-  revalidatePath(ADMIN_PATH);
-  redirect(ADMIN_PATH);
-}
 
 export async function setRolesAction(formData: FormData) {
   await requireAdmin();
@@ -81,7 +59,7 @@ export async function removeAccountAction(formData: FormData) {
   redirect(ADMIN_PATH);
 }
 
-/** Admin-provision an account directly (approved). Must change password on first login. */
+/** Admin-provision an account directly. Must change password on first login. */
 export async function createAccountAction(formData: FormData) {
   await requireAdmin();
   const name = String(formData.get("name") ?? "").trim();
@@ -97,9 +75,7 @@ export async function createAccountAction(formData: FormData) {
     email,
     passwordHash: hashPassword(password),
     roles,
-    status: "approved",
     mustChangePassword: true,
-    emailVerified: true,
   });
   revalidatePath(ADMIN_PATH);
   redirect(ADMIN_PATH);

@@ -26,15 +26,6 @@ export const ALL_ROLES: AppRole[] = [
 ];
 
 /**
- * Account approval lifecycle (Identity v2). Distinct from `isActive`:
- *   - status  = where the account is in the join flow (admin approval).
- *   - isActive = whether an approved account is enabled or suspended.
- * New public registrations start `pending`; existing/admin-provisioned
- * accounts are `approved`.
- */
-export type AccountStatus = "pending" | "approved" | "rejected";
-
-/**
  * True if these roles make the account a racing driver — i.e. a steward-case
  * participant (involved driver / complainant). `driver` is the Identity-v2
  * role; `member` is the retained legacy equivalent (treated as driver so no
@@ -51,13 +42,10 @@ export type Account = {
   email: string; // normalized lowercase; unique across accounts
   roles: AppRole[];
   passwordHash: string;
+  /** Whether the account is enabled or suspended (admin-controlled). */
   isActive: boolean;
-  /** Approval lifecycle (Identity v2). Grandfathered "approved" on migration. */
-  status: AccountStatus;
   /** Forces the change-password flow on next login. */
   mustChangePassword: boolean;
-  /** Whether the email has been verified (PW-2b). Grandfathered true on migration. */
-  emailVerified: boolean;
   /** Link to a CSV driver_id (PW-2c/d). null = unlinked. */
   driverId: string | null;
   /** Uploaded driver photo URL (PW-2e); overrides the CSV photo_url. null = none. */
@@ -91,17 +79,13 @@ export const emailSchema = z
 
 /** Input accepted by `createUser`. Kept shape-compatible with the old steward
  *  `NewUserInput` (name/email/passwordHash/roles/mustChangePassword) plus the
- *  new optional account fields. */
-export const statusSchema = z.enum(["pending", "approved", "rejected"]);
-
+ *  optional account fields. */
 export const newAccountSchema = z.object({
   name: z.string().trim().min(1, "Name is required.").max(120),
   email: emailSchema,
   passwordHash: z.string().min(1),
   roles: z.array(roleSchema),
-  status: statusSchema.optional(),
   mustChangePassword: z.boolean().optional(),
-  emailVerified: z.boolean().optional(),
   driverId: z.string().trim().min(1).nullable().optional(),
 });
 

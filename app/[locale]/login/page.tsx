@@ -36,12 +36,6 @@ export default async function LoginPage({
               {t("forgot")}
             </LoadingLink>
           </p>
-          <p className="mt-6 text-center text-sm text-meta">
-            {t("noAccount")}{" "}
-            <LoadingLink href="/register" className="text-oxblood hover:text-oxblood-deep">
-              {t("registerLink")}
-            </LoadingLink>
-          </p>
         </div>
       </Section>
     </main>

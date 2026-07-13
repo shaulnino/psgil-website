@@ -10,12 +10,6 @@ export const passwordSchema = z
   .min(8, "Password must be at least 8 characters.")
   .max(200);
 
-export const registerSchema = z.object({
-  name: z.string().trim().min(1, "Please enter your name.").max(120),
-  email: emailSchema,
-  password: passwordSchema,
-});
-
 export const loginSchema = z.object({
   email: emailSchema,
   password: z.string().min(1, "Please enter your password."),
@@ -29,5 +23,4 @@ export const resetPasswordSchema = z.object({
   password: passwordSchema,
 });
 
-export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;

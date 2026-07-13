@@ -5,10 +5,13 @@ import { Button } from "@/components/ui/button";
 import { requireUser } from "@/lib/auth/session";
 import { logoutAction } from "@/lib/auth/actions";
 import { isDriverRole } from "@/lib/accounts/types";
+import { fetchUpcomingRaces } from "@/lib/attendance/races";
+import { listAttendanceForDriver } from "@/lib/attendance/repository";
+import type { AttendanceStatus } from "@/lib/attendance/types";
 import ProfileForm from "./ProfileForm";
 import PasswordForm from "./PasswordForm";
-import ResendVerification from "./ResendVerification";
 import DriverPhotoForm from "./DriverPhotoForm";
+import AttendanceSection, { type AttendanceRaceView } from "./AttendanceSection";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("account.account");
@@ -19,24 +22,48 @@ const cardClass = "rounded-[2px] border border-[color:var(--isl-hairline)] bg-cr
 const sectionHeading = "font-display text-lg font-bold tracking-[0.02em] text-ink";
 
 export default async function AccountPage({
+  params,
   searchParams,
 }: {
-  searchParams: Promise<{ welcome?: string; saved?: string; pw?: string; photo?: string }>;
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ saved?: string; pw?: string; photo?: string }>;
 }) {
   const user = await requireUser("/account");
   const t = await getTranslations("account.account");
+  const tAtt = await getTranslations("attendance");
+  const { locale } = await params;
   const sp = await searchParams;
 
-  const flash = sp.welcome
-    ? t("welcome")
-    : sp.saved
-      ? t("saved")
-      : sp.pw
-        ? t("passwordChanged")
-        : sp.photo
-          ? t("photoUpdated")
-          : null;
+  const flash = sp.saved
+    ? t("saved")
+    : sp.pw
+      ? t("passwordChanged")
+      : sp.photo
+        ? t("photoUpdated")
+        : null;
   const showDriverPhoto = isDriverRole(user.roles);
+  const showAttendance = isDriverRole(user.roles) && !!user.driverId;
+
+  let attendanceRaces: AttendanceRaceView[] = [];
+  if (showAttendance) {
+    const [upcoming, myRsvps] = await Promise.all([
+      fetchUpcomingRaces(),
+      listAttendanceForDriver(user.driverId!),
+    ]);
+    const statusByRace = new Map<string, AttendanceStatus>(
+      myRsvps.map((r) => [r.raceId, r.status]),
+    );
+    attendanceRaces = upcoming.map((race) => {
+      const name = locale === "he" ? race.nameHe : race.name;
+      const meta = [race.date, race.startTime, race.league].filter(Boolean).join(" · ");
+      return {
+        raceId: race.raceId,
+        label: race.raceCount > 1 ? `${name} (${tAtt("doubleHeader")})` : name,
+        dateLabel: meta,
+        currentStatus: statusByRace.get(race.raceId) ?? null,
+      };
+    });
+  }
 
   return (
     <main className="text-ink-2">
@@ -46,19 +73,6 @@ export default async function AccountPage({
             <p className="rounded-[2px] border border-[color:var(--isl-success)] bg-[color:var(--isl-success)]/10 px-4 py-3 text-sm text-ink">
               {flash}
             </p>
-          )}
-
-          {user.status === "pending" && (
-            <p className="rounded-[2px] border border-[color:var(--isl-warning)] bg-[color:var(--isl-warning)]/10 px-4 py-3 text-sm text-ink">
-              {t("pendingBanner")}
-            </p>
-          )}
-
-          {!user.emailVerified && (
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-[2px] border border-[color:var(--isl-warning)] bg-[color:var(--isl-warning)]/10 px-4 py-3 text-sm text-ink">
-              <span>{t("unverifiedBanner")}</span>
-              <ResendVerification />
-            </div>
           )}
 
           <div className={cardClass}>
@@ -87,6 +101,15 @@ export default async function AccountPage({
                 ) : (
                   <p className="text-sm text-meta">{t("photoNotLinked")}</p>
                 )}
+              </div>
+            </div>
+          )}
+
+          {showAttendance && (
+            <div className={cardClass}>
+              <h2 className={sectionHeading}>{tAtt("heading")}</h2>
+              <div className="mt-4">
+                <AttendanceSection races={attendanceRaces} />
               </div>
             </div>
           )}

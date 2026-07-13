@@ -18,7 +18,6 @@ import {
   ALL_ROLES,
   newAccountSchema,
   type Account,
-  type AccountStatus,
   type AppRole,
 } from "@/lib/accounts/types";
 
@@ -33,12 +32,8 @@ export type NewUserInput = {
   roles: AppRole[];
   /** Defaults to true — new accounts must change password on first login. */
   mustChangePassword?: boolean;
-  /** PW-2b: public registration sets this false and verifies by email. */
-  emailVerified?: boolean;
   /** PW-2c: driver linking. */
   driverId?: string | null;
-  /** PW-2c: public registration sets "pending"; admin-provisioned defaults "approved". */
-  status?: AccountStatus;
 };
 
 const normalizeRoles = (roles: AppRole[]): AppRole[] =>
@@ -61,7 +56,7 @@ export async function getUserByEmail(email: string): Promise<Account | null> {
 
 export async function createUser(input: NewUserInput): Promise<Account> {
   // Validate + normalize (zod). Throws on malformed input — callers pass
-  // trusted server-side data today; PW-2b public registration relies on this.
+  // trusted server-side data (accounts are admin-provisioned).
   const parsed = newAccountSchema.parse(input);
   const now = new Date().toISOString();
   const account: Account = {
@@ -71,9 +66,7 @@ export async function createUser(input: NewUserInput): Promise<Account> {
     roles: normalizeRoles(parsed.roles as AppRole[]),
     passwordHash: parsed.passwordHash,
     isActive: true,
-    status: parsed.status ?? "approved",
     mustChangePassword: parsed.mustChangePassword ?? true,
-    emailVerified: parsed.emailVerified ?? false,
     driverId: parsed.driverId ?? null,
     driverPhotoUrl: null,
     createdAt: now,
@@ -81,16 +74,6 @@ export async function createUser(input: NewUserInput): Promise<Account> {
   };
   await putAccount(account);
   return account;
-}
-
-/** Approve or reject a pending account. Approving optionally sets the roles the
- *  admin chose (default handled by the caller); rejecting just flips status. */
-export async function setAccountStatus(userId: string, status: AccountStatus): Promise<void> {
-  const account = await getAccountById(userId);
-  if (!account) return;
-  account.status = status;
-  account.updatedAt = new Date().toISOString();
-  await putAccount(account);
 }
 
 /** Link/unlink an account to a CSV driver_id. Pass null to unlink. */
@@ -111,7 +94,7 @@ export async function setDriverPhotoUrl(userId: string, url: string | null): Pro
   await putAccount(account);
 }
 
-/** Enable/suspend an approved account (isActive), independent of approval status. */
+/** Enable/suspend an account (isActive). */
 export async function setAccountActive(userId: string, isActive: boolean): Promise<void> {
   const account = await getAccountById(userId);
   if (!account) return;
@@ -139,14 +122,6 @@ export async function updateUserRoles(userId: string, roles: AppRole[]): Promise
   const account = await getAccountById(userId);
   if (!account) return;
   account.roles = normalizeRoles(roles);
-  account.updatedAt = new Date().toISOString();
-  await putAccount(account);
-}
-
-export async function setEmailVerified(userId: string, verified: boolean): Promise<void> {
-  const account = await getAccountById(userId);
-  if (!account) return;
-  account.emailVerified = verified;
   account.updatedAt = new Date().toISOString();
   await putAccount(account);
 }

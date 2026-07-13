@@ -2,22 +2,10 @@
   "menu": {
     "signIn": "Sign in",
     "account": "My Account",
-    "register": "Register",
     "profile": "Profile",
     "stewards": "Stewards",
     "admin": "Admin",
     "signOut": "Sign out"
-  },
-  "register": {
-    "title": "Create your account",
-    "subtitle": "Join F1ISL to manage your driver profile and race attendance.",
-    "name": "Full name",
-    "email": "Email",
-    "password": "Password",
-    "confirm": "Confirm password",
-    "submit": "Create account",
-    "haveAccount": "Already have an account?",
-    "signInLink": "Sign in"
   },
   "login": {
     "title": "Sign in",
@@ -26,15 +14,11 @@
     "password": "Password",
     "remember": "Stay signed in",
     "submit": "Sign in",
-    "noAccount": "Don't have an account?",
-    "registerLink": "Create one",
     "forgot": "Forgot your password?",
     "resetDone": "Your password has been reset. Sign in with your new password."
   },
   "account": {
     "title": "Your account",
-    "welcome": "Welcome to F1ISL! Check your email to verify your address.",
-    "pendingBanner": "Your account is awaiting admin approval. You'll get access once an admin approves it.",
     "saved": "Your profile has been updated.",
     "passwordChanged": "Your password has been changed.",
     "photoUpdated": "Your driver photo has been updated.",
@@ -45,10 +29,6 @@
     "photoChoose": "Choose image",
     "photoUpload": "Upload photo",
     "photoNotLinked": "Your account isn't linked to a driver profile yet. An admin needs to link it before you can upload a photo.",
-    "verifiedBanner": "Email verified.",
-    "unverifiedBanner": "Your email isn't verified yet.",
-    "resend": "Resend verification email",
-    "resent": "Verification email sent — check your inbox.",
     "profile": "Profile",
     "name": "Full name",
     "email": "Email",
@@ -62,14 +42,6 @@
     "confirmPassword": "Confirm new password",
     "changePassword": "Change password",
     "signOut": "Sign out"
-  },
-  "verify": {
-    "title": "Verifying your email",
-    "working": "Confirming your email address…",
-    "success": "Your email is verified. Thanks!",
-    "goToAccount": "Go to your account",
-    "invalid": "This verification link is invalid or has expired.",
-    "requestNew": "Sign in and request a new link from your account page."
   },
   "forgot": {
     "title": "Reset your password",

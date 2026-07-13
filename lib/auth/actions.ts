@@ -4,11 +4,9 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { hashPassword, verifyPassword } from "@/lib/stewards/crypto";
 import {
-  createUser,
   getUserByEmail,
   getUserById,
   setDriverPhotoUrl,
-  setEmailVerified,
   updateUser,
 } from "@/lib/accounts/repository";
 import { isDriverRole } from "@/lib/accounts/types";
@@ -20,12 +18,11 @@ import {
   setSessionCookie,
 } from "@/lib/auth/session";
 import { signAuthToken, tokenBinding, verifyAuthToken } from "@/lib/auth/tokens";
-import { passwordResetEmail, sendAccountEmail, verificationEmail } from "@/lib/auth/mailer";
+import { passwordResetEmail, sendAccountEmail } from "@/lib/auth/mailer";
 import {
   forgotPasswordSchema,
   loginSchema,
   passwordSchema,
-  registerSchema,
   resetPasswordSchema,
 } from "@/lib/auth/schemas";
 
@@ -52,51 +49,6 @@ function safeNext(value: FormDataEntryValue | null): string | null {
   return v.startsWith("/") && !v.startsWith("//") ? v : null;
 }
 
-async function sendVerification(accountId: string, name: string, email: string) {
-  const token = await signAuthToken(accountId, "verify-email");
-  const url = `${await baseUrl()}/verify?token=${encodeURIComponent(token)}`;
-  const mail = verificationEmail(name, url);
-  await sendAccountEmail({ to: email, ...mail, devLink: url });
-}
-
-export async function registerAction(_prev: FormState, formData: FormData): Promise<FormState> {
-  const parsed = registerSchema.safeParse({
-    name: formData.get("name"),
-    email: formData.get("email"),
-    password: formData.get("password"),
-  });
-  if (!parsed.success) return { error: firstIssue(parsed.error.issues) };
-
-  const { name, email, password } = parsed.data;
-  if (String(formData.get("confirm") ?? "") !== password) {
-    return { error: "Passwords do not match." };
-  }
-  if (await getUserByEmail(email)) {
-    return { error: "An account with this email already exists." };
-  }
-
-  const account = await createUser({
-    name,
-    email,
-    passwordHash: hashPassword(password),
-    // Pending accounts hold the base role so the session resolves, but the
-    // `pending` status blocks every privileged area until an admin approves
-    // (approval upgrades them to `driver` by default).
-    roles: ["registered_user"],
-    status: "pending",
-    mustChangePassword: false,
-    emailVerified: false,
-  });
-
-  await sendVerification(account.id, account.name, account.email);
-
-  // Auto sign-in into the "awaiting approval" state (they can verify their
-  // email and see status; they get no driver/steward abilities until approved).
-  const token = await createSession(account, false);
-  await setSessionCookie(token, false);
-  redirect("/account?welcome=1");
-}
-
 export async function loginAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const parsed = loginSchema.safeParse({
     email: formData.get("email"),
@@ -121,24 +73,6 @@ export async function loginAction(_prev: FormState, formData: FormData): Promise
 export async function logoutAction(): Promise<void> {
   await clearSessionCookie();
   redirect("/");
-}
-
-/** Verifies an email-verification token (called from the /verify page). */
-export async function verifyEmailAction(token: string): Promise<{ ok: boolean; error?: string }> {
-  const sub = await verifyAuthToken(token, "verify-email");
-  if (!sub) return { ok: false, error: "This verification link is invalid or has expired." };
-  const account = await getUserById(sub);
-  if (!account) return { ok: false, error: "Account not found." };
-  if (!account.emailVerified) await setEmailVerified(sub, true);
-  return { ok: true };
-}
-
-export async function resendVerificationAction(): Promise<{ ok: boolean; error?: string }> {
-  const user = await getCurrentUser();
-  if (!user) return { ok: false, error: "You must be signed in." };
-  if (user.emailVerified) return { ok: true };
-  await sendVerification(user.id, user.name, user.email);
-  return { ok: true };
 }
 
 /**
