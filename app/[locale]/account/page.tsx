@@ -4,7 +4,9 @@ import Section from "@/components/Section";
 import { Button } from "@/components/ui/button";
 import { requireUser } from "@/lib/auth/session";
 import { logoutAction } from "@/lib/auth/actions";
+import { can } from "@/lib/stewards/auth";
 import { isDriverRole } from "@/lib/accounts/types";
+import LoadingLink from "@/components/LoadingLink";
 import { fetchCsv, parseCsv } from "@/lib/csv";
 import { mapDrivers, mapTeams } from "@/lib/driversData";
 import { GLOBAL_CSV_URLS } from "@/lib/seasonConfig";
@@ -41,6 +43,8 @@ export default async function AccountPage({
   const flash = sp.pw ? t("passwordChanged") : sp.photo ? t("photoUpdated") : null;
   const showDriverPhoto = isDriverRole(user.roles);
   const canRsvp = isDriverRole(user.roles) && !!user.driverId;
+  const canSteward = can(user, "view_steward_area");
+  const canAdmin = can(user, "manage_users");
 
   // Attendance targets the current next race. The "who's racing" roster is
   // visible to any signed-in user; the RSVP controls only to linked drivers.
@@ -98,6 +102,32 @@ export default async function AccountPage({
             <p className="rounded-[2px] border border-[color:var(--isl-success)] bg-[color:var(--isl-success)]/10 px-4 py-3 text-sm text-ink">
               {flash}
             </p>
+          )}
+
+          {(canSteward || canAdmin) && (
+            <div className={cardClass}>
+              <h2 className={sectionHeading}>{t("modulesHeading")}</h2>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                {canSteward && (
+                  <LoadingLink
+                    href="/stewards"
+                    className="group flex flex-col rounded-[2px] border border-[color:var(--isl-hairline-strong)] bg-sink p-4 transition-colors hover:border-ink"
+                  >
+                    <span className="font-display text-base font-bold text-ink">{t("stewardModule")}</span>
+                    <span className="mt-0.5 text-sm text-meta">{t("stewardModuleDesc")}</span>
+                  </LoadingLink>
+                )}
+                {canAdmin && (
+                  <LoadingLink
+                    href="/admin"
+                    className="group flex flex-col rounded-[2px] border border-[color:var(--isl-hairline-strong)] bg-sink p-4 transition-colors hover:border-ink"
+                  >
+                    <span className="font-display text-base font-bold text-ink">{t("adminModule")}</span>
+                    <span className="mt-0.5 text-sm text-meta">{t("adminModuleDesc")}</span>
+                  </LoadingLink>
+                )}
+              </div>
+            </div>
           )}
 
           <div className={cardClass}>

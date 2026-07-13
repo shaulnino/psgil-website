@@ -19,6 +19,11 @@
   },
   "account": {
     "title": "Your account",
+    "modulesHeading": "Go to",
+    "stewardModule": "Steward Portal",
+    "stewardModuleDesc": "Cases, verdicts and appeals",
+    "adminModule": "Account Administration",
+    "adminModuleDesc": "Manage accounts, roles and attendance",
     "passwordChanged": "Your password has been changed.",
     "photoUpdated": "Your driver photo has been updated.",
     "photoHeading": "Driver photo",

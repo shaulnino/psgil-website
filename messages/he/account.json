@@ -19,6 +19,11 @@
   },
   "account": {
     "title": "החשבון שלי",
+    "modulesHeading": "מעבר אל",
+    "stewardModule": "פורטל השיפוט",
+    "stewardModuleDesc": "תיקים, החלטות וערעורים",
+    "adminModule": "ניהול חשבונות",
+    "adminModuleDesc": "ניהול חשבונות, הרשאות ונוכחות",
     "passwordChanged": "הסיסמה שונתה.",
     "photoUpdated": "תמונת הנהג עודכנה.",
     "photoHeading": "תמונת נהג",

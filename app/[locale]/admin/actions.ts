@@ -10,9 +10,10 @@ import {
   removeUserById,
   setAccountActive,
   setDriverId,
+  updateUser,
   updateUserRoles,
 } from "@/lib/accounts/repository";
-import { ALL_ROLES, type AppRole } from "@/lib/accounts/types";
+import { ALL_ROLES, emailSchema, type AppRole } from "@/lib/accounts/types";
 
 const ADMIN_PATH = "/admin";
 
@@ -57,6 +58,41 @@ export async function removeAccountAction(formData: FormData) {
   if (userId) await removeUserById(userId, admin.id);
   revalidatePath(ADMIN_PATH);
   redirect(ADMIN_PATH);
+}
+
+/** Admin edits an account's display name and/or email. */
+export async function editAccountAction(formData: FormData) {
+  await requireAdmin();
+  const userId = uid(formData);
+  const name = String(formData.get("name") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  if (!userId || !name || !emailSchema.safeParse(email).success) {
+    redirect(`${ADMIN_PATH}?error=invalid`);
+  }
+  // Reject an email already owned by a *different* account.
+  const existing = await getUserByEmail(email);
+  if (existing && existing.id !== userId) redirect(`${ADMIN_PATH}?error=email-taken`);
+  await updateUser(userId, { name, email });
+  revalidatePath(ADMIN_PATH);
+  redirect(`${ADMIN_PATH}?ok=saved`);
+}
+
+/**
+ * Admin resets an account's password to a new temporary one. The account is
+ * flagged `mustChangePassword`, so the user is forced to set their own password
+ * on next login. Used when a user forgets their password and asks an admin.
+ */
+export async function resetPasswordAction(formData: FormData) {
+  await requireAdmin();
+  const userId = uid(formData);
+  const password = String(formData.get("password") ?? "");
+  if (!userId || password.length < 8) redirect(`${ADMIN_PATH}?error=invalid`);
+  await updateUser(userId, {
+    passwordHash: hashPassword(password),
+    mustChangePassword: true,
+  });
+  revalidatePath(ADMIN_PATH);
+  redirect(`${ADMIN_PATH}?ok=reset`);
 }
 
 /** Admin-provision an account directly. Must change password on first login. */
