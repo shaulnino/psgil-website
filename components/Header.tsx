@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import LoadingLink from "@/components/LoadingLink";
@@ -24,6 +24,12 @@ export default function Header({
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const t = useTranslations("common");
+
+  // Close the mobile menu on every navigation, so picking any item (nav link,
+  // account, language, Join Now) collapses the panel instead of leaving it open.
+  useEffect(() => {
+    setIsOpen(false);
+  }, [pathname]);
 
   return (
     <header className="sticky top-0 z-50 border-b border-[color:var(--isl-hairline)] bg-bone/95 pt-[env(safe-area-inset-top)] backdrop-blur-sm">
