@@ -9,13 +9,20 @@ import {
   listAttendanceForRace,
   putAttendance,
 } from "@/lib/attendance/store";
-import { attendanceStatusSchema, type AttendanceRecord, type AttendanceStatus } from "@/lib/attendance/types";
+import {
+  attendanceStatusSchema,
+  type AttendanceRecord,
+  type AttendanceSetBy,
+  type AttendanceStatus,
+} from "@/lib/attendance/types";
 
 export async function setAttendance(input: {
   raceId: string;
   driverId: string;
   accountId: string;
   status: AttendanceStatus;
+  /** Provenance — defaults to the driver setting their own RSVP. */
+  setBy?: AttendanceSetBy;
 }): Promise<AttendanceRecord> {
   const status = attendanceStatusSchema.parse(input.status);
   const record: AttendanceRecord = {
@@ -23,6 +30,7 @@ export async function setAttendance(input: {
     driverId: input.driverId.trim(),
     accountId: input.accountId,
     status,
+    setBy: input.setBy ?? "driver",
     updatedAt: new Date().toISOString(),
   };
   await putAttendance(record);

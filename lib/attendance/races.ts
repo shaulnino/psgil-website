@@ -1,17 +1,27 @@
 /**
- * Upcoming-races resolver for attendance (PW-3).
+ * Next-race attendance resolver (PW-3).
  *
- * Single place that decides *which* race-days a driver can RSVP to: the
- * not-yet-started race-day groups of the current season. Shared by the driver
- * surface (/account), the admin roster, and the server action's cutoff check —
- * so "you can RSVP until the race starts" is enforced in exactly one spot.
+ * Attendance targets exactly ONE race at a time — the next race-day of the
+ * current season — and is only editable inside a window:
+ *   - OPENS  3h after the previous race-day's start (or immediately if there is
+ *     no previous race, e.g. the season opener);
+ *   - CLOSES the day before the next race at 12:00 Israel time.
+ *
+ * This single resolver is the one place that decides the target race and the
+ * window, shared by the driver surface (/account), the admin roster, and the
+ * server actions, so the rule is enforced in exactly one spot. All times are
+ * Israel-local (Asia/Jerusalem) via `toIsraelTimestamp`.
  */
 import { fetchCsv, parseCsv } from "@/lib/csv";
 import {
-  getUpcomingRaceGroups,
+  getNextRaceGroup,
+  getPreviousRaceGroup,
   groupTimestamp,
   mapRaceEvents,
+  parseDateDDMMYYYY,
   raceGroupAnchorId,
+  toIsraelTimestamp,
+  type RaceGroup,
 } from "@/lib/scheduleData";
 import {
   GLOBAL_CSV_URLS,
@@ -20,7 +30,12 @@ import {
   resolveCurrentSeason,
 } from "@/lib/seasonConfig";
 
-/** A serializable summary of an upcoming race-day a driver can RSVP to. */
+/** Attendance opens this long after the previous race-day's start. */
+const OPEN_DELAY_MS = 3 * 60 * 60 * 1000;
+/** Attendance closes at this Israel-local time the day before the race. */
+const CLOSE_TIME = "12:00";
+
+/** A serializable summary of the race-day a driver can RSVP to. */
 export type UpcomingRace = {
   /** Anchor event_id of the race-day group (the RSVP key). */
   raceId: string;
@@ -40,30 +55,76 @@ export type UpcomingRace = {
   raceCount: number;
 };
 
-export async function fetchUpcomingRaces(): Promise<UpcomingRace[]> {
+export type AttendanceWindowState = "open" | "before" | "closed" | "none";
+
+export type NextRaceWindow = {
+  race: UpcomingRace | null;
+  /** UTC ms when RSVP opens; null = open immediately (no previous race). */
+  opensTs: number | null;
+  /** UTC ms when RSVP closes; null if the close time could not be computed. */
+  closesTs: number | null;
+  state: AttendanceWindowState;
+  /** Server "now" so callers render a consistent view. */
+  nowTs: number;
+};
+
+function toUpcomingRace(g: RaceGroup): UpcomingRace {
+  const first = g.events[0];
+  return {
+    raceId: raceGroupAnchorId(g),
+    season: g.season,
+    league: g.league,
+    date: g.date,
+    startTime: first?.start_time,
+    startTs: groupTimestamp(g),
+    name: first?.race_name ?? "",
+    nameHe: (first?.race_name_he || first?.race_name) ?? "",
+    raceCount: g.events.length,
+  };
+}
+
+function pad2(n: number): string {
+  return String(n).padStart(2, "0");
+}
+
+/** UTC ms for 12:00 Israel time on the calendar day before `dateStr` (DD.MM.YYYY). */
+function closeTimestampFor(dateStr: string): number | null {
+  const d = parseDateDDMMYYYY(dateStr);
+  if (!d) return null;
+  const dayBefore = new Date(d.getTime() - 24 * 60 * 60 * 1000);
+  const ds = `${pad2(dayBefore.getUTCDate())}.${pad2(dayBefore.getUTCMonth() + 1)}.${dayBefore.getUTCFullYear()}`;
+  return toIsraelTimestamp(ds, CLOSE_TIME);
+}
+
+/**
+ * Resolve the next race-day of the current season and its RSVP window.
+ * Returns `state: "none"` when there is no upcoming current-season race.
+ */
+export async function fetchNextRaceWindow(): Promise<NextRaceWindow> {
+  const nowTs = Date.now();
+  const empty: NextRaceWindow = { race: null, opensTs: null, closesTs: null, state: "none", nowTs };
+
   const [scheduleCsv, seasonsConfig] = await Promise.all([
     fetchCsv(GLOBAL_CSV_URLS.schedule).catch(() => ""),
     fetchSeasonsConfig(),
   ]);
-  if (!scheduleCsv) return [];
+  if (!scheduleCsv) return empty;
 
   const currentSeasonKey = resolveCurrentSeason(seasonsConfig).season_key;
   const events = mapRaceEvents(parseCsv<Record<string, string>>(scheduleCsv));
 
-  return getUpcomingRaceGroups(events)
-    .filter((g) => matchesSeason(g.season, currentSeasonKey))
-    .map((g) => {
-      const first = g.events[0];
-      return {
-        raceId: raceGroupAnchorId(g),
-        season: g.season,
-        league: g.league,
-        date: g.date,
-        startTime: first?.start_time,
-        startTs: groupTimestamp(g),
-        name: first?.race_name ?? "",
-        nameHe: (first?.race_name_he || first?.race_name) ?? "",
-        raceCount: g.events.length,
-      } satisfies UpcomingRace;
-    });
+  const next = getNextRaceGroup(events);
+  if (!next || !matchesSeason(next.season, currentSeasonKey)) return empty;
+
+  const nextStart = groupTimestamp(next);
+  const prev = getPreviousRaceGroup(events, nextStart);
+  const opensTs = prev ? groupTimestamp(prev) + OPEN_DELAY_MS : null;
+  const closesTs = closeTimestampFor(next.date);
+
+  let state: AttendanceWindowState;
+  if (closesTs != null && nowTs >= closesTs) state = "closed";
+  else if (opensTs != null && nowTs < opensTs) state = "before";
+  else state = "open";
+
+  return { race: toUpcomingRace(next), opensTs, closesTs, state, nowTs };
 }

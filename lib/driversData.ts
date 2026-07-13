@@ -246,19 +246,23 @@ export function normalizeRole(role: string): DriverRole {
  * via mergeComputedRatings / computeAllScopeRanks / computeCompetitionRanks.
  */
 export function mapDrivers(raw: Record<string, string>[]): Driver[] {
-  return raw.map((row) => ({
-    driver_id: row.driver_id ?? "",
-    name: row.name ?? "",
-    name_he: (row.name_he ?? "").trim() || undefined,
-    team_key: row.team_key ?? "",
-    role: normalizeRole(row.role ?? "main"),
-    number: row.number || undefined,
-    photo_url: row.photo_url || undefined,
-    photo_position: row.photo_position || undefined,
-    about: row.about || undefined,
-    about_he: (row.about_he ?? "").trim() || undefined,
-    rewards: [],
-  }));
+  return raw
+    // Skip CSV filler rows: trailing blank rows and stray note rows in the sheet
+    // have no id and/or no name and are not real drivers.
+    .filter((row) => (row.driver_id ?? "").trim() && (row.name ?? "").trim())
+    .map((row) => ({
+      driver_id: row.driver_id ?? "",
+      name: row.name ?? "",
+      name_he: (row.name_he ?? "").trim() || undefined,
+      team_key: row.team_key ?? "",
+      role: normalizeRole(row.role ?? "main"),
+      number: row.number || undefined,
+      photo_url: row.photo_url || undefined,
+      photo_position: row.photo_position || undefined,
+      about: row.about || undefined,
+      about_he: (row.about_he ?? "").trim() || undefined,
+      rewards: [],
+    }));
 }
 
 export function mapTeams(raw: Record<string, string>[]): Team[] {

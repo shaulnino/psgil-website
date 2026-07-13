@@ -1,15 +1,30 @@
 {
   "heading": "נוכחות במרוצים",
-  "hint": "עדכנו את הליגה אם תתחרו. אפשר לשנות את התשובה בכל עת עד תחילת המרוץ.",
-  "noRaces": "אין מרוצים קרובים לתגובה כרגע.",
+  "hint": "עדכנו את הליגה אם תתחרו בסבב הקרוב. אפשר לשנות את התשובה כל עוד הנוכחות פתוחה.",
+  "noRaces": "אין מרוץ קרוב לתגובה כרגע.",
+  "noResponse": "עדיין אין תשובה",
   "doubleHeader": "מקצה כפול",
+  "opensNotice": "הנוכחות נפתחת ב-{when}.",
+  "closesNotice": "אפשר לשנות את התשובה עד {when}.",
+  "closedNotice": "הנוכחות למרוץ זה נסגרה.",
   "status": {
     "going": "מגיע",
     "maybe": "אולי",
     "out": "לא מגיע"
   },
+  "rosterTitle": "מי מתחרה",
+  "rosterEmpty": "עדיין אין תגובות.",
   "adminTitle": "נוכחות במרוצים",
-  "adminDescription": "מי מתחרה בסבבים הקרובים.",
+  "adminDescription": "מי מתחרה בסבב הקרוב.",
   "backToAdmin": "← ניהול חשבונות",
-  "respondedCount": "{count} השיבו"
+  "respondedCount": "{count} השיבו",
+  "adminEditHint": "לחצו על תשובה כדי לקבוע או לשנות אותה עבור נהג. שינויים של מנהל מסומנים.",
+  "windowOpensAt": "הנוכחות נפתחת ב-{when}.",
+  "windowOpenUntil": "הנוכחות פתוחה עד {when}.",
+  "windowClosed": "הנוכחות למרוץ זה נסגרה.",
+  "colDriver": "נהג",
+  "colResponse": "תשובה",
+  "colUpdated": "עודכן",
+  "byDriver": "ע\"י הנהג",
+  "byAdmin": "ע\"י מנהל"
 }

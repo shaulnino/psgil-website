@@ -610,3 +610,21 @@ export function getNextRaceGroup(events: RaceEvent[]): RaceGroup | null {
 
   return future[0];
 }
+
+/**
+ * The race-day group immediately BEFORE a reference timestamp — the latest
+ * group whose start is strictly earlier than `beforeTs`, excluding cancelled
+ * groups. Used to anchor the attendance open window ("3h after the previous
+ * race started"). Returns null when there is no earlier race (e.g. the first
+ * race of a season). Deterministic regardless of completion status.
+ */
+export function getPreviousRaceGroup(events: RaceEvent[], beforeTs: number): RaceGroup | null {
+  const past = buildGroups(events).filter(
+    (g) =>
+      groupTimestamp(g) < beforeTs &&
+      !g.events.some((e) => e.status.toLowerCase() === "cancelled"),
+  );
+  if (past.length === 0) return null;
+  past.sort((a, b) => groupTimestamp(b) - groupTimestamp(a));
+  return past[0];
+}

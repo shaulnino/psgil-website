@@ -19,7 +19,6 @@
   },
   "account": {
     "title": "Your account",
-    "saved": "Your profile has been updated.",
     "passwordChanged": "Your password has been changed.",
     "photoUpdated": "Your driver photo has been updated.",
     "photoHeading": "Driver photo",
@@ -35,7 +34,6 @@
     "driverLink": "Linked driver",
     "notLinked": "Not linked to a driver profile",
     "roles": "Roles",
-    "save": "Save changes",
     "security": "Security",
     "currentPassword": "Current password",
     "newPassword": "New password",

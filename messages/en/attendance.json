@@ -1,15 +1,30 @@
 {
   "heading": "Race attendance",
-  "hint": "Let the league know if you'll be racing. You can change your answer any time until the race starts.",
-  "noRaces": "No upcoming races to respond to right now.",
+  "hint": "Let the league know if you'll be racing the next round. You can change your answer while attendance is open.",
+  "noRaces": "No upcoming race to respond to right now.",
+  "noResponse": "No response yet",
   "doubleHeader": "double-header",
+  "opensNotice": "Attendance opens {when}.",
+  "closesNotice": "You can change your answer until {when}.",
+  "closedNotice": "Attendance is closed for this race.",
   "status": {
     "going": "Going",
     "maybe": "Maybe",
     "out": "Can't make it"
   },
+  "rosterTitle": "Who's racing",
+  "rosterEmpty": "No responses yet.",
   "adminTitle": "Race Attendance",
-  "adminDescription": "Who's racing in the upcoming rounds.",
+  "adminDescription": "Who's racing in the next round.",
   "backToAdmin": "← Account administration",
-  "respondedCount": "{count} responded"
+  "respondedCount": "{count} responded",
+  "adminEditHint": "Click a response to set or change it for a driver. Admin changes are marked.",
+  "windowOpensAt": "Attendance opens {when}.",
+  "windowOpenUntil": "Attendance is open until {when}.",
+  "windowClosed": "Attendance is closed for this race.",
+  "colDriver": "Driver",
+  "colResponse": "Response",
+  "colUpdated": "Updated",
+  "byDriver": "by driver",
+  "byAdmin": "by admin"
 }

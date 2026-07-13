@@ -19,7 +19,6 @@
   },
   "account": {
     "title": "החשבון שלי",
-    "saved": "הפרופיל עודכן.",
     "passwordChanged": "הסיסמה שונתה.",
     "photoUpdated": "תמונת הנהג עודכנה.",
     "photoHeading": "תמונת נהג",
@@ -35,7 +34,6 @@
     "driverLink": "נהג מקושר",
     "notLinked": "לא מקושר לפרופיל נהג",
     "roles": "הרשאות",
-    "save": "שמירת שינויים",
     "security": "אבטחה",
     "currentPassword": "סיסמה נוכחית",
     "newPassword": "סיסמה חדשה",

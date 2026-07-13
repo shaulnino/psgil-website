@@ -28,6 +28,7 @@ function hydrate(raw: Partial<AttendanceRecord>): AttendanceRecord | null {
     driverId: raw.driverId,
     accountId: raw.accountId ?? "",
     status: raw.status as AttendanceStatus,
+    setBy: raw.setBy === "admin" ? "admin" : "driver", // grandfather pre-existing records
     updatedAt: raw.updatedAt ?? new Date(0).toISOString(),
   };
 }

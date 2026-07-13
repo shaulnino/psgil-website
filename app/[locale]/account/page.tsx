@@ -5,13 +5,17 @@ import { Button } from "@/components/ui/button";
 import { requireUser } from "@/lib/auth/session";
 import { logoutAction } from "@/lib/auth/actions";
 import { isDriverRole } from "@/lib/accounts/types";
-import { fetchUpcomingRaces } from "@/lib/attendance/races";
-import { listAttendanceForDriver } from "@/lib/attendance/repository";
-import type { AttendanceStatus } from "@/lib/attendance/types";
-import ProfileForm from "./ProfileForm";
+import { fetchCsv, parseCsv } from "@/lib/csv";
+import { mapDrivers, mapTeams } from "@/lib/driversData";
+import { GLOBAL_CSV_URLS } from "@/lib/seasonConfig";
+import { fetchNextRaceWindow } from "@/lib/attendance/races";
+import { getAttendance, listAttendanceForRace } from "@/lib/attendance/repository";
+import { formatIsraelDateTime } from "@/lib/attendance/format";
+import { buildAttendanceRoster, type AttendanceRoster as AttendanceRosterData } from "@/lib/attendance/roster";
 import PasswordForm from "./PasswordForm";
 import DriverPhotoForm from "./DriverPhotoForm";
-import AttendanceSection, { type AttendanceRaceView } from "./AttendanceSection";
+import AttendanceSection, { type AttendanceNextRaceView } from "./AttendanceSection";
+import AttendanceRoster from "./AttendanceRoster";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("account.account");
@@ -26,7 +30,7 @@ export default async function AccountPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ saved?: string; pw?: string; photo?: string }>;
+  searchParams: Promise<{ pw?: string; photo?: string }>;
 }) {
   const user = await requireUser("/account");
   const t = await getTranslations("account.account");
@@ -34,35 +38,56 @@ export default async function AccountPage({
   const { locale } = await params;
   const sp = await searchParams;
 
-  const flash = sp.saved
-    ? t("saved")
-    : sp.pw
-      ? t("passwordChanged")
-      : sp.photo
-        ? t("photoUpdated")
-        : null;
+  const flash = sp.pw ? t("passwordChanged") : sp.photo ? t("photoUpdated") : null;
   const showDriverPhoto = isDriverRole(user.roles);
-  const showAttendance = isDriverRole(user.roles) && !!user.driverId;
+  const canRsvp = isDriverRole(user.roles) && !!user.driverId;
 
-  let attendanceRaces: AttendanceRaceView[] = [];
-  if (showAttendance) {
-    const [upcoming, myRsvps] = await Promise.all([
-      fetchUpcomingRaces(),
-      listAttendanceForDriver(user.driverId!),
+  // Attendance targets the current next race. The "who's racing" roster is
+  // visible to any signed-in user; the RSVP controls only to linked drivers.
+  let attendanceHasRace = false;
+  let attendanceRace: AttendanceNextRaceView | null = null;
+  let attendanceRoster: AttendanceRosterData | null = null;
+
+  const raceWindow = await fetchNextRaceWindow();
+  if (raceWindow.race) {
+    attendanceHasRace = true;
+    const [records, driversCsv, teamsCsv, myRec] = await Promise.all([
+      listAttendanceForRace(raceWindow.race.raceId),
+      fetchCsv(GLOBAL_CSV_URLS.drivers).catch(() => ""),
+      fetchCsv(GLOBAL_CSV_URLS.teams).catch(() => ""),
+      canRsvp ? getAttendance(raceWindow.race.raceId, user.driverId!) : Promise.resolve(null),
     ]);
-    const statusByRace = new Map<string, AttendanceStatus>(
-      myRsvps.map((r) => [r.raceId, r.status]),
+
+    attendanceRoster = buildAttendanceRoster(
+      records,
+      driversCsv ? mapDrivers(parseCsv(driversCsv)) : [],
+      teamsCsv ? mapTeams(parseCsv(teamsCsv)) : [],
+      locale,
     );
-    attendanceRaces = upcoming.map((race) => {
-      const name = locale === "he" ? race.nameHe : race.name;
-      const meta = [race.date, race.startTime, race.league].filter(Boolean).join(" · ");
-      return {
-        raceId: race.raceId,
-        label: race.raceCount > 1 ? `${name} (${tAtt("doubleHeader")})` : name,
-        dateLabel: meta,
-        currentStatus: statusByRace.get(race.raceId) ?? null,
+
+    if (canRsvp) {
+      const name = locale === "he" ? raceWindow.race.nameHe : raceWindow.race.name;
+      const label = raceWindow.race.raceCount > 1 ? `${name} (${tAtt("doubleHeader")})` : name;
+      const dateLabel = [raceWindow.race.date, raceWindow.race.startTime, raceWindow.race.league]
+        .filter(Boolean)
+        .join(" · ");
+      let notice: string | null = null;
+      if (raceWindow.state === "before" && raceWindow.opensTs != null) {
+        notice = tAtt("opensNotice", { when: formatIsraelDateTime(raceWindow.opensTs, locale) });
+      } else if (raceWindow.state === "closed") {
+        notice = tAtt("closedNotice");
+      } else if (raceWindow.state === "open" && raceWindow.closesTs != null) {
+        notice = tAtt("closesNotice", { when: formatIsraelDateTime(raceWindow.closesTs, locale) });
+      }
+      attendanceRace = {
+        raceId: raceWindow.race.raceId,
+        label,
+        dateLabel,
+        currentStatus: myRec?.status ?? null,
+        editable: raceWindow.state === "open",
+        notice,
       };
-    });
+    }
   }
 
   return (
@@ -77,10 +102,15 @@ export default async function AccountPage({
 
           <div className={cardClass}>
             <h2 className={sectionHeading}>{t("profile")}</h2>
-            <div className="mt-4">
-              <ProfileForm name={user.name} email={user.email} />
-            </div>
-            <dl className="mt-6 space-y-2 border-t border-[color:var(--isl-hairline)] pt-4 text-sm">
+            <dl className="mt-4 space-y-2 text-sm">
+              <div className="flex justify-between gap-4">
+                <dt className="text-meta">{t("name")}</dt>
+                <dd className="text-ink-2">{user.name}</dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-meta">{t("email")}</dt>
+                <dd className="text-ink-2">{user.email}</dd>
+              </div>
               <div className="flex justify-between gap-4">
                 <dt className="text-meta">{t("roles")}</dt>
                 <dd className="text-ink-2">{user.roles.join(", ") || "—"}</dd>
@@ -105,12 +135,19 @@ export default async function AccountPage({
             </div>
           )}
 
-          {showAttendance && (
+          {attendanceHasRace && (
             <div className={cardClass}>
               <h2 className={sectionHeading}>{tAtt("heading")}</h2>
-              <div className="mt-4">
-                <AttendanceSection races={attendanceRaces} />
-              </div>
+              {canRsvp && (
+                <div className="mt-4">
+                  <AttendanceSection race={attendanceRace} />
+                </div>
+              )}
+              {attendanceRoster && (
+                <div className={canRsvp ? "mt-6 border-t border-[color:var(--isl-hairline)] pt-6" : "mt-4"}>
+                  <AttendanceRoster roster={attendanceRoster} />
+                </div>
+              )}
             </div>
           )}
 

@@ -126,15 +126,6 @@ export async function resetPasswordAction(_prev: FormState, formData: FormData):
   redirect("/login?reset=1");
 }
 
-export async function updateProfileAction(_prev: FormState, formData: FormData): Promise<FormState> {
-  const user = await getCurrentUser();
-  if (!user) redirect("/login");
-  const name = String(formData.get("name") ?? "").trim();
-  if (name.length < 1 || name.length > 120) return { error: "Please enter a valid name." };
-  await updateUser(user.id, { name });
-  redirect("/account?saved=1");
-}
-
 /** A linked driver uploads their profile photo (overrides CSV photo_url). */
 export async function uploadDriverPhotoAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const user = await getCurrentUser();

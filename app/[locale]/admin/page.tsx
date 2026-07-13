@@ -44,13 +44,14 @@ export default async function AdminPage({
 
   return (
     <main className="text-ink-2">
-      <Section title="Account Administration" description="Approve accounts, set roles, and link drivers." pageHeader>
+      <Section title="Account Administration" description="Create accounts, set roles, and link drivers." pageHeader>
         <div className="mx-auto max-w-5xl space-y-6">
-          <p className="text-sm">
-            <LoadingLink href="/admin/attendance" className="text-oxblood hover:text-oxblood-deep">
-              Race attendance →
-            </LoadingLink>
-          </p>
+          <LoadingLink
+            href="/admin/attendance"
+            className="inline-flex items-center rounded-[2px] bg-oxblood px-4 py-2.5 text-sm font-semibold uppercase tracking-[0.06em] text-bone transition-colors hover:bg-oxblood-deep"
+          >
+            Race attendance
+          </LoadingLink>
 
           {error && (
             <p className="rounded-[2px] border border-[color:var(--isl-danger)] px-3 py-2 text-sm text-[color:var(--isl-danger)]">
