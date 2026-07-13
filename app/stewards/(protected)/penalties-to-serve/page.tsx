@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { can, requireStewardUser } from "@/lib/stewards/auth";
+import { isDriverRole } from "@/lib/accounts/types";
 import { fmtDate } from "@/app/stewards/lib/dates";
 import {
   listPenaltiesToServe,
@@ -33,7 +34,7 @@ export default async function PenaltiesToServePage({ searchParams }: { searchPar
   ]);
 
   const driverName = (id: string) => users.find((u) => u.id === id)?.name ?? id;
-  const memberDrivers = users.filter((u) => u.roles.includes("member"));
+  const memberDrivers = users.filter((u) => isDriverRole(u.roles));
 
   const active       = penalties.filter((p) => p.status === "assigned" || p.status === "pending");
   const awaiting     = penalties.filter((p) => p.status === "awaiting_confirmation");

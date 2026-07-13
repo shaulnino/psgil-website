@@ -39,8 +39,10 @@ const TooltipPortalContext = createContext<TooltipPortalCtx>({
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 
+// Bypass next/image optimization for remote photos and for dynamic uploaded
+// driver photos (PW-2e), whose ?v= cache-buster next/image rejects locally.
 function isRemote(src?: string) {
-  return !!src && src.startsWith("http");
+  return !!src && (src.startsWith("http") || src.includes("?"));
 }
 
 function getRankExplanation(mode: StatMode, comp: CompMode): string {

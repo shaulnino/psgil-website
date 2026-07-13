@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { SignJWT, jwtVerify } from "jose";
 import { getUserById } from "@/lib/stewards/repository";
+import { ALL_ROLES } from "@/lib/accounts/types";
 import type { StewardRole, StewardUser } from "@/lib/stewards/types";
 
 const SESSION_COOKIE   = "steward_session";
@@ -10,31 +11,42 @@ const MAX_AGE_REMEMBER = 60 * 60 * 24 * 365 * 10; // 10 years (≈ no limit)
 
 const DEV_FALLBACK_SECRET = "dev-steward-secret-change-me";
 
-// Warn loudly in production when the session secret has not been configured.
-// This appears immediately in Netlify function logs on first request.
-if (process.env.NODE_ENV === "production") {
-  const configured = process.env.STEWARD_SESSION_SECRET;
-  if (!configured || configured === DEV_FALLBACK_SECRET) {
-    console.error(
-      "[steward-auth] CRITICAL: STEWARD_SESSION_SECRET is not set (or uses the default dev " +
-      "value). The JWT signing secret is publicly known. Set this environment variable in " +
-      "your Netlify site settings immediately.",
-    );
-  }
-}
-
 type SessionPayload = { sub: string; roles: StewardRole[] };
 
 const normalizeRoles = (input: unknown): StewardRole[] => {
   const arr = Array.isArray(input) ? input : typeof input === "string" ? [input] : [];
-  const valid = arr.filter(
-    (r): r is StewardRole => r === "admin" || r === "steward" || r === "member",
+  const valid = arr.filter((r): r is StewardRole =>
+    (ALL_ROLES as string[]).includes(r as string),
   );
   return [...new Set(valid)];
 };
 
-const secret = () =>
-  new TextEncoder().encode(process.env.STEWARD_SESSION_SECRET ?? DEV_FALLBACK_SECRET);
+// Resolve the JWT signing secret. In production we REFUSE to fall back to the
+// publicly-known dev secret: signing/verifying sessions with it would make the
+// steward portal trivially forgeable. Failing loudly here (on the first login
+// or session check) turns a silent security hole into an obvious outage that
+// forces STEWARD_SESSION_SECRET to be set in Netlify. Dev keeps the fallback.
+const secret = () => {
+  const configured = process.env.STEWARD_SESSION_SECRET;
+  if (!configured || configured === DEV_FALLBACK_SECRET) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        "[steward-auth] STEWARD_SESSION_SECRET is not configured in production. " +
+        "Refusing to sign or verify sessions with the publicly-known dev fallback. " +
+        "Set STEWARD_SESSION_SECRET in the Netlify site environment settings.",
+      );
+    }
+    return new TextEncoder().encode(DEV_FALLBACK_SECRET);
+  }
+  return new TextEncoder().encode(configured);
+};
+
+/**
+ * The HS256 signing key, shared with lib/auth (session cookie + email
+ * verification / password-reset tokens) so all tokens use the same secret and
+ * the same PW-0 production hard-fail. Exported rather than duplicated.
+ */
+export const getSessionSecret = secret;
 
 export async function createStewardSession(user: StewardUser, rememberMe = false) {
   const jwt = new SignJWT({ roles: user.roles })
@@ -86,6 +98,10 @@ export async function requireStewardUser(): Promise<StewardUser> {
   const user = await getCurrentStewardUser();
   if (!user || !user.isActive) redirect("/stewards/login");
   if (user.mustChangePassword) redirect("/stewards/change-password");
+  // Being signed in is not enough to enter the steward area — the account must
+  // hold a steward-area role. Plain registered_users are sent to their account
+  // page. (Accounts are admin-provisioned; suspended accounts fail isActive above.)
+  if (!can(user, "view_steward_area")) redirect("/account");
   return user;
 }
 
@@ -134,13 +150,17 @@ export type StewardPermission =
   | "delete_case"
   | "manage_users"
   | "manage_penalties"
-  | "reset_password";
+  | "reset_password"
+  | "submit_own_attendance"
+  | "manage_attendance";
 
 const PERMISSION_MATRIX: Record<StewardPermission, StewardRole[]> = {
-  view_steward_area:        ["member", "steward", "admin"],
-  create_complaint:         ["member", "admin"],
-  submit_response:          ["member", "admin"],
-  submit_appeal:            ["member", "admin"],
+  // `driver` is the Identity-v2 participant role; `member` is kept for legacy
+  // accounts/cases until the member→driver migration (PW-2d).
+  view_steward_area:        ["driver", "member", "steward", "admin"],
+  create_complaint:         ["driver", "member", "admin"],
+  submit_response:          ["driver", "member", "admin"],
+  submit_appeal:            ["driver", "member", "admin"],
   view_internal_discussion: ["steward", "admin"],
   comment_internally:       ["steward", "admin"],
   edit_verdict:             ["steward", "admin"],
@@ -150,6 +170,10 @@ const PERMISSION_MATRIX: Record<StewardPermission, StewardRole[]> = {
   manage_users:             ["admin"],
   manage_penalties:         ["admin"],
   reset_password:           ["admin"],
+  // PW-3 attendance: a linked driver RSVPs to their own races; admins manage
+  // and view the full roster.
+  submit_own_attendance:    ["driver", "member", "admin"],
+  manage_attendance:        ["admin"],
 };
 
 /** True if the user is allowed to perform the named action. */
@@ -161,7 +185,7 @@ export const can = (user: StewardUser, permission: StewardPermission): boolean =
 // ----------------------------------------------------------------
 
 export const canCreateComplaint = (roles: StewardRole[]) =>
-  roles.includes("member") || roles.includes("admin");
+  roles.includes("driver") || roles.includes("member") || roles.includes("admin");
 
 export const canCommentInternally = (roles: StewardRole[]) =>
   roles.includes("steward") || roles.includes("admin");

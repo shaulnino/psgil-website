@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { isDriverRole } from "@/lib/accounts/types";
 import { readStore, writeStore } from "@/lib/stewards/store";
 import type {
   Appeal,
@@ -15,7 +16,6 @@ import type {
   PenaltyToServe,
   PenaltyToServeStatus,
   StewardCase,
-  StewardRole,
   StewardStore,
   StewardUser,
   Verdict,
@@ -27,9 +27,20 @@ import { fetchCsv, parseCsv } from "@/lib/csv";
 import { mapRaceEvents, toIsraelTimestamp } from "@/lib/scheduleData";
 import { GLOBAL_CSV_URLS } from "@/lib/seasonConfig";
 
-export type RemoveUserResult =
-  | { ok: true }
-  | { ok: false; reason: "not-found" | "cannot-remove-self" | "last-admin" };
+// Identity is unified under the accounts module (PW-2a). The user CRUD API is
+// re-exported here under its historical names so every existing steward call
+// site keeps working unchanged.
+export {
+  listUsers,
+  getUserById,
+  getUserByEmail,
+  createUser,
+  updateUser,
+  updateUserRoles,
+  setUserLocale,
+  removeUserById,
+} from "@/lib/accounts/repository";
+export type { RemoveUserResult, NewUserInput } from "@/lib/accounts/repository";
 
 export type PendingIndicator = { id: string; label: string; count: number; href: string };
 
@@ -43,15 +54,6 @@ export type CaseWithRelations = {
   internalComments: (InternalComment & { author: StewardUser | null })[];
   verdict: Verdict | null;
   driverVerdicts: DriverVerdictWithDriver[];
-};
-
-type NewUserInput = {
-  name: string;
-  email: string;
-  passwordHash: string;
-  roles: StewardRole[];
-  /** Defaults to true — new accounts must change password on first login. */
-  mustChangePassword?: boolean;
 };
 
 type NewCaseInput = {
@@ -108,95 +110,8 @@ const STATUSES: CaseStatus[] = [
   "Archived",
 ];
 
-const VALID_ROLES: StewardRole[] = ["admin", "steward", "member"];
-
-const normalizeRoles = (roles: StewardRole[]) =>
-  [...new Set(roles.filter((r) => VALID_ROLES.includes(r)))];
-
 const attachmentsFromUrls = (urls: string[]) =>
   urls.map((url, idx) => ({ name: `Attachment ${idx + 1}`, url }));
-
-export async function listUsers(): Promise<StewardUser[]> {
-  const store = await readStore();
-  return store.users.map((u) => ({ ...u, roles: normalizeRoles(u.roles ?? []) }));
-}
-
-export async function getUserById(id: string) {
-  const users = await listUsers();
-  return users.find((u) => u.id === id) ?? null;
-}
-
-export async function getUserByEmail(email: string) {
-  const users = await listUsers();
-  return users.find((u) => u.email.toLowerCase() === email.toLowerCase()) ?? null;
-}
-
-export async function createUser(input: NewUserInput) {
-  const store = await readStore();
-  const now = new Date().toISOString();
-  const user: StewardUser = {
-    id: `u_${randomUUID()}`,
-    name: input.name.trim(),
-    email: input.email.trim().toLowerCase(),
-    roles: normalizeRoles(input.roles),
-    passwordHash: input.passwordHash,
-    isActive: true,
-    mustChangePassword: input.mustChangePassword ?? true,
-    createdAt: now,
-    updatedAt: now,
-  };
-  store.users.push(user);
-  await writeStore(store);
-  return user;
-}
-
-export async function updateUser(
-  userId: string,
-  fields: { name?: string; email?: string; passwordHash?: string; mustChangePassword?: boolean },
-) {
-  const store = await readStore();
-  const user = store.users.find((u) => u.id === userId);
-  if (!user) return false;
-  if (fields.name !== undefined)                user.name              = fields.name.trim();
-  if (fields.email !== undefined)               user.email             = fields.email.trim().toLowerCase();
-  if (fields.passwordHash !== undefined)        user.passwordHash      = fields.passwordHash;
-  if (fields.mustChangePassword !== undefined)  user.mustChangePassword = fields.mustChangePassword;
-  user.updatedAt = new Date().toISOString();
-  await writeStore(store);
-  return true;
-}
-
-export async function updateUserRoles(userId: string, roles: StewardRole[]) {
-  const store = await readStore();
-  const user = store.users.find((u) => u.id === userId);
-  if (!user) return;
-  user.roles = normalizeRoles(roles);
-  user.updatedAt = new Date().toISOString();
-  await writeStore(store);
-}
-
-export async function setUserLocale(userId: string, locale: "en" | "he") {
-  const store = await readStore();
-  const user = store.users.find((u) => u.id === userId);
-  if (!user) return;
-  user.locale = locale;
-  user.updatedAt = new Date().toISOString();
-  await writeStore(store);
-}
-
-export async function removeUserById(userId: string, actorUserId: string): Promise<RemoveUserResult> {
-  if (userId === actorUserId) return { ok: false, reason: "cannot-remove-self" };
-  const store = await readStore();
-  const target = store.users.find((u) => u.id === userId);
-  if (!target) return { ok: false, reason: "not-found" };
-  if (target.roles.includes("admin")) {
-    const adminCount = store.users.filter((u) => u.isActive && u.roles.includes("admin")).length;
-    if (adminCount <= 1) return { ok: false, reason: "last-admin" };
-  }
-  store.users = store.users.filter((u) => u.id !== userId);
-  await writeStore(store);
-  return { ok: true };
-}
 
 const WAITING_DELAY_MS = 10 * 60 * 1000; // 10 minutes
 
@@ -1213,7 +1128,7 @@ export async function getPendingIndicatorsForUser(user: StewardUser): Promise<Pe
   const respondedCaseIds = new Set(
     store.responses.filter((r) => r.userId === user.id).map((r) => r.caseId),
   );
-  if (user.roles.includes("member")) {
+  if (isDriverRole(user.roles)) {
     const pendingResponse = activeCases.filter(
       (c) => c.involvedDriverIds.includes(user.id) && !respondedCaseIds.has(c.id),
     ).length;

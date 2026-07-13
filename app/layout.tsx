@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
@@ -17,7 +17,10 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import NextRaceWidgetServer from "@/components/NextRaceWidgetServer";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import { GA_ID } from "@/lib/ga";
+import { getCurrentUser } from "@/lib/auth/session";
+import { can } from "@/lib/stewards/auth";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -69,6 +72,12 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: t("seo.title"),
     description: t("seo.description"),
+    applicationName: "F1ISL",
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "black-translucent",
+      title: "F1ISL",
+    },
     icons: {
       icon: [
         { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
@@ -81,6 +90,15 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+// PWA / mobile viewport (PW-1). `viewport-fit=cover` lets content extend into
+// the safe-area insets on notched devices in the installed app.
+export const viewport: Viewport = {
+  themeColor: "#0f1113",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -89,6 +107,12 @@ export default async function RootLayout({
   const messages = await getMessages();
   const locale = await getLocale();
   const dir = locale === "he" ? "rtl" : "ltr";
+  const currentUser = await getCurrentUser();
+  const authed = !!currentUser;
+  // Only steward-area accounts (member/steward/admin) get the Stewards entry —
+  // otherwise the link would just bounce a regular account back to /account.
+  const canSteward = !!currentUser && can(currentUser, "view_steward_area");
+  const canAdmin = !!currentUser && can(currentUser, "manage_users");
   return (
     <html lang={locale} dir={dir} data-scroll-behavior="smooth">
       <body
@@ -121,8 +145,9 @@ export default async function RootLayout({
         <Suspense fallback={null}>
           <GoogleAnalytics />
         </Suspense>
+        <ServiceWorkerRegister />
 
-        <Header />
+        <Header authed={authed} canSteward={canSteward} canAdmin={canAdmin} />
         {children}
         <Footer />
         <Suspense fallback={null}>

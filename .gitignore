@@ -43,10 +43,17 @@ next-env.d.ts
 # steward module — live data, never commit
 /data/stewards/
 /public/uploads/stewards/
+/public/uploads/drivers/
+
+# accounts store — live data (PW-2a), never commit
+/data/accounts/
 
 # accounts + driver uploads — live data (emails, password hashes, photos), never commit
 /data/accounts/
 /public/uploads/drivers/
+
+# attendance store — live data (PW-3), never commit
+/data/attendance/
 
 # Local Netlify folder
 .netlify

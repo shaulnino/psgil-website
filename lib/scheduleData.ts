@@ -567,6 +567,27 @@ export function getLastRaceGroup(events: RaceEvent[]): RaceGroup | null {
 }
 
 /**
+ * A stable identifier for a race-day group: the event_id of its earliest race
+ * (events within a group are sorted by race_number ascending). Used as the
+ * attendance key so a double-header night is a single RSVP (PW-3).
+ */
+export function raceGroupAnchorId(group: RaceGroup): string {
+  return group.events[0]?.event_id ?? "";
+}
+
+/**
+ * All upcoming race-day groups that haven't started yet, earliest first.
+ * Cancelled groups are excluded. Used by the attendance surfaces (PW-3).
+ */
+export function getUpcomingRaceGroups(events: RaceEvent[]): RaceGroup[] {
+  const nowUTC = Date.now();
+  const future = buildGroups(events).filter(
+    (g) => groupTimestamp(g) > nowUTC && !g.events.some((e) => e.status.toLowerCase() === "cancelled"),
+  );
+  return future.sort((a, b) => groupTimestamp(a) - groupTimestamp(b));
+}
+
+/**
  * Return the next upcoming race-day group that hasn't started yet.
  * Uses start_time for time-aware comparison.
  * Among ties, prefer groups with Scheduled events.
@@ -588,4 +609,22 @@ export function getNextRaceGroup(events: RaceEvent[]): RaceGroup | null {
   });
 
   return future[0];
+}
+
+/**
+ * The race-day group immediately BEFORE a reference timestamp — the latest
+ * group whose start is strictly earlier than `beforeTs`, excluding cancelled
+ * groups. Used to anchor the attendance open window ("3h after the previous
+ * race started"). Returns null when there is no earlier race (e.g. the first
+ * race of a season). Deterministic regardless of completion status.
+ */
+export function getPreviousRaceGroup(events: RaceEvent[], beforeTs: number): RaceGroup | null {
+  const past = buildGroups(events).filter(
+    (g) =>
+      groupTimestamp(g) < beforeTs &&
+      !g.events.some((e) => e.status.toLowerCase() === "cancelled"),
+  );
+  if (past.length === 0) return null;
+  past.sort((a, b) => groupTimestamp(b) - groupTimestamp(a));
+  return past[0];
 }

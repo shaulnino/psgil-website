@@ -131,11 +131,12 @@ export default function ZoomableImage({
             onClick={(event) => event.stopPropagation()}
           >
             <div className="absolute end-3 top-3 z-10 flex items-center gap-2">
-              <div className="flex items-center gap-1 rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-1">
+              <div className="flex items-center gap-1 rounded-[2px] border border-[color:var(--isl-hairline)] bg-black/40 p-1 backdrop-blur-sm">
                 <button
                   onClick={() => setZoom((value) => clampZoom(value - 0.2))}
                   aria-label="Zoom out"
-                  className="flex h-11 w-11 items-center justify-center rounded-[2px] text-ink-2 transition hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
+                  disabled={zoom <= 1}
+                  className="flex h-11 w-11 items-center justify-center rounded-[2px] text-ink-2 transition hover:text-ink disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
                 >
                   −
                 </button>
@@ -144,12 +145,13 @@ export default function ZoomableImage({
                   aria-label="Reset zoom"
                   className="num flex h-11 items-center justify-center px-2 text-xs uppercase tracking-[0.2em] text-meta transition hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
                 >
-                  100%
+                  {Math.round(zoom * 100)}%
                 </button>
                 <button
                   onClick={() => setZoom((value) => clampZoom(value + 0.2))}
                   aria-label="Zoom in"
-                  className="flex h-11 w-11 items-center justify-center rounded-[2px] text-ink-2 transition hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
+                  disabled={zoom >= 3}
+                  className="flex h-11 w-11 items-center justify-center rounded-[2px] text-ink-2 transition hover:text-ink disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
                 >
                   +
                 </button>
@@ -158,7 +160,7 @@ export default function ZoomableImage({
                 ref={closeButtonRef}
                 onClick={() => setIsOpen(false)}
                 aria-label="Close image preview"
-                className="flex h-11 w-11 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper text-ink-2 transition hover:border-oxblood hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
+                className="flex h-11 w-11 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-black/40 text-ink-2 backdrop-blur-sm transition hover:border-oxblood hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
               >
                 ×
               </button>

@@ -63,6 +63,7 @@ import {
   notifyVerdictPublished,
 } from "@/lib/stewards/notifications";
 import type { CaseStatus, StewardRole, VerdictDecision, WeekendSession } from "@/lib/stewards/types";
+import { isDriverRole } from "@/lib/accounts/types";
 
 const parseLines = (value: FormDataEntryValue | null) =>
   typeof value === "string"
@@ -99,9 +100,50 @@ const shortRaceLabel = (season: string, round: string) => {
   return `S${s}R${race}${circuit ? ` ${circuit}` : ""}`;
 };
 
+// Attachment safety limits. Case evidence is screenshots, short clips, PDFs.
+// The 20 MB `serverActions.bodySizeLimit` (next.config.ts) caps the whole
+// request; this caps each individual file and restricts the accepted types so
+// an authenticated user can't stash arbitrary executables in the blob store.
+const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024; // 10 MB per file
+const ALLOWED_ATTACHMENT_EXTS = new Set([
+  ".jpg", ".jpeg", ".png", ".gif", ".webp",
+  ".pdf", ".txt",
+  ".mp4", ".mov", ".webm",
+]);
+const ALLOWED_ATTACHMENT_MIMES = new Set(["application/pdf", "text/plain"]);
+const ALLOWED_ATTACHMENT_MIME_PREFIXES = ["image/", "video/"];
+
+// Validates a single upload and returns the safe extension to use in the
+// stored filename ("" when there's no usable extension). Throws a
+// user-readable Error on oversized or disallowed files so the whole
+// submission is rejected rather than storing an unvalidated file.
+function validatedExtension(file: File): string {
+  const label = file.name || "file";
+  if (file.size > MAX_ATTACHMENT_BYTES) {
+    const mb = Math.round(MAX_ATTACHMENT_BYTES / (1024 * 1024));
+    throw new Error(`Attachment "${label}" exceeds the ${mb} MB per-file limit.`);
+  }
+  const ext = path.extname(file.name || "").toLowerCase();
+  const type = (file.type || "").toLowerCase();
+  const extOk = ALLOWED_ATTACHMENT_EXTS.has(ext);
+  const mimeOk =
+    ALLOWED_ATTACHMENT_MIMES.has(type) ||
+    ALLOWED_ATTACHMENT_MIME_PREFIXES.some((prefix) => type.startsWith(prefix));
+  if (!extOk || !mimeOk) {
+    throw new Error(
+      `Attachment "${label}" has an unsupported file type. Allowed: images, video, PDF, or text.`,
+    );
+  }
+  return ext.length < 12 ? ext : "";
+}
+
 async function saveAttachments(files: File[]): Promise<string[]> {
   const validFiles = files.filter((f) => f && f.size > 0);
   if (validFiles.length === 0) return [];
+
+  // Validate every file up front so a single bad file rejects the batch before
+  // any I/O — no partial writes.
+  const prepared = validFiles.map((file) => ({ file, ext: validatedExtension(file) }));
 
   const isNetlify = !!(process.env.NETLIFY_BLOBS_CONTEXT || process.env.NETLIFY_DEV);
 
@@ -110,9 +152,8 @@ async function saveAttachments(files: File[]): Promise<string[]> {
     const { getStore } = await import("@netlify/blobs");
     const blobStore = getStore("steward-files");
     const urls: string[] = [];
-    for (const file of validFiles) {
-      const ext = path.extname(file.name || "").toLowerCase();
-      const key = `${Date.now()}-${randomUUID()}${ext && ext.length < 12 ? ext : ""}`;
+    for (const { file, ext } of prepared) {
+      const key = `${Date.now()}-${randomUUID()}${ext}`;
       const buffer = await file.arrayBuffer();
       await blobStore.set(key, buffer, {
         metadata: {
@@ -128,9 +169,8 @@ async function saveAttachments(files: File[]): Promise<string[]> {
     const dir = path.join(process.cwd(), "public", "uploads", "stewards");
     await mkdir(dir, { recursive: true });
     const urls: string[] = [];
-    for (const file of validFiles) {
-      const ext = path.extname(file.name || "").toLowerCase();
-      const filename = `${Date.now()}-${randomUUID()}${ext && ext.length < 12 ? ext : ""}`;
+    for (const { file, ext } of prepared) {
+      const filename = `${Date.now()}-${randomUUID()}${ext}`;
       await writeFile(path.join(dir, filename), Buffer.from(await file.arrayBuffer()));
       urls.push(`/uploads/stewards/${filename}`);
     }
@@ -186,8 +226,8 @@ export async function createComplaintAction(formData: FormData) {
   const attachmentUrls = await saveAttachments(uploadedFiles);
 
   const users = await listUsers();
-  const memberIds = new Set(users.filter((u) => u.roles.includes("member")).map((u) => u.id));
-  const involvedDriverIds = requestedInvolved.filter((id) => memberIds.has(id));
+  const driverIds = new Set(users.filter((u) => isDriverRole(u.roles)).map((u) => u.id));
+  const involvedDriverIds = requestedInvolved.filter((id) => driverIds.has(id));
 
   const isRaceLike = weekendSession === "Race" || weekendSession === "Sprint";
   const incidentLapNumber =

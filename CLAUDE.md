@@ -3,6 +3,13 @@
 > **Read this before touching any file.**
 > This document is the canonical reference for Claude Code operating on this repository.
 
+> **Canonical companion docs (root):**
+> - [PROJECT_VISION.md](./PROJECT_VISION.md) — **stable** product vision. Do not edit unless the product vision itself changes.
+> - [ARCHITECTURE.md](./ARCHITECTURE.md) — **living** technical reference. Update it in the same change whenever architecture, routing, backend, APIs, auth, permissions, PWA behavior, deployment, or a major implementation decision changes.
+> - [DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md) — **living** visual reference. Update it in the same change whenever reusable UI, styling, components, layouts, responsive behavior, or accessibility decisions change.
+>
+> The `docs/*` migration files are **historical** (they describe an earlier light-editorial theme that was superseded by the shipped dark "Race Control" theme). Treat ARCHITECTURE.md / DESIGN_SYSTEM.md as current truth.
+
 ---
 
 ## 1. Project Overview
@@ -428,7 +435,9 @@ These files exist for development and debugging purposes. Do not expose or enabl
 
 ## 15. Image Asset Convention
 
-Driver images live at `/public/drivers/{driver_id}.webp`. The `driver_id` is the stable snake_case identifier from the `csv_drivers` tab (e.g., `shaul_ezra`, `guy_cohen`). New drivers need a `.webp` image added manually.
+Driver photos come from the **`photo_url` column of the `csv_drivers` tab** (any local `/…` path or external URL), with an optional `photo_position` column for CSS `object-position`. `mapDrivers()` in `lib/driversData.ts` reads `photo_url`; components render `driver.photo_url || placeholder` (`/placeholders/driver.png`). There is **no** `/public/drivers/{driver_id}.webp` filename convention in the code — that earlier note was inaccurate (corrected 2026-07-05). The `driver_id` is the stable snake_case identifier from `csv_drivers` (e.g., `shaul_ezra`).
+
+> **Uploaded photos (PW-2e, live):** a linked driver can upload a photo from `/account`. It's stored dynamically (per-driver Netlify Blob in prod, `public/uploads/drivers/` in dev, served via `/api/driver-photo/[driverId]`) and **overrides `photo_url`** for that driver via `applyUploadedDriverPhotos()`, with the CSV value as fallback. See [docs/pw-2-identity-design.md](./docs/pw-2-identity-design.md) §13.
 
 Event poster images live at `/public/events/{event_id}.webp` or `.jpg`.
 

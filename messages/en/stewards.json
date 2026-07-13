@@ -6,7 +6,9 @@
     "role": {
       "member": "member",
       "steward": "steward",
-      "admin": "admin"
+      "admin": "admin",
+      "driver": "driver",
+      "registered_user": "registered"
     },
     "badge": {
       "pwReset": "pw reset"
@@ -655,7 +657,9 @@
     "role": {
       "admin": "admin",
       "steward": "steward",
-      "member": "member"
+      "member": "member",
+      "driver": "driver",
+      "registered_user": "registered"
     },
     "nav": {
       "dashboard": "Dashboard",

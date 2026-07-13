@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Offline — F1ISL</title>
+    <meta name="theme-color" content="#0f1113" />
+    <style>
+      /* Standalone surface — the service worker serves this when the network is
+         unreachable, so it can't use the app's CSS variables. Brand hex inline. */
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; height: 100%; }
+      body {
+        background: #0f1113;
+        color: #f3f1ec;
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 2rem;
+      }
+      .wrap { max-width: 30rem; }
+      .tick { width: 56px; height: 2px; background: #c9a24b; margin: 0 auto 1.5rem; }
+      h1 {
+        font-size: 1.4rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin: 0 0 0.85rem;
+      }
+      p { color: #cbc7bf; line-height: 1.65; margin: 0 0 0.5rem; }
+      .he { color: #918c82; font-size: 0.95rem; }
+      button {
+        margin-top: 1.75rem;
+        background: #c9a24b;
+        color: #0f1113;
+        border: 0;
+        border-radius: 2px;
+        padding: 0.7rem 1.5rem;
+        font: inherit;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        cursor: pointer;
+      }
+      button:hover { background: #e2c274; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="tick" aria-hidden="true"></div>
+      <h1>You're offline</h1>
+      <p>F1ISL can't reach the network right now. Live standings, results, and the schedule need a connection.</p>
+      <p class="he" dir="rtl">אין חיבור לרשת כרגע. נסו שוב כשהחיבור יחזור.</p>
+      <button type="button" onclick="location.reload()">Retry</button>
+    </div>
+  </body>
+</html>
