@@ -8,6 +8,8 @@
  * redirects to /stewards/login and enforces mustChangePassword).
  */
 import { redirect } from "next/navigation";
+import { getLocale } from "next-intl/server";
+import { getPathname } from "@/i18n/navigation";
 import {
   can,
   clearStewardSessionCookie,
@@ -16,6 +18,19 @@ import {
   setStewardSessionCookie,
 } from "@/lib/stewards/auth";
 import type { Account } from "@/lib/accounts/types";
+
+/**
+ * Redirect to a public route in the caller's current locale. These helpers run
+ * without a locale prefix, so a bare `redirect("/login")` resets the language to
+ * the default (Hebrew) — an English guest hitting /en/account would land on a
+ * Hebrew /login. Re-apply the correct prefix via `getPathname`.
+ */
+async function localeRedirect(href: string): Promise<never> {
+  const locale = await getLocale();
+  const [path, query] = href.split("?");
+  const localized = getPathname({ href: path, locale });
+  redirect(query ? `${localized}?${query}` : localized);
+}
 
 /** Current authenticated account, or null. Reads the session cookie. */
 export const getCurrentUser = getCurrentStewardUser;
@@ -32,7 +47,7 @@ export const clearSessionCookie = clearStewardSessionCookie;
 export async function requireUser(next?: string): Promise<Account> {
   const user = await getCurrentUser();
   if (!user || !user.isActive) {
-    redirect(`/login${next ? `?next=${encodeURIComponent(next)}` : ""}`);
+    return localeRedirect(`/login${next ? `?next=${encodeURIComponent(next)}` : ""}`);
   }
   return user;
 }
@@ -43,6 +58,6 @@ export async function requireUser(next?: string): Promise<Account> {
  */
 export async function requireAdmin(next?: string): Promise<Account> {
   const user = await requireUser(next);
-  if (!can(user, "manage_users")) redirect("/account");
+  if (!can(user, "manage_users")) return localeRedirect("/account");
   return user;
 }

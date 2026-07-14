@@ -1,12 +1,12 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/session";
 import { hashPassword } from "@/lib/stewards/crypto";
 import {
   createUser,
   getUserByEmail,
+  listUsers,
   removeUserById,
   setAccountActive,
   setDriverId,
@@ -15,104 +15,146 @@ import {
 } from "@/lib/accounts/repository";
 import { ALL_ROLES, emailSchema, type AppRole } from "@/lib/accounts/types";
 
-const ADMIN_PATH = "/admin";
-
-const uid = (formData: FormData) => String(formData.get("user_id") ?? "").trim();
-
-const rolesFrom = (formData: FormData): AppRole[] =>
-  formData
-    .getAll("roles")
-    .filter((r): r is string => typeof r === "string")
-    .filter((r): r is AppRole => (ALL_ROLES as string[]).includes(r));
-
-export async function setRolesAction(formData: FormData) {
-  await requireAdmin();
-  const userId = uid(formData);
-  const roles = rolesFrom(formData);
-  // Never strip an account to zero roles (would break its session).
-  if (userId && roles.length > 0) await updateUserRoles(userId, roles);
-  revalidatePath(ADMIN_PATH);
-  redirect(ADMIN_PATH);
-}
-
-export async function linkDriverAction(formData: FormData) {
-  await requireAdmin();
-  const userId = uid(formData);
-  const driverId = String(formData.get("driver_id") ?? "").trim();
-  if (userId) await setDriverId(userId, driverId || null);
-  revalidatePath(ADMIN_PATH);
-  redirect(ADMIN_PATH);
-}
-
-export async function setActiveAction(formData: FormData) {
-  await requireAdmin();
-  const userId = uid(formData);
-  if (userId) await setAccountActive(userId, formData.get("active") === "true");
-  revalidatePath(ADMIN_PATH);
-  redirect(ADMIN_PATH);
-}
-
-export async function removeAccountAction(formData: FormData) {
-  const admin = await requireAdmin();
-  const userId = uid(formData);
-  if (userId) await removeUserById(userId, admin.id);
-  revalidatePath(ADMIN_PATH);
-  redirect(ADMIN_PATH);
-}
-
-/** Admin edits an account's display name and/or email. */
-export async function editAccountAction(formData: FormData) {
-  await requireAdmin();
-  const userId = uid(formData);
-  const name = String(formData.get("name") ?? "").trim();
-  const email = String(formData.get("email") ?? "").trim().toLowerCase();
-  if (!userId || !name || !emailSchema.safeParse(email).success) {
-    redirect(`${ADMIN_PATH}?error=invalid`);
-  }
-  // Reject an email already owned by a *different* account.
-  const existing = await getUserByEmail(email);
-  if (existing && existing.id !== userId) redirect(`${ADMIN_PATH}?error=email-taken`);
-  await updateUser(userId, { name, email });
-  revalidatePath(ADMIN_PATH);
-  redirect(`${ADMIN_PATH}?ok=saved`);
-}
-
 /**
- * Admin resets an account's password to a new temporary one. The account is
- * flagged `mustChangePassword`, so the user is forced to set their own password
- * on next login. Used when a user forgets their password and asks an admin.
+ * Admin account-management actions (redesign, 2026-07).
+ *
+ * Unlike the previous form-`action` handlers (which redirected on every
+ * mutation), these are **result-returning** server actions called directly
+ * from the client `AccountsAdmin` UI. Each returns `{ ok: true }` or
+ * `{ ok: false, error }` with a stable code the client maps to a localized
+ * message, so failures can be shown inline next to the affected account/field
+ * instead of via a lossy redirect. All enforce `requireAdmin` and add the
+ * safety guards the old handlers lacked (self / last-admin protection).
  */
-export async function resetPasswordAction(formData: FormData) {
+const ADMIN_ROUTE = "/[locale]/admin";
+
+export type AdminErrorCode =
+  | "not-found"
+  | "name-required"
+  | "email-invalid"
+  | "email-taken"
+  | "roles-required"
+  | "own-admin"
+  | "last-admin"
+  | "cannot-remove-self"
+  | "cannot-suspend-self"
+  | "password-short"
+  | "generic";
+
+export type ActionResult = { ok: true } | { ok: false; error: AdminErrorCode };
+
+const ok = (): ActionResult => ({ ok: true });
+const fail = (error: AdminErrorCode): ActionResult => ({ ok: false, error });
+
+const normalizeRoles = (roles: AppRole[]): AppRole[] =>
+  [...new Set((roles ?? []).filter((r) => (ALL_ROLES as string[]).includes(r)))];
+
+/** Save an account's editable fields (name, email, roles, driver link) in one go. */
+export async function saveAccount(input: {
+  userId: string;
+  name: string;
+  email: string;
+  roles: AppRole[];
+  driverId: string | null;
+}): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  const userId = input.userId.trim();
+  const name = input.name.trim();
+  const email = input.email.trim().toLowerCase();
+  const roles = normalizeRoles(input.roles);
+
+  if (!userId) return fail("not-found");
+  if (!name) return fail("name-required");
+  if (!emailSchema.safeParse(email).success) return fail("email-invalid");
+  if (roles.length === 0) return fail("roles-required");
+
+  const all = await listUsers();
+  const target = all.find((a) => a.id === userId);
+  if (!target) return fail("not-found");
+
+  // Email must be unique across *other* accounts.
+  if (all.some((a) => a.id !== userId && a.email === email)) return fail("email-taken");
+
+  // Guard: dropping the `admin` role from someone who currently has it.
+  if (target.roles.includes("admin") && !roles.includes("admin")) {
+    if (target.id === admin.id) return fail("own-admin");
+    const activeAdmins = all.filter((a) => a.isActive && a.roles.includes("admin")).length;
+    if (activeAdmins <= 1) return fail("last-admin");
+  }
+
+  await updateUser(userId, { name, email });
+  await updateUserRoles(userId, roles);
+  await setDriverId(userId, input.driverId?.trim() || null);
+  revalidatePath(ADMIN_ROUTE, "page");
+  return ok();
+}
+
+/** Reset an account's password to an admin-chosen temporary one (forces change). */
+export async function resetPassword(userId: string, password: string): Promise<ActionResult> {
   await requireAdmin();
-  const userId = uid(formData);
-  const password = String(formData.get("password") ?? "");
-  if (!userId || password.length < 8) redirect(`${ADMIN_PATH}?error=invalid`);
-  await updateUser(userId, {
+  if (password.length < 8) return fail("password-short");
+  const updated = await updateUser(userId.trim(), {
     passwordHash: hashPassword(password),
     mustChangePassword: true,
   });
-  revalidatePath(ADMIN_PATH);
-  redirect(`${ADMIN_PATH}?ok=reset`);
+  if (!updated) return fail("not-found");
+  revalidatePath(ADMIN_ROUTE, "page");
+  return ok();
 }
 
-/** Admin-provision an account directly. Must change password on first login. */
-export async function createAccountAction(formData: FormData) {
-  await requireAdmin();
-  const name = String(formData.get("name") ?? "").trim();
-  const email = String(formData.get("email") ?? "").trim().toLowerCase();
-  const password = String(formData.get("password") ?? "");
-  const roles = rolesFrom(formData);
-  if (!name || !email || password.length < 8 || roles.length === 0) {
-    redirect(`${ADMIN_PATH}?error=invalid`);
+/** Suspend (isActive=false) or reactivate an account. */
+export async function setActive(userId: string, isActive: boolean): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  const id = userId.trim();
+  if (!isActive) {
+    if (id === admin.id) return fail("cannot-suspend-self");
+    const all = await listUsers();
+    const target = all.find((a) => a.id === id);
+    if (!target) return fail("not-found");
+    if (target.roles.includes("admin")) {
+      const activeAdmins = all.filter((a) => a.isActive && a.roles.includes("admin")).length;
+      if (activeAdmins <= 1) return fail("last-admin");
+    }
   }
-  if (await getUserByEmail(email)) redirect(`${ADMIN_PATH}?error=email-taken`);
+  await setAccountActive(id, isActive);
+  revalidatePath(ADMIN_ROUTE, "page");
+  return ok();
+}
+
+/** Permanently remove an account (blocks self + last-admin at the repository). */
+export async function removeAccount(userId: string): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  const res = await removeUserById(userId.trim(), admin.id);
+  if (!res.ok) return fail(res.reason);
+  revalidatePath(ADMIN_ROUTE, "page");
+  return ok();
+}
+
+/** Admin-provision a new account. Must change password on first login. */
+export async function createAccount(input: {
+  name: string;
+  email: string;
+  password: string;
+  roles: AppRole[];
+}): Promise<ActionResult> {
+  await requireAdmin();
+  const name = input.name.trim();
+  const email = input.email.trim().toLowerCase();
+  const roles = normalizeRoles(input.roles);
+
+  if (!name) return fail("name-required");
+  if (!emailSchema.safeParse(email).success) return fail("email-invalid");
+  if (input.password.length < 8) return fail("password-short");
+  if (roles.length === 0) return fail("roles-required");
+  if (await getUserByEmail(email)) return fail("email-taken");
+
   await createUser({
     name,
     email,
-    passwordHash: hashPassword(password),
+    passwordHash: hashPassword(input.password),
     roles,
     mustChangePassword: true,
   });
-  revalidatePath(ADMIN_PATH);
-  redirect(ADMIN_PATH);
+  revalidatePath(ADMIN_ROUTE, "page");
+  return ok();
 }

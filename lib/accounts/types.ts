@@ -9,32 +9,33 @@
  */
 import { z } from "zod";
 
-/** All roles a platform account can hold (flat, additive to the old set). */
+/**
+ * All roles a platform account can hold (flat).
+ *
+ * The legacy `member` role has been **retired**: `driver` carries all the
+ * abilities `member` had, and any stored/legacy `member` is migrated to
+ * `driver` on read (see `hydrate` in `lib/accounts/store.ts` and
+ * `normalizeRoles` in `lib/stewards/auth.ts`). No new account gets `member`.
+ */
 export type AppRole =
   | "admin" // League Administrator — full control
   | "steward" // Steward — case/verdict/appeal workflow
-  | "member" // legacy steward-portal participant (retained for existing cases)
   | "driver" // participant linked to a CSV driver_id; submits own attendance
   | "registered_user"; // signed-up account with no driver link (fan)
 
 export const ALL_ROLES: AppRole[] = [
   "admin",
   "steward",
-  "member",
   "driver",
   "registered_user",
 ];
 
 /**
  * True if these roles make the account a racing driver — i.e. a steward-case
- * participant (involved driver / complainant). `driver` is the Identity-v2
- * role; `member` is the retained legacy equivalent (treated as driver so no
- * pre-existing account is dropped from the steward flows). Defined here (no
- * deps) so both `lib/stewards/*` and route components can import it without a
- * circular import.
+ * participant (involved driver / complainant). Defined here (no deps) so both
+ * `lib/stewards/*` and route components can import it without a circular import.
  */
-export const isDriverRole = (roles: AppRole[]): boolean =>
-  roles.includes("driver") || roles.includes("member");
+export const isDriverRole = (roles: AppRole[]): boolean => roles.includes("driver");
 
 export type Account = {
   id: string;
@@ -65,7 +66,6 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const roleSchema = z.enum([
   "admin",
   "steward",
-  "member",
   "driver",
   "registered_user",
 ]);

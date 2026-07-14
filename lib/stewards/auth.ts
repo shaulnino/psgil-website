@@ -15,7 +15,10 @@ type SessionPayload = { sub: string; roles: StewardRole[] };
 
 const normalizeRoles = (input: unknown): StewardRole[] => {
   const arr = Array.isArray(input) ? input : typeof input === "string" ? [input] : [];
-  const valid = arr.filter((r): r is StewardRole =>
+  // Map the retired `member` role to `driver` so pre-existing sessions/tokens
+  // (whose JWT still carries `member`) stay valid instead of losing all roles.
+  const mapped = arr.map((r) => (r === "member" ? "driver" : r));
+  const valid = mapped.filter((r): r is StewardRole =>
     (ALL_ROLES as string[]).includes(r as string),
   );
   return [...new Set(valid)];
@@ -155,12 +158,11 @@ export type StewardPermission =
   | "manage_attendance";
 
 const PERMISSION_MATRIX: Record<StewardPermission, StewardRole[]> = {
-  // `driver` is the Identity-v2 participant role; `member` is kept for legacy
-  // accounts/cases until the member→driver migration (PW-2d).
-  view_steward_area:        ["driver", "member", "steward", "admin"],
-  create_complaint:         ["driver", "member", "admin"],
-  submit_response:          ["driver", "member", "admin"],
-  submit_appeal:            ["driver", "member", "admin"],
+  // `driver` is the participant role (the retired `member` mapped into it).
+  view_steward_area:        ["driver", "steward", "admin"],
+  create_complaint:         ["driver", "admin"],
+  submit_response:          ["driver", "admin"],
+  submit_appeal:            ["driver", "admin"],
   view_internal_discussion: ["steward", "admin"],
   comment_internally:       ["steward", "admin"],
   edit_verdict:             ["steward", "admin"],
@@ -172,7 +174,7 @@ const PERMISSION_MATRIX: Record<StewardPermission, StewardRole[]> = {
   reset_password:           ["admin"],
   // PW-3 attendance: a linked driver RSVPs to their own races; admins manage
   // and view the full roster.
-  submit_own_attendance:    ["driver", "member", "admin"],
+  submit_own_attendance:    ["driver", "admin"],
   manage_attendance:        ["admin"],
 };
 
@@ -185,7 +187,7 @@ export const can = (user: StewardUser, permission: StewardPermission): boolean =
 // ----------------------------------------------------------------
 
 export const canCreateComplaint = (roles: StewardRole[]) =>
-  roles.includes("driver") || roles.includes("member") || roles.includes("admin");
+  roles.includes("driver") || roles.includes("admin");
 
 export const canCommentInternally = (roles: StewardRole[]) =>
   roles.includes("steward") || roles.includes("admin");

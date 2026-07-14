@@ -1,0 +1,121 @@
+{
+  "title": "Account Administration",
+  "description": "Manage accounts, roles, driver links and passwords.",
+  "attendance": "Race attendance",
+  "you": "You",
+  "searchPlaceholder": "Search name or email…",
+  "empty": "No accounts yet.",
+  "noMatches": "No accounts match your search.",
+  "common": {
+    "cancel": "Cancel",
+    "close": "Close"
+  },
+  "cols": {
+    "account": "Account",
+    "roles": "Roles",
+    "driver": "Linked driver",
+    "status": "Status",
+    "actions": "Actions"
+  },
+  "status": {
+    "active": "Active",
+    "suspended": "Suspended"
+  },
+  "roles": {
+    "admin": "Admin",
+    "steward": "Steward",
+    "driver": "Driver",
+    "registered_user": "Registered user",
+    "groupPrivileged": "Privileged",
+    "groupStandard": "Standard"
+  },
+  "driverLink": {
+    "none": "No link",
+    "missing": "Link missing from roster",
+    "missingValue": "Missing: {id}",
+    "unlink": "— No driver link —",
+    "searchPlaceholder": "Search drivers…",
+    "noMatches": "No drivers found.",
+    "historic": "Historic",
+    "roleNoLink": "This account has the Driver role but is not linked to a driver.",
+    "roleNoLinkShort": "driver role, no link",
+    "linkNoRole": "Linked to a driver but does not have the Driver role.",
+    "linkNoRoleShort": "no driver role"
+  },
+  "menu": {
+    "label": "Actions for {name}",
+    "edit": "Edit account",
+    "reset": "Reset password",
+    "suspend": "Suspend account",
+    "reactivate": "Reactivate account",
+    "remove": "Remove account"
+  },
+  "drawer": {
+    "title": "Edit account",
+    "name": "Full name",
+    "email": "Email",
+    "roles": "Roles",
+    "driver": "Linked driver",
+    "save": "Save changes",
+    "editRoles": "Edit roles",
+    "noRoles": "No roles selected",
+    "removeRole": "Remove {role}"
+  },
+  "create": {
+    "button": "Create account",
+    "title": "Create account",
+    "password": "Temporary password",
+    "passwordHint": "Minimum 8 characters. The user must change it on first sign-in.",
+    "submit": "Create account"
+  },
+  "reset": {
+    "title": "Reset password",
+    "for": "Set a new temporary password for {name} ({email}).",
+    "field": "Temporary password",
+    "hint": "Minimum 8 characters. The user must change it on next sign-in.",
+    "show": "Show password",
+    "hide": "Hide password",
+    "confirm": "Reset password"
+  },
+  "suspend": {
+    "title": "Suspend account?",
+    "body": "Suspend {name}? They will be signed out and unable to sign in until reactivated. This is reversible.",
+    "confirm": "Suspend"
+  },
+  "reactivate": {
+    "title": "Reactivate account?",
+    "body": "Reactivate {name}? They will be able to sign in again.",
+    "confirm": "Reactivate"
+  },
+  "remove": {
+    "title": "Remove account?",
+    "body": "Remove {name} ({email})?",
+    "permanent": "This is permanent and cannot be undone.",
+    "driverKept": "The linked driver in the roster is NOT deleted.",
+    "historyKept": "Standings, results and stats are unaffected.",
+    "caseRefs": "Existing steward cases keep this account's id as a reference.",
+    "tip": "Tip: use Suspend to disable an account reversibly instead.",
+    "confirm": "Remove account"
+  },
+  "success": {
+    "saved": "Account updated.",
+    "created": "Account created. The user must change their password on first sign-in.",
+    "reset": "Password reset. The user must set a new password on next sign-in.",
+    "removed": "Account removed.",
+    "suspended": "Account suspended.",
+    "reactivated": "Account reactivated."
+  },
+  "errors": {
+    "not-found": "That account no longer exists.",
+    "name-required": "A name is required.",
+    "email-invalid": "Enter a valid email address.",
+    "email-taken": "An account with that email already exists.",
+    "roles-required": "Select at least one role.",
+    "own-admin": "You cannot remove your own admin role.",
+    "last-admin": "This is the last admin — the admin role can't be removed and the account can't be suspended or removed.",
+    "cannot-remove-self": "You cannot remove your own account.",
+    "cannot-suspend-self": "You cannot suspend your own account.",
+    "password-short": "Password must be at least 8 characters.",
+    "generic": "Something went wrong. Please try again."
+  }
+}

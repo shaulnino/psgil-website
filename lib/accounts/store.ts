@@ -15,11 +15,24 @@
  * backend for a datastore. Callers use the repository, so that's a backend swap,
  * not an app rewrite.
  */
-import type { Account } from "@/lib/accounts/types";
+import { ALL_ROLES, type Account, type AppRole } from "@/lib/accounts/types";
 
 const BLOB_STORE_NAME = "accounts";
 const ACCT_PREFIX = "acct/";
 const EMAIL_PREFIX = "email/";
+
+/**
+ * Migrate stored roles to the current role set: the retired `member` role maps
+ * to `driver` (which now carries all its abilities), and anything not in
+ * ALL_ROLES is dropped. De-duplicated so an account holding both stays clean.
+ */
+function migrateRoles(raw: unknown): AppRole[] {
+  const arr = Array.isArray(raw) ? raw : [];
+  const mapped = arr.map((r) => (r === "member" ? "driver" : r));
+  return [...new Set(mapped)].filter((r): r is AppRole =>
+    (ALL_ROLES as string[]).includes(r as string),
+  );
+}
 
 function isNetlifyEnv(): boolean {
   return !!(process.env.NETLIFY_BLOBS_CONTEXT || process.env.NETLIFY_DEV);
@@ -34,7 +47,7 @@ function hydrate(raw: Partial<Account> & { id: string }): Account {
     id: raw.id,
     name: raw.name ?? "",
     email: normEmail(raw.email ?? ""),
-    roles: Array.isArray(raw.roles) ? raw.roles : [],
+    roles: migrateRoles(raw.roles),
     passwordHash: raw.passwordHash ?? "",
     isActive: raw.isActive ?? true,
     mustChangePassword: raw.mustChangePassword ?? false,
