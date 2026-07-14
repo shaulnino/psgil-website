@@ -25,6 +25,16 @@
     "totalDrivers": "סה״כ נהגים",
     "winners": "מנצחים"
   },
+  "standingsPreview": {
+    "title": "טבלאות האליפות",
+    "description": "איך העונה הנוכחית מתעצבת — הקרב בחזית, במבט חטוף.",
+    "viewFull": "לטבלאות המלאות",
+    "driversTitle": "אליפות הנהגים",
+    "constructorsTitle": "אליפות הקבוצות",
+    "points": "נק׳",
+    "driversAria": "מעבר לטבלת אליפות הנהגים המלאה",
+    "constructorsAria": "מעבר לטבלת אליפות הקבוצות המלאה"
+  },
   "leagueFormatItems": [
     {
       "title": "סדרת EA SPORTS F1",

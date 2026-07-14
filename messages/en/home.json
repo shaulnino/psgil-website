@@ -25,6 +25,16 @@
     "totalDrivers": "Total Drivers",
     "winners": "Winners"
   },
+  "standingsPreview": {
+    "title": "Championship Standings",
+    "description": "How the current season is shaping up — the fight at the front, at a glance.",
+    "viewFull": "View full standings",
+    "driversTitle": "Drivers' Championship",
+    "constructorsTitle": "Constructors' Championship",
+    "points": "PTS",
+    "driversAria": "View the full Drivers' Championship standings",
+    "constructorsAria": "View the full Constructors' Championship standings"
+  },
   "leagueFormatItems": [
     {
       "title": "EA SPORTS F1 series",
