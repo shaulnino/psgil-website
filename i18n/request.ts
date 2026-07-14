@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { getRequestConfig } from "next-intl/server";
 import { routing } from "./routing";
 import { getCurrentStewardUser } from "@/lib/stewards/auth";
@@ -24,6 +25,7 @@ const NAMESPACES = [
   "errors",
   "account",
   "attendance",
+  "admin",
 ] as const;
 
 type Dict = Record<string, unknown>;
@@ -48,15 +50,23 @@ export default getRequestConfig(async ({ requestLocale }) => {
     // Public [locale] route.
     locale = requested;
   } else {
-    // Non-localized route (steward portal / api). The steward portal uses the
-    // logged-in user's saved language preference (Phase 9e); everything else en.
-    let stewardLocale: string | undefined;
-    try {
-      stewardLocale = (await getCurrentStewardUser())?.locale;
-    } catch {
-      stewardLocale = undefined;
+    // Non-localized route (steward portal / api). Inherit the locale the user
+    // was last browsing in: the next-intl middleware writes a `NEXT_LOCALE`
+    // cookie on every public page, and the steward toggle writes it too. So
+    // arriving at /stewards from a Hebrew page stays Hebrew. Fall back to the
+    // account's saved preference, then English.
+    const cookieLocale = (await cookies()).get("NEXT_LOCALE")?.value;
+    if (cookieLocale && (routing.locales as readonly string[]).includes(cookieLocale)) {
+      locale = cookieLocale;
+    } else {
+      let stewardLocale: string | undefined;
+      try {
+        stewardLocale = (await getCurrentStewardUser())?.locale;
+      } catch {
+        stewardLocale = undefined;
+      }
+      locale = stewardLocale === "he" ? "he" : "en";
     }
-    locale = stewardLocale === "he" ? "he" : "en";
   }
 
   const enEntries = await Promise.all(

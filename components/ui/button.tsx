@@ -34,7 +34,18 @@ const buttonVariants = cva(
 type CommonProps = VariantProps<typeof buttonVariants> & {
   className?: string;
   children: React.ReactNode;
+  /** Button-only: show a spinner and disable while an action is in flight. */
+  loading?: boolean;
 };
+
+function ButtonSpinner() {
+  return (
+    <svg className="h-4 w-4 shrink-0 animate-spin" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeOpacity="0.25" strokeWidth="2.5" />
+      <path d="M14.5 8a6.5 6.5 0 00-6.5-6.5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+    </svg>
+  );
+}
 
 type ButtonAsButton = CommonProps &
   Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, keyof CommonProps> & {
@@ -48,8 +59,8 @@ type ButtonAsLink = CommonProps &
 
 export type ButtonProps = ButtonAsButton | ButtonAsLink;
 
-export function Button({ variant, size, className, children, ...props }: ButtonProps) {
-  const classes = cn(buttonVariants({ variant, size }), className);
+export function Button({ variant, size, className, children, loading, ...props }: ButtonProps) {
+  const classes = cn(buttonVariants({ variant, size }), "active:translate-y-px", className);
   if ("href" in props && props.href !== undefined) {
     return (
       <a className={classes} {...(props as React.AnchorHTMLAttributes<HTMLAnchorElement>)}>
@@ -57,8 +68,15 @@ export function Button({ variant, size, className, children, ...props }: ButtonP
       </a>
     );
   }
+  const { disabled, ...buttonProps } = props as React.ButtonHTMLAttributes<HTMLButtonElement>;
   return (
-    <button className={classes} {...(props as React.ButtonHTMLAttributes<HTMLButtonElement>)}>
+    <button
+      className={classes}
+      disabled={disabled || loading}
+      aria-busy={loading || undefined}
+      {...buttonProps}
+    >
+      {loading && <ButtonSpinner />}
       {children}
     </button>
   );

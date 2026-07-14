@@ -246,6 +246,7 @@ function TablesInner({
         )}
 
         {/* ============ DRIVERS MAIN ============ */}
+        <div id="drivers-standings" className="scroll-mt-24">
         {hasPlayoffs ? (
           /* Playoff bracket groups (e.g. S2/S3 upper / lower) */
           groupByBracket(data.driversMain).map(({ bracket, rows }) => (
@@ -285,19 +286,22 @@ function TablesInner({
             type="drivers"
           />
         )}
+        </div>
 
         {/* ============ CONSTRUCTORS MAIN ============ */}
         {showConstructors && (
-          <StandingsSection
-            title={t("tablesContent.constructorsMainTitle")}
-            subtitle={t("tablesContent.constructorsMainSubtitle")}
-            image={{
-              src: cMainImg,
-              alt: t("tablesContent.constructorsMainImageAlt"),
-            }}
-            standingsData={data.constructorsMain}
-            type="constructors"
-          />
+          <div id="constructors-standings" className="scroll-mt-24">
+            <StandingsSection
+              title={t("tablesContent.constructorsMainTitle")}
+              subtitle={t("tablesContent.constructorsMainSubtitle")}
+              image={{
+                src: cMainImg,
+                alt: t("tablesContent.constructorsMainImageAlt"),
+              }}
+              standingsData={data.constructorsMain}
+              type="constructors"
+            />
+          </div>
         )}
 
         {/* ============ WILD ============ */}

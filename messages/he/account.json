@@ -44,7 +44,28 @@
     "newPassword": "סיסמה חדשה",
     "confirmPassword": "אימות סיסמה חדשה",
     "changePassword": "שינוי סיסמה",
-    "signOut": "התנתקות"
+    "signOut": "התנתקות",
+    "roleLabels": {
+      "admin": "מנהל",
+      "steward": "סטיוארד",
+      "driver": "נהג",
+      "registered_user": "רשום"
+    },
+    "statusActive": "פעיל",
+    "statusSuspended": "מושהה",
+    "notLinkedShort": "לא מקושר",
+    "team": "קבוצה",
+    "close": "סגירה",
+    "cancel": "ביטול",
+    "passwordRequirement": "לפחות 8 תווים.",
+    "showPassword": "הצגת סיסמה",
+    "hidePassword": "הסתרת סיסמה",
+    "photoDrop": "גרור תמונה לכאן, או לחץ לבחירה",
+    "photoReplace": "החלפת תמונה",
+    "photoSave": "שמירת תמונה",
+    "photoCancel": "ביטול",
+    "photoTooLarge": "התמונה חורגת ממגבלת 5MB.",
+    "photoBadType": "סוג קובץ לא נתמך. השתמש ב-JPG, ‏PNG, ‏WebP או GIF."
   },
   "forgot": {
     "title": "איפוס סיסמה",

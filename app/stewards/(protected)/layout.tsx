@@ -1,4 +1,4 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { logoutStewardAction } from "@/app/stewards/actions";
 import FormActionButton from "@/app/stewards/components/FormActionButton";
 import StewardNav from "@/app/stewards/components/StewardNav";
@@ -10,11 +10,10 @@ export default async function StewardProtectedLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const user = await requireStewardUser();
-  // Steward portal language is a per-user preference (Phase 9e). i18n/request.ts
-  // resolves the request locale + messages from this same preference, so
-  // getTranslations() below and all child components already render in it; here
-  // we only need it for the dir/lang wrapper + the toggle's current state.
-  const locale = user.locale === "he" ? "he" : "en";
+  // Use the *resolved* request locale (i18n/request.ts: NEXT_LOCALE browsing
+  // cookie → account preference → English) so the dir/lang wrapper and the
+  // toggle's current state match what getTranslations() below actually renders.
+  const locale = (await getLocale()) === "he" ? "he" : "en";
   const t = await getTranslations("stewards");
   const dir = locale === "he" ? "rtl" : "ltr";
   const rolesDisplay = user.roles.map((r) => t(`shell.role.${r}`)).join(", ");

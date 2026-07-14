@@ -2,6 +2,8 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { getLocale } from "next-intl/server";
+import { getPathname } from "@/i18n/navigation";
 import { hashPassword, verifyPassword } from "@/lib/stewards/crypto";
 import {
   getUserByEmail,
@@ -26,7 +28,7 @@ import {
   resetPasswordSchema,
 } from "@/lib/auth/schemas";
 
-export type FormState = { error?: string } | undefined;
+export type FormState = { error?: string; ok?: boolean } | undefined;
 
 /** Forgot-password state — `sent` drives the anti-enumeration confirmation. */
 export type ForgotState = { error?: string; sent?: boolean } | undefined;
@@ -49,6 +51,18 @@ function safeNext(value: FormDataEntryValue | null): string | null {
   return v.startsWith("/") && !v.startsWith("//") ? v : null;
 }
 
+/**
+ * Redirect to a public route in the caller's current locale. Server actions run
+ * without a locale prefix, so a bare `redirect("/account")` resets the language
+ * to the default (Hebrew). Re-apply the correct prefix via `getPathname`.
+ */
+async function localeRedirect(href: string): Promise<never> {
+  const locale = await getLocale();
+  const [path, query] = href.split("?");
+  const localized = getPathname({ href: path, locale });
+  redirect(query ? `${localized}?${query}` : localized);
+}
+
 export async function loginAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const parsed = loginSchema.safeParse({
     email: formData.get("email"),
@@ -66,8 +80,11 @@ export async function loginAction(_prev: FormState, formData: FormData): Promise
   const token = await createSession(user, remember);
   await setSessionCookie(token, remember);
 
+  // Steward-provisioned accounts finish onboarding in the (unprefixed) steward
+  // portal; everyone else lands on their account in the locale they logged in
+  // from (localeRedirect re-applies the prefix so English stays English).
   if (user.mustChangePassword) redirect("/stewards/change-password");
-  redirect(safeNext(formData.get("next")) ?? "/account");
+  await localeRedirect(safeNext(formData.get("next")) ?? "/account");
 }
 
 export async function logoutAction(): Promise<void> {
@@ -141,7 +158,7 @@ export async function uploadDriverPhotoAction(_prev: FormState, formData: FormDa
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Upload failed." };
   }
-  redirect("/account?photo=1");
+  await localeRedirect("/account?photo=1");
 }
 
 export async function changeOwnPasswordAction(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -158,5 +175,7 @@ export async function changeOwnPasswordAction(_prev: FormState, formData: FormDa
     return { error: "New passwords do not match." };
   }
   await updateUser(user.id, { passwordHash: hashPassword(parsed.data) });
-  redirect("/account?pw=1");
+  // Return success (instead of redirecting) so the password dialog can show a
+  // confirmation and close itself without a full-page reload.
+  return { ok: true };
 }

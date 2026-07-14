@@ -44,7 +44,28 @@
     "newPassword": "New password",
     "confirmPassword": "Confirm new password",
     "changePassword": "Change password",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "roleLabels": {
+      "admin": "Admin",
+      "steward": "Steward",
+      "driver": "Driver",
+      "registered_user": "Registered"
+    },
+    "statusActive": "Active",
+    "statusSuspended": "Suspended",
+    "notLinkedShort": "Not linked",
+    "team": "Team",
+    "close": "Close",
+    "cancel": "Cancel",
+    "passwordRequirement": "At least 8 characters.",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "photoDrop": "Drag an image here, or click to choose",
+    "photoReplace": "Replace image",
+    "photoSave": "Save photo",
+    "photoCancel": "Cancel",
+    "photoTooLarge": "Image exceeds the 5 MB limit.",
+    "photoBadType": "Unsupported image type. Use JPG, PNG, WebP or GIF."
   },
   "forgot": {
     "title": "Reset your password",

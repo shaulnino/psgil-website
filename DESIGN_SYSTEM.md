@@ -117,10 +117,13 @@ All CVA-driven, composed with `cn()`, token-only colors, 2px corners, logical pr
 | **StatusBadge** | `icon: LucideIcon`, `tone: info \| warning \| success \| danger \| brass \| bronze \| muted` | **shape-first** — icon + label carry meaning, hue confirms. |
 | **Input** (PW-2b) | native input props | sunk surface (`bg-sink`), hairline border, gold focus ring, 2px corners, logical padding. |
 | **Label** (PW-2b) | native label props | small uppercase tracked meta label above a field (eyebrow-like). |
+| **Dialog** | `{open, onClose, title, closeLabel?}` | generic centered modal on native `<dialog>` (focus trap + Escape + inert backdrop for free); titled header with close button, backdrop click closes, `open:animate-[f1-rise]`. |
+| **Drawer** | `{open, onClose, title, footer?, closeLabel?}` | inline-end side sheet on native `<dialog>`; full-height desktop / full-width sheet on mobile; scrollable body + sticky footer. RTL-docks to the inline-end edge. |
+| **Menu** | `{items: MenuItem[], label}` | accessible ⋯ overflow menu (`aria-haspopup="menu"`, `role="menuitem"`); outside-click + Escape close, focuses first enabled item, `danger` tone + per-item `disabled`/`title` (blocked-reason tooltip). |
 
 New reusable UI must be added here, not inlined per feature. A live gallery exists at `/design-preview`.
 
-> **Form pattern (PW-2b):** auth forms (register/login/account) are client components using React 19 `useActionState` over server actions; errors render in a `role="alert"` danger box, success flashes via a `?query` banner. `Input`+`Label` are the building blocks. A `Dialog` primitive is still deferred until a real modal need arises.
+> **Form pattern (PW-2b):** auth forms (register/login/account) are client components using React 19 `useActionState` over server actions; errors render in a `role="alert"` danger box, success flashes via a `?query` banner. `Input`+`Label` are the building blocks. Modals/side-sheets now use the `Dialog` / `Drawer` primitives (both native `<dialog>`), and overflow actions use the `Menu` primitive — see the account-administration redesign (`app/[locale]/admin/_components/*`).
 
 ---
 

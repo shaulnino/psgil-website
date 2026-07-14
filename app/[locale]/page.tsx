@@ -8,6 +8,7 @@ import HomeRaceCards from "@/components/HomeRaceCards";
 import WatchLastRaceButton from "@/components/WatchLastRaceButton";
 import Section from "@/components/Section";
 import SnapshotStrip from "@/components/SnapshotStrip";
+import StandingsPreview, { type StandingsPreviewRow } from "@/components/StandingsPreview";
 import SocialLinks from "@/components/SocialLinks";
 import ContactSection from "@/components/ContactSection";
 import NewsCarousel from "@/components/NewsCarousel";
@@ -25,7 +26,8 @@ import {
   localizedRaceName,
 } from "@/lib/scheduleData";
 import type { RaceGroup, RaceEvent } from "@/lib/scheduleData";
-import { fetchAllRaceResults, fetchStandings } from "@/lib/resultsData";
+import { fetchAllRaceResults, fetchStandings, filterBySeason } from "@/lib/resultsData";
+import type { StandingsRow } from "@/lib/resultsData";
 import {
   mapDrivers,
   mapTeams,
@@ -33,7 +35,10 @@ import {
   leagueStandingsFromTables,
   mergeComputedRatings,
   computeAllScopeRanks,
+  getTeamLogo,
+  localizedDriverName,
 } from "@/lib/driversData";
+import type { Driver, Team } from "@/lib/driversData";
 import { computeDriverRatings, computeHomePageSnapshot } from "@/lib/statsComputed";
 import { attachRewardsToDrivers, fetchRewards } from "@/lib/rewardsData";
 import { fetchLatestArticles, formatNewsDate } from "@/lib/newsData";
@@ -61,6 +66,78 @@ function groupPoster(group: RaceGroup | null): string | undefined {
   return group?.events.find((e) => !!e.poster_image)?.poster_image;
 }
 
+/** Normalise a team name for logo lookup (lowercase, collapsed whitespace). */
+function normalizeTeamName(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+/** Sort standings rows by numeric position (blanks last). */
+function byPosition(a: StandingsRow, b: StandingsRow): number {
+  return (parseInt(a.position, 10) || 9999) - (parseInt(b.position, 10) || 9999);
+}
+
+/**
+ * Build the top-5 preview rows for the homepage from the SAME computed standings
+ * CSVs used by the full /statistics page — no separate data, no re-ordering, no
+ * hardcoding. Ties/penalties/DNFs/reserves are already baked into the CSV order.
+ */
+function buildStandingsPreview(
+  driversMain: StandingsRow[],
+  constructorsMain: StandingsRow[],
+  seasonKey: string,
+  hasConstructors: boolean,
+  drivers: Driver[],
+  teams: Team[],
+  locale: string,
+): {
+  driversPreviewRows: StandingsPreviewRow[];
+  constructorsPreviewRows: StandingsPreviewRow[];
+} {
+  // driver_id → team_key (for driver-row logos) and localized display name
+  const teamKeyByDriverId = new Map(drivers.map((d) => [d.driver_id, d.team_key]));
+  const nameByDriverId = new Map(
+    drivers.map((d) => [d.driver_id, localizedDriverName(d, locale)]),
+  );
+  // normalized team name → team_key (for constructor-row logos)
+  const teamKeyByName = new Map(
+    teams.map((t) => [normalizeTeamName(t.team_name), t.team_key]),
+  );
+
+  const resolveTeamKey = (row: StandingsRow): string =>
+    teamKeyByDriverId.get(row.driver_id) ??
+    teamKeyByName.get(normalizeTeamName(row.team)) ??
+    "";
+
+  // Drivers main: exclude the lower playoff bracket (when present) so the preview
+  // reflects the primary championship, then sort by position and take the top 5.
+  const driversPreviewRows: StandingsPreviewRow[] = filterBySeason(driversMain, seasonKey)
+    .filter((r) => r.bracket !== "lower")
+    .sort(byPosition)
+    .slice(0, 5)
+    .map((row) => ({
+      position: row.position,
+      name: nameByDriverId.get(row.driver_id) || row.driver_name,
+      points: row.points,
+      logo: getTeamLogo(resolveTeamKey(row)),
+      teamName: row.team,
+    }));
+
+  const constructorsPreviewRows: StandingsPreviewRow[] = hasConstructors
+    ? filterBySeason(constructorsMain, seasonKey)
+        .sort(byPosition)
+        .slice(0, 5)
+        .map((row) => ({
+          position: row.position,
+          name: row.team,
+          points: row.points,
+          logo: getTeamLogo(teamKeyByName.get(normalizeTeamName(row.team)) ?? ""),
+          teamName: row.team,
+        }))
+    : [];
+
+  return { driversPreviewRows, constructorsPreviewRows };
+}
+
 export default async function Home() {
   const tHome = await getTranslations("home");
   const tCommon = await getTranslations("common");
@@ -78,7 +155,7 @@ export default async function Home() {
     resolveTemplate(text, currentSeasonLabel, seasonCount, templateExtras);
 
   /* ---- Fetch schedule + race results + drivers/teams + standings in parallel ---- */
-  const [scheduleCsv, raceResultsByEvent, driversCsv, teamsCsv, mainStandings, wildStandings, rewards, latestNews] =
+  const [scheduleCsv, raceResultsByEvent, driversCsv, teamsCsv, mainStandings, wildStandings, constructorsMainStandings, rewards, latestNews] =
     await Promise.all([
       fetchCsv(GLOBAL_CSV_URLS.schedule).catch(() => ""),
       fetchAllRaceResults(GLOBAL_CSV_URLS.raceResults),
@@ -86,6 +163,7 @@ export default async function Home() {
       fetchCsv(GLOBAL_CSV_URLS.teams).catch(() => ""),
       fetchStandings(GLOBAL_CSV_URLS.driversStandingsMain),
       fetchStandings(GLOBAL_CSV_URLS.driversStandingsWild),
+      fetchStandings(GLOBAL_CSV_URLS.constructorsStandingsMain),
       fetchRewards(GLOBAL_CSV_URLS.rewards),
       fetchLatestArticles(3, locale),
     ]);
@@ -158,6 +236,17 @@ export default async function Home() {
   const allTeams = teamsCsv
     ? mapTeams(parseCsv<Record<string, string>>(teamsCsv))
     : [];
+
+  /* ---- Championship Standings Preview (current season, main league, top 5) ---- */
+  const { driversPreviewRows, constructorsPreviewRows } = buildStandingsPreview(
+    mainStandings,
+    constructorsMainStandings,
+    currentSeason.season_key,
+    currentSeason.has_constructors,
+    allDrivers,
+    allTeams,
+    locale,
+  );
 
   // Strip non-serialisable _dateObj before sending to client component
   const stripDate = (g: RaceGroup | null) =>
@@ -393,11 +482,30 @@ export default async function Home() {
 
       <SnapshotStrip stats={snapshotStats} />
 
+      {driversPreviewRows.length > 0 && (
+        <Section
+          title={tHome("standingsPreview.title")}
+          description={tHome("standingsPreview.description")}
+          brandTitle
+          index="01" compact
+          headerRight={
+            <Button href="/statistics" size="sm" variant="secondary">
+              {tHome("standingsPreview.viewFull")}
+            </Button>
+          }
+        >
+          <StandingsPreview
+            drivers={driversPreviewRows}
+            constructors={constructorsPreviewRows}
+          />
+        </Section>
+      )}
+
       <Section
         title={tHome("leagueFormat.title")}
         description={tHome("leagueFormat.description")}
         brandTitle
-        index="01" compact
+        index="02" compact
       >
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {(tHome.raw("leagueFormatItems") as { title: string; description: string }[]).map((item, i) => (
@@ -426,7 +534,7 @@ export default async function Home() {
         title={tHome("races.title")}
         description={tHome("races.description")}
         brandTitle
-        index="02" compact
+        index="03" compact
         headerRight={
           <Button href="/schedule" size="sm" variant="secondary">
             {tHome("races.fullSchedule")}
@@ -449,7 +557,7 @@ export default async function Home() {
         title={tHome("latestNews.title")}
         description={tHome("latestNews.description")}
         brandTitle
-        index="03" compact
+        index="04" compact
         headerRight={
           <Button href="/news" size="sm" variant="secondary">
             {tHome("latestNews.allNews")}
@@ -459,7 +567,7 @@ export default async function Home() {
         <NewsCarousel articles={latestNews} />
       </Section>
 
-      <Section title={tHome("about.title")} brandTitle index="04" compact>
+      <Section title={tHome("about.title")} brandTitle index="05" compact>
         <Card chamfer cornerTicks className="p-6 md:p-8">
           <div className="isl-gold-rule mb-5 max-w-[120px]" />
           <p className="text-base leading-relaxed text-ink-2 md:text-lg">
@@ -475,7 +583,7 @@ export default async function Home() {
         title={tHome("contact.title")}
         description={tHome("contact.description")}
         brandTitle
-        index="05" compact
+        index="06" compact
       >
         <ContactSection />
       </Section>

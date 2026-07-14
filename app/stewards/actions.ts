@@ -3,6 +3,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
+import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import {
@@ -200,7 +201,11 @@ export async function logoutStewardAction() {
 
 export async function setStewardLocaleAction(locale: "en" | "he") {
   const user = await requireStewardUser();
-  await setUserLocale(user.id, locale === "he" ? "he" : "en");
+  const value: "en" | "he" = locale === "he" ? "he" : "en";
+  await setUserLocale(user.id, value);
+  // Also write the shared browsing-locale cookie so the choice is authoritative
+  // for the unprefixed steward routes (i18n/request.ts reads NEXT_LOCALE first).
+  (await cookies()).set("NEXT_LOCALE", value, { path: "/", sameSite: "lax" });
   revalidatePath("/stewards", "layout");
 }
 
@@ -461,7 +466,7 @@ export async function updateUserRoleAction(formData: FormData) {
   await requireRole(["admin"]);
   const userId = String(formData.get("user_id") ?? "");
   const roles = parseMulti(formData, "roles").filter(
-    (r): r is StewardRole => r === "admin" || r === "steward" || r === "member",
+    (r): r is StewardRole => r === "admin" || r === "steward" || r === "driver",
   );
   if (!userId || roles.length === 0) redirect("/stewards/admin");
   await updateUserRoles(userId, roles);
@@ -475,7 +480,7 @@ export async function createUserAction(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const roles = parseMulti(formData, "roles").filter(
-    (r): r is StewardRole => r === "admin" || r === "steward" || r === "member",
+    (r): r is StewardRole => r === "admin" || r === "steward" || r === "driver",
   );
   if (!name || !email || !password || roles.length === 0) {
     redirect("/stewards/admin?error=invalid-user");
