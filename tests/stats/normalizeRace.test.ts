@@ -48,14 +48,16 @@ test("status normalization covers dnf / dns / dsq / finished", () => {
   assert.deepEqual(kinds, ["finished", "dnf", "dns", "dsq"]);
 });
 
-test("DNS has no finishing position and is not a start", () => {
+test("DNS has no finishing position, is not a start, and has no net change", () => {
   const [r] = normalizeRaces(
-    [makeResult({ event_id: "e1", driver_id: "a", status: "DNS", position: "5" })],
+    [makeResult({ event_id: "e1", driver_id: "a", status: "DNS", position: "5", position_change: "-2" })],
     [makeEvent({ event_id: "e1" })],
   );
   assert.equal(r.finish, null);
   assert.equal(r.isStart, false);
   assert.equal(r.isClassified, false);
+  // A DNS never started, so a source position_change must be ignored.
+  assert.equal(r.netChange, null);
 });
 
 test("only a numeric finish on a finished race counts as classified", () => {
