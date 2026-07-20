@@ -174,7 +174,9 @@ export function normalizeRaces(
       finish: status === "dns" ? null : finish,
       grid,
       gridRaw,
-      netChange: parseNum(r.position_change),
+      // A DNS never took the start, so a position change is meaningless even
+      // if the source CSV carries a value. Only credit net change to starters.
+      netChange: isStart ? parseNum(r.position_change) : null,
 
       points: parseNum(r.points) ?? 0,
       status,
