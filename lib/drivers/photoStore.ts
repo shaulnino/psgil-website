@@ -57,6 +57,30 @@ export async function saveDriverPhoto(driverId: string, file: File, version: str
   return `/uploads/drivers/${encodeURIComponent(driverId)}${ext}?v=${v}`;
 }
 
+/**
+ * Delete a driver's uploaded photo. Removes the Netlify blob in production, or
+ * the local file(s) in dev. Safe to call when no photo exists.
+ */
+export async function deleteDriverPhoto(driverId: string): Promise<void> {
+  if (isNetlifyEnv()) {
+    const { getStore } = await import("@netlify/blobs");
+    await getStore(BLOB_STORE_NAME).delete(driverId);
+    return;
+  }
+
+  const { unlink } = await import("node:fs/promises");
+  const dir = path.join(process.cwd(), "public", "uploads", "drivers");
+  await Promise.all(
+    [...ALLOWED_EXTS].map(async (ext) => {
+      try {
+        await unlink(path.join(dir, `${driverId}${ext}`));
+      } catch {
+        // Missing file for this extension is fine.
+      }
+    }),
+  );
+}
+
 /** Read a driver's photo bytes (production blob path — used by the API route). */
 export async function readDriverPhoto(
   driverId: string,

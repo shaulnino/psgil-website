@@ -223,9 +223,12 @@ export default function NextRaceWidget({ race }: { race: NextRaceData | null }) 
   // If not live and countdown expired, don't render (race ended but page hasn't reloaded yet)
   if (!isLiveNow && countdown && countdown.total <= 0) return null;
 
-  // race.season may be "S6" or "6"; normalize to "S6" format for the URL param
+  // race.season may be "S6" or "6"; normalize to "S6" format for the URL param.
+  // Use the `event` query param (not a hash): ScheduleList reads it to scroll to
+  // the round card AND open its details modal. A raw hash lands at the top of the
+  // page because the list renders client-side after the hash scroll has fired.
   const seasonParam = race.season.startsWith("S") ? race.season : `S${race.season}`;
-  const scheduleUrl = `/schedule?season=${seasonParam}#${race.eventId}`;
+  const scheduleUrl = `/schedule?season=${seasonParam}&event=${race.eventId}`;
 
   /* ---------- Minimised pill ---------- */
   if (minimised) {

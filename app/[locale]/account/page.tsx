@@ -39,7 +39,8 @@ export default async function AccountPage({
   const { locale } = await params;
   const sp = await searchParams;
 
-  const flash = sp.photo ? t("photoUpdated") : null;
+  const flash =
+    sp.photo === "removed" ? t("photoRemoved") : sp.photo ? t("photoUpdated") : null;
   const showDriverPhoto = isDriverRole(user.roles);
   const canRsvp = isDriverRole(user.roles) && !!user.driverId;
   const canSteward = can(user, "view_steward_area");

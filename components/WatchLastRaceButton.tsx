@@ -14,18 +14,25 @@ type Props = {
   links: RaceLink[];
   /** Button label text (e.g. "Watch Last Race"). */
   label: string;
+  /** Visual weight — outline (default), gold fill, or red "live". */
+  variant?: "primary" | "secondary" | "live";
+  /** Extra classes appended to the trigger (e.g. full-width on mobile). */
+  className?: string;
 };
 
 /* ------------------------------------------------------------------ */
-/*  Shared Tailwind classes — ISL secondary/md button language         */
+/*  Shared Tailwind classes — ISL button language (matches ui/button)  */
 /* ------------------------------------------------------------------ */
 
 const base =
   "inline-flex items-center justify-center gap-2 rounded-[2px] font-medium uppercase tracking-[0.08em] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]";
-const secondary =
-  "border border-oxblood text-oxblood hover:border-oxblood-deep hover:text-oxblood-deep bg-transparent";
+const variants = {
+  primary: "bg-oxblood text-bone hover:bg-oxblood-deep",
+  secondary:
+    "border border-oxblood text-oxblood hover:border-oxblood-deep hover:text-oxblood-deep hover:bg-oxblood/10 bg-transparent",
+  live: "bg-status-danger text-bone hover:brightness-110",
+} as const;
 const md = "text-sm md:text-base px-6 py-2.5";
-const btnClass = `${base} ${secondary} ${md}`;
 
 /* ------------------------------------------------------------------ */
 /*  Watch modal                                                        */
@@ -114,10 +121,16 @@ function WatchModal({
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
-export default function WatchLastRaceButton({ links, label }: Props) {
+export default function WatchLastRaceButton({
+  links,
+  label,
+  variant = "secondary",
+  className = "",
+}: Props) {
   const [open, setOpen] = useState(false);
   const [watchTarget, setWatchTarget] = useState<RaceLink | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const btnClass = `${base} ${variants[variant]} ${md} ${className}`;
 
   // Close picker on outside click
   useEffect(() => {

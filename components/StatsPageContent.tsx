@@ -4,13 +4,11 @@ import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import StatsFilterPills from "@/components/stats/StatsFilterPills";
+import DriversSection from "@/components/stats/drivers/DriversSection";
+import LeagueSection from "@/components/stats/league/LeagueSection";
 import {
-  DRIVER_STAT_TAB_ORDER,
-  groupMetricsByDriverTab,
-  resolveHeroMetrics,
   pickMetricKeyForPreset,
   RANKINGS_QUICK_PRESETS,
-  type DriverStatTabId,
 } from "@/lib/statsMetricRegistry";
 import {
   BarChart,
@@ -21,11 +19,6 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  RadarChart,
-  Radar,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
   LineChart,
   Line,
   CartesianGrid,
@@ -34,23 +27,19 @@ import type {
   DriverStatRow,
   LeagueStatRow,
   CircuitStatRow,
-  MetricInfo,
   MetricCategory,
 } from "@/lib/statsData";
 import {
   detectMetrics,
   detectCircuitMetrics,
   categoriseMetrics,
-  getMetricTooltip,
-  DRIVER_CHART_METRICS,
-  DRIVER_RATING_METRICS,
 } from "@/lib/statsData";
 import type { RaceResultRow } from "@/lib/resultsData";
 import type { RaceEvent } from "@/lib/scheduleData";
 import { localizedRaceName, localizedTrack } from "@/lib/scheduleData";
 import type { Reward } from "@/lib/rewardsData";
 import type { SeasonConfig } from "@/lib/seasonConfig";
-import { seasonHasWild } from "@/lib/seasonConfig";
+import { seasonHasWild, matchesSeason } from "@/lib/seasonConfig";
 import { computeDriverStats } from "@/lib/statsComputed";
 import type { StatsFilters } from "@/lib/statsComputed";
 import RaceResultsTable from "@/components/RaceResultsTable";
@@ -81,6 +70,8 @@ type Props = {
   /** Passed from server for client-side filter computation */
   seasons?: SeasonConfig[];
   rewards?: Reward[];
+  /** Hebrew driver display names keyed by driver_id (label-only). */
+  driverNamesHe?: Record<string, string>;
 };
 
 /* ------------------------------------------------------------------ */
@@ -91,12 +82,42 @@ const TABS = ["Drivers", "League", "Circuits", "Head-to-Head", "Rankings"] as co
 type Tab = (typeof TABS)[number];
 
 const COMPARE_COLORS = ["#7E2A1E", "#2F5A6E", "#3F6B3A", "#B07A1E"];
-const SINGLE_COLOR = "#7E2A1E";
 
-function parseNum(v: string): number | null {
-  if (!v || v === "-" || v === "N/A") return null;
-  const n = Number(v.replace(/%/g, "").replace(/,/g, "").trim());
-  return isNaN(n) ? null : n;
+/**
+ * Which result filter dimensions actually have data in the current scope.
+ * Used to hide filter pills/groups that would be no-ops (e.g. no sprint or
+ * 25% races, or a season with no playoff rounds).
+ */
+type FilterAvailability = {
+  formats: NonNullable<StatsFilters["format"]>[];
+  hasRegular: boolean;
+  hasPlayoffs: boolean;
+};
+
+function computeFilterAvailability(
+  events: RaceEvent[] | undefined,
+  mode: "All-time" | "Season",
+  season: string,
+): FilterAvailability {
+  const scoped = (events ?? []).filter((e) => {
+    if (e.status.toLowerCase().trim() !== "completed") return false;
+    if (mode === "Season" && !matchesSeason(e.season, season)) return false;
+    return true;
+  });
+  const formatSet = new Set<NonNullable<StatsFilters["format"]>>();
+  let hasRegular = false;
+  let hasPlayoffs = false;
+  for (const e of scoped) {
+    formatSet.add(e.race_format);
+    if (e.is_playoff) hasPlayoffs = true;
+    else hasRegular = true;
+  }
+  const order: NonNullable<StatsFilters["format"]>[] = ["50%", "25%", "sprint"];
+  return {
+    formats: order.filter((f) => formatSet.has(f)),
+    hasRegular,
+    hasPlayoffs,
+  };
 }
 
 function isLowerBetterMetric(metricLabel: string): boolean {
@@ -131,61 +152,11 @@ function isLowerBetterMetric(metricLabel: string): boolean {
   );
 }
 
-function getDriverParticipationCount(row: DriverStatRow): number {
-  const entries = Object.entries(row.metrics).filter(
-    ([key, val]) => Number.isFinite(val) && !key.includes("%"),
-  );
-  const raceEvents = entries.find(([key]) =>
-    key.trim().toLowerCase() === "race events",
-  );
-  if (raceEvents) return raceEvents[1];
-
-  const participationLike = entries
-    .filter(([key]) => /participation|race events?|events participated|races participated/i.test(key))
-    .map(([, val]) => val);
-  if (participationLike.length > 0) return Math.max(...participationLike);
-
-  return 0;
-}
-
 function fmtVal(v: number | string | undefined, pct = false): string {
   if (v === undefined || v === null) return "-";
   if (typeof v === "string") return v || "-";
   if (pct) return `${v.toFixed(1)}%`;
   return Number.isInteger(v) ? String(v) : v.toFixed(2);
-}
-
-/**
- * Find the best matching metric key in a set of available keys.
- * Handles the "Event Podiums" vs "Podiums" naming difference across seasons.
- */
-function findMetricKey(wanted: string, availableKeys: Set<string>): string | null {
-  if (availableKeys.has(wanted)) return wanted;
-  const stripped = wanted.replace(/^Event\s+/i, "");
-  if (availableKeys.has(stripped)) return stripped;
-  const prefixed = `Event ${wanted}`;
-  if (availableKeys.has(prefixed)) return prefixed;
-  for (const k of availableKeys) {
-    if (k.endsWith(wanted) || wanted.endsWith(k)) return k;
-  }
-  return null;
-}
-
-/**
- * Resolve a list of curated metric names against available keys.
- */
-function resolveMetrics(
-  curated: string[],
-  availableKeys: Set<string>,
-): { label: string; key: string }[] {
-  const result: { label: string; key: string }[] = [];
-  for (const wanted of curated) {
-    const actual = findMetricKey(wanted, availableKeys);
-    if (actual) {
-      result.push({ label: wanted.replace(/^Event\s+/i, ""), key: actual });
-    }
-  }
-  return result;
 }
 
 /* ------------------------------------------------------------------ */
@@ -478,35 +449,6 @@ function StatRow({
   );
 }
 
-function StatHeroCard({
-  label,
-  value,
-  isPct,
-  tooltip,
-}: {
-  label: string;
-  value: number | undefined;
-  isPct: boolean;
-  tooltip?: string;
-}) {
-  return (
-    <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-4 py-3">
-      <div className="text-[10px] font-bold uppercase tracking-wider text-meta">
-        {tooltip ? (
-          <MetricTooltip text={tooltip}>
-            <span>{label}</span>
-          </MetricTooltip>
-        ) : (
-          label
-        )}
-      </div>
-      <div className="num mt-1.5 text-xl font-extrabold tracking-tight text-ink sm:text-2xl">
-        {fmtVal(value, isPct)}
-      </div>
-    </div>
-  );
-}
-
 /* ------------------------------------------------------------------ */
 /*  Chart wrappers                                                     */
 /* ------------------------------------------------------------------ */
@@ -711,1527 +653,19 @@ function StatsBarChart({
   );
 }
 
-function StatsRadarChart({
-  data,
-  subjects,
-  height = 420,
-}: {
-  data: { subject: string; [key: string]: string | number }[];
-  subjects: { key: string; color: string; name: string }[];
-  height?: number;
-}) {
-  return (
-    <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-4">
-      <ResponsiveContainer width="100%" height={height}>
-        <RadarChart cx="50%" cy="50%" outerRadius="72%" data={data}>
-          <PolarGrid stroke="rgba(28,23,18,0.14)" />
-          <PolarAngleAxis
-            dataKey="subject"
-            tick={{ fill: "#7E2A1E", fontSize: 12, fontWeight: 600 }}
-          />
-          <PolarRadiusAxis
-            angle={90}
-            tick={{ fill: "#3A322A", fontSize: 10 }}
-            axisLine={false}
-            domain={[0, 110]}
-            ticks={[0, 25, 50, 75, 100] as any}
-          />
-          {subjects.map((s) => (
-            <Radar
-              key={s.key}
-              name={s.name}
-              dataKey={s.key}
-              stroke={s.color}
-              fill={s.color}
-              fillOpacity={0.15}
-              strokeWidth={2}
-            />
-          ))}
-          <Tooltip content={<CustomTooltip />} />
-          {subjects.length > 1 && (
-            <Legend wrapperStyle={{ fontSize: 12, color: "#3A322A" }} />
-          )}
-        </RadarChart>
-      </ResponsiveContainer>
-    </div>
-  );
-}
-
 /* ------------------------------------------------------------------ */
-/*  Section: DRIVERS                                                   */
+/*  Shared: category open-state default                                */
 /* ------------------------------------------------------------------ */
 
 /** Number of categories to open by default */
 const DEFAULT_OPEN_CATEGORIES = 1;
 
-const DRIVER_CUM_METRICS = [
-  { key: "points", label: "Points (Cumulative)" },
-  { key: "wins", label: "Wins (Cumulative)" },
-  { key: "podiums", label: "Podiums (Cumulative)" },
-  { key: "top5", label: "Top 5 (Cumulative)" },
-  { key: "top10", label: "Top 10 (Cumulative)" },
-  { key: "poles", label: "Poles (Cumulative)" },
-  { key: "fastestLaps", label: "Fastest Laps (Cumulative)" },
-  { key: "dotd", label: "DOTD (Cumulative)" },
-  { key: "dnfs", label: "DNFs (Cumulative)" },
-  { key: "finished", label: "Races Finished (Cumulative)" },
-  { key: "avgFinish", label: "Avg Finish (Running)" },
-  { key: "avgGrid", label: "Avg Grid (Running)" },
-  { key: "avgPoints", label: "Avg Points (Running)" },
-] as const;
-
-type DriverCumMetricKey = (typeof DRIVER_CUM_METRICS)[number]["key"];
-
-type DriverRacePoint = {
-  eventId: string;
-  raceName: string;
-  date: string;
-  seasonKey: string;
-  points: number;
-  finish: number | null;
-  grid: number | null;
-  status: string;
-  fastestLap: string;
-  dotd: string;
-};
-
-function toSeasonKey(raw: string): string {
-  const s = (raw ?? "").trim();
-  if (!s) return "";
-  return s.startsWith("S") || s.startsWith("s") ? s.toUpperCase() : `S${s}`;
-}
-
-function normalizeDriverName(raw: string): string {
-  return (raw ?? "").trim().toLowerCase().replace(/\s+/g, " ");
-}
-
-function parseDateMaybe(value: string): number {
-  const s = (value ?? "").trim();
-  const m = s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
-  if (!m) return Number.NaN;
-  const d = parseInt(m[1], 10);
-  const mo = parseInt(m[2], 10) - 1;
-  const y = parseInt(m[3], 10);
-  return new Date(y, mo, d).getTime();
-}
-
-function isDnfStatus(st: string): boolean {
-  const s = (st ?? "").trim().toLowerCase();
-  return s === "dnf" || s === "dns" || s === "dsq" || s === "retired";
-}
-
-function DriverCumulativeChart({
-  driverName,
-  raceResults,
-  events,
-  mode,
-  seasonKey,
-}: {
-  driverName: string;
-  raceResults: Record<string, RaceResultRow[]>;
-  events: RaceEvent[];
-  mode: "All-time" | "Season";
-  seasonKey: string;
-}) {
-  const t = useTranslations("stats");
-  const [metric, setMetric] = useState<DriverCumMetricKey>("points");
-  const [raceCount, setRaceCount] = useState<number>(0);
-
-  const eventMap = useMemo(() => {
-    const map = new Map<
-      string,
-      { raceName: string; date: string; seasonKey: string }
-    >();
-    for (const e of events) {
-      map.set(e.event_id, {
-        raceName: e.race_name || e.event_id,
-        date: e.date || "",
-        seasonKey: toSeasonKey(e.season),
-      });
-    }
-    return map;
-  }, [events]);
-
-  const allDriverRaces = useMemo(() => {
-    const target = normalizeDriverName(driverName);
-    const rows: DriverRacePoint[] = [];
-    for (const [eventId, list] of Object.entries(raceResults)) {
-      const row = list.find(
-        (r) => normalizeDriverName(r.driver_name ?? "") === target,
-      );
-      if (!row) continue;
-      const meta = eventMap.get(eventId);
-      const finish = parseNum(row.position);
-      const grid = parseNum(row.grid);
-      const points = parseNum(row.points) ?? 0;
-      const seasonFromId = eventId.match(/^s(\d+)/i)?.[1];
-      rows.push({
-        eventId,
-        raceName: meta?.raceName ?? eventId,
-        date: meta?.date ?? "",
-        seasonKey: meta?.seasonKey ?? (seasonFromId ? `S${seasonFromId}` : ""),
-        points,
-        finish,
-        grid,
-        status: row.status ?? "",
-        fastestLap: row.fastest_lap ?? "",
-        dotd: row.dotd ?? "",
-      });
-    }
-    rows.sort((a, b) => {
-      const ta = parseDateMaybe(a.date);
-      const tb = parseDateMaybe(b.date);
-      if (Number.isFinite(ta) && Number.isFinite(tb) && ta !== tb) return ta - tb;
-      return a.eventId.localeCompare(b.eventId);
-    });
-    return rows;
-  }, [raceResults, eventMap, driverName]);
-
-  const driverRaces = useMemo(() => {
-    if (mode !== "Season") return allDriverRaces;
-    return allDriverRaces.filter((r) => r.seasonKey === seasonKey);
-  }, [allDriverRaces, mode, seasonKey]);
-
-  const chartData = useMemo(() => {
-    if (driverRaces.length === 0) return [];
-    const sliced = raceCount > 0 ? driverRaces.slice(-raceCount) : driverRaces;
-
-    const acc = {
-      races: 0,
-      points: 0,
-      wins: 0,
-      podiums: 0,
-      top5: 0,
-      top10: 0,
-      poles: 0,
-      fastestLaps: 0,
-      dotd: 0,
-      dnfs: 0,
-      finished: 0,
-      finishSum: 0,
-      finishCount: 0,
-      gridSum: 0,
-      gridCount: 0,
-    };
-
-    const consume = (r: DriverRacePoint) => {
-      acc.races += 1;
-      acc.points += r.points;
-      if (r.finish === 1) acc.wins += 1;
-      if (r.finish !== null && r.finish <= 3) acc.podiums += 1;
-      if (r.finish !== null && r.finish <= 5) acc.top5 += 1;
-      if (r.finish !== null && r.finish <= 10) acc.top10 += 1;
-      if (r.grid === 1) acc.poles += 1;
-      const fl = r.fastestLap.trim().toLowerCase();
-      if (fl === "yes" || fl === "1" || fl === "true") acc.fastestLaps += 1;
-      const d = r.dotd.trim().toLowerCase();
-      if (d === "yes" || d === "1" || d === "true") acc.dotd += 1;
-      if (isDnfStatus(r.status)) acc.dnfs += 1;
-      else acc.finished += 1;
-      if (r.finish !== null) {
-        acc.finishSum += r.finish;
-        acc.finishCount += 1;
-      }
-      if (r.grid !== null) {
-        acc.gridSum += r.grid;
-        acc.gridCount += 1;
-      }
-    };
-
-    return sliced.map((r) => {
-      consume(r);
-      let value: number | null = null;
-      switch (metric) {
-        case "points":
-          value = acc.points;
-          break;
-        case "wins":
-          value = acc.wins;
-          break;
-        case "podiums":
-          value = acc.podiums;
-          break;
-        case "top5":
-          value = acc.top5;
-          break;
-        case "top10":
-          value = acc.top10;
-          break;
-        case "poles":
-          value = acc.poles;
-          break;
-        case "fastestLaps":
-          value = acc.fastestLaps;
-          break;
-        case "dotd":
-          value = acc.dotd;
-          break;
-        case "dnfs":
-          value = acc.dnfs;
-          break;
-        case "finished":
-          value = acc.finished;
-          break;
-        case "avgFinish":
-          value = acc.finishCount > 0 ? acc.finishSum / acc.finishCount : null;
-          break;
-        case "avgGrid":
-          value = acc.gridCount > 0 ? acc.gridSum / acc.gridCount : null;
-          break;
-        case "avgPoints":
-          value = acc.races > 0 ? acc.points / acc.races : null;
-          break;
-      }
-      return {
-        name: r.seasonKey ? `${r.raceName} (${r.seasonKey})` : r.raceName,
-        value,
-      };
-    });
-  }, [driverRaces, metric, raceCount]);
-
-  const metricOptions = DRIVER_CUM_METRICS.map((m) => m.label);
-  const selectedMetricLabel =
-    DRIVER_CUM_METRICS.find((m) => m.key === metric)?.label ?? metric;
-
-  return (
-    <div className="space-y-4 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-4 sm:p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 className="text-sm font-semibold text-meta">{t("charts.driverCumulativeTrend")}</h3>
-        <div className="flex gap-1 rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-0.5">
-          {[5, 10, 15, 0].map((n) => (
-            <button
-              key={n}
-              onClick={() => setRaceCount(n)}
-              className={`rounded-[2px] px-2.5 py-1 text-xs font-semibold transition ${
-                raceCount === n
-                  ? "bg-ink text-bone"
-                  : "text-meta hover:text-ink"
-              }`}
-            >
-              {n === 0 ? t("raceCount.all") : t("raceCount.last", { n })}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="max-w-sm">
-        <SearchableSelect
-          options={metricOptions}
-          value={selectedMetricLabel}
-          onChange={(v) => {
-            const label = String(v);
-            const found = DRIVER_CUM_METRICS.find((m) => m.label === label);
-            if (found) setMetric(found.key);
-          }}
-          placeholder={t("select.selectMetric")}
-        />
-      </div>
-
-      {chartData.length === 0 ? (
-        <div className="flex h-48 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream">
-          <p className="text-sm text-meta">
-            {t("empty.noRaceByRaceDriver")}
-          </p>
-        </div>
-      ) : (
-        <div className="h-72">
-          <ResponsiveContainer width="100%" height={288}>
-            <LineChart data={chartData} margin={{ top: 8, right: 12, bottom: 4, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(28,23,18,0.10)" />
-              <XAxis
-                dataKey="name"
-                tick={{ fill: "#3A322A", fontSize: 10 }}
-                axisLine={{ stroke: "rgba(28,23,18,0.14)" }}
-                tickLine={false}
-                interval="preserveStartEnd"
-                angle={-18}
-                textAnchor="end"
-                height={56}
-              />
-              <YAxis
-                tick={{ fill: "#3A322A", fontSize: 10 }}
-                axisLine={{ stroke: "rgba(28,23,18,0.14)" }}
-                tickLine={false}
-                width={40}
-              />
-              <Tooltip
-                contentStyle={{
-                  background: "#FBF8F0",
-                  border: "1px solid rgba(28,23,18,0.14)",
-                  borderRadius: 2,
-                  fontSize: 12,
-                  color: "#1C1712",
-                  boxShadow: "none",
-                }}
-                labelStyle={{ color: "#3A322A", marginBottom: 4 }}
-              />
-              <Line
-                type="monotone"
-                dataKey="value"
-                name={selectedMetricLabel}
-                stroke="#7E2A1E"
-                strokeWidth={2.5}
-                dot={{ r: 3, fill: "#7E2A1E" }}
-                activeDot={{ r: 5 }}
-                connectNulls
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function DriverCompareCumulativeChart({
-  driverNames,
-  raceResults,
-  events,
-  mode,
-  seasonKey,
-}: {
-  driverNames: string[];
-  raceResults: Record<string, RaceResultRow[]>;
-  events: RaceEvent[];
-  mode: "All-time" | "Season";
-  seasonKey: string;
-}) {
-  const t = useTranslations("stats");
-  const [metric, setMetric] = useState<DriverCumMetricKey>("points");
-  const [raceCount, setRaceCount] = useState<number>(0);
-
-  const eventMap = useMemo(() => {
-    const map = new Map<
-      string,
-      { raceName: string; date: string; seasonKey: string }
-    >();
-    for (const e of events) {
-      map.set(e.event_id, {
-        raceName: e.race_name || e.event_id,
-        date: e.date || "",
-        seasonKey: toSeasonKey(e.season),
-      });
-    }
-    return map;
-  }, [events]);
-
-  const rowsByDriver = useMemo(() => {
-    const out = new Map<string, Map<string, DriverRacePoint>>();
-    for (const name of driverNames) {
-      const target = normalizeDriverName(name);
-      const map = new Map<string, DriverRacePoint>();
-      for (const [eventId, list] of Object.entries(raceResults)) {
-        const row = list.find(
-          (r) => normalizeDriverName(r.driver_name ?? "") === target,
-        );
-        if (!row) continue;
-        const meta = eventMap.get(eventId);
-        const seasonFromId = eventId.match(/^s(\d+)/i)?.[1];
-        map.set(eventId, {
-          eventId,
-          raceName: meta?.raceName ?? eventId,
-          date: meta?.date ?? "",
-          seasonKey: meta?.seasonKey ?? (seasonFromId ? `S${seasonFromId}` : ""),
-          points: parseNum(row.points) ?? 0,
-          finish: parseNum(row.position),
-          grid: parseNum(row.grid),
-          status: row.status ?? "",
-          fastestLap: row.fastest_lap ?? "",
-          dotd: row.dotd ?? "",
-        });
-      }
-      out.set(name, map);
-    }
-    return out;
-  }, [driverNames, raceResults, eventMap]);
-
-  const timeline = useMemo(() => {
-    const ids = new Set<string>();
-    for (const map of rowsByDriver.values()) {
-      for (const eid of map.keys()) ids.add(eid);
-    }
-    let eventsList = Array.from(ids).map((eid) => {
-      const m = eventMap.get(eid);
-      return {
-        eventId: eid,
-        raceName: m?.raceName ?? eid,
-        seasonKey: m?.seasonKey ?? (eid.match(/^s(\d+)/i)?.[1] ? `S${eid.match(/^s(\d+)/i)?.[1]}` : ""),
-        date: m?.date ?? "",
-      };
-    });
-    if (mode === "Season") {
-      eventsList = eventsList.filter((e) => e.seasonKey === seasonKey);
-    }
-    eventsList.sort((a, b) => {
-      const ta = parseDateMaybe(a.date);
-      const tb = parseDateMaybe(b.date);
-      if (Number.isFinite(ta) && Number.isFinite(tb) && ta !== tb) return ta - tb;
-      return a.eventId.localeCompare(b.eventId);
-    });
-    return eventsList;
-  }, [rowsByDriver, eventMap, mode, seasonKey]);
-
-  const chartData = useMemo(() => {
-    if (timeline.length === 0) return [];
-    const sliced = raceCount > 0 ? timeline.slice(-raceCount) : timeline;
-    const before = raceCount > 0 ? timeline.slice(0, Math.max(0, timeline.length - raceCount)) : [];
-
-    const createAcc = () => ({
-      races: 0,
-      points: 0,
-      wins: 0,
-      podiums: 0,
-      top5: 0,
-      top10: 0,
-      poles: 0,
-      fastestLaps: 0,
-      dotd: 0,
-      dnfs: 0,
-      finished: 0,
-      finishSum: 0,
-      finishCount: 0,
-      gridSum: 0,
-      gridCount: 0,
-    });
-
-    const accByDriver = new Map<string, ReturnType<typeof createAcc>>();
-    for (const n of driverNames) accByDriver.set(n, createAcc());
-
-    const consume = (name: string, r: DriverRacePoint | undefined) => {
-      if (!r) return;
-      const acc = accByDriver.get(name)!;
-      acc.races += 1;
-      acc.points += r.points;
-      if (r.finish === 1) acc.wins += 1;
-      if (r.finish !== null && r.finish <= 3) acc.podiums += 1;
-      if (r.finish !== null && r.finish <= 5) acc.top5 += 1;
-      if (r.finish !== null && r.finish <= 10) acc.top10 += 1;
-      if (r.grid === 1) acc.poles += 1;
-      const fl = r.fastestLap.trim().toLowerCase();
-      if (fl === "yes" || fl === "1" || fl === "true") acc.fastestLaps += 1;
-      const d = r.dotd.trim().toLowerCase();
-      if (d === "yes" || d === "1" || d === "true") acc.dotd += 1;
-      if (isDnfStatus(r.status)) acc.dnfs += 1;
-      else acc.finished += 1;
-      if (r.finish !== null) {
-        acc.finishSum += r.finish;
-        acc.finishCount += 1;
-      }
-      if (r.grid !== null) {
-        acc.gridSum += r.grid;
-        acc.gridCount += 1;
-      }
-    };
-
-    for (const ev of before) {
-      for (const n of driverNames) consume(n, rowsByDriver.get(n)?.get(ev.eventId));
-    }
-
-    return sliced.map((ev) => {
-      const row: Record<string, string | number | null> = {
-        name: ev.seasonKey ? `${ev.raceName} (${ev.seasonKey})` : ev.raceName,
-      };
-      for (const n of driverNames) {
-        const r = rowsByDriver.get(n)?.get(ev.eventId);
-        consume(n, r);
-        const acc = accByDriver.get(n)!;
-        let value: number | null = null;
-        switch (metric) {
-          case "points": value = acc.points; break;
-          case "wins": value = acc.wins; break;
-          case "podiums": value = acc.podiums; break;
-          case "top5": value = acc.top5; break;
-          case "top10": value = acc.top10; break;
-          case "poles": value = acc.poles; break;
-          case "fastestLaps": value = acc.fastestLaps; break;
-          case "dotd": value = acc.dotd; break;
-          case "dnfs": value = acc.dnfs; break;
-          case "finished": value = acc.finished; break;
-          case "avgFinish": value = acc.finishCount > 0 ? acc.finishSum / acc.finishCount : null; break;
-          case "avgGrid": value = acc.gridCount > 0 ? acc.gridSum / acc.gridCount : null; break;
-          case "avgPoints": value = acc.races > 0 ? acc.points / acc.races : null; break;
-        }
-        row[n] = value;
-      }
-      return row;
-    });
-  }, [timeline, raceCount, driverNames, rowsByDriver, metric]);
-
-  const metricOptions = DRIVER_CUM_METRICS.map((m) => m.label);
-  const selectedMetricLabel =
-    DRIVER_CUM_METRICS.find((m) => m.key === metric)?.label ?? metric;
-
-  if (driverNames.length < 2) return null;
-
-  return (
-    <div className="space-y-4 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-4 sm:p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 className="text-sm font-semibold text-meta">{t("charts.compareCumulativeTrend")}</h3>
-        <div className="flex gap-1 rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper p-0.5">
-          {[5, 10, 15, 0].map((n) => (
-            <button
-              key={n}
-              onClick={() => setRaceCount(n)}
-              className={`rounded-[2px] px-2.5 py-1 text-xs font-semibold transition ${
-                raceCount === n ? "bg-ink text-bone" : "text-meta hover:text-ink"
-              }`}
-            >
-              {n === 0 ? t("raceCount.all") : t("raceCount.last", { n })}
-            </button>
-          ))}
-        </div>
-      </div>
-      <p className="text-xs text-meta">
-        {t("charts.compareCumulativeNote")}
-      </p>
-
-      <div className="max-w-sm">
-        <SearchableSelect
-          options={metricOptions}
-          value={selectedMetricLabel}
-          onChange={(v) => {
-            const label = String(v);
-            const found = DRIVER_CUM_METRICS.find((m) => m.label === label);
-            if (found) setMetric(found.key);
-          }}
-          placeholder={t("select.selectMetric")}
-        />
-      </div>
-
-      {chartData.length === 0 ? (
-        <div className="flex h-48 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream">
-          <p className="text-sm text-meta">{t("empty.noRaceByRaceCompare")}</p>
-        </div>
-      ) : (
-        <div className="h-72">
-          <ResponsiveContainer width="100%" height={288}>
-            <LineChart data={chartData} margin={{ top: 8, right: 12, bottom: 4, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(28,23,18,0.10)" />
-              <XAxis
-                dataKey="name"
-                tick={{ fill: "#3A322A", fontSize: 10 }}
-                axisLine={{ stroke: "rgba(28,23,18,0.14)" }}
-                tickLine={false}
-                interval="preserveStartEnd"
-                angle={-18}
-                textAnchor="end"
-                height={56}
-              />
-              <YAxis
-                tick={{ fill: "#3A322A", fontSize: 10 }}
-                axisLine={{ stroke: "rgba(28,23,18,0.14)" }}
-                tickLine={false}
-                width={40}
-              />
-              <Tooltip
-                contentStyle={{
-                  background: "#FBF8F0",
-                  border: "1px solid rgba(28,23,18,0.14)",
-                  borderRadius: 2,
-                  fontSize: 12,
-                  color: "#1C1712",
-                  boxShadow: "none",
-                }}
-                labelStyle={{ color: "#3A322A", marginBottom: 4 }}
-              />
-              <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
-              {driverNames.map((name, i) => (
-                <Line
-                  key={name}
-                  type="monotone"
-                  dataKey={name}
-                  name={name}
-                  stroke={COMPARE_COLORS[i % COMPARE_COLORS.length]}
-                  strokeWidth={2.5}
-                  dot={{ r: 3, fill: COMPARE_COLORS[i % COMPARE_COLORS.length] }}
-                  activeDot={{ r: 5 }}
-                  connectNulls
-                />
-              ))}
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function DriversSection({
-  allTime,
-  bySeason,
-  raceResults = {},
-  events = [],
-  initialDriver,
-  seasons,
-  rewards,
-}: {
-  allTime: { rows: DriverStatRow[]; headers: string[] };
-  bySeason: Record<string, { rows: DriverStatRow[]; headers: string[] }>;
-  raceResults?: Record<string, RaceResultRow[]>;
-  events?: RaceEvent[];
-  initialDriver?: string;
-  seasons?: SeasonConfig[];
-  rewards?: Reward[];
-}) {
-  const t = useTranslations("stats");
-  // Derive the default season from bySeason keys (newest first)
-  const defaultSeason = useMemo(() => {
-    const keys = Object.keys(bySeason).sort((a, b) => {
-      const numA = parseInt(a.replace(/\D/g, ""), 10) || 0;
-      const numB = parseInt(b.replace(/\D/g, ""), 10) || 0;
-      return numB - numA;
-    });
-    return keys[0] || "S1";
-  }, [bySeason]);
-
-  const [mode, setMode] = useState<"All-time" | "Season">("All-time");
-  const [season, setSeason] = useState<string>(defaultSeason);
-  const [compare, setCompare] = useState(false);
-  const [selectedDrivers, setSelectedDrivers] = useState<string[]>(
-    initialDriver ? [initialDriver] : [],
-  );
-
-  // ── Format / Competition / Round-type filters ──────────────────────
-  const [formatFilter,      setFormatFilter]      = useState<StatsFilters["format"]>(undefined);
-  const [competitionFilter, setCompetitionFilter] = useState<StatsFilters["competition"]>(undefined);
-  const [roundTypeFilter,   setRoundTypeFilter]   = useState<StatsFilters["roundType"]>(undefined);
-  const [driverStatTab, setDriverStatTab] = useState<DriverStatTabId>("championship");
-
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const filterQueryHydrated = useRef(false);
-
-  const anyFilterActive = !!(formatFilter || competitionFilter || roundTypeFilter);
-
-  // Only offer the Wild scope when the relevant season(s) actually have it.
-  const wildAvailable = useMemo(
-    () => seasonHasWild(seasons ?? [], mode === "Season" ? season : undefined),
-    [seasons, mode, season],
-  );
-  useEffect(() => {
-    if (!wildAvailable && competitionFilter === "wild") setCompetitionFilter(undefined);
-  }, [wildAvailable, competitionFilter]);
-
-  useEffect(() => {
-    const next = new URLSearchParams(searchParams.toString());
-    if (!filterQueryHydrated.current) {
-      const f = next.get("format");
-      if (f === "50%" || f === "25%" || f === "sprint") {
-        setFormatFilter(f as StatsFilters["format"]);
-      }
-      const c = next.get("comp");
-      if (c === "main" || c === "wild") {
-        setCompetitionFilter(c as StatsFilters["competition"]);
-      }
-      const r = next.get("round");
-      if (r === "regular" || r === "playoff") {
-        setRoundTypeFilter(r as StatsFilters["roundType"]);
-      }
-      filterQueryHydrated.current = true;
-      return;
-    }
-    if (formatFilter) next.set("format", formatFilter);
-    else next.delete("format");
-    if (competitionFilter) next.set("comp", competitionFilter);
-    else next.delete("comp");
-    if (roundTypeFilter) next.set("round", roundTypeFilter);
-    else next.delete("round");
-    const qs = next.toString();
-    if (qs !== searchParams.toString()) {
-      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-    }
-  }, [
-    searchParams,
-    formatFilter,
-    competitionFilter,
-    roundTypeFilter,
-    pathname,
-    router,
-  ]);
-
-  // Flat race-results array for client-side computation
-  const allResultsFlat = useMemo(
-    () => Object.values(raceResults).flat(),
-    [raceResults],
-  );
-
-  // Client-side filtered dataset — only recomputed when a filter changes
-  const filteredDataset = useMemo<{ rows: DriverStatRow[]; headers: string[] } | null>(() => {
-    if (!anyFilterActive) return null;
-    if (!allResultsFlat.length || !events.length) return null;
-    const filters: StatsFilters = {};
-    if (mode === "Season") filters.season = season;
-    if (formatFilter)      filters.format = formatFilter;
-    if (competitionFilter) filters.competition = competitionFilter;
-    if (roundTypeFilter)   filters.roundType = roundTypeFilter;
-    return computeDriverStats(
-      allResultsFlat,
-      events,
-      rewards ?? [],
-      seasons ?? [],
-      filters,
-    );
-  }, [anyFilterActive, allResultsFlat, events, mode, season, formatFilter, competitionFilter, roundTypeFilter, rewards, seasons]);
-
-  // Pick the correct dataset: filtered > server-computed
-  const serverDataset = mode === "All-time" ? allTime : (bySeason[season] ?? { rows: [], headers: [] });
-  const dataset = filteredDataset ?? serverDataset;
-  const driverNames = useMemo(
-    () => dataset.rows.map((r) => r.driver_name).sort(),
-    [dataset.rows],
-  );
-
-  const metrics = useMemo(() => detectMetrics(dataset.rows), [dataset.rows]);
-  const categories = useMemo(() => categoriseMetrics(metrics), [metrics]);
-  const defaultOpenCategoryIds = useMemo(
-    () => new Set(categories.slice(0, DEFAULT_OPEN_CATEGORIES).map((c) => c.id)),
-    [categories],
-  );
-  const [openCategoryIds, setOpenCategoryIds] = useState<Set<string>>(new Set());
-  useEffect(() => {
-    setOpenCategoryIds((prev) => {
-      const valid = new Set(categories.map((c) => c.id));
-      const next = new Set([...prev].filter((id) => valid.has(id)));
-      if (next.size === 0) return new Set(defaultOpenCategoryIds);
-      return next;
-    });
-  }, [categories, defaultOpenCategoryIds]);
-  const allCategoriesExpanded =
-    categories.length > 0 && openCategoryIds.size === categories.length;
-
-  // Ensure selected drivers exist in the current dataset
-  const validDrivers = useMemo(
-    () => selectedDrivers.filter((d) => driverNames.includes(d)),
-    [selectedDrivers, driverNames],
-  );
-
-  // Auto-select first driver if none selected
-  useEffect(() => {
-    if (validDrivers.length === 0 && driverNames.length > 0 && !compare) {
-      const eligible = dataset.rows
-        .filter((r) => getDriverParticipationCount(r) >= 15)
-        .map((r) => r.driver_name);
-      const pool = eligible.length > 0 ? eligible : driverNames;
-      const random = pool[Math.floor(Math.random() * pool.length)];
-      if (random) setSelectedDrivers([random]);
-    }
-  }, [validDrivers, driverNames, compare, dataset.rows]);
-
-  const selectedRows = useMemo(
-    () =>
-      validDrivers
-        .map((name) => dataset.rows.find((r) => r.driver_name === name))
-        .filter((r): r is DriverStatRow => !!r),
-    [validDrivers, dataset.rows],
-  );
-
-  // Chart metrics resolution
-  const availableKeys = useMemo(() => new Set(metrics.map((m) => m.key)), [metrics]);
-
-  const chartMetrics = useMemo(
-    () => resolveMetrics(DRIVER_CHART_METRICS, availableKeys),
-    [availableKeys],
-  );
-  const ratingMetrics = useMemo(
-    () => resolveMetrics(DRIVER_RATING_METRICS, availableKeys),
-    [availableKeys],
-  );
-
-  const tabMetricGroups = useMemo(
-    () => groupMetricsByDriverTab(metrics, availableKeys),
-    [metrics, availableKeys],
-  );
-  const heroMetricSlots = useMemo(
-    () => resolveHeroMetrics(metrics, availableKeys),
-    [metrics, availableKeys],
-  );
-
-  useEffect(() => {
-    if (tabMetricGroups[driverStatTab].length === 0) {
-      const fb = DRIVER_STAT_TAB_ORDER.find((t) => tabMetricGroups[t.id].length > 0)?.id;
-      if (fb) setDriverStatTab(fb);
-    }
-  }, [driverStatTab, tabMetricGroups]);
-
-  // Season keys that actually have data — derived dynamically from bySeason
-  const availableSeasons = useMemo(
-    () =>
-      Object.keys(bySeason)
-        .filter((k) => (bySeason[k]?.rows.length ?? 0) > 0)
-        .sort((a, b) => {
-          // Sort newest season first (S6, S5, S4, …)
-          const numA = parseInt(a.replace(/\D/g, ""), 10) || 0;
-          const numB = parseInt(b.replace(/\D/g, ""), 10) || 0;
-          return numB - numA;
-        }),
-    [bySeason],
-  );
-
-  if (dataset.rows.length === 0) {
-    return (
-      <EmptyState
-        message={
-          mode === "Season"
-            ? t("empty.noDriverStatsForSeason", { season })
-            : t("empty.noDriverStats")
-        }
-      />
-    );
-  }
-
-  const singleDriver = !compare && selectedRows.length === 1 ? selectedRows[0] : null;
-
-  const [showAllMetrics, setShowAllMetrics] = useState(false);
-
-  /** All chartable metrics (non-rating, non-percentage) */
-  const allChartableMetrics = useMemo(
-    () => metrics.filter((m) => !m.isRating && !m.isPercentage),
-    [metrics],
-  );
-  const [modalSelectedKeys, setModalSelectedKeys] = useState<Set<string>>(new Set());
-
-  // Reset modal selection when opening / metrics change
-  useEffect(() => {
-    if (showAllMetrics) {
-      setModalSelectedKeys(new Set(allChartableMetrics.map((m) => m.key)));
-    }
-  }, [showAllMetrics, allChartableMetrics]);
-
-  /* ---------- Chart data ---------- */
-  const barData = useMemo(() => {
-    if (selectedRows.length === 0) return [];
-    return chartMetrics.map(({ label, key }) => {
-      const row: Record<string, string | number> = { metric: label };
-      for (const dr of selectedRows) {
-        row[dr.driver_name] = dr.metrics[key] ?? 0;
-      }
-      return row;
-    });
-  }, [selectedRows, chartMetrics]);
-
-  /** Filtered bar data for the modal */
-  const modalBarData = useMemo(() => {
-    if (selectedRows.length === 0) return [];
-    return allChartableMetrics
-      .filter((m) => modalSelectedKeys.has(m.key))
-      .map(({ label, key }) => {
-        const row: Record<string, string | number> = { metric: label };
-        for (const dr of selectedRows) {
-          row[dr.driver_name] = dr.metrics[key] ?? 0;
-        }
-        return row;
-      });
-  }, [selectedRows, allChartableMetrics, modalSelectedKeys]);
-
-  const radarData = useMemo(() => {
-    if (ratingMetrics.length === 0 || selectedRows.length === 0) return [];
-    return ratingMetrics.map(({ label, key }) => {
-      const row: { subject: string; [key: string]: string | number } = { subject: label };
-      for (const dr of selectedRows) {
-        row[dr.driver_name] = dr.metrics[key] ?? 0;
-      }
-      return row;
-    });
-  }, [selectedRows, ratingMetrics]);
-
-  return (
-    <div className="space-y-6">
-      {/* Controls */}
-      <div className="flex flex-wrap items-center gap-3">
-        <Toggle options={["All-time", "Season"]} value={mode} onChange={(v) => setMode(v as "All-time" | "Season")} />
-        {mode === "Season" && (
-          <select
-            value={season}
-            onChange={(e) => setSeason(e.target.value)}
-            className="num rounded-[2px] border border-[color:var(--isl-hairline-strong)] bg-paper px-3 py-2 text-sm text-ink outline-none"
-          >
-            {availableSeasons.map((k) => (
-              <option key={k} value={k} className="bg-paper">
-                Season {k.replace("S", "")}
-              </option>
-            ))}
-          </select>
-        )}
-
-        <div className="flex-1" />
-        <button
-          onClick={() => {
-            setCompare(!compare);
-            if (!compare && validDrivers.length < 2) {
-              setSelectedDrivers(driverNames.slice(0, 2));
-            }
-          }}
-          className={`rounded-[2px] px-3 py-2 text-sm font-semibold transition ${
-            compare
-              ? "bg-ink text-bone"
-              : "border border-[color:var(--isl-hairline)] text-meta hover:text-ink"
-          }`}
-        >
-          {compare ? t("compare.close") : t("compare.open")}
-        </button>
-      </div>
-
-      <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-4">
-        <p className="mb-3 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-oxblood">{t("segments.results")}</p>
-        <StatsFilterPills
-          formatFilter={formatFilter}
-          competitionFilter={competitionFilter}
-          roundTypeFilter={roundTypeFilter}
-          onFormat={setFormatFilter}
-          onCompetition={setCompetitionFilter}
-          onRoundType={setRoundTypeFilter}
-          onClearAll={() => {
-            setFormatFilter(undefined);
-            setCompetitionFilter(undefined);
-            setRoundTypeFilter(undefined);
-          }}
-          showWild={wildAvailable}
-        />
-      </div>
-
-      {/* Driver selector */}
-      <div className="max-w-sm">
-        <SearchableSelect
-          options={driverNames}
-          value={compare ? validDrivers : validDrivers[0] ?? ""}
-          onChange={(v) => setSelectedDrivers(Array.isArray(v) ? v : [v])}
-          placeholder={compare ? t("select.selectUpTo4Drivers") : t("select.selectDriver")}
-          multiple={compare}
-          maxItems={4}
-        />
-      </div>
-
-      {compare && categories.length > 0 && (
-        <div className="flex justify-end">
-          <button
-            type="button"
-            onClick={() =>
-              setOpenCategoryIds(
-                allCategoriesExpanded
-                  ? new Set()
-                  : new Set(categories.map((c) => c.id)),
-              )
-            }
-            className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-3 py-1.5 text-xs font-semibold text-meta transition hover:text-ink"
-          >
-            {allCategoriesExpanded ? t("expand.collapseAll") : t("expand.expandAll")}
-          </button>
-        </div>
-      )}
-
-      {/* ---- SINGLE DRIVER: hero + sub-tabs + detail grid ---- */}
-      {singleDriver && (
-        <div className="space-y-5">
-          <div>
-            <p className="mb-2 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-oxblood">{t("sections.overview")}</p>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-              {heroMetricSlots.map(({ info, key }) => (
-                <StatHeroCard
-                  key={key}
-                  label={info.label}
-                  value={singleDriver.metrics[key]}
-                  isPct={info.isPercentage}
-                  tooltip={info.tooltip !== info.key ? info.tooltip : undefined}
-                />
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <p className="mb-2 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-oxblood">{t("sections.explore")}</p>
-            <div className="flex flex-wrap gap-1.5 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-1.5">
-              {DRIVER_STAT_TAB_ORDER.map((tabDef) => {
-                const count = tabMetricGroups[tabDef.id].length;
-                if (count === 0) return null;
-                const active = driverStatTab === tabDef.id;
-                return (
-                  <button
-                    key={tabDef.id}
-                    type="button"
-                    onClick={() => setDriverStatTab(tabDef.id)}
-                    className={`rounded-[2px] px-3 py-2 text-xs font-semibold transition sm:text-sm ${
-                      active
-                        ? "bg-ink text-bone"
-                        : "text-meta hover:bg-sink hover:text-ink"
-                    }`}
-                  >
-                    {t(`driverStatTabs.${tabDef.id}`)}
-                    <span
-                      className={`num ms-1.5 rounded-[2px] px-1.5 py-0.5 text-[10px] ${
-                        active ? "bg-bone/20 text-bone/90" : "bg-sink text-meta"
-                      }`}
-                    >
-                      {count}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-4">
-            <div className="grid grid-cols-1 gap-x-6 gap-y-0.5 sm:grid-cols-2 lg:grid-cols-3">
-              {tabMetricGroups[driverStatTab]
-                .filter((m) => {
-                  if (driverStatTab !== "records") return true;
-                  return (singleDriver.metrics[m.key] ?? 0) > 0;
-                })
-                .map((m) => (
-                  <StatRow
-                    key={m.key}
-                    label={m.label}
-                    value={singleDriver.metrics[m.key]}
-                    isPct={m.isPercentage}
-                    tooltip={m.tooltip}
-                  />
-                ))}
-            </div>
-          </div>
-
-          <DriverCumulativeChart
-            driverName={singleDriver.driver_name}
-            raceResults={raceResults}
-            events={events}
-            mode={mode}
-            seasonKey={season}
-          />
-        </div>
-      )}
-
-      {/* ---- COMPARE MODE: Full table with all metrics ---- */}
-      {compare && selectedRows.length > 1 && (
-        <div className="space-y-3">
-          {categories.map((cat, catIdx) => (
-            <CategoryGroup
-              key={cat.id}
-              category={cat}
-              defaultOpen={catIdx < DEFAULT_OPEN_CATEGORIES}
-              open={openCategoryIds.has(cat.id)}
-              onToggle={() =>
-                setOpenCategoryIds((prev) => {
-                  const next = new Set(prev);
-                  if (next.has(cat.id)) next.delete(cat.id);
-                  else next.add(cat.id);
-                  return next;
-                })
-              }
-            >
-              <div className="overflow-x-auto -mx-4">
-                <table className="w-full text-sm">
-                  <thead className="bg-sink">
-                    <tr className="border-b border-[color:var(--isl-hairline-strong)]">
-                      <th className="px-4 py-2 text-start text-sm font-semibold uppercase tracking-wider text-meta">
-                        {t("table.metric")}
-                      </th>
-                      {selectedRows.map((dr, i) => (
-                        <th
-                          key={dr.driver_name}
-                          className="px-4 py-2 text-end text-sm font-semibold uppercase tracking-wider"
-                          style={{ color: COMPARE_COLORS[i] }}
-                        >
-                          {dr.driver_name}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {cat.metrics.map((m) => {
-                      const numeric = selectedRows.map((dr) => ({
-                        driver: dr.driver_name,
-                        value: dr.metrics[m.key] ?? 0,
-                      }));
-                      const target = isLowerBetterMetric(m.label)
-                        ? Math.min(...numeric.map((x) => x.value))
-                        : Math.max(...numeric.map((x) => x.value));
-                      const leaders = new Set(
-                        numeric.filter((x) => x.value === target).map((x) => x.driver),
-                      );
-                      return (
-                        <tr key={m.key} className="border-b border-[color:var(--isl-hairline)]">
-                          <td className="px-4 py-1.5 text-sm text-meta">
-                            {m.tooltip ? (
-                              <MetricTooltip text={m.tooltip}>
-                                <span>{m.label}</span>
-                              </MetricTooltip>
-                            ) : m.label}
-                          </td>
-                          {selectedRows.map((dr) => {
-                            const isLeader = leaders.has(dr.driver_name);
-                            return (
-                              <td
-                                key={dr.driver_name}
-                                className={`num px-4 py-1.5 text-end text-sm font-semibold ${
-                                  isLeader
-                                    ? "text-oxblood"
-                                    : "text-faint"
-                                }`}
-                              >
-                                {fmtVal(dr.metrics[m.key], m.isPercentage)}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </CategoryGroup>
-          ))}
-        </div>
-      )}
-
-      {/* Charts — only useful in compare mode */}
-      {compare && selectedRows.length > 1 && (
-        <div className="space-y-6">
-          <div className="grid gap-6 lg:grid-cols-2">
-            {barData.length > 0 && (
-              <div>
-                <h3 className="mb-2 text-sm font-semibold text-meta">{t("charts.keyMetricsNormalised")}</h3>
-                <StatsBarChart
-                  data={barData}
-                  bars={selectedRows.map((dr, i) => ({
-                    key: dr.driver_name,
-                    color: COMPARE_COLORS[i],
-                    name: dr.driver_name,
-                  }))}
-                  xKey="metric"
-                  normalise
-                  leaderAware
-                  isLowerBetter={isLowerBetterMetric}
-                  hideLegend
-                  height={360}
-                />
-                <p className="mt-2 text-xs text-faint">
-                  {t("charts.leaderHint")}
-                </p>
-                <div className="mt-2 flex justify-end">
-                  <button
-                    onClick={() => setShowAllMetrics(true)}
-                    className="text-sm font-semibold text-oxblood hover:text-oxblood-deep transition"
-                  >
-                    {t("charts.allMetricsLink")}
-                  </button>
-                </div>
-              </div>
-            )}
-            {radarData.length > 0 && (
-              <div>
-                <h3 className="mb-2 text-sm font-semibold text-meta">{t("charts.driverRatings")}</h3>
-                <StatsRadarChart
-                  data={radarData}
-                  subjects={selectedRows.map((dr, i) => ({
-                    key: dr.driver_name,
-                    color: COMPARE_COLORS[i],
-                    name: dr.driver_name,
-                  }))}
-                />
-              </div>
-            )}
-          </div>
-
-          <DriverCompareCumulativeChart
-            driverNames={selectedRows.map((dr) => dr.driver_name)}
-            raceResults={raceResults}
-            events={events}
-            mode={mode}
-            seasonKey={season}
-          />
-        </div>
-      )}
-
-      {/* ---- All Metrics Modal ---- */}
-      {showAllMetrics && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
-          onClick={() => setShowAllMetrics(false)}
-        >
-          <div
-            className="relative mx-4 flex w-full max-w-6xl max-h-[90vh] flex-col rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-[color:var(--isl-hairline)] px-6 py-4">
-              <h2 className="font-display text-lg font-bold text-ink">{t("modal.allMetricsNormalised")}</h2>
-              <button
-                onClick={() => setShowAllMetrics(false)}
-                className="rounded-[2px] p-1.5 text-meta transition hover:bg-sink hover:text-ink"
-              >
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Metric picker */}
-            <div className="border-b border-[color:var(--isl-hairline)] px-6 py-3">
-              <div className="mb-2 flex items-center justify-between">
-                <span className="text-sm font-semibold text-meta uppercase tracking-wider">
-                  {t("modal.metricsCount", { selected: modalSelectedKeys.size, total: allChartableMetrics.length })}
-                </span>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setModalSelectedKeys(new Set(allChartableMetrics.map((m) => m.key)))}
-                    className="text-[11px] font-semibold text-oxblood hover:text-oxblood-deep transition"
-                  >
-                    {t("modal.selectAll")}
-                  </button>
-                  <span className="text-faint">|</span>
-                  <button
-                    onClick={() => setModalSelectedKeys(new Set())}
-                    className="text-[11px] font-semibold text-meta hover:text-ink transition"
-                  >
-                    {t("modal.clear")}
-                  </button>
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-1.5 max-h-28 overflow-auto">
-                {allChartableMetrics.map((m) => {
-                  const selected = modalSelectedKeys.has(m.key);
-                  return (
-                    <button
-                      key={m.key}
-                      onClick={() => {
-                        setModalSelectedKeys((prev) => {
-                          const next = new Set(prev);
-                          if (next.has(m.key)) next.delete(m.key);
-                          else next.add(m.key);
-                          return next;
-                        });
-                      }}
-                      className={`rounded-[2px] px-2 py-1 text-[11px] font-medium transition ${
-                        selected
-                          ? "bg-ink text-bone"
-                          : "bg-cream text-meta hover:text-ink"
-                      }`}
-                    >
-                      {m.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Sticky driver legend */}
-            {selectedRows.length > 0 && (
-              <div className="flex items-center gap-4 border-b border-[color:var(--isl-hairline)] bg-paper px-6 py-2">
-                {selectedRows.map((dr, i) => (
-                  <div key={dr.driver_name} className="flex items-center gap-1.5">
-                    <span
-                      className="inline-block h-3 w-3 rounded-[2px]"
-                      style={{ backgroundColor: compare ? COMPARE_COLORS[i] : SINGLE_COLOR }}
-                    />
-                    <span className="text-sm font-medium text-ink-2">{dr.driver_name}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Horizontally scrollable chart */}
-            <div className="flex-1 overflow-auto px-6 py-4">
-              {modalBarData.length === 0 ? (
-                <div className="flex items-center justify-center py-16">
-                  <p className="text-sm text-meta">{t("modal.selectAtLeastOne")}</p>
-                </div>
-              ) : (
-                <div
-                  className="overflow-x-auto"
-                  style={{ minWidth: 0 }}
-                >
-                  <div style={{ width: Math.max(700, modalBarData.length * 90) }}>
-                    <StatsBarChart
-                      data={modalBarData}
-                      bars={selectedRows.map((dr, i) => ({
-                        key: dr.driver_name,
-                        color: compare ? COMPARE_COLORS[i] : SINGLE_COLOR,
-                        name: dr.driver_name,
-                      }))}
-                      xKey="metric"
-                      normalise
-                      height={400}
-                      hideLegend
-                      leaderAware={compare}
-                      isLowerBetter={isLowerBetterMetric}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 /* ------------------------------------------------------------------ */
-/*  Section: LEAGUE                                                    */
+/*  Section: LEAGUE — moved to components/stats/league/*               */
 /* ------------------------------------------------------------------ */
-
-function LeagueSection({ league }: { league: LeagueStatRow[] }) {
-  const t = useTranslations("stats");
-  const seasonCols = useMemo(() => {
-    if (league.length === 0) return [];
-    return Object.keys(league[0].seasons);
-  }, [league]);
-
-  const [mode, setMode] = useState<"All-time" | "Season">("All-time");
-  const [compare, setCompare] = useState(false);
-  const [selectedSeasons, setSelectedSeasons] = useState<string[]>(
-    seasonCols.length >= 2 ? [seasonCols[seasonCols.length - 1], seasonCols[seasonCols.length - 2]] : seasonCols.slice(0, 2),
-  );
-
-  if (league.length === 0) {
-    return <EmptyState message={t("empty.noLeagueStats")} />;
-  }
-
-  // Season compare bar chart data
-  const barData = useMemo(() => {
-    const cols = compare ? selectedSeasons : ["Total"];
-    return league.map((r) => {
-      const row: Record<string, string | number> = { metric: r.metric };
-      for (const c of cols) {
-        const val = c === "Total" ? r.total : r.seasons[c] ?? "";
-        const n = parseNum(val);
-        if (n !== null) row[c] = n;
-      }
-      return row;
-    }).filter((r) => Object.keys(r).length > 1);
-  }, [league, compare, selectedSeasons]);
-
-  const leagueHighlightDefs = [
-    { metric: "Total Events", shortKey: "league.kpi.events" },
-    { metric: "# Drivers Participating*", shortKey: "league.kpi.drivers" },
-    { metric: "Avg. Participation", shortKey: "league.kpi.avgParticipation" },
-    { metric: "DNF Rate %", shortKey: "league.kpi.dnfRate" },
-  ] as const;
-
-  return (
-    <div className="space-y-6">
-      {/* Controls */}
-      <div className="flex flex-wrap items-center gap-3">
-        <Toggle options={["All-time", "Season"]} value={mode} onChange={(v) => setMode(v as "All-time" | "Season")} />
-        {mode === "Season" && (
-          <button
-            onClick={() => setCompare(!compare)}
-            className={`rounded-[2px] px-3 py-2 text-sm font-semibold transition ${
-              compare
-                ? "bg-ink text-bone"
-                : "border border-[color:var(--isl-hairline)] text-meta hover:text-ink"
-            }`}
-          >
-            {compare ? t("compare.closeSeasons") : t("compare.openSeasons")}
-          </button>
-        )}
-      </div>
-
-      {mode === "All-time" && (
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {leagueHighlightDefs.map(({ metric, shortKey }) => {
-            const row = league.find((r) => r.metric === metric);
-            return (
-              <div
-                key={metric}
-                className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-4 py-3"
-              >
-                <div className="text-[10px] font-bold uppercase tracking-wider text-meta">{t(shortKey)}</div>
-                <div className="num mt-1 text-xl font-extrabold text-ink sm:text-2xl">
-                  {row?.total ?? "—"}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {compare && mode === "Season" && (
-        <div className="max-w-sm">
-          <SearchableSelect
-            options={seasonCols}
-            value={selectedSeasons}
-            onChange={(v) => setSelectedSeasons(Array.isArray(v) ? v : [v])}
-            placeholder={t("select.select2Seasons")}
-            multiple
-            maxItems={2}
-          />
-        </div>
-      )}
-
-      {/* Stats table */}
-      <div className="overflow-x-auto rounded-[2px] border border-[color:var(--isl-hairline)]">
-        <table role="table" className="w-full text-sm">
-          <thead className="bg-sink">
-            <tr className="border-b border-[color:var(--isl-hairline-strong)]">
-              <th className="px-4 py-3 text-start text-sm font-semibold uppercase tracking-wider text-meta">{t("table.metric")}</th>
-              {mode === "All-time" ? (
-                <th className="px-4 py-3 text-end text-sm font-semibold uppercase tracking-wider text-oxblood">{t("table.total")}</th>
-              ) : compare ? (
-                selectedSeasons.map((sc, i) => (
-                  <th key={sc} className="px-4 py-3 text-end text-sm font-semibold uppercase tracking-wider" style={{ color: COMPARE_COLORS[i] }}>{sc}</th>
-                ))
-              ) : (
-                seasonCols.map((sc) => (
-                  <th key={sc} className="px-4 py-3 text-end text-sm font-semibold uppercase tracking-wider text-meta">{sc}</th>
-                ))
-              )}
-            </tr>
-          </thead>
-          <tbody>
-            {league.map((r) => {
-              const tip = getMetricTooltip(r.metric, r.metric);
-              const hasTip = tip !== r.metric;
-              return (
-              <tr key={r.metric} className="border-b border-[color:var(--isl-hairline)] hover:bg-sink/50 transition">
-                <td className="px-4 py-2 text-ink-2 font-medium">
-                  {hasTip ? (
-                    <MetricTooltip text={tip}>
-                      <span>{r.metric}</span>
-                    </MetricTooltip>
-                  ) : r.metric}
-                </td>
-                {mode === "All-time" ? (
-                  <td className="num px-4 py-2 text-end font-semibold text-ink">{r.total}</td>
-                ) : compare ? (
-                  selectedSeasons.map((sc) => (
-                    <td key={sc} className="num px-4 py-2 text-end font-semibold text-ink">{r.seasons[sc] ?? "-"}</td>
-                  ))
-                ) : (
-                  seasonCols.map((sc) => (
-                    <td key={sc} className="num px-4 py-2 text-end text-meta">{r.seasons[sc] ?? "-"}</td>
-                  ))
-                )}
-              </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Bar chart (compare mode) */}
-      {compare && mode === "Season" && barData.length > 0 && (
-        <div>
-          <h3 className="mb-2 text-sm font-semibold text-meta">{t("charts.seasonComparisonNormalised")}</h3>
-          <div className="overflow-x-auto">
-            <div style={{ width: Math.max(700, barData.length * 90) }}>
-              <StatsBarChart
-                data={barData}
-                bars={selectedSeasons.map((sc, i) => ({
-                  key: sc,
-                  color: COMPARE_COLORS[i],
-                  name: sc,
-                }))}
-                xKey="metric"
-                height={380}
-                normalise
-              />
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+/*  The League tab is now a self-contained module that computes its    */
+/*  profile client-side from normalized race data. See                 */
+/*  components/stats/league/LeagueSection.tsx.                          */
 
 /* ------------------------------------------------------------------ */
 /*  Section: CIRCUITS                                                  */
@@ -2636,6 +1070,21 @@ function RankingsSection({
     if (!wildAvailable && competitionFilter === "wild") setCompetitionFilter(undefined);
   }, [wildAvailable, competitionFilter]);
 
+  // Only offer format / round-type pills that actually occur in the data scope.
+  const filterAvail = useMemo(
+    () => computeFilterAvailability(events, mode, season),
+    [events, mode, season],
+  );
+  const showFilterBar =
+    filterAvail.formats.length >= 2 ||
+    wildAvailable ||
+    (filterAvail.hasRegular && filterAvail.hasPlayoffs);
+  useEffect(() => {
+    if (formatFilter && !filterAvail.formats.includes(formatFilter)) setFormatFilter(undefined);
+    if (roundTypeFilter === "playoff" && !filterAvail.hasPlayoffs) setRoundTypeFilter(undefined);
+    if (roundTypeFilter === "regular" && !filterAvail.hasRegular) setRoundTypeFilter(undefined);
+  }, [filterAvail, formatFilter, roundTypeFilter]);
+
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -2805,23 +1254,28 @@ function RankingsSection({
         )}
       </div>
 
-      <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-4">
-        <p className="mb-3 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-oxblood">{t("segments.leaderboard")}</p>
-        <StatsFilterPills
-          formatFilter={formatFilter}
-          competitionFilter={competitionFilter}
-          roundTypeFilter={roundTypeFilter}
-          onFormat={setFormatFilter}
-          onCompetition={setCompetitionFilter}
-          onRoundType={setRoundTypeFilter}
-          onClearAll={() => {
-            setFormatFilter(undefined);
-            setCompetitionFilter(undefined);
-            setRoundTypeFilter(undefined);
-          }}
-          showWild={wildAvailable}
-        />
-      </div>
+      {showFilterBar && (
+        <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-4">
+          <p className="mb-3 font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-oxblood">{t("segments.leaderboard")}</p>
+          <StatsFilterPills
+            formatFilter={formatFilter}
+            competitionFilter={competitionFilter}
+            roundTypeFilter={roundTypeFilter}
+            onFormat={setFormatFilter}
+            onCompetition={setCompetitionFilter}
+            onRoundType={setRoundTypeFilter}
+            onClearAll={() => {
+              setFormatFilter(undefined);
+              setCompetitionFilter(undefined);
+              setRoundTypeFilter(undefined);
+            }}
+            showWild={wildAvailable}
+            availableFormats={filterAvail.formats}
+            showRegular={filterAvail.hasRegular}
+            showPlayoffs={filterAvail.hasPlayoffs}
+          />
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-2">
         <span className="w-full font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-oxblood sm:w-auto sm:self-center">
@@ -3488,10 +1942,15 @@ function H2HSection({
   raceResults,
   events,
   seasons,
+  initialDriverA,
+  initialDriverB,
 }: {
   raceResults: Record<string, RaceResultRow[]>;
   events: RaceEvent[];
   seasons?: SeasonConfig[];
+  /** Pre-select both drivers (e.g. arriving from the Drivers-tab comparison). */
+  initialDriverA?: string;
+  initialDriverB?: string;
 }) {
   const t = useTranslations("stats");
   const locale = useLocale();
@@ -3507,8 +1966,8 @@ function H2HSection({
     return map;
   }, [events]);
 
-  const [driverA, setDriverA] = useState("");
-  const [driverB, setDriverB] = useState("");
+  const [driverA, setDriverA] = useState(initialDriverA ?? "");
+  const [driverB, setDriverB] = useState(initialDriverB ?? "");
   const [seasonFilters, setSeasonFilters] = useState<string[]>([]);
   const [circuitFilters, setCircuitFilters] = useState<string[]>([]);
   const [weatherFilters, setWeatherFilters] = useState<string[]>([]);
@@ -3558,6 +2017,39 @@ function H2HSection({
   const competitionOptions = wildAvailable
     ? ["All Leagues", "Main", "Wild"]
     : ["All Leagues", "Main"];
+
+  // Only offer format / round-type filters that actually occur in the data
+  // scope (respecting any selected season filters).
+  const filterAvail = useMemo(() => {
+    const scoped = events.filter((e) => {
+      if (e.status.toLowerCase().trim() !== "completed") return false;
+      if (seasonFilters.length > 0 && !seasonFilters.some((sk) => matchesSeason(e.season, sk))) return false;
+      return true;
+    });
+    const formatSet = new Set<NonNullable<StatsFilters["format"]>>();
+    let hasRegular = false;
+    let hasPlayoffs = false;
+    for (const e of scoped) {
+      formatSet.add(e.race_format);
+      if (e.is_playoff) hasPlayoffs = true;
+      else hasRegular = true;
+    }
+    const order: NonNullable<StatsFilters["format"]>[] = ["50%", "25%", "sprint"];
+    return { formats: order.filter((f) => formatSet.has(f)), hasRegular, hasPlayoffs };
+  }, [events, seasonFilters]);
+  const showFormatFilter = filterAvail.formats.length >= 2;
+  const showRoundFilter = filterAvail.hasRegular && filterAvail.hasPlayoffs;
+  const formatLabels: Record<NonNullable<StatsFilters["format"]>, string> = {
+    "50%": "50% Race",
+    "25%": "25% Race",
+    sprint: "Sprint",
+  };
+  const formatOptions = ["All Formats", ...filterAvail.formats.map((f) => formatLabels[f])];
+  useEffect(() => {
+    if (formatFilter && !filterAvail.formats.includes(formatFilter as NonNullable<StatsFilters["format"]>)) setFormatFilter("");
+    if (roundTypeFilter === "playoff" && !filterAvail.hasPlayoffs) setRoundTypeFilter("");
+    if (roundTypeFilter === "regular" && !filterAvail.hasRegular) setRoundTypeFilter("");
+  }, [filterAvail, formatFilter, roundTypeFilter]);
 
   const activeFilterCount = seasonFilters.length + circuitFilters.length + weatherFilters.length
     + (formatFilter ? 1 : 0) + (competitionFilter ? 1 : 0) + (roundTypeFilter ? 1 : 0);
@@ -3667,41 +2159,47 @@ function H2HSection({
         )}
 
         {/* Format / Competition / Round type */}
-        <div className="w-40">
-          <SearchableSelect
-            options={["All Formats", "50% Race", "25% Race", "Sprint"]}
-            value={formatFilter === "50%" ? "50% Race" : formatFilter === "25%" ? "25% Race" : formatFilter === "sprint" ? "Sprint" : ""}
-            onChange={(v) => {
-              const s = v as string;
-              setFormatFilter(s === "50% Race" ? "50%" : s === "25% Race" ? "25%" : s === "Sprint" ? "sprint" : "");
-            }}
-            placeholder={t("h2h.allFormats")}
-          />
-        </div>
+        {showFormatFilter && (
+          <div className="w-40">
+            <SearchableSelect
+              options={formatOptions}
+              value={formatFilter === "50%" ? "50% Race" : formatFilter === "25%" ? "25% Race" : formatFilter === "sprint" ? "Sprint" : ""}
+              onChange={(v) => {
+                const s = v as string;
+                setFormatFilter(s === "50% Race" ? "50%" : s === "25% Race" ? "25%" : s === "Sprint" ? "sprint" : "");
+              }}
+              placeholder={t("h2h.allFormats")}
+            />
+          </div>
+        )}
 
-        <div className="w-36">
-          <SearchableSelect
-            options={competitionOptions}
-            value={competitionFilter === "main" ? "Main" : competitionFilter === "wild" ? "Wild" : ""}
-            onChange={(v) => {
-              const s = v as string;
-              setCompetitionFilter(s === "Main" ? "main" : s === "Wild" ? "wild" : "");
-            }}
-            placeholder={t("h2h.allLeagues")}
-          />
-        </div>
+        {wildAvailable && (
+          <div className="w-36">
+            <SearchableSelect
+              options={competitionOptions}
+              value={competitionFilter === "main" ? "Main" : competitionFilter === "wild" ? "Wild" : ""}
+              onChange={(v) => {
+                const s = v as string;
+                setCompetitionFilter(s === "Main" ? "main" : s === "Wild" ? "wild" : "");
+              }}
+              placeholder={t("h2h.allLeagues")}
+            />
+          </div>
+        )}
 
-        <div className="w-40">
-          <SearchableSelect
-            options={["All Rounds", "Regular Season", "Playoffs"]}
-            value={roundTypeFilter === "regular" ? "Regular Season" : roundTypeFilter === "playoff" ? "Playoffs" : ""}
-            onChange={(v) => {
-              const s = v as string;
-              setRoundTypeFilter(s === "Regular Season" ? "regular" : s === "Playoffs" ? "playoff" : "");
-            }}
-            placeholder={t("h2h.allRounds")}
-          />
-        </div>
+        {showRoundFilter && (
+          <div className="w-40">
+            <SearchableSelect
+              options={["All Rounds", "Regular Season", "Playoffs"]}
+              value={roundTypeFilter === "regular" ? "Regular Season" : roundTypeFilter === "playoff" ? "Playoffs" : ""}
+              onChange={(v) => {
+                const s = v as string;
+                setRoundTypeFilter(s === "Regular Season" ? "regular" : s === "Playoffs" ? "playoff" : "");
+              }}
+              placeholder={t("h2h.allRounds")}
+            />
+          </div>
+        )}
 
         {activeFilterCount > 0 && (
           <button
@@ -3960,7 +2458,7 @@ function H2HSection({
 /*  Main component                                                     */
 /* ------------------------------------------------------------------ */
 
-export default function StatsPageContent({ data, raceResults, events, seasons, rewards }: Props) {
+export default function StatsPageContent({ data, raceResults, events, seasons, rewards, driverNamesHe }: Props) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -3976,6 +2474,10 @@ export default function StatsPageContent({ data, raceResults, events, seasons, r
   const [overrideDriver, setOverrideDriver] = useState<string | undefined>(
     undefined,
   );
+
+  // Drivers pre-selected when jumping to Head-to-Head from the Drivers-tab
+  // comparison ("full comparison" action).
+  const [h2hPair, setH2hPair] = useState<{ a: string; b: string } | null>(null);
 
   const handleSelectDriverFromRanking = useCallback(
     (driverName: string) => {
@@ -4001,6 +2503,14 @@ export default function StatsPageContent({ data, raceResults, events, seasons, r
     [pathname, router, searchParams],
   );
 
+  const openHeadToHead = useCallback(
+    (driverA?: string, driverB?: string) => {
+      if (driverA && driverB) setH2hPair({ a: driverA, b: driverB });
+      setTabWithUrl("Head-to-Head");
+    },
+    [setTabWithUrl],
+  );
+
   // Effective initial driver: override takes precedence over URL param
   const effectiveDriver = overrideDriver ?? initialDriver;
 
@@ -4022,14 +2532,28 @@ export default function StatsPageContent({ data, raceResults, events, seasons, r
           initialDriver={effectiveDriver}
           seasons={seasons}
           rewards={rewards}
+          driverNamesHe={driverNamesHe}
+          onOpenHeadToHead={openHeadToHead}
         />
       )}
-      {tab === "League" && <LeagueSection league={data.league} />}
+      {tab === "League" && (
+        <LeagueSection
+          raceResults={raceResults ?? {}}
+          events={events ?? []}
+          seasons={seasons}
+        />
+      )}
       {tab === "Circuits" && (
         <CircuitsSection circuits={data.circuits} />
       )}
       {tab === "Head-to-Head" && raceResults && events && (
-        <H2HSection raceResults={raceResults} events={events} seasons={seasons} />
+        <H2HSection
+          raceResults={raceResults}
+          events={events}
+          seasons={seasons}
+          initialDriverA={h2hPair?.a}
+          initialDriverB={h2hPair?.b}
+        />
       )}
       {tab === "Head-to-Head" && (!raceResults || !events) && (
         <EmptyState message="Race results data is not available." />

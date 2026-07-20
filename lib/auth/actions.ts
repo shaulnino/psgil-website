@@ -12,7 +12,7 @@ import {
   updateUser,
 } from "@/lib/accounts/repository";
 import { isDriverRole } from "@/lib/accounts/types";
-import { saveDriverPhoto } from "@/lib/drivers/photoStore";
+import { deleteDriverPhoto, saveDriverPhoto } from "@/lib/drivers/photoStore";
 import {
   clearSessionCookie,
   createSession,
@@ -159,6 +159,22 @@ export async function uploadDriverPhotoAction(_prev: FormState, formData: FormDa
     return { error: err instanceof Error ? err.message : "Upload failed." };
   }
   await localeRedirect("/account?photo=1");
+}
+
+/** A linked driver removes their uploaded photo (reverts to the CSV photo, if any). */
+export async function removeDriverPhotoAction(_prev: FormState, _formData: FormData): Promise<FormState> {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  if (!isDriverRole(user.roles) || !user.driverId) {
+    return { error: "Only a linked driver can remove a photo." };
+  }
+  try {
+    await deleteDriverPhoto(user.driverId);
+    await setDriverPhotoUrl(user.id, null);
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Remove failed." };
+  }
+  await localeRedirect("/account?photo=removed");
 }
 
 export async function changeOwnPasswordAction(_prev: FormState, formData: FormData): Promise<FormState> {

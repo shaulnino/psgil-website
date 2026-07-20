@@ -43,6 +43,9 @@ export type StandingsRow = {
   driver_id: string;
   driver_name: string;
   team: string;
+  /** Stable team identifier for logo lookup (csv column: team_id / team_key).
+   *  Empty when the CSV omits it — callers then fall back to name matching. */
+  team_key: string;
   points: string;
   gain: string;
   interval: string;
@@ -127,6 +130,7 @@ export function mapStandings(raw: Record<string, string>[]): StandingsRow[] {
     driver_id: s(row.driver_id),
     driver_name: s(row.driver_name),
     team: s(row.team),
+    team_key: s(row.team_id) || s(row.team_key),
     points: s(row.points),
     gain: s(row.gain),
     interval: s(row.interval),

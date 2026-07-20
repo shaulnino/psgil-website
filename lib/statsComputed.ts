@@ -459,6 +459,12 @@ function buildIntermediates(
     const posChange = parseNum(row.position_change) ?? 0;
     const status = (row.status ?? "").trim().toLowerCase();
     const isFinished = status !== "dnf" && status !== "dns" && status !== "dsq" && status !== "disqualified";
+    // DNS = qualified but never started the race. The CSV still carries a
+    // placeholder finishing position (e.g. Gadi P17 in s1_r01_main) and 0
+    // points, neither of which reflect on-track performance. We keep the DNS
+    // count and the (real) qualifying grid, but exclude the race itself from
+    // all finish/points/consistency aggregates.
+    const isDNS = status === "dns";
 
     d.events++;
     if (fmt === "sprint") d.sprints++;
@@ -478,14 +484,18 @@ function buildIntermediates(
     if (weather === "dry")      d.points_dry += pts;
     else if (weather === "rain")     d.points_rain += pts;
     else if (weather === "changing") d.points_changing += pts;
-    if (isPlayoff) { d.points_playoff += pts; d.events_playoff++; }
-    else           { d.points_regular += pts; d.events_regular++; }
+    // Skip DNS from playoff/regular averages — a forced 0 from a race the
+    // driver never started would deflate his points-per-event denominator.
+    if (!isDNS) {
+      if (isPlayoff) { d.points_playoff += pts; d.events_playoff++; }
+      else           { d.points_regular += pts; d.events_regular++; }
+    }
     if (pts > d.max_points_single) d.max_points_single = pts;
 
     // Track season participation
     if (ev?.season) d.seasons_set.add(ev.season);
 
-    if (pos !== null) {
+    if (pos !== null && !isDNS) {
       d.finish_positions.push(pos);
       if (pos === 1) {
         d.wins++;
@@ -523,10 +533,11 @@ function buildIntermediates(
       }
     }
 
-    d.position_changes_sum += posChange;
+    if (!isDNS) d.position_changes_sum += posChange;
     // Per-race absolute change (grid → finish) for consistency average
-    // Only use races with normal grids so reverse-grid events don't distort the metric
-    if (pos !== null && grid !== null && !isReverseGrid) {
+    // Only use races with normal grids so reverse-grid events don't distort the metric.
+    // DNS is excluded — the placeholder finish position is not a real race result.
+    if (pos !== null && grid !== null && !isReverseGrid && !isDNS) {
       d.position_changes_abs_sum += Math.abs(pos - grid);
       d.races_with_grid_and_finish++;
       // Over-performance: finished ahead of grid position
@@ -537,8 +548,10 @@ function buildIntermediates(
       }
     }
 
-    // Track events that awarded points for the Avg. Points denominator
-    if (!isNoPointsEvent) {
+    // Track events that awarded points for the Avg. Points denominator.
+    // Exclude DNS: the driver never started, so a forced 0 must not deflate
+    // his points-per-event average.
+    if (!isNoPointsEvent && !isDNS) {
       d.events_with_points++;
     }
 
@@ -628,7 +641,10 @@ function computeDriverStreaks(
     let maxDNFFree = 0, curDNFFree = 0;
 
     for (const r of races) {
-      const isDNF = r.status === "dnf" || r.status === "dns" || r.status === "dsq" || r.status === "disqualified";
+      // DNS = qualified but never started. Treat it as neutral: it neither
+      // breaks nor extends any streak (including the DNF-free streak).
+      if (r.status === "dns") continue;
+      const isDNF = r.status === "dnf" || r.status === "dsq" || r.status === "disqualified";
       const isWin    = r.pos === 1;
       const isPodium = r.pos !== null && r.pos <= 3;
       const isPoints = r.pts > 0;
@@ -982,7 +998,7 @@ export function computeDriverStats(
     rewards,
     standingsProxy.map<StandingsRow>((a) => ({
       position: "", position_change: "", driver_id: a.driver_id,
-      driver_name: a.driver_name, team: a.team, points: "", gain: "",
+      driver_name: a.driver_name, team: a.team, team_key: "", points: "", gain: "",
       interval: "", gap: "", p1: "", p2: "", p3: "", top5: "", top10: "",
       best_finish: "", best_quali: "", fastest_laps: "", poles: "", dotd: "",
       penalty_points: "", dnfs: "", races: "", season: a.season, bracket: "",

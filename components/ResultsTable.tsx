@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
 /* ------------------------------------------------------------------ */
@@ -28,7 +28,12 @@ export type ColumnDef<T> = {
   hideMobile?: boolean;
 };
 
-/** Cumulative `left` (px) for horizontal `position:sticky` on the first `count` columns. */
+/** Cumulative `left` (px) for horizontal `position:sticky` on the first `count`
+ *  columns, estimated from each column's `minWidth`. Used for the very first
+ *  paint / SSR; once mounted we replace these with the *measured* widths (see
+ *  `useLayoutEffect` below), because columns almost always render wider than
+ *  their `minWidth`, and under-estimating the offset makes frozen columns
+ *  overlap each other when the table is scrolled horizontally. */
 function computeStickyLeftPx<T>(columns: ColumnDef<T>[], count: number): number[] {
   const lefts: number[] = [];
   let acc = 0;
@@ -89,10 +94,69 @@ export default function ResultsTable<T extends Record<string, unknown>>({
 }: Props<T>) {
   const t = useTranslations("schedule");
   const stickyN = Math.max(0, horizontalStickyCount ?? 0);
-  const stickyLefts = computeStickyLeftPx(columns, stickyN);
 
   // Resolve effective rows: if groups are provided use them, otherwise use data
   const effectiveRows = groups ? groups.flatMap((g) => g.rows) : data;
+
+  // Sticky-column offsets. Start from the minWidth estimate (SSR/first paint),
+  // then correct with the real rendered widths so frozen columns line up edge
+  // to edge instead of overlapping when scrolled sideways. We also read the
+  // table's text direction and apply a *physical* left/right inset (logical
+  // `inset-inline-start` is unreliable for sticky in RTL horizontal scroll).
+  const headRowRef = useRef<HTMLTableRowElement>(null);
+  const [measuredLefts, setMeasuredLefts] = useState<number[] | null>(null);
+  const [dir, setDir] = useState<"ltr" | "rtl">("ltr");
+  const fallbackLefts = computeStickyLeftPx(columns, stickyN);
+  const stickyLefts = measuredLefts ?? fallbackLefts;
+  const insetKey: "left" | "right" = dir === "rtl" ? "right" : "left";
+
+  // Freeze columns only on wider viewports (matches the previous `md:` gating).
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    const update = () => setIsDesktop(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  useLayoutEffect(() => {
+    if (stickyN === 0) {
+      setMeasuredLefts(null);
+      return;
+    }
+    const measure = () => {
+      const row = headRowRef.current;
+      if (!row) return;
+      setDir(getComputedStyle(row).direction === "rtl" ? "rtl" : "ltr");
+      const cells = Array.from(row.children) as HTMLElement[];
+      const lefts: number[] = [];
+      let acc = 0;
+      for (let i = 0; i < Math.min(stickyN, cells.length); i++) {
+        lefts[i] = acc;
+        acc += cells[i].getBoundingClientRect().width;
+      }
+      setMeasuredLefts((prev) =>
+        prev && prev.length === lefts.length && prev.every((v, i) => Math.abs(v - lefts[i]) < 0.5)
+          ? prev
+          : lefts,
+      );
+    };
+    measure();
+    const row = headRowRef.current;
+    const ro = new ResizeObserver(measure);
+    if (row) {
+      (Array.from(row.children) as HTMLElement[])
+        .slice(0, stickyN)
+        .forEach((el) => ro.observe(el));
+    }
+    window.addEventListener("resize", measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stickyN, columns, effectiveRows.length]);
 
   if (effectiveRows.length === 0) {
     return (
@@ -123,6 +187,7 @@ export default function ResultsTable<T extends Record<string, unknown>>({
 
           const isHSticky = ci < stickyN;
           const lastFrozen = isHSticky && ci === stickyN - 1;
+          const stickyActive = isHSticky && isDesktop;
 
           return (
             <td
@@ -134,16 +199,16 @@ export default function ResultsTable<T extends Record<string, unknown>>({
                     ? "text-end"
                     : "text-start"
               } ${col.mono ? "num" : ""} ${col.className ?? ""} ${col.hideMobile ? "hidden md:table-cell" : ""} ${
-                isHSticky
-                  ? `sticky z-[1] ${lastFrozen ? "border-e border-[color:var(--isl-hairline-strong)]" : ""}`
-                  : ""
+                stickyActive && lastFrozen ? "border-e border-[color:var(--isl-hairline-strong)]" : ""
               }`}
               style={
-                isHSticky
-                  ? {
-                      insetInlineStart: stickyLefts[ci],
+                stickyActive
+                  ? ({
+                      position: "sticky",
+                      [insetKey]: `${stickyLefts[ci]}px`,
+                      zIndex: 1,
                       backgroundColor: stickyBodyCellBg(ri),
-                    }
+                    } as React.CSSProperties)
                   : undefined
               }
             >
@@ -172,10 +237,11 @@ export default function ResultsTable<T extends Record<string, unknown>>({
         <table className="w-full min-w-max border-collapse text-sm">
           {/* Sticky header — gold (oxblood) top hairline + strong bottom rule */}
           <thead className="bg-sink">
-            <tr>
+            <tr ref={headRowRef}>
               {columns.map((col, ci) => {
                 const isHSticky = ci < stickyN;
                 const lastFrozen = isHSticky && ci === stickyN - 1;
+                const stickyActive = isHSticky && isDesktop;
                 return (
                   <th
                     key={ci}
@@ -186,13 +252,13 @@ export default function ResultsTable<T extends Record<string, unknown>>({
                           ? "text-end"
                           : "text-start"
                     } ${col.hideMobile ? "hidden md:table-cell" : ""} ${
-                      isHSticky
-                        ? `z-20 ${lastFrozen ? "border-e border-[color:var(--isl-hairline-strong)]" : ""}`
-                        : ""
+                      stickyActive && lastFrozen ? "border-e border-[color:var(--isl-hairline-strong)]" : ""
                     }`}
                     style={{
                       ...(col.minWidth ? { minWidth: col.minWidth } : {}),
-                      ...(isHSticky ? { insetInlineStart: stickyLefts[ci] } : {}),
+                      ...(stickyActive
+                        ? ({ [insetKey]: `${stickyLefts[ci]}px`, zIndex: 20 } as React.CSSProperties)
+                        : {}),
                     }}
                   >
                     {col.label}

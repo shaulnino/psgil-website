@@ -4,8 +4,8 @@ import { getLocale, getTranslations } from "next-intl/server";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import HomeHero from "@/components/home/HomeHero";
 import HomeRaceCards from "@/components/HomeRaceCards";
-import WatchLastRaceButton from "@/components/WatchLastRaceButton";
 import Section from "@/components/Section";
 import SnapshotStrip from "@/components/SnapshotStrip";
 import StandingsPreview, { type StandingsPreviewRow } from "@/components/StandingsPreview";
@@ -24,6 +24,8 @@ import {
   groupEndTimestamp,
   toIsraelTimestamp,
   localizedRaceName,
+  localizedTrack,
+  youtubeWatchLinksForGroup,
 } from "@/lib/scheduleData";
 import type { RaceGroup, RaceEvent } from "@/lib/scheduleData";
 import { fetchAllRaceResults, fetchStandings, filterBySeason } from "@/lib/resultsData";
@@ -54,16 +56,13 @@ import {
 
 const newsFallbackImage = "/isl-banner.png";
 
-// Shown only when no upcoming/recent race carries a poster (e.g. between seasons).
-const DEFAULT_HERO_POSTER = "/hero-new-era.png";
+// Fixed cinematic hero image (a real photo, not a per-race poster) — cropping it
+// never loses race info, and it doesn't need clean art maintained per event.
+// Swap this file/path to change the hero backdrop.
+const HERO_IMAGE = "/hero-lineup.png";
 
 function isRemote(src?: string) {
   return !!src && src.startsWith("http");
-}
-
-/** First event in a race-day group that carries a poster image. */
-function groupPoster(group: RaceGroup | null): string | undefined {
-  return group?.events.find((e) => !!e.poster_image)?.poster_image;
 }
 
 /** Normalise a team name for logo lookup (lowercase, collapsed whitespace). */
@@ -103,9 +102,12 @@ function buildStandingsPreview(
     teams.map((t) => [normalizeTeamName(t.team_name), t.team_key]),
   );
 
+  // Prefer the explicit team_id from the standings CSV, then fall back to
+  // driver→team and finally fuzzy team-name matching against the teams CSV.
   const resolveTeamKey = (row: StandingsRow): string =>
-    teamKeyByDriverId.get(row.driver_id) ??
-    teamKeyByName.get(normalizeTeamName(row.team)) ??
+    row.team_key ||
+    teamKeyByDriverId.get(row.driver_id) ||
+    teamKeyByName.get(normalizeTeamName(row.team)) ||
     "";
 
   // Drivers main: exclude the lower playoff bracket (when present) so the preview
@@ -130,7 +132,7 @@ function buildStandingsPreview(
           position: row.position,
           name: row.team,
           points: row.points,
-          logo: getTeamLogo(teamKeyByName.get(normalizeTeamName(row.team)) ?? ""),
+          logo: getTeamLogo(resolveTeamKey(row)),
           teamName: row.team,
         }))
     : [];
@@ -140,7 +142,6 @@ function buildStandingsPreview(
 
 export default async function Home() {
   const tHome = await getTranslations("home");
-  const tCommon = await getTranslations("common");
   const locale = await getLocale();
 
   /* ---- Seasons config ---- */
@@ -201,15 +202,6 @@ export default async function Home() {
   } catch {
     // CSV not available — cards will show fallback
   }
-
-  // Hero banner poster: a race flagged `hero` in the schedule CSV pins its poster
-  // (manual override); otherwise auto-populate from the next race's poster, then
-  // the most recent race's, then a fixed default.
-  const heroPoster =
-    allEventsGlob.find((e) => e.is_hero && e.poster_image)?.poster_image ??
-    groupPoster(nextGroup) ??
-    groupPoster(lastGroup) ??
-    DEFAULT_HERO_POSTER;
 
   let allDrivers = driversCsv
     ? mapDrivers(parseCsv<Record<string, string>>(driversCsv))
@@ -324,8 +316,56 @@ export default async function Home() {
     }
   }
 
+  /* ---- Hero state (league-first, state-aware): live → upcoming → replay → default ---- */
+  const heroLiveLinks = liveGroup ? youtubeWatchLinksForGroup(liveGroup) : [];
+  const heroHasReplay = lastRaceYoutubeLinks.length > 0;
+  const heroState: "live" | "upcoming" | "replay" | "default" = liveGroup
+    ? "live"
+    : nextGroup
+      ? "upcoming"
+      : heroHasReplay
+        ? "replay"
+        : "default";
+
+  const heroStateGroup =
+    heroState === "live"
+      ? liveGroup
+      : heroState === "upcoming"
+        ? nextGroup
+        : heroState === "replay"
+          ? lastGroup
+          : null;
+
+  // Race meta overlaid on the hero image (crop-safe + accessible).
+  const heroRace = heroStateGroup
+    ? (() => {
+        const ev = heroStateGroup.events.find((e) => !!e.poster_image) ?? heroStateGroup.events[0];
+        const time = heroStateGroup.events
+          .map((e) => e.start_time)
+          .filter((tm): tm is string => !!tm)
+          .sort()[0];
+        return {
+          name: localizedRaceName(ev, locale),
+          date: heroStateGroup.date,
+          time,
+          track: localizedTrack(ev, locale),
+          countryCode: ev.country_code,
+        };
+      })()
+    : null;
+
+  const heroWatchLinks =
+    heroState === "live" ? heroLiveLinks : heroState === "replay" ? lastRaceYoutubeLinks : [];
+
+  // League attributes: 3 static (localized) + a data-driven season race count.
+  const heroAttributes = [...(tHome.raw("hero.attributes") as string[])];
+  const heroRaceCount =
+    seasonEvents.filter((e) => e.league.toLowerCase() === "main").length || seasonEvents.length;
+  if (heroRaceCount > 0) {
+    heroAttributes.push(tHome("hero.raceCountAttr", { count: heroRaceCount }));
+  }
+
   /* ---- Resolve template tokens in siteConfig values ---- */
-  const trustChips = (tHome.raw("trustChips") as string[]).map(t);
   const snapshotStats = siteConfig.snapshotStats.map((stat) => ({
     label: tHome(`snapshotStats.${stat.id}`),
     value: t(stat.value),
@@ -334,71 +374,16 @@ export default async function Home() {
 
   return (
     <main className="text-ink-2">
-      {/* ── Hero: "League Command Center" — broadcast-framed race image + ink headline on charcoal ── */}
-      <section className="relative isl-speed-lines overflow-hidden border-b border-[color:var(--isl-hairline)]">
-        <div className="mx-auto w-full max-w-[1240px] px-5 pb-10 pt-6">
-          {/* Race-control status strip */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[color:var(--isl-hairline)] pb-4">
-            <span className="inline-flex items-center gap-2 font-isl-body text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-oxblood">
-              <span
-                className="h-1.5 w-1.5 rounded-full bg-oxblood"
-                style={{ animation: "f1-tick 1.6s steps(1) infinite" }}
-              />
-              {tCommon("leagueFullName")}
-            </span>
-            <span className="num text-[0.7rem] uppercase tracking-[0.2em] text-meta">
-              {currentSeasonLabel} · GMT+3
-            </span>
-          </div>
-
-          {/* Broadcast-framed hero image — see .isl-hero-frame in globals.css */}
-          <div className="isl-hero-frame mt-6 w-full">
-            <div className="isl-hero-frame__plate">
-              <div className="isl-hero-frame__inner relative aspect-[16/9] bg-ink">
-                <Image
-                  src={heroPoster}
-                  alt={tHome("hero.imageAlt")}
-                  fill
-                  priority
-                  sizes="(max-width: 1240px) 100vw, 1240px"
-                  className="object-cover"
-                  unoptimized={isRemote(heroPoster)}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-8 max-w-5xl">
-            <p className="font-isl-body text-[0.75rem] font-semibold uppercase tracking-[0.24em] text-brass-ink">
-              {tHome("hero.keyFacts")}
-            </p>
-            <h1 className="mt-3 font-display text-4xl font-bold leading-[1.02] tracking-[0.005em] text-ink md:text-5xl lg:text-6xl [text-wrap:balance]">
-              {tHome("hero.title")}
-            </h1>
-            <div className="isl-gold-rule mt-5 max-w-[260px]" />
-            <p className="mt-5 max-w-xl text-lg text-ink-2 md:text-xl">
-              {tHome("hero.subtitle")}
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Button href="#contact-us">{tHome("hero.joinNow")}</Button>
-              <WatchLastRaceButton
-                links={lastRaceYoutubeLinks}
-                label={tHome("hero.watchLastRace")}
-              />
-            </div>
-            <div className="mt-7 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] leading-relaxed">
-              {trustChips.map((chip) => (
-                <span key={chip} className="inline-flex items-center gap-2 select-none">
-                  <span className="h-3 w-[2px] shrink-0 bg-oxblood/70" />
-                  <span className="font-isl-body font-medium uppercase tracking-[0.1em] text-ink-2">
-                    {chip}
-                  </span>
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* ── Unified league-first hero — see components/home/HomeHero.tsx ── */}
+      <HomeHero
+        state={heroState}
+        seasonLabel={currentSeasonLabel}
+        image={HERO_IMAGE}
+        imageIsRemote={isRemote(HERO_IMAGE)}
+        race={heroRace}
+        watchLinks={heroWatchLinks}
+        attributes={heroAttributes}
+      />
 
       <div className="mx-auto mt-4 flex w-full max-w-[1240px] items-center gap-3 px-5">
         {siteConfig.socials.length > 0 && (
@@ -531,6 +516,7 @@ export default async function Home() {
       </Section>
 
       <Section
+        id="races"
         title={tHome("races.title")}
         description={tHome("races.description")}
         brandTitle
