@@ -8,6 +8,7 @@ import { fetchSeasonsConfig, GLOBAL_CSV_URLS } from "@/lib/seasonConfig";
 import { fetchAllRaceResults } from "@/lib/resultsData";
 import { fetchCsv, parseCsv } from "@/lib/csv";
 import { mapRaceEvents } from "@/lib/scheduleData";
+import { mapDrivers } from "@/lib/driversData";
 import { fetchRewards } from "@/lib/rewardsData";
 import {
   computeDriverStats,
@@ -19,15 +20,24 @@ export default async function StatsPage() {
   const t = await getTranslations("stats");
   const seasons = await fetchSeasonsConfig();
 
-  const [raceResultsByEvent, scheduleCsv, rewards] = await Promise.all([
+  const [raceResultsByEvent, scheduleCsv, driversCsv, rewards] = await Promise.all([
     fetchAllRaceResults(GLOBAL_CSV_URLS.raceResults),
     fetchCsv(GLOBAL_CSV_URLS.schedule).catch(() => ""),
+    fetchCsv(GLOBAL_CSV_URLS.drivers).catch(() => ""),
     fetchRewards(GLOBAL_CSV_URLS.rewards),
   ]);
 
   const events = scheduleCsv
     ? mapRaceEvents(parseCsv<Record<string, string>>(scheduleCsv))
     : [];
+
+  // Hebrew display names keyed by driver_id (English `driver_name` from the
+  // results CSV stays the internal value; only the label is localized).
+  const drivers = driversCsv ? mapDrivers(parseCsv(driversCsv)) : [];
+  const driverNamesHe: Record<string, string> = {};
+  for (const d of drivers) {
+    if (d.name_he) driverNamesHe[d.driver_id] = d.name_he;
+  }
 
   const allResults = Object.values(raceResultsByEvent).flat();
 
@@ -74,6 +84,7 @@ export default async function StatsPage() {
             events={events}
             seasons={seasons}
             rewards={rewards}
+            driverNamesHe={driverNamesHe}
           />
         </Suspense>
       </Section>

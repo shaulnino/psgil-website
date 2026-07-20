@@ -65,7 +65,14 @@
     "photoSave": "שמירת תמונה",
     "photoCancel": "ביטול",
     "photoTooLarge": "התמונה חורגת ממגבלת 5MB.",
-    "photoBadType": "סוג קובץ לא נתמך. השתמש ב-JPG, ‏PNG, ‏WebP או GIF."
+    "photoBadType": "סוג קובץ לא נתמך. השתמש ב-JPG, ‏PNG, ‏WebP או GIF.",
+    "photoRemove": "הסרת תמונה",
+    "photoRemoveConfirm": "להסיר את התמונה?",
+    "photoRemoveCta": "כן, להסיר",
+    "photoRemoved": "תמונת הנהג הוסרה.",
+    "photoCropTitle": "חיתוך תמונה",
+    "photoCropApply": "החלת חיתוך",
+    "photoZoom": "זום"
   },
   "forgot": {
     "title": "איפוס סיסמה",

@@ -65,7 +65,14 @@
     "photoSave": "Save photo",
     "photoCancel": "Cancel",
     "photoTooLarge": "Image exceeds the 5 MB limit.",
-    "photoBadType": "Unsupported image type. Use JPG, PNG, WebP or GIF."
+    "photoBadType": "Unsupported image type. Use JPG, PNG, WebP or GIF.",
+    "photoRemove": "Remove photo",
+    "photoRemoveConfirm": "Remove this photo?",
+    "photoRemoveCta": "Yes, remove",
+    "photoRemoved": "Your driver photo has been removed.",
+    "photoCropTitle": "Crop photo",
+    "photoCropApply": "Apply crop",
+    "photoZoom": "Zoom"
   },
   "forgot": {
     "title": "Reset your password",

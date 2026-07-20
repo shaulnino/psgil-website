@@ -328,8 +328,11 @@ export default function StandingsTable({
   };
 
   const columns = useMemo(() => getColumns(type, t), [type, t]);
-  const horizontalStickyCount =
-    columns.findIndex((c) => c.label === t("standingsTable.points")) + 1;
+  // Freeze only the first 4 columns (the identity block): for drivers that's
+  // position, +/-, driver, team; for constructors position, +/-, team, points.
+  // Everything from the points/stats onward scrolls. Freezing more than this
+  // caused the last frozen column to overlap the team names in RTL.
+  const horizontalStickyCount = Math.min(4, columns.length);
 
   return (
     <ResultsTable<StandingsRow>
