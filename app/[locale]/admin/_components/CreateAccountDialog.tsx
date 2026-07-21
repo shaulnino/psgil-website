@@ -23,7 +23,6 @@ export function CreateAccountDialog({
   const t = useTranslations("admin");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [roles, setRoles] = useState<AppRole[]>(["driver"]);
   const [error, setError] = useState<AdminErrorCode | null>(null);
   const [pending, startTransition] = useTransition();
@@ -31,7 +30,7 @@ export function CreateAccountDialog({
   const submit = () => {
     setError(null);
     startTransition(async () => {
-      const res = await createAccount({ name, email, password, roles });
+      const res = await createAccount({ name, email, roles });
       if (res.ok) onDone();
       else setError(res.error);
     });
@@ -54,21 +53,13 @@ export function CreateAccountDialog({
           />
         </div>
         <div>
-          <Label htmlFor="create-pw">{t("create.password")}</Label>
-          <Input
-            id="create-pw"
-            type="text"
-            value={password}
-            minLength={8}
-            autoComplete="off"
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <p className="mt-1.5 text-xs text-meta">{t("create.passwordHint")}</p>
-        </div>
-        <div>
           <Label>{t("drawer.roles")}</Label>
           <RolesField value={roles} onChange={setRoles} />
         </div>
+
+        <p className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2 text-xs leading-relaxed text-meta">
+          {t("create.tempInfo")}
+        </p>
 
         {error && (
           <p
@@ -88,7 +79,7 @@ export function CreateAccountDialog({
             size="sm"
             onClick={submit}
             loading={pending}
-            disabled={!name || !email || password.length < 8 || roles.length === 0}
+            disabled={!name || !email || roles.length === 0}
           >
             {t("create.submit")}
           </Button>

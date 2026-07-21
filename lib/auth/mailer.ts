@@ -62,3 +62,41 @@ export function passwordResetEmail(name: string, url: string): { subject: string
 </div>`;
   return { subject, html, text };
 }
+
+/**
+ * Branded (dark, RTL Hebrew) welcome email for an admin-provisioned account.
+ * States the login email + temporary password and links to the login page; the
+ * user is forced to change the password on first sign-in. Inline hex — email
+ * clients can't use CSS vars. Credentials render LTR inside the RTL shell.
+ */
+export function accountCreatedEmail(
+  name: string,
+  email: string,
+  tempPassword: string,
+  loginUrl: string,
+): { subject: string; html: string; text: string } {
+  const first = (name || "").trim().split(/\s+/)[0] || "";
+  const hello = first ? `שלום ${first},` : "שלום,";
+  const subject = "החשבון שלך ב-ISL נוצר";
+  const text =
+    `${hello}\n\nנוצר עבורך חשבון באתר ISL. זהו אימייל אוטומטי עם פרטי הכניסה שלך.\n\n` +
+    `אימייל לכניסה: ${email}\nסיסמה זמנית: ${tempPassword}\n\n` +
+    `כניסה לחשבון: ${loginUrl}\n\n` +
+    `בכניסה הראשונה תתבקש להחליף את הסיסמה הזמנית בסיסמה אישית שרק אתם מכירים.`;
+  const html = `<div dir="rtl" style="background:#0f1113;color:#f3f1ec;font-family:Arial,Helvetica,sans-serif;padding:32px;text-align:right">
+  <div style="max-width:480px;margin:0 auto">
+    <div style="width:56px;height:2px;background:#c9a24b;margin-bottom:20px"></div>
+    <h1 style="font-size:18px;letter-spacing:0.02em;margin:0 0 12px">החשבון שלך ב-ISL נוצר</h1>
+    <p style="color:#cbc7bf;line-height:1.7;margin:0 0 20px">${hello} נוצר עבורך חשבון באתר ISL. זהו אימייל אוטומטי עם פרטי הכניסה שלך.</p>
+    <div style="background:#171a1e;border:1px solid rgba(240,236,228,0.15);border-radius:2px;padding:16px;margin:0 0 20px">
+      <p style="color:#918c82;font-size:12px;margin:0 0 4px">אימייל לכניסה</p>
+      <p dir="ltr" style="color:#f3f1ec;font-size:15px;font-weight:bold;margin:0 0 14px;text-align:left">${email}</p>
+      <p style="color:#918c82;font-size:12px;margin:0 0 4px">סיסמה זמנית</p>
+      <p dir="ltr" style="color:#d8b45f;font-size:18px;font-weight:bold;letter-spacing:0.1em;margin:0;text-align:left">${tempPassword}</p>
+    </div>
+    <a href="${loginUrl}" style="display:inline-block;background:#c9a24b;color:#0f1113;text-decoration:none;font-weight:bold;padding:12px 22px;border-radius:2px">כניסה לחשבון</a>
+    <p style="color:#918c82;font-size:13px;line-height:1.7;margin:22px 0 0">בכניסה הראשונה תתבקש להחליף את הסיסמה הזמנית בסיסמה אישית שרק אתם מכירים.</p>
+  </div>
+</div>`;
+  return { subject, html, text };
+}

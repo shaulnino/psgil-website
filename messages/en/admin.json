@@ -64,8 +64,7 @@
   "create": {
     "button": "Create account",
     "title": "Create account",
-    "password": "Temporary password",
-    "passwordHint": "Minimum 8 characters. The user must change it on first sign-in.",
+    "tempInfo": "The user will get an email with a login link and a temporary password (12345678). They must change it on first sign-in.",
     "submit": "Create account"
   },
   "reset": {

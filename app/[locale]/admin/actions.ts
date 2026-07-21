@@ -14,6 +14,16 @@ import {
   updateUserRoles,
 } from "@/lib/accounts/repository";
 import { ALL_ROLES, emailSchema, type AppRole } from "@/lib/accounts/types";
+import { sendAccountEmail, accountCreatedEmail } from "@/lib/auth/mailer";
+
+/**
+ * Fixed temporary password for every admin-provisioned account. Safe as a
+ * constant because `mustChangePassword: true` forces an immediate change on
+ * first login. Communicated to the new user via the welcome email.
+ */
+const TEMP_PASSWORD = "12345678";
+// Public base for the login link in the welcome email (Netlify overrides via env).
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://f1isl.com").replace(/\/$/, "");
 
 /**
  * Admin account-management actions (redesign, 2026-07).
@@ -130,11 +140,13 @@ export async function removeAccount(userId: string): Promise<ActionResult> {
   return ok();
 }
 
-/** Admin-provision a new account. Must change password on first login. */
+/**
+ * Admin-provision a new account with the fixed temporary password. The new user
+ * is emailed their login link + temp password and must change it on first login.
+ */
 export async function createAccount(input: {
   name: string;
   email: string;
-  password: string;
   roles: AppRole[];
 }): Promise<ActionResult> {
   await requireAdmin();
@@ -144,17 +156,23 @@ export async function createAccount(input: {
 
   if (!name) return fail("name-required");
   if (!emailSchema.safeParse(email).success) return fail("email-invalid");
-  if (input.password.length < 8) return fail("password-short");
   if (roles.length === 0) return fail("roles-required");
   if (await getUserByEmail(email)) return fail("email-taken");
 
-  await createUser({
+  const account = await createUser({
     name,
     email,
-    passwordHash: hashPassword(input.password),
+    passwordHash: hashPassword(TEMP_PASSWORD),
     roles,
     mustChangePassword: true,
   });
+
+  // Welcome email with login link + temp password. Non-fatal: sendAccountEmail
+  // never throws (logs on failure), so a mail issue never blocks account creation.
+  const loginUrl = `${SITE_URL}/login`;
+  const mail = accountCreatedEmail(account.name, account.email, TEMP_PASSWORD, loginUrl);
+  await sendAccountEmail({ to: account.email, ...mail, devLink: loginUrl });
+
   revalidatePath(ADMIN_ROUTE, "page");
   return ok();
 }
