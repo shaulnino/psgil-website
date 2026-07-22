@@ -323,6 +323,12 @@ export function DisciplineSection({ profile }: { profile: DriverProfile }) {
         <StatLine label={label("cleanRacePct")} value={val("cleanRacePct", d.cleanRacePct)} tooltip={tip("cleanRacePct")} />
         <StatLine label={label("penaltyRate")} value={val("penaltyRate", d.penaltyRate)} tooltip={tip("penaltyRate")} />
         <StatLine label={label("penaltySeconds")} value={val("penaltySeconds", d.penaltySeconds)} tooltip={tip("penaltySeconds")} />
+        {d.stewardSeconds > 0 && (
+          <StatLine label={label("stewardSeconds")} value={val("stewardSeconds", d.stewardSeconds)} tooltip={tip("stewardSeconds")} />
+        )}
+        {d.gameSeconds > 0 && (
+          <StatLine label={label("gameSeconds")} value={val("gameSeconds", d.gameSeconds)} tooltip={tip("gameSeconds")} />
+        )}
         <StatLine label={label("penaltiesPerStart")} value={val("penaltiesPerStart", d.penaltiesPerStart)} tooltip={tip("penaltiesPerStart")} />
       </MetricGrid>
     </SectionCard>

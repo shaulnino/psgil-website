@@ -171,6 +171,9 @@ export type DriverProfile = {
   // ── G. Discipline ────────────────────────────────────────────
   discipline: {
     penaltySeconds: number;
+    /** Split of total penalty time by source (steward decisions vs in-game). */
+    stewardSeconds: number;
+    gameSeconds: number;
     penaltiesPerStart: number | null;
     cleanRaces: number;
     cleanRacePct: number | null;
@@ -475,6 +478,8 @@ export function computeDriverProfile(
 
   // ── Discipline ────────────────────────────────────────────────
   const penaltySeconds = filtered.reduce((s, r) => s + r.penaltySeconds, 0);
+  const stewardSeconds = filtered.reduce((s, r) => s + r.stewardPenalty, 0);
+  const gameSeconds = filtered.reduce((s, r) => s + r.gamePenalty, 0);
   const racesWithPenalty = filtered.filter(
     (r) => r.isStart && r.penaltySeconds > 0,
   ).length;
@@ -641,6 +646,8 @@ export function computeDriverProfile(
 
     discipline: {
       penaltySeconds: round2(penaltySeconds),
+      stewardSeconds: round2(stewardSeconds),
+      gameSeconds: round2(gameSeconds),
       penaltiesPerStart: starts > 0 ? round2(penaltySeconds / starts) : null,
       cleanRaces,
       cleanRacePct: pct(cleanRaces, starts),

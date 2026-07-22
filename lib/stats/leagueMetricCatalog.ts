@@ -55,6 +55,8 @@ export const LEAGUE_METRIC_CATALOG: Record<string, LeagueMetricDef> = {
   penaltyRate: { id: "penaltyRate", unit: "pct" },
   cleanRaceRate: { id: "cleanRaceRate", unit: "pct" },
   penaltySecondsPerRace: { id: "penaltySecondsPerRace", unit: "sec" },
+  stewardSecondsPerRace: { id: "stewardSecondsPerRace", unit: "sec" },
+  gameSecondsPerRace: { id: "gameSecondsPerRace", unit: "sec" },
 
   // Facts (operational, demoted)
   safetyCars: { id: "safetyCars", unit: "int" },

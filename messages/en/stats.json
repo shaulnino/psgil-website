@@ -206,6 +206,8 @@
     "podiumStreakBest": { "label": "Longest podium streak", "tooltip": "Longest run of consecutive podiums." },
     "winStreakBest": { "label": "Longest win streak", "tooltip": "Longest run of consecutive wins." },
     "penaltySeconds": { "label": "Penalty time", "tooltip": "Total steward and in-game time penalties, in seconds." },
+    "stewardSeconds": { "label": "Steward penalty time", "tooltip": "Time penalties handed down by stewards, in seconds. Shown only when any were applied." },
+    "gameSeconds": { "label": "In-game penalty time", "tooltip": "Automatic in-game time penalties (e.g. track limits), in seconds. Shown only when any were applied." },
     "penaltiesPerStart": { "label": "Penalty time / start", "tooltip": "Average penalty time per start, in seconds." },
     "cleanRaces": { "label": "Clean races", "tooltip": "Starts with zero time penalty." },
     "cleanRacePct": { "label": "Clean-race %", "tooltip": "Clean races as a percentage of starts." },
@@ -347,6 +349,8 @@
       "penaltyRate": { "label": "Races with penalties", "tooltip": "Share of races with at least one time penalty." },
       "cleanRaceRate": { "label": "Clean races", "tooltip": "Share of races with zero time penalties." },
       "penaltySecondsPerRace": { "label": "Penalty time / race", "tooltip": "Average total time penalties handed out per race, in seconds." },
+      "stewardSecondsPerRace": { "label": "Steward penalty time / race", "tooltip": "Average steward-issued time penalties per race, in seconds. Shown only when any were applied." },
+      "gameSecondsPerRace": { "label": "In-game penalty time / race", "tooltip": "Average automatic in-game time penalties (e.g. track limits) per race, in seconds. Shown only when any were applied." },
       "safetyCars": { "label": "Safety cars", "tooltip": "Total safety-car deployments recorded." },
       "reverseGridEvents": { "label": "Reverse-grid races", "tooltip": "Races run with a reverse grid." },
       "broadcastedEvents": { "label": "Broadcast races", "tooltip": "Races with a video broadcast on record." }

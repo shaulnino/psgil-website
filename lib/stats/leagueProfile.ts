@@ -67,6 +67,8 @@ export type EventAgg = {
 
   penalizedRows: number;
   penaltySeconds: number;
+  stewardSeconds: number;
+  gameSeconds: number;
   hasPenalty: boolean;
 };
 
@@ -150,6 +152,9 @@ export type LeagueProfile = {
     penaltyRate: number | null; // % of races with >= 1 penalty
     cleanRaceRate: number | null;
     penaltySecondsPerRace: number | null;
+    /** Split of average penalty time per race by source (steward vs in-game). */
+    stewardSecondsPerRace: number | null;
+    gameSecondsPerRace: number | null;
     racesWithPenalty: number;
   };
 
@@ -250,6 +255,8 @@ export function aggregateEvents(races: NormalizedRace[]): EventAgg[] {
 
     const penalizedRows = rows.filter((r) => r.penaltySeconds > 0).length;
     const penaltySeconds = rows.reduce((s, r) => s + r.penaltySeconds, 0);
+    const eventStewardSeconds = rows.reduce((s, r) => s + r.stewardPenalty, 0);
+    const eventGameSeconds = rows.reduce((s, r) => s + r.gamePenalty, 0);
 
     aggs.push({
       ref: toRef(first),
@@ -277,6 +284,8 @@ export function aggregateEvents(races: NormalizedRace[]): EventAgg[] {
 
       penalizedRows,
       penaltySeconds: round2(penaltySeconds),
+      stewardSeconds: round2(eventStewardSeconds),
+      gameSeconds: round2(eventGameSeconds),
       hasPenalty: penalizedRows > 0,
     });
   }
@@ -439,6 +448,8 @@ export function computeLeagueProfile(
   // ── Discipline ────────────────────────────────────────────────
   const racesWithPenalty = evAggs.filter((e) => e.hasPenalty).length;
   const penaltySecondsTotal = evAggs.reduce((s, e) => s + e.penaltySeconds, 0);
+  const stewardSecondsTotal = evAggs.reduce((s, e) => s + e.stewardSeconds, 0);
+  const gameSecondsTotal = evAggs.reduce((s, e) => s + e.gameSeconds, 0);
 
   // ── Splits ────────────────────────────────────────────────────
   const bySeason: SeasonSplit[] = [...bySeasonRaces.entries()]
@@ -588,6 +599,8 @@ export function computeLeagueProfile(
       penaltyRate: pct(racesWithPenalty, races),
       cleanRaceRate: pct(races - racesWithPenalty, races),
       penaltySecondsPerRace: races > 0 ? round2(penaltySecondsTotal / races) : null,
+      stewardSecondsPerRace: races > 0 ? round2(stewardSecondsTotal / races) : null,
+      gameSecondsPerRace: races > 0 ? round2(gameSecondsTotal / races) : null,
       racesWithPenalty,
     },
 

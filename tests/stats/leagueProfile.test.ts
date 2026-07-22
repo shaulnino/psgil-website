@@ -105,7 +105,19 @@ test("discipline: penalty + clean-race rates (clean = zero time penalties)", () 
   assert.equal(d.penaltyRate, 66.67);
   assert.equal(d.cleanRaceRate, 33.33);
   assert.equal(d.penaltySecondsPerRace, 2.67); // (5+3)/3
+  // Split by source: steward 5s (r1 carol), in-game 3s (r3 carol), over 3 races.
+  assert.equal(d.stewardSecondsPerRace, 1.67); // 5/3
+  assert.equal(d.gameSecondsPerRace, 1); // 3/3
+  // The two components sum to the combined total.
+  assert.equal(
+    round(d.stewardSecondsPerRace! + d.gameSecondsPerRace!),
+    d.penaltySecondsPerRace,
+  );
 });
+
+function round(n: number): number {
+  return Math.round(n * 100) / 100;
+}
 
 test("records are all-time and independent of filters", () => {
   const { races, events } = season();

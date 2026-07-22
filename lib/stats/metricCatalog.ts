@@ -81,6 +81,8 @@ export const METRIC_CATALOG: Record<string, MetricDef> = {
 
   // Discipline
   penaltySeconds: { id: "penaltySeconds", unit: "sec", higherBetter: false },
+  stewardSeconds: { id: "stewardSeconds", unit: "sec", higherBetter: false },
+  gameSeconds: { id: "gameSeconds", unit: "sec", higherBetter: false },
   penaltiesPerStart: { id: "penaltiesPerStart", unit: "dec", higherBetter: false },
   cleanRaces: { id: "cleanRaces", unit: "int", higherBetter: true },
   cleanRacePct: { id: "cleanRacePct", unit: "pct", higherBetter: true },

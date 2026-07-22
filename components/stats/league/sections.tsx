@@ -181,6 +181,12 @@ export function DisciplineSection({ profile }: { profile: LeagueProfile }) {
         <StatLine label={label("cleanRaceRate")} value={val("cleanRaceRate", d.cleanRaceRate)} tooltip={tip("cleanRaceRate")} />
         <StatLine label={label("penaltyRate")} value={val("penaltyRate", d.penaltyRate)} sample={t("league.sample.races", { count: d.racesWithPenalty })} tooltip={tip("penaltyRate")} />
         <StatLine label={label("penaltySecondsPerRace")} value={val("penaltySecondsPerRace", d.penaltySecondsPerRace)} tooltip={tip("penaltySecondsPerRace")} />
+        {d.stewardSecondsPerRace !== null && d.stewardSecondsPerRace > 0 && (
+          <StatLine label={label("stewardSecondsPerRace")} value={val("stewardSecondsPerRace", d.stewardSecondsPerRace)} tooltip={tip("stewardSecondsPerRace")} />
+        )}
+        {d.gameSecondsPerRace !== null && d.gameSecondsPerRace > 0 && (
+          <StatLine label={label("gameSecondsPerRace")} value={val("gameSecondsPerRace", d.gameSecondsPerRace)} tooltip={tip("gameSecondsPerRace")} />
+        )}
       </MetricGrid>
     </SectionCard>
   );
