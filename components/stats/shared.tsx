@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useTranslations } from "next-intl";
 
 /* ------------------------------------------------------------------ */
@@ -31,10 +31,37 @@ export function MetricTooltip({
   text: string;
   children: React.ReactNode;
 }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handlePointer(e: PointerEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("pointerdown", handlePointer);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointer);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [open]);
+
   return (
-    <span className="group/tip relative inline-flex cursor-help">
+    <span
+      ref={ref}
+      className="group/tip relative inline-flex cursor-help"
+      onClick={() => setOpen((v) => !v)}
+    >
       {children}
-      <span className="pointer-events-none absolute bottom-full start-0 z-50 mb-2 w-max max-w-[220px] rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-2.5 py-1.5 text-[11px] font-medium text-ink opacity-0 transition-opacity group-hover/tip:opacity-100 text-start leading-snug">
+      <span
+        className={`pointer-events-none absolute bottom-full start-0 z-50 mb-2 w-max max-w-[220px] rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-2.5 py-1.5 text-[11px] font-medium text-ink transition-opacity group-hover/tip:opacity-100 text-start leading-snug ${open ? "opacity-100" : "opacity-0"}`}
+      >
         {text}
       </span>
     </span>
