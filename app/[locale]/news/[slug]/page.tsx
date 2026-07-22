@@ -26,6 +26,7 @@ import {
 } from "@/lib/resultsData";
 import { mapDrivers, mapTeams, type Driver, type Team } from "@/lib/driversData";
 import { attachRewardsToDrivers, fetchRewards } from "@/lib/rewardsData";
+import { applyUploadedDriverPhotos } from "@/lib/drivers/photoOverride";
 import {
   fetchArticleBySlug,
   fetchArticlesWithStatus,
@@ -240,6 +241,9 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
         modalDrivers = driversCsv
           ? mapDrivers(parseCsv<Record<string, string>>(driversCsv))
           : [];
+        // Override CSV photo_url with account-uploaded driver photos (PW-2e) so
+        // the shared driver modal opened from a recap shows it too.
+        modalDrivers = await applyUploadedDriverPhotos(modalDrivers);
         modalDrivers = attachRewardsToDrivers(modalDrivers, rewards);
         modalTeams = teamsCsv
           ? mapTeams(parseCsv<Record<string, string>>(teamsCsv))

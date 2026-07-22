@@ -16,6 +16,7 @@ import {
   computeCompetitionRanks,
 } from "@/lib/driversData";
 import { attachRewardsToDrivers, fetchRewards } from "@/lib/rewardsData";
+import { applyUploadedDriverPhotos } from "@/lib/drivers/photoOverride";
 import {
   fetchSeasonsConfig,
   resolveCurrentSeason,
@@ -59,6 +60,9 @@ export default async function SchedulePage() {
   let allDrivers = driversCsv
     ? mapDrivers(parseCsv<Record<string, string>>(driversCsv))
     : [];
+  // Override CSV photo_url with account-uploaded driver photos (PW-2e) so the
+  // shared driver modal opened from the schedule shows it too.
+  allDrivers = await applyUploadedDriverPhotos(allDrivers);
 
   if (standingsCsv) {
     const standings = mapLeagueStandings(

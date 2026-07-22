@@ -43,6 +43,7 @@ import {
 import type { Driver, Team } from "@/lib/driversData";
 import { computeDriverRatings, computeHomePageSnapshot } from "@/lib/statsComputed";
 import { attachRewardsToDrivers, fetchRewards } from "@/lib/rewardsData";
+import { applyUploadedDriverPhotos } from "@/lib/drivers/photoOverride";
 import { fetchLatestArticles, formatNewsDate } from "@/lib/newsData";
 import { getYouTubeVideoId } from "@/lib/youtube";
 import {
@@ -206,6 +207,9 @@ export default async function Home() {
   let allDrivers = driversCsv
     ? mapDrivers(parseCsv<Record<string, string>>(driversCsv))
     : [];
+  // Override CSV photo_url with account-uploaded driver photos (PW-2e) so the
+  // shared driver modal opened from the home race cards shows it too.
+  allDrivers = await applyUploadedDriverPhotos(allDrivers);
 
   // Derive league ranks from the computed standings tables (current season only)
   allDrivers = applyLeagueStandings(
