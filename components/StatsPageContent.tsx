@@ -1425,7 +1425,7 @@ function RankingsSection({
                     {t("table.team")}
                   </th>
                 )}
-                <th className="hidden w-36 px-2 py-3 text-start text-[10px] font-bold uppercase tracking-wider text-meta sm:table-cell">
+                <th className="w-36 px-2 py-3 text-start text-[10px] font-bold uppercase tracking-wider text-meta">
                   {t("table.vsField")}
                 </th>
                 <th className="px-4 py-3 text-end text-sm font-semibold uppercase tracking-wider text-oxblood">
@@ -1504,7 +1504,7 @@ function RankingsSection({
                       <td className="px-4 py-2.5 text-meta">{r.team}</td>
                     )}
 
-                    <td className="hidden px-3 py-2.5 sm:table-cell">
+                    <td className="px-3 py-2.5">
                       <div className="h-2 overflow-hidden rounded-[2px] bg-sink">
                         <div
                           className="h-full rounded-[2px] bg-oxblood"

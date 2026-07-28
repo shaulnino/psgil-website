@@ -86,129 +86,97 @@ const buildPointsAndStats = (t: Translator): ColumnDef<StandingsRow>[] => [
     accessor: (row) => standingsStatCell(row.gain),
     align: "center",
     mono: true,
-    minWidth: 44,
-    hideMobile: true,
-  },
+    minWidth: 44,  },
   {
     label: t("standingsTable.interval"),
     accessor: (row) => standingsStatCell(row.interval),
     align: "center",
     mono: true,
-    minWidth: 64,
-    hideMobile: true,
-  },
+    minWidth: 64,  },
   {
     label: t("standingsTable.gap"),
     accessor: (row) => standingsStatCell(row.gap),
     align: "center",
     mono: true,
-    minWidth: 56,
-    hideMobile: true,
-  },
+    minWidth: 56,  },
   {
     label: t("standingsTable.wins"),
     accessor: (row) => standingsStatCell(row.p1),
     align: "center",
     mono: true,
-    minWidth: 42,
-    hideMobile: true,
-  },
+    minWidth: 42,  },
   {
     label: t("standingsTable.second"),
     accessor: (row) => standingsStatCell(row.p2),
     align: "center",
     mono: true,
-    minWidth: 38,
-    hideMobile: true,
-  },
+    minWidth: 38,  },
   {
     label: t("standingsTable.third"),
     accessor: (row) => standingsStatCell(row.p3),
     align: "center",
     mono: true,
-    minWidth: 38,
-    hideMobile: true,
-  },
+    minWidth: 38,  },
   {
     label: t("standingsTable.top5"),
     accessor: (row) => standingsStatCell(row.top5),
     align: "center",
     mono: true,
-    minWidth: 44,
-    hideMobile: true,
-  },
+    minWidth: 44,  },
   {
     label: t("standingsTable.top10"),
     accessor: (row) => standingsStatCell(row.top10),
     align: "center",
     mono: true,
-    minWidth: 48,
-    hideMobile: true,
-  },
+    minWidth: 48,  },
   {
     label: t("standingsTable.bestFinish"),
     accessor: (row) => standingsStatCell(row.best_finish),
     align: "center",
     mono: true,
-    minWidth: 52,
-    hideMobile: true,
-  },
+    minWidth: 52,  },
   {
     label: t("standingsTable.bestGrid"),
     accessor: (row) => standingsStatCell(row.best_quali),
     align: "center",
     mono: true,
-    minWidth: 52,
-    hideMobile: true,
-  },
+    minWidth: 52,  },
   {
     label: t("standingsTable.fastestLaps"),
     accessor: (row) => standingsStatCell(row.fastest_laps),
     align: "center",
     mono: true,
-    minWidth: 52,
-    hideMobile: true,
-  },
+    minWidth: 52,  },
   {
     label: t("standingsTable.poles"),
     accessor: (row) => standingsStatCell(row.poles),
     align: "center",
     mono: true,
-    minWidth: 44,
-    hideMobile: true,
-  },
+    minWidth: 44,  },
   {
     label: t("standingsTable.dotd"),
     accessor: (row) => standingsStatCell(row.dotd),
     align: "center",
     mono: true,
-    minWidth: 44,
-    hideMobile: true,
-  },
+    minWidth: 44,  },
   {
     label: t("standingsTable.penaltyPts"),
     accessor: (row) => standingsStatCell(row.penalty_points),
     align: "center",
     mono: true,
-    minWidth: 56,
-    hideMobile: true,
-  },
+    minWidth: 56,  },
   {
     label: t("standingsTable.dnfs"),
     accessor: (row) => standingsStatCell(row.dnfs),
     align: "center",
     mono: true,
-    minWidth: 44,
-    hideMobile: true,
-  },
+    minWidth: 44,  },
   {
     label: t("standingsTable.races"),
     accessor: (row) => standingsStatCell(row.races),
     align: "center",
     mono: true,
-    minWidth: 48,
-    hideMobile: true,
-  },
+    minWidth: 48,  },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -328,11 +296,15 @@ export default function StandingsTable({
   };
 
   const columns = useMemo(() => getColumns(type, t), [type, t]);
-  // Freeze only the first 4 columns (the identity block): for drivers that's
+  // Desktop: freeze the first 4 columns (the identity block): for drivers that's
   // position, +/-, driver, team; for constructors position, +/-, team, points.
   // Everything from the points/stats onward scrolls. Freezing more than this
   // caused the last frozen column to overlap the team names in RTL.
   const horizontalStickyCount = Math.min(4, columns.length);
+  // Mobile: freeze only the first 3 (position, +/-, driver — or team for
+  // constructors) so the identity stays pinned while all stat columns scroll
+  // into view, without the frozen block eating the narrow viewport.
+  const mobileStickyCount = Math.min(3, columns.length);
 
   return (
     <ResultsTable<StandingsRow>
@@ -342,6 +314,7 @@ export default function StandingsTable({
       rowHighlight={highlight}
       groups={groups}
       horizontalStickyCount={horizontalStickyCount}
+      mobileStickyCount={mobileStickyCount}
     />
   );
 }

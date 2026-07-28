@@ -24,8 +24,6 @@ export type ColumnDef<T> = {
   className?: string;
   /** Min-width in px (for horizontal scroll sizing) */
   minWidth?: number;
-  /** Hide on mobile? */
-  hideMobile?: boolean;
 };
 
 /** Cumulative `left` (px) for horizontal `position:sticky` on the first `count`
@@ -63,8 +61,12 @@ type Props<T extends Record<string, unknown>> = {
   /** Optional section groups – renders section-header rows between groups.
    *  When provided, `data` is ignored and groups.rows are used instead. */
   groups?: SectionGroup<T>[];
-  /** First N columns stay fixed on the left when the table scrolls horizontally. */
+  /** First N columns stay fixed on the left when the table scrolls horizontally (desktop). */
   horizontalStickyCount?: number;
+  /** First N columns to freeze on mobile (< 768px). Defaults to 0 (no freeze).
+   *  Kept smaller than the desktop count so the frozen block doesn't consume a
+   *  narrow viewport — typically just the identity columns (position + name). */
+  mobileStickyCount?: number;
 };
 
 /* Medal / highlight accent — a metal hairline on the row's inline-start edge
@@ -91,9 +93,14 @@ export default function ResultsTable<T extends Record<string, unknown>>({
   className = "",
   groups,
   horizontalStickyCount,
+  mobileStickyCount,
 }: Props<T>) {
   const t = useTranslations("schedule");
-  const stickyN = Math.max(0, horizontalStickyCount ?? 0);
+  const desktopStickyN = Math.max(0, horizontalStickyCount ?? 0);
+  const mobileStickyN = Math.max(0, mobileStickyCount ?? 0);
+  // Widths only ever need measuring up to the largest freeze count of either
+  // viewport; the active count decides how many are actually frozen at a time.
+  const maxStickyN = Math.max(desktopStickyN, mobileStickyN);
 
   // Resolve effective rows: if groups are provided use them, otherwise use data
   const effectiveRows = groups ? groups.flatMap((g) => g.rows) : data;
@@ -106,11 +113,12 @@ export default function ResultsTable<T extends Record<string, unknown>>({
   const headRowRef = useRef<HTMLTableRowElement>(null);
   const [measuredLefts, setMeasuredLefts] = useState<number[] | null>(null);
   const [dir, setDir] = useState<"ltr" | "rtl">("ltr");
-  const fallbackLefts = computeStickyLeftPx(columns, stickyN);
+  const fallbackLefts = computeStickyLeftPx(columns, maxStickyN);
   const stickyLefts = measuredLefts ?? fallbackLefts;
   const insetKey: "left" | "right" = dir === "rtl" ? "right" : "left";
 
-  // Freeze columns only on wider viewports (matches the previous `md:` gating).
+  // How many columns are frozen depends on the viewport: fewer on mobile so the
+  // frozen block doesn't swallow a narrow screen.
   const [isDesktop, setIsDesktop] = useState(false);
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 768px)");
@@ -119,9 +127,10 @@ export default function ResultsTable<T extends Record<string, unknown>>({
     mq.addEventListener("change", update);
     return () => mq.removeEventListener("change", update);
   }, []);
+  const activeStickyN = isDesktop ? desktopStickyN : mobileStickyN;
 
   useLayoutEffect(() => {
-    if (stickyN === 0) {
+    if (maxStickyN === 0) {
       setMeasuredLefts(null);
       return;
     }
@@ -132,7 +141,7 @@ export default function ResultsTable<T extends Record<string, unknown>>({
       const cells = Array.from(row.children) as HTMLElement[];
       const lefts: number[] = [];
       let acc = 0;
-      for (let i = 0; i < Math.min(stickyN, cells.length); i++) {
+      for (let i = 0; i < Math.min(maxStickyN, cells.length); i++) {
         lefts[i] = acc;
         acc += cells[i].getBoundingClientRect().width;
       }
@@ -147,7 +156,7 @@ export default function ResultsTable<T extends Record<string, unknown>>({
     const ro = new ResizeObserver(measure);
     if (row) {
       (Array.from(row.children) as HTMLElement[])
-        .slice(0, stickyN)
+        .slice(0, maxStickyN)
         .forEach((el) => ro.observe(el));
     }
     window.addEventListener("resize", measure);
@@ -156,7 +165,7 @@ export default function ResultsTable<T extends Record<string, unknown>>({
       window.removeEventListener("resize", measure);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stickyN, columns, effectiveRows.length]);
+  }, [maxStickyN, columns, effectiveRows.length]);
 
   if (effectiveRows.length === 0) {
     return (
@@ -185,9 +194,9 @@ export default function ResultsTable<T extends Record<string, unknown>>({
               ? col.accessor(row, ri)
               : (row[col.accessor] as React.ReactNode) ?? "";
 
-          const isHSticky = ci < stickyN;
-          const lastFrozen = isHSticky && ci === stickyN - 1;
-          const stickyActive = isHSticky && isDesktop;
+          const isHSticky = ci < activeStickyN;
+          const lastFrozen = isHSticky && ci === activeStickyN - 1;
+          const stickyActive = isHSticky;
 
           return (
             <td
@@ -198,7 +207,7 @@ export default function ResultsTable<T extends Record<string, unknown>>({
                   : col.align === "right"
                     ? "text-end"
                     : "text-start"
-              } ${col.mono ? "num" : ""} ${col.className ?? ""} ${col.hideMobile ? "hidden md:table-cell" : ""} ${
+              } ${col.mono ? "num" : ""} ${col.className ?? ""} ${
                 stickyActive && lastFrozen ? "border-e border-[color:var(--isl-hairline-strong)]" : ""
               }`}
               style={
@@ -232,16 +241,17 @@ export default function ResultsTable<T extends Record<string, unknown>>({
         </div>
       )}
 
-      {/* Scrollable wrapper */}
-      <div className="overflow-x-auto">
+      {/* Scrollable wrapper — momentum scroll on touch, and contained overscroll
+          so swiping the table sideways doesn't bounce the whole page. */}
+      <div className="overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]">
         <table className="w-full min-w-max border-collapse text-sm">
           {/* Sticky header — gold (oxblood) top hairline + strong bottom rule */}
           <thead className="bg-sink">
             <tr ref={headRowRef}>
               {columns.map((col, ci) => {
-                const isHSticky = ci < stickyN;
-                const lastFrozen = isHSticky && ci === stickyN - 1;
-                const stickyActive = isHSticky && isDesktop;
+                const isHSticky = ci < activeStickyN;
+                const lastFrozen = isHSticky && ci === activeStickyN - 1;
+                const stickyActive = isHSticky;
                 return (
                   <th
                     key={ci}
@@ -251,7 +261,7 @@ export default function ResultsTable<T extends Record<string, unknown>>({
                         : col.align === "right"
                           ? "text-end"
                           : "text-start"
-                    } ${col.hideMobile ? "hidden md:table-cell" : ""} ${
+                    } ${
                       stickyActive && lastFrozen ? "border-e border-[color:var(--isl-hairline-strong)]" : ""
                     }`}
                     style={{

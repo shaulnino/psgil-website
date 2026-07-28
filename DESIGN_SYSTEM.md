@@ -129,7 +129,7 @@ New reusable UI must be added here, not inlined per feature. A live gallery exis
 
 ## 7. Composite components (selected)
 
-- **ResultsTable** — generic table primitive: sticky header, horizontal scroll with N frozen columns (`horizontalStickyCount`), zebra rows, medal hairlines (brass/silver/bronze on `border-s`), tabular numerals. Used by public standings/results **and** steward tables — keep it token-adaptive.
+- **ResultsTable** — generic table primitive: sticky header, horizontal scroll with N frozen columns, zebra rows, medal hairlines (brass/silver/bronze on `border-s`), tabular numerals. **All columns are shown on every viewport** (no column hiding) — mobile keeps them via horizontal scroll. The frozen-column count is per-viewport: `horizontalStickyCount` (desktop) and `mobileStickyCount` (a smaller identity block, e.g. position + name, so the frozen columns don't swallow a narrow screen). Used by public standings/results **and** steward tables — keep it token-adaptive.
 - **StandingsTable / RaceResultsTable / TablesPageContent** — build on ResultsTable.
 - **DriverModal / DriverCard / DriversGrid** — roster UI with rating breakdowns.
 - **StatsPageContent** (large) — filter pills, Recharts bar/radar/line, H2H, leaderboards. Charts use a **JS theme object** reading `--isl-*` (Recharts can't read Tailwind classes).

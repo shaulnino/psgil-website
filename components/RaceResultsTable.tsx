@@ -119,11 +119,11 @@ const buildRaceResultsColumns = (t: Translator): ColumnDef<RaceResultRow>[] => [
     accessor: (row) => <DriverNameCell row={row} />,
     minWidth: 160,
   },
-  { label: t("raceResultsTable.team"), accessor: "team", minWidth: 120, hideMobile: true },
+  { label: t("raceResultsTable.team"), accessor: "team", minWidth: 120 },
   { label: t("raceResultsTable.timeOrGap"), accessor: "time_or_gap", mono: true, minWidth: 110 },
-  { label: t("raceResultsTable.bestLap"), accessor: "best_lap", mono: true, minWidth: 90, hideMobile: true },
-  { label: t("raceResultsTable.grid"), accessor: "grid", align: "center", mono: true, minWidth: 48, hideMobile: true },
-  { label: t("raceResultsTable.stops"), accessor: "stops", align: "center", mono: true, minWidth: 48, hideMobile: true },
+  { label: t("raceResultsTable.bestLap"), accessor: "best_lap", mono: true, minWidth: 90 },
+  { label: t("raceResultsTable.grid"), accessor: "grid", align: "center", mono: true, minWidth: 48 },
+  { label: t("raceResultsTable.stops"), accessor: "stops", align: "center", mono: true, minWidth: 48 },
   {
     label: t("raceResultsTable.points"),
     accessor: (row) => (
@@ -142,7 +142,6 @@ const buildRaceResultsColumns = (t: Translator): ColumnDef<RaceResultRow>[] => [
     },
     align: "center",
     minWidth: 70,
-    hideMobile: true,
   },
 ];
 
@@ -163,6 +162,10 @@ export default function RaceResultsTable({ results, caption }: RaceResultsTableP
       data={results}
       columns={raceResultsColumns}
       caption={caption}
+      // Mobile: keep position, +/- and driver pinned so the row identity stays
+      // visible while the rest (team, time, laps, grid, stops, points, status)
+      // scrolls horizontally. Desktop keeps its existing all-columns layout.
+      mobileStickyCount={3}
       rowHighlight={(row) => {
         const pos = parseInt(row.position, 10);
         if (pos === 1) return "p1";
