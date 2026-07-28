@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import Section from "@/components/Section";
 import LoadingLink from "@/components/LoadingLink";
+import { Badge } from "@/components/ui/badge";
 import { requireAttendanceAdmin } from "@/lib/auth/session";
 import { can } from "@/lib/stewards/auth";
 import { fetchCsv, parseCsv } from "@/lib/csv";
@@ -134,7 +135,14 @@ export default async function AttendanceAdminPage({
                       : "—";
                     return (
                       <tr key={d.driver_id} className="border-t border-[color:var(--isl-hairline)] align-top">
-                        <td className="py-2.5 pe-3 text-ink">{localizedDriverName(d, locale)}</td>
+                        <td className="py-2.5 pe-3 text-ink">
+                          <span className="flex flex-wrap items-center gap-2">
+                            <span>{localizedDriverName(d, locale)}</span>
+                            <Badge variant={d.role === "reserve" ? "ink" : "brass"}>
+                              {d.role === "reserve" ? t("roleReserve") : t("roleMain")}
+                            </Badge>
+                          </span>
+                        </td>
                         <td className="py-2.5 pe-3">
                           <AttendanceAdminControls
                             raceId={race.raceId}

@@ -29,6 +29,8 @@
   "colDriver": "Driver",
   "colResponse": "Response",
   "colUpdated": "Updated",
+  "roleMain": "Main",
+  "roleReserve": "Reserve",
   "byDriver": "by driver",
   "byAdmin": "by admin"
 }

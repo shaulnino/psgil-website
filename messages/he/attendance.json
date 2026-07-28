@@ -29,6 +29,8 @@
   "colDriver": "נהג",
   "colResponse": "תשובה",
   "colUpdated": "עודכן",
+  "roleMain": "ראשי",
+  "roleReserve": "מילואים",
   "byDriver": "ע\"י הנהג",
   "byAdmin": "ע\"י מנהל"
 }
