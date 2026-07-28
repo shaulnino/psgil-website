@@ -5,6 +5,7 @@
     "profile": "Profile",
     "stewards": "Stewards",
     "admin": "Admin",
+    "attendance": "Attendance",
     "signOut": "Sign out"
   },
   "login": {
@@ -24,6 +25,7 @@
     "stewardModuleDesc": "Cases, verdicts and appeals",
     "adminModule": "Account Administration",
     "adminModuleDesc": "Manage accounts, roles and attendance",
+    "attendanceModule": "Race Attendance",
     "passwordChanged": "Your password has been changed.",
     "photoUpdated": "Your driver photo has been updated.",
     "photoHeading": "Driver photo",
@@ -47,6 +49,7 @@
     "signOut": "Sign out",
     "roleLabels": {
       "admin": "Admin",
+      "attendance_admin": "Attendance Admin",
       "steward": "Steward",
       "driver": "Driver",
       "registered_user": "Registered"

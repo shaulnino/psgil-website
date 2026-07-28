@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { ALL_ROLES, type AppRole } from "@/lib/accounts/types";
 
-const PRIVILEGED: AppRole[] = ["admin", "steward"];
+const PRIVILEGED: AppRole[] = ["admin", "attendance_admin", "steward"];
 const STANDARD: AppRole[] = ["driver", "registered_user"];
 
 /**

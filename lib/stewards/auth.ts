@@ -6,8 +6,14 @@ import { ALL_ROLES } from "@/lib/accounts/types";
 import type { StewardRole, StewardUser } from "@/lib/stewards/types";
 
 const SESSION_COOKIE   = "steward_session";
+// Non-persistent logins: JWT is capped at 12h, but the cookie itself is written
+// as a SESSION cookie (no maxAge/expires) so it clears when the browser/PWA
+// session ends.
 const MAX_AGE_DEFAULT  = 60 * 60 * 12;            // 12 hours
-const MAX_AGE_REMEMBER = 60 * 60 * 24 * 365 * 10; // 10 years (≈ no limit)
+// "Remember me": 400 days — the maximum cookie lifetime Chromium honors. Values
+// larger than this (e.g. the old 10-year setting) are silently clamped, which
+// made persistence behave inconsistently across browsers and iOS PWAs.
+const MAX_AGE_REMEMBER = 60 * 60 * 24 * 400;      // 400 days
 
 const DEV_FALLBACK_SECRET = "dev-steward-secret-change-me";
 
@@ -52,12 +58,16 @@ const secret = () => {
 export const getSessionSecret = secret;
 
 export async function createStewardSession(user: StewardUser, rememberMe = false) {
-  const jwt = new SignJWT({ roles: user.roles })
+  // Give the token a bounded lifetime in both cases (a token with no `exp` is
+  // valid forever, which some verifiers/platforms handle inconsistently). The
+  // cookie's persistence — not the JWT — decides whether it survives app close.
+  const lifetimeSeconds = rememberMe ? MAX_AGE_REMEMBER : MAX_AGE_DEFAULT;
+  return new SignJWT({ roles: user.roles })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(user.id)
-    .setIssuedAt();
-  if (!rememberMe) jwt.setExpirationTime(`${MAX_AGE_DEFAULT}s`);
-  return jwt.sign(secret());
+    .setIssuedAt()
+    .setExpirationTime(`${lifetimeSeconds}s`)
+    .sign(secret());
 }
 
 export async function setStewardSessionCookie(token: string, rememberMe = false) {
@@ -67,7 +77,16 @@ export async function setStewardSessionCookie(token: string, rememberMe = false)
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: rememberMe ? MAX_AGE_REMEMBER : MAX_AGE_DEFAULT,
+    // "Remember me" → a persistent cookie with an explicit maxAge AND expires
+    // (both set for cross-browser/iOS reliability). Otherwise omit them entirely
+    // so the browser stores a SESSION cookie that is dropped when the session
+    // ends (app/browser fully closed) — i.e. the user is logged out on close.
+    ...(rememberMe
+      ? {
+          maxAge: MAX_AGE_REMEMBER,
+          expires: new Date(Date.now() + MAX_AGE_REMEMBER * 1000),
+        }
+      : {}),
   });
 }
 
@@ -172,10 +191,10 @@ const PERMISSION_MATRIX: Record<StewardPermission, StewardRole[]> = {
   manage_users:             ["admin"],
   manage_penalties:         ["admin"],
   reset_password:           ["admin"],
-  // PW-3 attendance: a linked driver RSVPs to their own races; admins manage
-  // and view the full roster.
+  // PW-3 attendance: a linked driver RSVPs to their own races; admins and the
+  // dedicated attendance_admin role manage and view the full roster.
   submit_own_attendance:    ["driver", "admin"],
-  manage_attendance:        ["admin"],
+  manage_attendance:        ["admin", "attendance_admin"],
 };
 
 /** True if the user is allowed to perform the named action. */

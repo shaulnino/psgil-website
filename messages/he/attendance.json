@@ -20,6 +20,7 @@
   "adminTitle": "נוכחות במרוצים",
   "adminDescription": "מי מתחרה בסבב הקרוב.",
   "backToAdmin": "← ניהול חשבונות",
+  "backToAccount": "← החשבון שלי",
   "respondedCount": "{count} השיבו",
   "adminEditHint": "לחצו על תשובה כדי לקבוע או לשנות אותה עבור נהג. שינויים של מנהל מסומנים.",
   "windowOpensAt": "הנוכחות נפתחת ב-{when}.",

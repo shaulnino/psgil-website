@@ -23,6 +23,7 @@
   },
   "roles": {
     "admin": "מנהל",
+    "attendance_admin": "מנהל נוכחות",
     "steward": "סטיוארד",
     "driver": "נהג",
     "registered_user": "משתמש רשום",

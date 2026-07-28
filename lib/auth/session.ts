@@ -61,3 +61,14 @@ export async function requireAdmin(next?: string): Promise<Account> {
   if (!can(user, "manage_users")) return localeRedirect("/account");
   return user;
 }
+
+/**
+ * Require attendance-management access (the race-attendance roster/override).
+ * Granted to full admins and the dedicated `attendance_admin` role via the
+ * `manage_attendance` permission. Non-managers are sent to /account.
+ */
+export async function requireAttendanceAdmin(next?: string): Promise<Account> {
+  const user = await requireUser(next);
+  if (!can(user, "manage_attendance")) return localeRedirect("/account");
+  return user;
+}

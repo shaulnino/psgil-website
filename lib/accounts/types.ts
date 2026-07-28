@@ -19,12 +19,14 @@ import { z } from "zod";
  */
 export type AppRole =
   | "admin" // League Administrator — full control
+  | "attendance_admin" // manages race attendance only (no user/case/penalty control)
   | "steward" // Steward — case/verdict/appeal workflow
   | "driver" // participant linked to a CSV driver_id; submits own attendance
   | "registered_user"; // signed-up account with no driver link (fan)
 
 export const ALL_ROLES: AppRole[] = [
   "admin",
+  "attendance_admin",
   "steward",
   "driver",
   "registered_user",
@@ -65,6 +67,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export const roleSchema = z.enum([
   "admin",
+  "attendance_admin",
   "steward",
   "driver",
   "registered_user",

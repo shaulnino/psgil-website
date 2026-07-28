@@ -1,13 +1,13 @@
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
-import { CheckCircle2, Ban, ShieldCheck, Settings } from "lucide-react";
+import { CheckCircle2, Ban, ShieldCheck, Settings, CalendarCheck } from "lucide-react";
 import LoadingLink from "@/components/LoadingLink";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { logoutAction } from "@/lib/auth/actions";
 import type { AppRole } from "@/lib/accounts/types";
 
-const PRIVILEGED: AppRole[] = ["admin", "steward"];
+const PRIVILEGED: AppRole[] = ["admin", "attendance_admin", "steward"];
 
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -34,6 +34,7 @@ export default async function AccountHeader({
   avatarUrl,
   canSteward,
   canAdmin,
+  canAttendance,
 }: {
   name: string;
   email: string;
@@ -46,6 +47,7 @@ export default async function AccountHeader({
   avatarUrl: string | null;
   canSteward: boolean;
   canAdmin: boolean;
+  canAttendance: boolean;
 }) {
   const t = await getTranslations("account.account");
 
@@ -100,6 +102,12 @@ export default async function AccountHeader({
             <LoadingLink href="/admin" className={shortcut}>
               <Settings className="h-3.5 w-3.5" aria-hidden />
               {t("adminModule")}
+            </LoadingLink>
+          )}
+          {canAttendance && (
+            <LoadingLink href="/admin/attendance" className={shortcut}>
+              <CalendarCheck className="h-3.5 w-3.5" aria-hidden />
+              {t("attendanceModule")}
             </LoadingLink>
           )}
           <form action={logoutAction}>

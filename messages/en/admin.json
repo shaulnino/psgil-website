@@ -23,6 +23,7 @@
   },
   "roles": {
     "admin": "Admin",
+    "attendance_admin": "Attendance Admin",
     "steward": "Steward",
     "driver": "Driver",
     "registered_user": "Registered user",

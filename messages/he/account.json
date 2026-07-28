@@ -5,6 +5,7 @@
     "profile": "פרופיל",
     "stewards": "שיפוט",
     "admin": "ניהול",
+    "attendance": "נוכחות",
     "signOut": "התנתקות"
   },
   "login": {
@@ -24,6 +25,7 @@
     "stewardModuleDesc": "תיקים, החלטות וערעורים",
     "adminModule": "ניהול חשבונות",
     "adminModuleDesc": "ניהול חשבונות, הרשאות ונוכחות",
+    "attendanceModule": "נוכחות במרוצים",
     "passwordChanged": "הסיסמה שונתה.",
     "photoUpdated": "תמונת הנהג עודכנה.",
     "photoHeading": "תמונת נהג",
@@ -47,6 +49,7 @@
     "signOut": "התנתקות",
     "roleLabels": {
       "admin": "מנהל",
+      "attendance_admin": "מנהל נוכחות",
       "steward": "סטיוארד",
       "driver": "נהג",
       "registered_user": "רשום"

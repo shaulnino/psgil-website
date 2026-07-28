@@ -113,6 +113,7 @@ export default async function RootLayout({
   // otherwise the link would just bounce a regular account back to /account.
   const canSteward = !!currentUser && can(currentUser, "view_steward_area");
   const canAdmin = !!currentUser && can(currentUser, "manage_users");
+  const canAttendance = !!currentUser && can(currentUser, "manage_attendance");
   return (
     <html lang={locale} dir={dir} data-scroll-behavior="smooth">
       <body
@@ -147,7 +148,7 @@ export default async function RootLayout({
         </Suspense>
         <ServiceWorkerRegister />
 
-        <Header authed={authed} canSteward={canSteward} canAdmin={canAdmin} />
+        <Header authed={authed} canSteward={canSteward} canAdmin={canAdmin} canAttendance={canAttendance} />
         {children}
         <Footer />
         <Suspense fallback={null}>

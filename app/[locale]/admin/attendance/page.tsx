@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import Section from "@/components/Section";
 import LoadingLink from "@/components/LoadingLink";
-import { requireAdmin } from "@/lib/auth/session";
+import { requireAttendanceAdmin } from "@/lib/auth/session";
+import { can } from "@/lib/stewards/auth";
 import { fetchCsv, parseCsv } from "@/lib/csv";
 import { localizedDriverName, mapDrivers } from "@/lib/driversData";
 import { GLOBAL_CSV_URLS } from "@/lib/seasonConfig";
@@ -29,7 +30,8 @@ export default async function AttendanceAdminPage({
 }: {
   params: Promise<{ locale: string }>;
 }) {
-  await requireAdmin("/admin/attendance");
+  const user = await requireAttendanceAdmin("/admin/attendance");
+  const isFullAdmin = can(user, "manage_users");
   const { locale } = await params;
   const t = await getTranslations("attendance");
 
@@ -40,8 +42,11 @@ export default async function AttendanceAdminPage({
 
   const backLink = (
     <p className="text-sm">
-      <LoadingLink href="/admin" className="text-oxblood hover:text-oxblood-deep">
-        {t("backToAdmin")}
+      <LoadingLink
+        href={isFullAdmin ? "/admin" : "/account"}
+        className="text-oxblood hover:text-oxblood-deep"
+      >
+        {isFullAdmin ? t("backToAdmin") : t("backToAccount")}
       </LoadingLink>
     </p>
   );

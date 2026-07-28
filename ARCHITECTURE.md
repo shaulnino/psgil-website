@@ -139,19 +139,22 @@ Server Action (app/stewards/actions.ts)
 - **Navigation:** "My Account" is the single header hub for all signed-in areas — Profile, the **Steward module** (nested, shown only to `view_steward_area` accounts), and future driver-only areas (attendance). Stewards is no longer a top-level nav link. Guests see "Sign in". Driven by `authed` + `canSteward` props from the root layout (`components/AccountMenu.tsx`) so a non-steward never sees a Stewards link that would just bounce them.
 - **Steward area is role-gated (not just auth-gated):** `requireStewardUser()` requires the `view_steward_area` permission (`driver`/`steward`/`admin`), redirecting plain `registered_user` accounts to `/account`. Being signed in is not sufficient to enter `/stewards`; suspended accounts (`isActive=false`) are also rejected.
 - **Known follow-ups:** server-action error strings are English-only (UI labels are localized). Admin (`app/[locale]/admin/actions.ts`) and profile (`lib/auth/actions.ts`) actions now redirect **locale-preserving** via `getPathname` + `getLocale`; other server redirects (login/logout) are still unprefixed (default-locale Hebrew). "Drivers" are read-only CSV rows keyed by `driver_id`; linking `account.driverId → driver_id` is admin-assigned.
-- Session: `jose` JWT (HS256), stored in `steward_session` HTTP-only cookie (`sameSite: lax`, `secure` in prod only). 12h default / 10y "remember me".
+- Session: `jose` JWT (HS256), stored in `steward_session` HTTP-only cookie (`sameSite: lax`, `secure` in prod only). Without "remember me" the cookie is a **session cookie** (no `maxAge`/`expires`, JWT capped at 12h) so it clears when the browser/PWA session ends. With "remember me" it is a **persistent** cookie (`maxAge` + `expires` = 400 days, the max Chromium honors; JWT `exp` matches).
 - Secret: `STEWARD_SESSION_SECRET`. Dev fallback `"dev-steward-secret-change-me"`. **⚠️ In production, a missing secret is only `console.error`-logged — the request continues with the known default secret (HIGH-severity issue; see §10).**
 - Passwords: **scrypt** (`crypto.ts`, 16-byte salt, keylen 64), `timingSafeEqual` verification. `mustChangePassword` forces a reset on first login.
-- Roles: `admin | steward | driver | registered_user`. Enforced via `requireStewardUser()` / `requireRole()` and `PERMISSION_MATRIX` (in `lib/stewards/auth.ts`):
+- Roles: `admin | attendance_admin | steward | driver | registered_user`. Enforced via `requireStewardUser()` / `requireRole()` and `PERMISSION_MATRIX` (in `lib/stewards/auth.ts`). `attendance_admin` is a narrow role that manages **only** race attendance (no user/case/penalty control):
 
-| Permission | driver | steward | admin |
-|---|:-:|:-:|:-:|
-| view_steward_area | ✅ | ✅ | ✅ |
-| create_complaint / submit_response / submit_appeal | ✅ | | ✅ |
-| submit_own_attendance | ✅ | | ✅ |
-| view_internal_discussion / comment_internally | | ✅ | ✅ |
-| edit_verdict / publish_verdict / manage_appeals | | ✅ | ✅ |
-| delete_case / manage_users / manage_penalties / reset_password / manage_attendance | | | ✅ |
+| Permission | driver | attendance_admin | steward | admin |
+|---|:-:|:-:|:-:|:-:|
+| view_steward_area | ✅ | | ✅ | ✅ |
+| create_complaint / submit_response / submit_appeal | ✅ | | | ✅ |
+| submit_own_attendance | ✅ | | | ✅ |
+| view_internal_discussion / comment_internally | | | ✅ | ✅ |
+| edit_verdict / publish_verdict / manage_appeals | | | ✅ | ✅ |
+| manage_attendance | | ✅ | | ✅ |
+| delete_case / manage_users / manage_penalties / reset_password | | | | ✅ |
+
+The attendance roster (`/[locale]/admin/attendance`) is gated by `requireAttendanceAdmin()` (`manage_attendance`), not `requireAdmin()`, so an `attendance_admin` reaches it without the account console. A dedicated "Attendance" link is surfaced in the account menu (`AccountMenu`) and on `/account` (`AccountHeader`) to anyone with `manage_attendance`.
 
 Enforcement is layered (edge cookie gate in `proxy.ts` + per-page `requireStewardUser()` + per-action `requireRole()`). One gap: `view_internal_discussion` is enforced at render, not at the data-fetch layer (MEDIUM).
 

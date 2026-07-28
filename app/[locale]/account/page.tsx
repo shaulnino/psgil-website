@@ -45,6 +45,7 @@ export default async function AccountPage({
   const canRsvp = isDriverRole(user.roles) && !!user.driverId;
   const canSteward = can(user, "view_steward_area");
   const canAdmin = can(user, "manage_users");
+  const canAttendance = can(user, "manage_attendance");
 
   // Drivers + teams CSV (best-effort) — used for the header's linked-driver line
   // and the attendance roster.
@@ -165,6 +166,7 @@ export default async function AccountPage({
             avatarUrl={avatarUrl}
             canSteward={canSteward}
             canAdmin={canAdmin}
+            canAttendance={canAttendance}
           />
 
           {attendanceHasRace ? (

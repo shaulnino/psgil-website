@@ -20,6 +20,7 @@
   "adminTitle": "Race Attendance",
   "adminDescription": "Who's racing in the next round.",
   "backToAdmin": "← Account administration",
+  "backToAccount": "← My account",
   "respondedCount": "{count} responded",
   "adminEditHint": "Click a response to set or change it for a driver. Admin changes are marked.",
   "windowOpensAt": "Attendance opens {when}.",
