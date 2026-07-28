@@ -295,8 +295,13 @@ export async function submitCaseResponseAction(formData: FormData) {
   const caseData = await getCaseById(caseId);
   if (!caseData || !text) redirect(`/stewards/cases/${caseId}?view=driver`);
 
-  // Only involved drivers submit statements (complainant already gave their side in the complaint)
-  if (!caseData.caseItem.involvedDriverIds.includes(user.id)) {
+  // Only involved drivers submit statements, and never the complainant —
+  // their side is already captured in the complaint itself, even if they also
+  // listed themselves as an involved party.
+  const isRespondingDriver =
+    caseData.caseItem.involvedDriverIds.includes(user.id) &&
+    caseData.caseItem.complainantId !== user.id;
+  if (!isRespondingDriver) {
     redirect(`/stewards/cases/${caseId}?view=driver`);
   }
 
@@ -309,11 +314,12 @@ export async function submitCaseResponseAction(formData: FormData) {
 
   try { await notifyResponseConfirmation(caseData.caseItem, user, users); } catch { /* non-fatal */ }
 
-  // If all involved drivers have now responded, notify stewards + complainant once
+  // If all involved drivers have now responded, notify stewards + complainant once.
+  // The complainant is excluded — they don't submit a separate statement.
   const updatedCase = await getCaseById(caseId);
-  const allResponded = updatedCase?.caseItem.involvedDriverIds.every((driverId) =>
-    updatedCase.responses.some((r) => r.userId === driverId),
-  );
+  const allResponded = updatedCase?.caseItem.involvedDriverIds
+    .filter((driverId) => driverId !== updatedCase.caseItem.complainantId)
+    .every((driverId) => updatedCase.responses.some((r) => r.userId === driverId));
   if (allResponded && updatedCase) {
     try { await notifyAllResponsesSubmitted(updatedCase.caseItem, users); } catch { /* non-fatal */ }
   }

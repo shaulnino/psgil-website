@@ -229,11 +229,15 @@ export async function addCaseResponse(input: NewResponseInput) {
   });
   caseItem.responseIds.push(responseId);
 
-  // Only change status on active cases — never touch Verdict Ready / Closed / Archived
+  // Only change status on active cases — never touch Verdict Ready / Closed / Archived.
+  // The complainant is excluded from the "responded" check: their side is the
+  // complaint itself, so they never submit a separate statement.
   if (caseItem.status === "Open" || caseItem.status === "Waiting for Response") {
-    const allResponded = caseItem.involvedDriverIds.every((driverId) =>
-      store.responses.some((r) => r.caseId === input.caseId && r.userId === driverId),
-    );
+    const allResponded = caseItem.involvedDriverIds
+      .filter((driverId) => driverId !== caseItem.complainantId)
+      .every((driverId) =>
+        store.responses.some((r) => r.caseId === input.caseId && r.userId === driverId),
+      );
     caseItem.status = allResponded ? "Under Review" : "Waiting for Response";
   }
 
@@ -1130,7 +1134,10 @@ export async function getPendingIndicatorsForUser(user: StewardUser): Promise<Pe
   );
   if (isDriverRole(user.roles)) {
     const pendingResponse = activeCases.filter(
-      (c) => c.involvedDriverIds.includes(user.id) && !respondedCaseIds.has(c.id),
+      (c) =>
+        c.involvedDriverIds.includes(user.id) &&
+        c.complainantId !== user.id &&
+        !respondedCaseIds.has(c.id),
     ).length;
     if (pendingResponse > 0) {
       indicators.push({

@@ -74,9 +74,13 @@ export default async function StewardCaseDetailPage({
     appealWindowOpen &&
     !myAppeal &&
     (caseItem.complainantId === user.id || caseItem.involvedDriverIds.includes(user.id));
-  // Only involved drivers submit statements — complainant's side is already the complaint itself
-  const participantIds = [...new Set(caseItem.involvedDriverIds)];
-  const isInvolved = caseItem.involvedDriverIds.includes(user.id);
+  // Only involved drivers submit statements — the complainant's side is already the
+  // complaint itself, so they are excluded even if they listed themselves as involved.
+  const participantIds = [...new Set(caseItem.involvedDriverIds)].filter(
+    (id) => id !== caseItem.complainantId,
+  );
+  const isInvolved =
+    caseItem.involvedDriverIds.includes(user.id) && caseItem.complainantId !== user.id;
   const alreadyResponded = responses.some((r) => r.userId === user.id);
   const hasDriverRole = isDriverRole(user.roles);
   const hasStewardRole = can(user, "view_internal_discussion");

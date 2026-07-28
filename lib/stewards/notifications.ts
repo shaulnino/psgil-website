@@ -270,8 +270,10 @@ export async function notifyCaseSubmitted(caseItem: StewardCase, users: StewardU
     await send(`[ISL Stewards] Case submitted — ${caseItem.title}`, html, text, [comp.email]);
   }
 
-  // Involved drivers — response required
+  // Involved drivers — response required (never the complainant: their side is
+  // the complaint itself, even if they also listed themselves as involved)
   for (const driver of involved(caseItem, users)) {
+    if (driver.id === caseItem.complainantId) continue;
     const { html, text } = buildEmail({
       eyebrow: "Action Required",
       title: "You have been named in a steward case",
