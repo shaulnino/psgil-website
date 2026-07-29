@@ -68,8 +68,20 @@ export default async function AttendanceAdminPage({
   }
 
   const race = raceWindow.race;
-  const drivers = (driversCsv ? mapDrivers(parseCsv(driversCsv)) : [])
-    .filter((d) => d.role !== "historic")
+  // Only include drivers explicitly marked Main or Reserve in the CSV. Blank /
+  // other roles are coerced to "main" by normalizeRole(), so we key off the raw
+  // CSV role here to keep inactive/unassigned drivers out of the attendance list.
+  const rawDriverRows = driversCsv ? parseCsv(driversCsv) : [];
+  const rosterIds = new Set(
+    rawDriverRows
+      .filter((r) => {
+        const role = (r.role ?? "").toLowerCase().trim();
+        return role === "main" || role === "reserve";
+      })
+      .map((r) => (r.driver_id ?? "").trim()),
+  );
+  const drivers = mapDrivers(rawDriverRows)
+    .filter((d) => rosterIds.has(d.driver_id))
     .sort((a, b) => localizedDriverName(a, locale).localeCompare(localizedDriverName(b, locale)));
 
   const records = await listAttendanceForRace(race.raceId);

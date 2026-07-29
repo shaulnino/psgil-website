@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import ResultsTable, { type ColumnDef } from "@/components/ResultsTable";
 import type { RaceResultRow } from "@/lib/resultsData";
@@ -156,16 +157,34 @@ type RaceResultsTableProps = {
 
 export default function RaceResultsTable({ results, caption }: RaceResultsTableProps) {
   const t = useTranslations("schedule");
-  const raceResultsColumns = buildRaceResultsColumns(t);
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  const baseColumns = buildRaceResultsColumns(t);
+  // On mobile we pin only POS + DRIVER (identity) and let +/- scroll with the
+  // rest, so the frozen block doesn't swallow a narrow viewport. Sticky freezes
+  // the *first* N columns, so swap +/- (index 1) and DRIVER (index 2) into
+  // [POS, DRIVER, +/-, …] order for mobile. Desktop keeps the reference layout
+  // (POS, +/-, DRIVER) and freezes nothing.
+  const raceResultsColumns = isMobile
+    ? [baseColumns[0], baseColumns[2], baseColumns[1], ...baseColumns.slice(3)]
+    : baseColumns;
+
   return (
     <ResultsTable<RaceResultRow>
       data={results}
       columns={raceResultsColumns}
       caption={caption}
-      // Mobile: keep position, +/- and driver pinned so the row identity stays
-      // visible while the rest (team, time, laps, grid, stops, points, status)
-      // scrolls horizontally. Desktop keeps its existing all-columns layout.
-      mobileStickyCount={3}
+      // Mobile: keep only position + driver pinned so the row identity stays
+      // visible while the rest (+/-, team, time, laps, grid, stops, points,
+      // status) scrolls horizontally. Desktop keeps its all-columns layout.
+      mobileStickyCount={2}
       rowHighlight={(row) => {
         const pos = parseInt(row.position, 10);
         if (pos === 1) return "p1";
