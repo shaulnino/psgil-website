@@ -5,6 +5,8 @@ import LoadingLink from "@/components/LoadingLink";
 import NewsCategoryTag from "@/components/NewsCategoryTag";
 import NewsImage from "@/components/NewsImage";
 import NewsArticleActions from "@/components/NewsArticleActions";
+import ShareButton from "@/components/share/ShareButton";
+import { buildArticleShare } from "@/lib/share/builders";
 import { Button } from "@/components/ui/button";
 import { fetchCsv, parseCsv } from "@/lib/csv";
 import {
@@ -294,11 +296,22 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
             />
           </div>
           <div className="border-b border-[color:var(--isl-hairline)] bg-cream p-6 md:p-8">
-            <p className="num-date text-xs font-semibold uppercase tracking-[0.16em] text-meta">
-              {formatNewsDate(article.date, locale)}
-              <span className="mx-2 text-faint">•</span>
-              {article.author}
-            </p>
+            <div className="flex items-start justify-between gap-4">
+              <p className="num-date text-xs font-semibold uppercase tracking-[0.16em] text-meta">
+                {formatNewsDate(article.date, locale)}
+                <span className="mx-2 text-faint">•</span>
+                {article.author}
+              </p>
+              <ShareButton
+                payload={buildArticleShare({
+                  slug: article.slug,
+                  title: article.title,
+                  excerpt: article.excerpt,
+                  locale,
+                })}
+                variant="icon"
+              />
+            </div>
             <div className="mt-3">
               <NewsCategoryTag category={article.category} />
             </div>
