@@ -14,6 +14,7 @@ import {
   parseSeasonDigitFromArticleText,
   parseWildEventDayNumberFromText,
   resolveRecapRaceGroupForNewsArticle,
+  resolveEventIdsFromArticleText,
   scheduleWatchLinksForArticleEventIds,
   youtubeWatchLinksForGroup,
   type RaceGroup,
@@ -158,9 +159,12 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
   const articleId = article.id.toLowerCase();
   const isRecap = articleId.includes("recap");
   const isPreview = articleId.includes("preview");
-  const eventIdsFromArticle = parseEventIdsFromArticleId(article.id);
-  const primaryEventId = eventIdsFromArticle[0] ?? null;
-  const articleCopyBlob = `${article.id} ${article.title}`;
+  // Strict event-id tokens embedded in the id (e.g. "s1_r01_main"). Many
+  // articles use human slugs instead ("isl-s1-r01-belgium-recap"), so this can
+  // be empty here and is back-filled from the schedule below via season+round.
+  let eventIdsFromArticle = parseEventIdsFromArticleId(article.id);
+  let primaryEventId = eventIdsFromArticle[0] ?? null;
+  const articleCopyBlob = `${article.id} ${article.slug} ${article.title}`;
   const seasonDigitHint =
     primaryEventId?.match(/^s(\d+)_/i)?.[1] ?? parseSeasonDigitFromArticleText(articleCopyBlob);
   const seasonKey = seasonDigitHint ? `S${seasonDigitHint}` : null;
@@ -177,8 +181,7 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
 
   const shouldLoadSchedule =
     eventIdsFromArticle.length > 0 ||
-    (isRecap &&
-      (primaryEventId !== null || (wildEventDayHint !== null && seasonDigitHint !== null))) ||
+    (isRecap && (primaryEventId !== null || seasonDigitHint !== null)) ||
     (isPreview && seasonKey !== null);
 
   if (shouldLoadSchedule) {
@@ -187,6 +190,13 @@ export default async function NewsArticlePage({ params }: NewsArticlePageProps) 
       const events = scheduleCsv
         ? mapRaceEvents(parseCsv<Record<string, string>>(scheduleCsv))
         : [];
+
+      // Back-fill event ids for articles that use human slugs instead of strict
+      // "s{n}_r{n}_{league}" tokens, by matching season+round against the schedule.
+      if (eventIdsFromArticle.length === 0) {
+        eventIdsFromArticle = resolveEventIdsFromArticleText(events, articleCopyBlob);
+        primaryEventId = eventIdsFromArticle[0] ?? null;
+      }
 
       const seasonsConfig = await fetchSeasonsConfig();
       hasWild = seasonHasWild(seasonsConfig, seasonKey ?? undefined);
