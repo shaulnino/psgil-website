@@ -444,6 +444,47 @@ export function resolveRecapRaceGroupForNewsArticle(
 }
 
 /**
+ * Fallback event-id resolver for news articles whose id/slug does NOT contain
+ * the strict `s{n}_r{n}_{league}` token — e.g. human-authored slugs like
+ * "isl-s1-r01-belgium-recap". Parses a season digit + round number + optional
+ * league hint from the supplied text (id + slug + title) and matches them
+ * against the schedule CSV, returning the concrete event_id(s). Returns [] when
+ * no confident (season AND round) match exists, so callers safely fall through.
+ */
+export function resolveEventIdsFromArticleText(events: RaceEvent[], text: string): string[] {
+  const blob = (text ?? "").toLowerCase();
+
+  const seasonDigit =
+    blob.match(/\bs(\d+)\b/i)?.[1] ?? blob.match(/season[\s_-]*(\d+)/i)?.[1] ?? null;
+
+  const roundStr =
+    blob.match(/\br0*(\d+)\b/i)?.[1] ??
+    blob.match(/round[\s_-]*0*(\d+)/i)?.[1] ??
+    blob.match(/race[\s_-]*#?\s*0*(\d+)/i)?.[1] ??
+    null;
+
+  if (!seasonDigit || !roundStr) return [];
+  const round = parseInt(roundStr, 10);
+  if (Number.isNaN(round)) return [];
+
+  // League intent: explicit "wild"/"main" keyword wins; otherwise default to
+  // Main so a bare "s1 r01" article never accidentally binds a Wild race.
+  const wantWild = /\bwild\b/.test(blob);
+  const wantMain = /\bmain\b/.test(blob);
+
+  const matches = events.filter((e) => {
+    if (normalizeSeasonDigitForMatch(e.season) !== seasonDigit) return false;
+    if ((parseInt(e.race_number, 10) || 0) !== round) return false;
+    const league = (e.league || "").trim().toLowerCase();
+    if (wantWild) return league === "wild";
+    if (wantMain) return league === "main";
+    return league === "main";
+  });
+
+  return [...new Set(matches.map((e) => e.event_id.trim().toLowerCase()))];
+}
+
+/**
  * YouTube watch links for a race-day group (double-headers: one button per distinct URL).
  */
 export function youtubeWatchLinksForGroup(group: RaceGroup): { label: string; url: string }[] {
