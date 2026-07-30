@@ -1,0 +1,24 @@
+{
+  "button": "Share",
+  "heading": "Share",
+  "ariaLabel": "Share: {title}",
+  "copyLink": "Copy link",
+  "copied": "Link copied",
+  "copyFailed": "Couldn't copy — select and copy the link manually.",
+  "whatsapp": "WhatsApp",
+  "telegram": "Telegram",
+  "x": "X",
+  "email": "Email",
+  "close": "Close",
+  "race": {
+    "title": "{race} — Race Result",
+    "podium": "Podium: 1. {p1} · 2. {p2} · 3. {p3}",
+    "meta": "{circuit} · Round {round} · Season {season}",
+    "metaNoCircuit": "Round {round} · Season {season}"
+  },
+  "racePage": {
+    "backToSchedule": "View in full schedule",
+    "resultsPending": "Results for this race aren't available yet.",
+    "resultsCaptionSuffix": "Race Results"
+  }
+}

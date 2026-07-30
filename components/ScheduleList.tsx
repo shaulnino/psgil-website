@@ -17,6 +17,9 @@ import YouTubeEmbed from "@/components/YouTubeEmbed";
 import { gaClickWatchYouTube, gaClickRaceResults } from "@/lib/ga";
 import { getYouTubeVideoId } from "@/lib/youtube";
 import { Button } from "@/components/ui/button";
+import ShareButton from "@/components/share/ShareButton";
+import { buildRaceResultShare } from "@/lib/share/builders";
+import type { ShareTranslator } from "@/lib/share/types";
 
 /* ------------------------------------------------------------------ */
 /*  Country flag image (works on Windows, macOS, all browsers)         */
@@ -206,10 +209,17 @@ function ResultsModal({
   onClose: () => void;
 }) {
   const t = useTranslations("schedule");
+  const tShare = useTranslations("share");
   const locale = useLocale();
   const hasTable = tableData.length > 0;
   const hasImage = !!event.results_image;
   const [showImage, setShowImage] = useState(!hasTable && hasImage);
+  const sharePayload = buildRaceResultShare({
+    event,
+    results: tableData,
+    locale,
+    t: tShare as unknown as ShareTranslator,
+  });
 
   // Image zoom state (only used when showing image)
   const [zoom, setZoom] = useState(1);
@@ -286,13 +296,16 @@ function ResultsModal({
               </span>
             )}
           </div>
-          <button
-            onClick={onClose}
-            aria-label={t("resultsModal.closeResults")}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper text-xl text-ink-2 transition-colors hover:border-ink hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
-          >
-            ×
-          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            <ShareButton payload={sharePayload} variant="icon" />
+            <button
+              onClick={onClose}
+              aria-label={t("resultsModal.closeResults")}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper text-xl text-ink-2 transition-colors hover:border-ink hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
+            >
+              ×
+            </button>
+          </div>
         </div>
 
         {/* Image zoom controls (only when showing image) */}

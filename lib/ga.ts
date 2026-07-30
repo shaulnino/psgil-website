@@ -87,3 +87,20 @@ export const gaOpenDriverCard = (driverName?: string) =>
     category: "engagement",
     label: driverName,
   });
+
+/**
+ * User shares a piece of content. Method/type/id/locale are encoded into the
+ * event label ("raceResult:s6_r01_main:whatsapp:he") so the existing
+ * gaEvent shape is enough — no schema change needed.
+ */
+export const gaShare = (args: {
+  method: "native" | "copy" | "whatsapp" | "telegram" | "x" | "email";
+  contentType: "article" | "raceResult";
+  contentId: string;
+  locale: string;
+}) =>
+  gaEvent({
+    action: "share",
+    category: "engagement",
+    label: `${args.contentType}:${args.contentId}:${args.method}:${args.locale}`,
+  });

@@ -13,6 +13,9 @@ import DriverLookupProvider from "@/components/DriverLookupProvider";
 import HeroCountdown from "@/components/home/HeroCountdown";
 import YouTubeEmbed from "@/components/YouTubeEmbed";
 import { Button } from "@/components/ui/button";
+import ShareButton from "@/components/share/ShareButton";
+import { buildRaceResultShare } from "@/lib/share/builders";
+import type { ShareTranslator } from "@/lib/share/types";
 import { getYouTubeVideoId } from "@/lib/youtube";
 import { gaClickWatchYouTube, gaClickRaceResults } from "@/lib/ga";
 
@@ -411,6 +414,7 @@ function GroupResultsModal({
   onClose: () => void;
 }) {
   const t = useTranslations("home");
+  const tShare = useTranslations("share");
   const locale = useLocale();
   // Events that have either a results image or CSV table data
   const withResults = group.events.filter(
@@ -424,6 +428,17 @@ function GroupResultsModal({
   const hasTable = tableData.length > 0;
   const hasImage = !!current?.results_image;
   const [showImage, setShowImage] = useState(!hasTable && hasImage);
+
+  // Share the currently-active race tab, deep-linking to its canonical
+  // /schedule/[eventId] page (which renders table or image + OG preview).
+  const sharePayload = current
+    ? buildRaceResultShare({
+        event: current,
+        results: tableData,
+        locale,
+        t: tShare as unknown as ShareTranslator,
+      })
+    : null;
 
   // Image zoom state
   const [zoom, setZoom] = useState(1);
@@ -481,13 +496,16 @@ function GroupResultsModal({
               </button>
             )}
           </div>
-          <button
-            onClick={onClose}
-            aria-label={t("raceCards.close")}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] text-xl text-ink-2 transition-colors hover:border-ink hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
-          >
-            ×
-          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            {sharePayload && <ShareButton payload={sharePayload} variant="icon" />}
+            <button
+              onClick={onClose}
+              aria-label={t("raceCards.close")}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[2px] border border-[color:var(--isl-hairline)] text-xl text-ink-2 transition-colors hover:border-ink hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
+            >
+              ×
+            </button>
+          </div>
         </div>
 
         {/* Tab selector for multi-race groups */}
