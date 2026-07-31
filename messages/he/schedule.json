@@ -56,7 +56,7 @@
     "mixedTooltip": "מזג אוויר: תנאים משתנים (יבש ורטוב)",
     "mixed": "משתנה",
     "safetyCarsTooltip": "מכוניות בטיחות: {count}",
-    "reverseGridTooltip": "במרוץ זה נעשה שימוש במקבץ הפוך"
+    "reverseGridTooltip": "במרוץ זה נעשה שימוש בגריד הפוך"
   },
   "status": {
     "live": "חי",
@@ -138,8 +138,8 @@
     "constructors": "קבוצות",
     "community": "קהילה",
     "driversMainBracketTitle": "אליפות הנהגים הראשית – {bracket}",
-    "driversMainSubtitleUpper": "המחצית העליונה של המקבץ.",
-    "driversMainSubtitleLower": "המחצית התחתונה של המקבץ.",
+    "driversMainSubtitleUpper": "המחצית העליונה של הגריד.",
+    "driversMainSubtitleLower": "המחצית התחתונה של הגריד.",
     "driversMainSubtitleOverall": "טבלת הנקודות הנוכחית לאחר הסבב האחרון.",
     "driversMainTitle": "טבלת אליפות הנהגים הראשית",
     "driversMainSubtitle": "טבלת הנקודות הנוכחית לאחר הסבב האחרון.",

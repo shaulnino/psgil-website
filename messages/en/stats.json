@@ -46,6 +46,7 @@
       "records": "Records & milestones",
       "trends": "Trends"
     },
+    "dnsOnlyNote": "Entered but did not start. This driver appears in {entries, plural, one {# race} other {# races}} in this scope but has zero starts — they qualified, yet each race ended in a DNS. Start-based stats (finishes, points and averages) are shown as “—”, while their qualifying grid and any poles are still counted.",
     "context": {
       "reset": "Reset",
       "filters": "Filters",
