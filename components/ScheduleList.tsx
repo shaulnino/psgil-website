@@ -669,24 +669,26 @@ function SunIcon({ className = "" }: { className?: string }) {
   return (
     <svg
       className={className}
-      width="12"
-      height="12"
+      width="16"
+      height="16"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <circle cx="12" cy="12" r="5" />
-      <line x1="12" y1="1" x2="12" y2="3" />
-      <line x1="12" y1="21" x2="12" y2="23" />
-      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-      <line x1="1" y1="12" x2="3" y2="12" />
-      <line x1="21" y1="12" x2="23" y2="12" />
-      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+      {/* Solid disc + distinct rays — matches the mixed-weather sun */}
+      <circle cx="12" cy="12" r="4" fill="currentColor" strokeWidth="1.2" />
+      <g strokeWidth="1.8">
+        <line x1="12" y1="1.8" x2="12" y2="4.2" />
+        <line x1="12" y1="19.8" x2="12" y2="22.2" />
+        <line x1="1.8" y1="12" x2="4.2" y2="12" />
+        <line x1="19.8" y1="12" x2="22.2" y2="12" />
+        <line x1="4.8" y1="4.8" x2="6.5" y2="6.5" />
+        <line x1="17.5" y1="17.5" x2="19.2" y2="19.2" />
+        <line x1="4.8" y1="19.2" x2="6.5" y2="17.5" />
+        <line x1="17.5" y1="6.5" x2="19.2" y2="4.8" />
+      </g>
     </svg>
   );
 }
@@ -695,19 +697,26 @@ function CloudRainIcon({ className = "" }: { className?: string }) {
   return (
     <svg
       className={className}
-      width="12"
-      height="12"
+      width="16"
+      height="16"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25" />
-      <line x1="8" y1="16" x2="8" y2="20" />
-      <line x1="12" y1="18" x2="12" y2="22" />
-      <line x1="16" y1="16" x2="16" y2="20" />
+      {/* Same rounded cloud body + bold drops as the mixed-weather icon */}
+      <path
+        d="M7 16a4 4 0 0 1-.5-7.97A5.5 5.5 0 0 1 17 9.2 3.5 3.5 0 0 1 16.5 16Z"
+        fill="currentColor"
+        fillOpacity="0.22"
+        strokeWidth="1.6"
+      />
+      <g strokeWidth="1.8">
+        <line x1="8" y1="18.5" x2="7" y2="21" />
+        <line x1="12" y1="18.5" x2="11" y2="21" />
+        <line x1="16" y1="18.5" x2="15" y2="21" />
+      </g>
     </svg>
   );
 }
@@ -716,24 +725,35 @@ function CloudSunRainIcon({ className = "" }: { className?: string }) {
   return (
     <svg
       className={className}
-      width="14"
-      height="14"
+      width="16"
+      height="16"
       viewBox="0 0 24 24"
       fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <path d="M12 2v2" />
-      <path d="m4.93 4.93 1.41 1.41" />
-      <path d="M20 12h2" />
-      <path d="m19.07 4.93-1.41 1.41" />
-      <path d="M15.947 12.65a4 4 0 0 0-5.925-4.128" />
-      <path d="M13 22H7" />
-      <path d="M17 17.58A5 5 0 0 0 15 8h-.6A8 8 0 1 0 1 16" />
-      <line x1="7" y1="17" x2="7" y2="21" />
-      <line x1="11" y1="19" x2="11" y2="23" />
+      {/* Sun — solid amber disc with rays fanned across the exposed arc */}
+      <g stroke="var(--isl-warning)" strokeWidth="1.6">
+        <line x1="12.8" y1="2.8" x2="13.9" y2="3.9" />
+        <line x1="17" y1="1" x2="17" y2="2.6" />
+        <line x1="21.2" y1="2.8" x2="20.1" y2="3.9" />
+        <line x1="23" y1="7" x2="21.4" y2="7" />
+        <line x1="21.2" y1="11.2" x2="20.1" y2="10.1" />
+      </g>
+      <circle cx="17" cy="7" r="3.2" fill="var(--isl-warning)" stroke="var(--isl-warning)" strokeWidth="1.2" />
+      {/* Cloud — clean rounded body */}
+      <path
+        d="M7 18a4 4 0 0 1-.5-7.97A5.5 5.5 0 0 1 17 11.2 3.5 3.5 0 0 1 16.5 18Z"
+        fill="color-mix(in srgb, var(--isl-info) 22%, transparent)"
+        stroke="var(--isl-info)"
+        strokeWidth="1.6"
+      />
+      {/* Rain — bold blue drops */}
+      <g stroke="var(--isl-info)" strokeWidth="1.8">
+        <line x1="8" y1="20" x2="7" y2="22.5" />
+        <line x1="12" y1="20" x2="11" y2="22.5" />
+        <line x1="16" y1="20" x2="15" y2="22.5" />
+      </g>
     </svg>
   );
 }
@@ -809,7 +829,7 @@ function RaceBadges({ event }: { event: RaceEvent }) {
       )}
       {weather === "mixed" && (
         <Tooltip text={t("badges.mixedTooltip")}>
-          <span className="inline-flex items-center gap-1 rounded-[2px] border border-[color:var(--isl-hairline-strong)] px-1.5 py-0.5 text-xs font-medium leading-none text-ink-2">
+          <span className="inline-flex items-center gap-1 rounded-[2px] border border-[color:color-mix(in_srgb,var(--isl-warning)_45%,var(--isl-info)_55%)] bg-gradient-to-r from-[color:color-mix(in_srgb,var(--isl-warning)_18%,transparent)] to-[color:color-mix(in_srgb,var(--isl-info)_18%,transparent)] px-1.5 py-0.5 text-xs font-medium leading-none text-ink">
             <CloudSunRainIcon className="shrink-0" />
             {t("badges.mixed")}
           </span>
