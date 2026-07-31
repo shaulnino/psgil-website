@@ -6,13 +6,22 @@ import { can } from "@/lib/stewards/auth";
 import { isDriverRole } from "@/lib/accounts/types";
 import { fetchCsv, parseCsv } from "@/lib/csv";
 import { mapDrivers, mapTeams, getTeamLogo, localizedDriverName } from "@/lib/driversData";
-import { GLOBAL_CSV_URLS } from "@/lib/seasonConfig";
+import { GLOBAL_CSV_URLS, fetchSeasonsConfig } from "@/lib/seasonConfig";
+import { fetchAllRaceResults, type RaceResultRow } from "@/lib/resultsData";
+import { mapRaceEvents } from "@/lib/scheduleData";
+import { fetchRewards } from "@/lib/rewardsData";
+import { normalizeRaces } from "@/lib/stats/normalizeRace";
+import { computeDriverProfile } from "@/lib/stats/driverProfile";
+import { computeDriverStats } from "@/lib/statsComputed";
 import { fetchNextRaceWindow } from "@/lib/attendance/races";
 import { getAttendance, listAttendanceForRace } from "@/lib/attendance/repository";
 import { formatIsraelDateTime } from "@/lib/attendance/format";
 import { buildAttendanceRoster, type AttendanceRoster as AttendanceRosterData } from "@/lib/attendance/roster";
 import type { AttendanceStatus } from "@/lib/attendance/types";
 import AccountHeader from "./_components/AccountHeader";
+import AccountStatsTeaser, {
+  type AccountStatsTeaserProps,
+} from "./_components/AccountStatsTeaser";
 import AttendanceSelector from "./_components/AttendanceSelector";
 import AttendanceSummary from "./_components/AttendanceSummary";
 import DriverImageUploader from "./_components/DriverImageUploader";
@@ -63,6 +72,55 @@ export default async function AccountPage({
   const teamLogo = myDriver?.team_key ? getTeamLogo(myDriver.team_key) : null;
   const driverName = myDriver ? localizedDriverName(myDriver, locale) : user.driverId;
   const avatarUrl = user.driverPhotoUrl ?? myDriver?.photo_url ?? null;
+
+  // Driver statistics teaser (all-time). Only for accounts linked to a driver
+  // that actually has race data. Reuses the exact Drivers-tab computation
+  // (`computeDriverProfile` for transparent stats + `computeDriverStats` for
+  // the pool-relative rating / championship position) — no new formulas. The
+  // heavy CSV fetches are skipped entirely for unlinked accounts.
+  let statsTeaser: AccountStatsTeaserProps | null = null;
+  if (user.driverId) {
+    const [resultsByEvent, teaserScheduleCsv, rewards, seasons] = await Promise.all([
+      fetchAllRaceResults(GLOBAL_CSV_URLS.raceResults).catch(
+        () => ({}) as Record<string, RaceResultRow[]>,
+      ),
+      fetchCsv(GLOBAL_CSV_URLS.schedule).catch(() => ""),
+      fetchRewards(GLOBAL_CSV_URLS.rewards).catch(() => []),
+      fetchSeasonsConfig().catch(() => []),
+    ]);
+    const teaserEvents = teaserScheduleCsv
+      ? mapRaceEvents(parseCsv(teaserScheduleCsv))
+      : [];
+    const allResults = Object.values(resultsByEvent).flat();
+    const normalized = normalizeRaces(allResults, teaserEvents);
+    // Resolve the driver's English results-CSV name from the stable driver_id —
+    // this is the value the Drivers tab selector + `?driver=` param expect.
+    const resultsName =
+      normalized.find((r) => r.driverId === user.driverId)?.driverName ?? null;
+    const profile = resultsName
+      ? computeDriverProfile(normalized, resultsName, { scope: "all-time" })
+      : null;
+    if (resultsName && profile && profile.entries > 0) {
+      const statsAll = computeDriverStats(allResults, teaserEvents, rewards, seasons);
+      const rankIdx = statsAll.rows.findIndex((r) => r.driver_id === user.driverId);
+      const ratingRow = rankIdx >= 0 ? statsAll.rows[rankIdx] : null;
+      statsTeaser = {
+        locale,
+        urlName: resultsName,
+        displayName: driverName ?? resultsName,
+        teamName,
+        starts: profile.starts,
+        wins: profile.wins,
+        podiums: profile.podiums,
+        poles: profile.results.poles,
+        points: profile.points,
+        bestFinish: profile.results.bestFinish,
+        avgFinish: profile.avgFinish,
+        driverRating: ratingRow?.metrics["Driver Rating"] ?? null,
+        championshipPos: rankIdx >= 0 ? rankIdx + 1 : null,
+      };
+    }
+  }
 
   // Attendance: resolve the current next race + RSVP window.
   let attendanceHasRace = false;
@@ -168,6 +226,8 @@ export default async function AccountPage({
             canAdmin={canAdmin}
             canAttendance={canAttendance}
           />
+
+          {statsTeaser && <AccountStatsTeaser {...statsTeaser} />}
 
           {attendanceHasRace ? (
             <div className="grid gap-6 lg:grid-cols-3">

@@ -20,6 +20,8 @@
   },
   "account": {
     "title": "החשבון שלי",
+    "statsHeading": "הסטטיסטיקות שלי",
+    "statsCta": "לכל הסטטיסטיקות",
     "modulesHeading": "מעבר אל",
     "stewardModule": "פורטל השיפוט",
     "stewardModuleDesc": "תיקים, החלטות וערעורים",

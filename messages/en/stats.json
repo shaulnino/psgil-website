@@ -16,6 +16,94 @@
     "thirdPlace": "3rd Place",
     "winners": "Winners"
   },
+  "circuitsTab": {
+    "sections": {
+      "snapshot": "Circuit snapshot",
+      "history": "Race history",
+      "qualifying": "Qualifying vs race",
+      "specialists": "Top performers here",
+      "characteristics": "Race characteristics",
+      "conditions": "Conditions & discipline",
+      "records": "Circuit records"
+    },
+    "sample": {
+      "races": "{count, plural, =1 {# race} other {# races}}"
+    },
+    "nextRaceHere": "Next ISL race here · {circuit}",
+    "empty": {
+      "noCircuits": "No circuits have hosted an ISL race yet. This tab fills in once results are in.",
+      "forFilters": "No races match the current filters at this circuit.",
+      "noChartData": "Not enough classified results to plot yet."
+    },
+    "history": {
+      "colRace": "Race",
+      "colWeather": "Weather",
+      "colPole": "Pole",
+      "colWinner": "Winner",
+      "colWinnerGrid": "Won from",
+      "colStarters": "Starters",
+      "colDnf": "DNF",
+      "colLink": "",
+      "view": "View →"
+    },
+    "qualifying": {
+      "winnerGridDist": "Winners by starting grid",
+      "gridN": "Grid {n}",
+      "gridVsFinish": "Grid vs finish",
+      "axisGrid": "Grid",
+      "axisFinish": "Finish",
+      "notClassified": "{count, plural, =1 {# non-classified result not shown} other {# non-classified results not shown}}"
+    },
+    "specialists": {
+      "colDriver": "Driver"
+    },
+    "conditions": {
+      "colWeather": "Weather",
+      "colRaces": "Races",
+      "lowCoverage": "Weather data is sparse for this circuit - splits are hidden until coverage improves."
+    },
+    "records": {
+      "none": "-",
+      "allTimeNote": "All-time at this circuit - not affected by the filters above.",
+      "firstWinner": "First winner",
+      "mostWins": "Most wins",
+      "mostPoles": "Most poles",
+      "mostPodiums": "Most podiums",
+      "biggestGrid": "Biggest field"
+    },
+    "metrics": {
+      "islRaces": { "label": "ISL races", "tooltip": "Completed ISL races held at this circuit in the current scope." },
+      "seasonsFeatured": { "label": "Seasons", "tooltip": "Number of seasons this circuit has appeared on the calendar." },
+      "uniqueWinners": { "label": "Unique winners", "tooltip": "Number of different drivers who have won here." },
+      "uniquePoleSitters": { "label": "Unique polesitters", "tooltip": "Number of different drivers who have taken pole here." },
+      "avgFieldSize": { "label": "Avg. field", "tooltip": "Average number of drivers who took the start." },
+      "classificationRate": { "label": "Classified", "tooltip": "Share of starts that reached a classified finish (not DNF/DSQ)." },
+      "dnfRate": { "label": "DNF rate", "tooltip": "Share of starts that ended in DNF or DSQ." },
+      "poleToWinRate": { "label": "Pole → win", "tooltip": "Share of races where the polesitter went on to win (races with a known pole and winner)." },
+      "frontRowToWinRate": { "label": "Front row → win", "tooltip": "Share of wins that came from a top-2 grid slot." },
+      "frontRowToPodiumRate": { "label": "Front row → podium", "tooltip": "Share of podium finishes that started on the front row." },
+      "avgWinningGrid": { "label": "Avg. winning grid", "tooltip": "Average grid slot of race winners (reverse-grid races excluded)." },
+      "avgPodiumGrid": { "label": "Avg. podium grid", "tooltip": "Average starting grid of podium finishers (reverse-grid races excluded)." },
+      "avgAbsMovement": { "label": "Avg. positions moved", "tooltip": "Average absolute grid-to-finish change per classified finisher (DNF/DNS/DSQ excluded)." },
+      "avgNetMovement": { "label": "Avg. net movement", "tooltip": "Average net positions gained (+) or lost (−) from grid to finish." },
+      "pctImproved": { "label": "Improved on grid", "tooltip": "Share of classified finishers who finished ahead of where they started." },
+      "bestRecovery": { "label": "Best recovery", "tooltip": "Largest positions-gained drive recorded at this circuit." },
+      "worstLoss": { "label": "Biggest drop", "tooltip": "Largest positions-lost result recorded at this circuit." },
+      "wetRate": { "label": "Wet/mixed", "tooltip": "Share of races here run in wet or mixed conditions (of races with known weather)." },
+      "safetyCarRate": { "label": "Safety car rate", "tooltip": "Share of races that saw at least one safety car (shown only when data is recorded)." },
+      "cleanRaceRate": { "label": "Clean races", "tooltip": "Share of starts with zero time penalty (steward + in-game)." },
+      "penaltiesPerRace": { "label": "Penalties / race", "tooltip": "Average number of penalised drivers per race." },
+      "starts": { "label": "Starts", "tooltip": "Races the driver took the start at this circuit." },
+      "wins": { "label": "Wins", "tooltip": "Race wins at this circuit." },
+      "podiums": { "label": "Podiums", "tooltip": "Top-3 finishes at this circuit." },
+      "poles": { "label": "Poles", "tooltip": "Pole positions at this circuit (reverse-grid races excluded)." },
+      "podiumRate": { "label": "Podium %", "tooltip": "Podiums as a share of starts." },
+      "pointsPerStart": { "label": "Pts / start", "tooltip": "Average championship points per start." },
+      "avgFinish": { "label": "Avg. finish", "tooltip": "Average classified finishing position (DNF/DNS/DSQ excluded)." },
+      "bestFinish": { "label": "Best", "tooltip": "Best classified finish at this circuit." },
+      "netPositions": { "label": "Net +/−", "tooltip": "Total net positions gained or lost from grid to finish." }
+    }
+  },
   "compare": {
     "close": "✕ Compare",
     "closeSeasons": "✕ Compare Seasons",
@@ -46,7 +134,7 @@
       "records": "Records & milestones",
       "trends": "Trends"
     },
-    "dnsOnlyNote": "Entered but did not start. This driver appears in {entries, plural, one {# race} other {# races}} in this scope but has zero starts — they qualified, yet each race ended in a DNS. Start-based stats (finishes, points and averages) are shown as “—”, while their qualifying grid and any poles are still counted.",
+    "dnsOnlyNote": "Entered but did not start. This driver appears in {entries, plural, one {# race} other {# races}} in this scope but has zero starts - they qualified, yet each race ended in a DNS. Start-based stats (finishes, points and averages) are shown as “-”, while their qualifying grid and any poles are still counted.",
     "context": {
       "reset": "Reset",
       "filters": "Filters",
@@ -134,7 +222,7 @@
       "firstWin": "First win",
       "mostPointsRace": "Most points in a race",
       "careerNote": "Career records ignore the active filters.",
-      "none": "—"
+      "none": "-"
     },
     "graph": {
       "finishByRace": "Finish by race",
@@ -197,11 +285,11 @@
     "racesLost": { "label": "Races losing positions", "tooltip": "Races that ended with a net position loss." },
     "bestRecovery": { "label": "Best recovery", "tooltip": "Most positions gained in a single race." },
     "worstLoss": { "label": "Worst position loss", "tooltip": "Most positions lost in a single race." },
-    "dnf": { "label": "DNF", "tooltip": "Did Not Finish — retired from the race." },
-    "dns": { "label": "DNS", "tooltip": "Did Not Start — entered but did not take the start." },
+    "dnf": { "label": "DNF", "tooltip": "Did Not Finish - retired from the race." },
+    "dns": { "label": "DNS", "tooltip": "Did Not Start - entered but did not take the start." },
     "dsq": { "label": "DSQ", "tooltip": "Disqualified from the race." },
     "dnfRate": { "label": "DNF rate", "tooltip": "DNFs as a percentage of starts." },
-    "stdevFinish": { "label": "Finish spread", "tooltip": "How much finishing positions vary — lower means more consistent." },
+    "stdevFinish": { "label": "Finish spread", "tooltip": "How much finishing positions vary - lower means more consistent." },
     "finishStreakBest": { "label": "Longest finish streak", "tooltip": "Longest run of consecutive classified finishes." },
     "pointsStreakBest": { "label": "Longest points streak", "tooltip": "Longest run of consecutive points finishes." },
     "podiumStreakBest": { "label": "Longest podium streak", "tooltip": "Longest run of consecutive podiums." },
@@ -212,11 +300,13 @@
     "penaltiesPerStart": { "label": "Penalty time / start", "tooltip": "Average penalty time per start, in seconds." },
     "cleanRaces": { "label": "Clean races", "tooltip": "Starts with zero time penalty." },
     "cleanRacePct": { "label": "Clean-race %", "tooltip": "Clean races as a percentage of starts." },
-    "penaltyRate": { "label": "Penalty rate", "tooltip": "Percentage of starts that received a time penalty." }
+    "penaltyRate": { "label": "Penalty rate", "tooltip": "Percentage of starts that received a time penalty." },
+    "h2hWins": { "label": "Head-to-head wins", "tooltip": "Shared races (both started) where this driver finished ahead. A classified finish beats a DNF or DSQ." },
+    "gridWins": { "label": "Qualifying wins", "tooltip": "Shared races where this driver started ahead on the grid (reverse-grid races excluded)." }
   },
   "status": {
-    "dnf": { "label": "DNF", "tooltip": "Did Not Finish — retired from the race." },
-    "dns": { "label": "DNS", "tooltip": "Did Not Start — entered but did not take the start." },
+    "dnf": { "label": "DNF", "tooltip": "Did Not Finish - retired from the race." },
+    "dns": { "label": "DNS", "tooltip": "Did Not Start - entered but did not take the start." },
     "dsq": { "label": "DSQ", "tooltip": "Disqualified from the race." },
     "finished": { "label": "Finished", "tooltip": "Classified finish." }
   },
@@ -270,7 +360,7 @@
     "filterBy": "Filter by",
     "noSharedRaces": "{driverA} and {driverB} have no shared races.",
     "noSharedRacesFiltered": "No shared races between {driverA} and {driverB} for {filters}.",
-    "raceResultsCaption": "{race} — Race Results",
+    "raceResultsCaption": "{race} - Race Results",
     "resultsNotAvailable": "Results not available yet.",
     "selectAtLeastOneMetric": "Select at least one metric to display.",
     "selectDifferentDrivers": "Please select two different drivers.",
@@ -278,7 +368,19 @@
     "selectDriverB": "Select Driver B…",
     "selectTwoDrivers": "Select two drivers to compare their head-to-head record.",
     "sharedRacesWord": "{count, plural, one {shared race} other {shared races}}",
+    "sharedStartsWord": "{count, plural, one {race both started} other {races both started}}",
+    "dnsExcluded": "DNS - not counted",
+    "dnsExcludedCount": "{count, plural, one {# race excluded (one driver did not start)} other {# races excluded (one driver did not start)}}",
     "swap": "Swap",
+    "chart": {
+      "finish": "Finish",
+      "grid": "Grid",
+      "points": "Points",
+      "net": "Positions gained",
+      "cumPoints": "Cumulative points",
+      "cumWins": "Cumulative wins",
+      "cumPodiums": "Cumulative podiums"
+    },
     "table": {
       "better": "Better",
       "date": "Date",
@@ -288,11 +390,11 @@
       "race": "Race",
       "season": "Season"
     },
-    "tiesCount": "{count} ties",
+    "tiesCount": "{count, plural, one {# tie} other {# ties}}",
     "trendOverRaces": "Trend Over Races",
     "vs": "vs",
     "watchRace": "Watch Race",
-    "winsCount": "{count} wins"
+    "winsCount": "{count, plural, one {# win} other {# wins}}"
   },
   "league": {
     "kpi": {
@@ -333,12 +435,12 @@
       "avgStarters": { "label": "Avg grid size", "tooltip": "Average number of cars that started each race." },
       "differentPodium": { "label": "Different podium finishers", "tooltip": "Distinct drivers who reached the podium." },
       "differentPoles": { "label": "Different pole-sitters", "tooltip": "Distinct drivers who took pole (reverse-grid races excluded)." },
-      "topDriverWinShare": { "label": "Top winner's share", "tooltip": "Share of races won by the single most successful driver — lower means a more open field." },
+      "topDriverWinShare": { "label": "Top winner's share", "tooltip": "Share of races won by the single most successful driver - lower means a more open field." },
       "leadChanges": { "label": "Championship lead changes", "tooltip": "Times the points leader changed during a season, summed across seasons in scope. Points-based: it sums race points per round and does not model dropped-score or playoff rules." },
-      "avgWinningGrid": { "label": "Avg winning grid", "tooltip": "Average starting position of race winners — higher means wins came from further back." },
+      "avgWinningGrid": { "label": "Avg winning grid", "tooltip": "Average starting position of race winners - higher means wins came from further back." },
       "poleToWinRate": { "label": "Pole → win conversion", "tooltip": "Share of genuine-pole races the pole-sitter went on to win (reverse-grid races excluded)." },
       "winsFromOutsideTop3": { "label": "Wins from outside the top 3", "tooltip": "Race wins by a driver who started outside the top 3." },
-      "avgAbsPositionChange": { "label": "Avg positions changed", "tooltip": "Average positions gained or lost per entry — higher means busier races." },
+      "avgAbsPositionChange": { "label": "Avg positions changed", "tooltip": "Average positions gained or lost per entry - higher means busier races." },
       "maxGrid": { "label": "Largest grid", "tooltip": "Most cars to start a single race." },
       "minGrid": { "label": "Smallest grid", "tooltip": "Fewest cars to start a single race." },
       "completionRate": { "label": "Completion rate", "tooltip": "Classified finishes as a share of starters." },
@@ -377,7 +479,7 @@
       "mostFinishers": "Most finishers",
       "mostDifferentWinnersSeason": "Most different winners in a season",
       "mostPenalizedRace": "Most penalised race",
-      "none": "—",
+      "none": "-",
       "starters": "{n} on the grid",
       "finishers": "{n} classified",
       "winnersInSeason": "{n} winners",
@@ -433,6 +535,38 @@
     "stat": "Stat",
     "third": "3rd",
     "valuesShownAsPct": " · Values shown as %"
+  },
+  "rankingsTab": {
+    "category": "Category",
+    "categories": {
+      "results": "Results & achievements",
+      "rates": "Performance rates",
+      "qualifying": "Qualifying",
+      "race": "Race performance",
+      "reliability": "Reliability",
+      "recent": "Recent form",
+      "discipline": "Discipline",
+      "ratings": "Ratings"
+    },
+    "metrics": {
+      "recentPoints": { "label": "Recent points", "tooltip": "Points scored across the driver's last 5 starts in the current scope." },
+      "recentAvgFinish": { "label": "Recent avg finish", "tooltip": "Average classified finish across the driver's last 5 starts." },
+      "recentNet": { "label": "Recent positions gained", "tooltip": "Net positions gained or lost across the driver's last 5 starts." },
+      "speed": { "label": "Speed rating", "tooltip": "Pace rating relative to the field, based on finishing positions." },
+      "consistency": { "label": "Consistency rating", "tooltip": "How steady a driver's results are relative to the field." },
+      "performance": { "label": "Performance rating", "tooltip": "Overall on-track performance rating relative to the field." },
+      "agility": { "label": "Agility rating", "tooltip": "Adaptability across formats and conditions relative to the field." }
+    },
+    "ratingsNote": "Ratings are pool ratings for the whole scope and ignore the advanced filters.",
+    "starts": "Starts",
+    "startsCount": "{count, plural, one {# start} other {# starts}}",
+    "allTeams": "All teams",
+    "showAll": "Show all ({count} more)",
+    "insufficientHeading": "Below the {n}-start minimum",
+    "allBelowMin": "No driver has reached the {n}-start minimum for this metric yet. Every driver with data is shown below.",
+    "showLowSample": "Show",
+    "hideLowSample": "Hide",
+    "minSampleNote": "Rates and averages need at least {n} starts to be ranked."
   },
   "sections": {
     "explore": "Explore",

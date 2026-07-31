@@ -782,10 +782,15 @@ function computeRatings(
     }
 
     // Consistency (score: 100 − inconsistency×50, range [50,100])
+    // Requires the driver to have actually started at least one race. A
+    // driver who only ever entered + qualified but never started (all DNS)
+    // has no on-track data, so consistency stays null (shown as "—") rather
+    // than a misleading perfect 100 from zero position-change/DNF inputs.
+    const starts = d.events - d.dns;
     const cpca = normPosChgAbs.get(id);
     const cdnf = normDnfRate.get(id);
     let consistency: number | null = null;
-    if (cpca !== null && cpca !== undefined && cdnf !== null && cdnf !== undefined) {
+    if (starts > 0 && cpca !== null && cpca !== undefined && cdnf !== null && cdnf !== undefined) {
       // Invert normLowerBetter output (it returns [50,100] where lower=100)
       // so inconsistencyScore = (1 - normalized_relative_score) equivalent
       const normPcaRaw   = posChgAbs.has(id) ? posChgAbs.get(id)! : 0;

@@ -213,11 +213,12 @@ export type ProfileFilters = {
   roundType?: "regular" | "playoff";
   weather?: "dry" | "wet" | "mixed";
   circuit?: string; // track name
+  team?: string; // exact team name (case-insensitive)
 };
 
 /** Whether any advanced (non-scope) filter is active. */
 export function hasAdvancedFilter(f: ProfileFilters): boolean {
-  return !!(f.format || f.competition || f.roundType || f.weather || f.circuit);
+  return !!(f.format || f.competition || f.roundType || f.weather || f.circuit || f.team);
 }
 
 /** Apply scope + advanced filters to normalized races. */
@@ -235,6 +236,7 @@ export function filterRaces(
     if (f.roundType === "regular" && r.isPlayoff) return false;
     if (f.weather && r.weather !== f.weather) return false;
     if (f.circuit && (r.track ?? "") !== f.circuit) return false;
+    if (f.team && r.team.trim().toLowerCase() !== f.team.trim().toLowerCase()) return false;
     return true;
   });
 }

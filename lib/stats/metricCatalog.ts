@@ -87,6 +87,10 @@ export const METRIC_CATALOG: Record<string, MetricDef> = {
   cleanRaces: { id: "cleanRaces", unit: "int", higherBetter: true },
   cleanRacePct: { id: "cleanRacePct", unit: "pct", higherBetter: true },
   penaltyRate: { id: "penaltyRate", unit: "pct", higherBetter: false },
+
+  // Head-to-Head (shared events)
+  h2hWins: { id: "h2hWins", unit: "int", higherBetter: true },
+  gridWins: { id: "gridWins", unit: "int", higherBetter: true },
 };
 
 /* ------------------------------------------------------------------ */
@@ -101,7 +105,7 @@ export function formatMetric(
   value: number | null | undefined,
   unit: MetricUnit,
   locale: string,
-  placeholder = "—",
+  placeholder = "-",
 ): string {
   if (value === null || value === undefined || Number.isNaN(value)) {
     return placeholder;

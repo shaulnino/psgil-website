@@ -8,6 +8,7 @@ import LoadingLink from "@/components/LoadingLink";
 import { localizedAbout, localizedDriverName, type Driver, type CompetitionStats } from "@/lib/driversData";
 import { buildAchievements, getAwardIcon } from "@/components/AchievementBadges";
 import type { AwardCode, RewardCompetition } from "@/lib/rewardsData";
+import { METRIC_CATALOG, formatMetric, type MetricUnit } from "@/lib/stats/metricCatalog";
 
 type DriverModalProps = {
   driver: Driver;
@@ -45,16 +46,6 @@ function isRemote(src?: string) {
   return !!src && (src.startsWith("http") || src.includes("?"));
 }
 
-function getRankExplanation(mode: StatMode, comp: CompMode): string {
-  if (comp !== "all") {
-    const scope = comp === "main" ? "Main" : "Wild";
-    return `Gold number indicates the driver's rank in this stat among drivers who competed in the ${scope} league${mode === "season" ? " this season" : ""}.`;
-  }
-  return mode === "season"
-    ? "Gold number indicates the driver\u2019s rank in this stat among active drivers in the current season."
-    : "Gold number indicates the driver\u2019s rank in this stat among all-time drivers.";
-}
-
 function resolveCompStats(driver: Driver, mode: StatMode, comp: CompMode): CompetitionStats | null {
   if (comp === "all") return null; // use flat Driver fields
   if (mode === "alltime") return comp === "main" ? driver.comp_main ?? null : driver.comp_wild ?? null;
@@ -62,52 +53,34 @@ function resolveCompStats(driver: Driver, mode: StatMode, comp: CompMode): Compe
 }
 
 
+// Quick-stat fields shown in the modal. `key` is the Driver field; `metricId`
+// maps to the shared stats metric catalog so labels, tooltips and locale-aware
+// formatting match the /stats Drivers tab exactly (single source of truth).
 const statItems = [
-  { key: "points", label: "Points", isDecimal: false, tooltipDesc: "Total championship points earned across all races in this scope." },
-  { key: "wins", label: "Wins", isDecimal: false, tooltipDesc: "Number of race victories achieved." },
-  { key: "podiums", label: "Podiums", isDecimal: false, tooltipDesc: "Total top-3 finishes (P1\u2013P3)." },
-  { key: "poles", label: "Poles", isDecimal: false, tooltipDesc: "Number of pole positions achieved in qualifying." },
-  { key: "avg_finish", label: "Avg Finish", isDecimal: true, tooltipDesc: "Average finishing position across all races. Lower is better." },
-  { key: "dnfs", label: "DNFs", isDecimal: false, tooltipDesc: "Number of races not finished (DNF)." },
-  { key: "avg_grid", label: "Avg Grid", isDecimal: true, tooltipDesc: "Average starting position across all races. Lower is better." },
-  { key: "avg_points", label: "Avg Points", isDecimal: true, tooltipDesc: "Average points scored per race." },
+  { key: "points", metricId: "points" },
+  { key: "wins", metricId: "wins" },
+  { key: "podiums", metricId: "podiums" },
+  { key: "poles", metricId: "poles" },
+  { key: "avg_finish", metricId: "avgFinish" },
+  { key: "dnfs", metricId: "dnf" },
+  { key: "avg_grid", metricId: "avgGrid" },
+  { key: "avg_points", metricId: "pointsPerStart" },
 ] as const;
 
 const ratingItems = [
-  {
-    key: "rating_speed",
-    label: "Speed",
-    tooltip: "Pace and qualifying/race position strength.",
-  },
-  {
-    key: "rating_consistency",
-    label: "Consistency",
-    tooltip: "Ability to deliver stable results and avoid DNFs/major swings.",
-  },
-  {
-    key: "rating_performance",
-    label: "Performance",
-    tooltip: "Overall outcome strength (wins/podiums/points efficiency).",
-  },
-  {
-    key: "rating_agility",
-    label: "Agility",
-    tooltip: "Ability in rain/changing conditions and adapting during races.",
-  },
-  {
-    key: "rating_overall",
-    label: "Driver Rating",
-    tooltip: "Weighted overall rating combining all categories.",
-  },
+  { key: "rating_speed" },
+  { key: "rating_consistency" },
+  { key: "rating_performance" },
+  { key: "rating_agility" },
+  { key: "rating_overall" },
 ] as const;
 
-function formatStatValue(value: string | undefined, isDecimal: boolean): string {
-  if (!value) return "—";
-  if (isDecimal) {
-    const num = parseFloat(value);
-    return Number.isFinite(num) ? num.toFixed(1) : "—";
-  }
-  return value;
+/** Format a Driver quick-stat string via the shared metric catalog + locale. */
+function formatStatValue(value: string | undefined, metricId: string, locale: string): string {
+  if (value === undefined || value === "") return "-";
+  const num = parseFloat(value);
+  const unit: MetricUnit = METRIC_CATALOG[metricId]?.unit ?? "int";
+  return formatMetric(Number.isFinite(num) ? num : null, unit, locale);
 }
 
 function getStatValue(driver: Driver, key: string, mode: StatMode, comp: CompMode): string | undefined {
@@ -270,7 +243,21 @@ function Tooltip({ text, children, triggerClassName, wide }: { text: React.React
 export default function DriverModal({ driver, placeholderSrc, onClose, currentSeasonLabel, hasWild = true }: DriverModalProps) {
   const t = useTranslations("drivers");
   const tr = useTranslations("rewards");
+  const ts = useTranslations("stats");
   const locale = useLocale();
+
+  // Rank explanation string, scope-aware and localized.
+  const rankExplanation = (): string => {
+    if (compMode !== "all") {
+      const scope = compMode === "main" ? t("modal.compMain") : t("modal.compWild");
+      return statMode === "season"
+        ? t("modal.rankExplanation.compSeason", { scope })
+        : t("modal.rankExplanation.compAllTime", { scope });
+    }
+    return statMode === "season"
+      ? t("modal.rankExplanation.season")
+      : t("modal.rankExplanation.allTime");
+  };
   const [statMode, setStatMode] = useState<StatMode>("alltime");
   const [compMode, setCompMode] = useState<CompMode>("all");
   const compModes: CompMode[] = hasWild ? ["all", "main", "wild"] : ["all", "main"];
@@ -551,14 +538,14 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
                       <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-3 py-1.5 text-xs">
                         <span className="text-meta">{t("modal.leagueMain")}</span>
                         <span className="num font-semibold text-ink">
-                          {driver.league_rank_main ? `#${driver.league_rank_main}` : "—"}
+                          {driver.league_rank_main ? `#${driver.league_rank_main}` : "-"}
                         </span>
                       </span>
                       {hasWild && (
                         <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-3 py-1.5 text-xs">
                           <span className="text-meta">{t("modal.leagueWild")}</span>
                           <span className="num font-semibold text-ink">
-                            {driver.league_rank_wild ? `#${driver.league_rank_wild}` : "—"}
+                            {driver.league_rank_wild ? `#${driver.league_rank_wild}` : "-"}
                           </span>
                         </span>
                       )}
@@ -589,8 +576,10 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
                         <Tooltip
                           text={
                             item.seasons.length > 0
-                              ? `Seasons: ${item.seasons.map((s: number) => `S${s}`).join(", ")}`
-                              : "No seasons found"
+                              ? t("modal.awardSeasons", {
+                                  seasons: item.seasons.map((s: number) => `S${s}`).join(", "),
+                                })
+                              : t("modal.noSeasons")
                           }
                         >
                           <span className="num cursor-help font-display text-sm font-semibold text-brass-ink">
@@ -621,7 +610,7 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
                           </span>
                         </Tooltip>
                         <span className="num font-semibold text-ink">
-                          {getEventsCount(driver, statMode, compMode) || "—"}
+                          {getEventsCount(driver, statMode, compMode) || "-"}
                         </span>
                       </div>
                     )}
@@ -663,18 +652,18 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
                 </div>
 
                 {hasAnyStats && (
-                  <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <div className="mt-4 grid auto-rows-fr grid-cols-2 gap-3 sm:grid-cols-4">
                     {statItems.map((stat) => {
                       const value = hasCompStats ? getStatValue(driver, stat.key, statMode, compMode) : undefined;
                       const rank = getStatRank(driver, stat.key, statMode, compMode);
                       return (
-                        <Tooltip key={stat.key} text={<><p>{stat.tooltipDesc}</p><p className="mt-1.5 text-meta">{getRankExplanation(statMode, compMode)}</p></>} triggerClassName="block" wide>
+                        <Tooltip key={stat.key} text={<><p>{ts(`metrics.${stat.metricId}.tooltip`)}</p><p className="mt-1.5 text-meta">{rankExplanation()}</p></>} triggerClassName="block h-full" wide>
                           <div
-                            className={`cursor-help rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-4 py-3 ${!hasCompStats ? "opacity-40" : ""}`}
+                            className={`flex h-full flex-col justify-between gap-2 cursor-help rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream px-4 py-3 ${!hasCompStats ? "opacity-40" : ""}`}
                           >
                             <div className="flex items-start justify-between gap-2">
                               <p className="text-xs uppercase tracking-[0.2em] text-meta">
-                                {stat.label}
+                                {ts(`metrics.${stat.metricId}.label`)}
                               </p>
                               {rank && (
                                 <span className="num shrink-0 text-xs font-medium text-meta">
@@ -683,7 +672,7 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
                               )}
                             </div>
                             <p className="num font-display text-lg font-semibold text-ink">
-                              {formatStatValue(value, stat.isDecimal)}
+                              {formatStatValue(value, stat.metricId, locale)}
                             </p>
                           </div>
                         </Tooltip>
@@ -713,7 +702,7 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
                       <div key={rating.key}>
                         <div className="flex items-center justify-between text-sm">
                           <div className="flex items-center gap-2">
-                            <Tooltip text={rating.tooltip}>
+                            <Tooltip text={t(`ratingTooltips.${rating.key}`)}>
                               <span className="cursor-help text-ink-2">
                                 {t(`ratings.${rating.key}`)}
                               </span>
@@ -729,7 +718,7 @@ export default function DriverModal({ driver, placeholderSrc, onClose, currentSe
                               hasValue ? "text-ink" : "text-faint"
                             }`}
                           >
-                            {hasValue ? numValue : "—"}
+                            {hasValue ? numValue : "-"}
                           </span>
                         </div>
                         <div className="mt-2 h-2 overflow-hidden rounded-[2px] border border-[color:var(--isl-hairline)] bg-sink">

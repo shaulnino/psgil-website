@@ -1,7 +1,7 @@
 {
   "page": {
     "title": "Drivers",
-    "description": "Official ISL roster: teams, drivers, and profiles — updated as the season progresses."
+    "description": "Official ISL roster: teams, drivers, and profiles - updated as the season progresses."
   },
   "grid": {
     "mainDrivers": "Main drivers",
@@ -24,14 +24,22 @@
     "recordsAndAwards": "Records & Awards",
     "quickStats": "Quick stats",
     "raceEvents": "Race Events",
-    "raceEventsTooltip": "Total number of race events the driver participated in (Regular Races + 25% Races + Sprint Races combined).",
+    "raceEventsTooltip": "Total number of events the driver was entered in (Regular Races + 25% Races + Sprint Races combined). An event counts here even if the driver qualified but did not start the race (DNS).",
     "scopeAllTime": "All-time",
     "scopeSeason": "Season",
     "compAll": "All",
     "compMain": "Main",
     "compWild": "Wild",
     "driverRatings": "Driver Ratings",
-    "fullDriverStats": "Full Driver Stats"
+    "fullDriverStats": "Full Driver Stats",
+    "awardSeasons": "Seasons: {seasons}",
+    "noSeasons": "No seasons found",
+    "rankExplanation": {
+      "allTime": "The number shows the driver's rank in this stat among all-time drivers.",
+      "season": "The number shows the driver's rank in this stat among active drivers this season.",
+      "compAllTime": "The number shows the driver's rank in this stat among {scope} league drivers, all-time.",
+      "compSeason": "The number shows the driver's rank in this stat among {scope} league drivers this season."
+    }
   },
   "ratings": {
     "rating_speed": "Speed",
@@ -39,5 +47,12 @@
     "rating_performance": "Performance",
     "rating_agility": "Agility",
     "rating_overall": "Driver Rating"
+  },
+  "ratingTooltips": {
+    "rating_speed": "Pace and qualifying/race position strength.",
+    "rating_consistency": "Ability to deliver stable results and avoid DNFs/major swings.",
+    "rating_performance": "Overall outcome strength (wins/podiums/points efficiency).",
+    "rating_agility": "Ability in rain/changing conditions and adapting during races.",
+    "rating_overall": "Weighted overall rating combining all categories."
   }
 }

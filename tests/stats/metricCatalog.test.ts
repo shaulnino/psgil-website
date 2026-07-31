@@ -9,9 +9,9 @@ test("catalog: every entry's id matches its key", () => {
 });
 
 test("formatMetric: null/undefined/NaN render the placeholder", () => {
-  assert.equal(formatMetric(null, "int", "en"), "—");
-  assert.equal(formatMetric(undefined, "dec", "en"), "—");
-  assert.equal(formatMetric(Number.NaN, "pct", "en"), "—");
+  assert.equal(formatMetric(null, "int", "en"), "-");
+  assert.equal(formatMetric(undefined, "dec", "en"), "-");
+  assert.equal(formatMetric(Number.NaN, "pct", "en"), "-");
   assert.equal(formatMetric(null, "int", "en", "N/A"), "N/A");
 });
 

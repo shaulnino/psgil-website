@@ -20,6 +20,8 @@
   },
   "account": {
     "title": "Your account",
+    "statsHeading": "Your racing stats",
+    "statsCta": "View full statistics",
     "modulesHeading": "Go to",
     "stewardModule": "Steward Portal",
     "stewardModuleDesc": "Cases, verdicts and appeals",

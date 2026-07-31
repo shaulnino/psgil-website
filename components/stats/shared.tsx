@@ -7,8 +7,11 @@ import { useTranslations } from "next-intl";
 /*  Shared constants                                                    */
 /* ------------------------------------------------------------------ */
 
-export const SINGLE_COLOR = "#7E2A1E";
-export const COMPARE_COLOR = "#2F5A6E";
+// Driver A vs Driver B compare duo. Tuned to pop on the dark charcoal theme
+// (and stay legible on the light chart-tooltip popover): a vivid racing red
+// against a bright azure.
+export const SINGLE_COLOR = "#F2555A";
+export const COMPARE_COLOR = "#38B6E6";
 
 export const CHART_THEME = {
   bg: "#FBF8F0",

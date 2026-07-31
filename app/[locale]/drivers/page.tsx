@@ -28,6 +28,8 @@ import {
 import { fetchAllRaceResults, fetchStandings } from "@/lib/resultsData";
 import { mapRaceEvents } from "@/lib/scheduleData";
 import { computeDriverRatingsAll } from "@/lib/statsComputed";
+import { normalizeRaces } from "@/lib/stats/normalizeRace";
+import { mergeDriverProfileStats } from "@/lib/drivers/profileStats";
 
 const PLACEHOLDER_PHOTO = "/placeholders/driver.png";
 
@@ -179,6 +181,11 @@ export default async function DriversPage() {
       drivers = mergeComputedRatings(drivers, allTimeWild, "wild");
       drivers = mergeComputedRatings(drivers, seasonMain,  "season_main");
       drivers = mergeComputedRatings(drivers, seasonWild,  "season_wild");
+      // Unify the modal's quick stats with the /stats Drivers tab: overwrite the
+      // statsComputed-sourced quick stats with computeDriverProfile values so both
+      // surfaces use one engine. Ratings (above) stay as-is. Must run before ranks.
+      const normalized = normalizeRaces(allResults, events);
+      drivers = mergeDriverProfileStats(drivers, normalized, currentSeason.season_key);
       // Compute cross-driver rankings for all scopes
       drivers = computeAllScopeRanks(drivers);
       drivers = computeCompetitionRanks(drivers);

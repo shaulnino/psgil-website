@@ -12,7 +12,6 @@ import { mapDrivers } from "@/lib/driversData";
 import { fetchRewards } from "@/lib/rewardsData";
 import {
   computeDriverStats,
-  computeCircuitStats,
   computeLeagueStats,
 } from "@/lib/statsComputed";
 
@@ -59,15 +58,14 @@ export default async function StatsPage() {
     ]),
   );
 
-  // League and circuits
-  const league   = computeLeagueStats(allResults, events, seasons);
-  const circuits = computeCircuitStats(allResults, events, seasons);
+  // League (Circuits tab now computes its own profile client-side from
+  // normalized race data — see components/stats/circuits/CircuitsSection).
+  const league = computeLeagueStats(allResults, events, seasons);
 
   const data = {
     driversAllTime,
     driversBySeason,
     league,
-    circuits,
   };
 
   return (
