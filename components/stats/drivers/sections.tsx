@@ -268,11 +268,16 @@ export function ConsistencySection({ profile }: { profile: DriverProfile }) {
   const { label, tip, val, t } = useMetricText();
   const c = profile.consistency;
   const total = c.distribution.reduce((s, d) => s + Math.max(0, d.count), 0);
+  // Only show the distribution bar when there is an actual spread to
+  // visualise. A single non-empty bucket renders as one solid full-width
+  // segment, which reads as an empty/pointless box, so hide it in that case.
+  const nonEmptyBuckets = c.distribution.filter((d) => d.count > 0).length;
+  const showDistribution = total > 0 && nonEmptyBuckets >= 2;
 
   return (
     <SectionCard id="consistency" title={t("driversTab.sections.consistency")}>
       <div className="space-y-4">
-        {total > 0 && (
+        {showDistribution && (
           <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-4">
             <div className="flex h-4 w-full overflow-hidden rounded-[2px]">
               {c.distribution.map((d) =>
