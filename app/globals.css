@@ -257,6 +257,18 @@
   border-width: 0 1px 1px 0;
 }
 
+/* Completed-race card wash — a subtle uniform green tint layered over the
+   card's base surface, signalling a finished event. The tint is a
+   background-image overlay so it composits above bg-cream/bg-paper hover
+   without overriding the hover color. */
+.isl-card-finished {
+  background-image: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--isl-success) 9%, transparent),
+    color-mix(in srgb, var(--isl-success) 4%, transparent)
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /*  Hero broadcast frame — cinematic F1 race-control display frame.    */
 /*  A chamfered metallic-gold plate holds the hero image, with HUD     */

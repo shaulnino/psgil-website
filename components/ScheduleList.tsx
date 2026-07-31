@@ -973,6 +973,7 @@ function ScheduleListInner({
             const s = event.status.toLowerCase();
             const isLive = s === "live";
             const isCancelled = s === "cancelled";
+            const isCompleted = s === "completed";
             const roundNum = String(event.race_number).padStart(2, "0");
             return (
               <button
@@ -985,6 +986,8 @@ function ScheduleListInner({
                     ? "isl-corner-ticks border-status-danger border-t-status-danger"
                     : isCancelled
                     ? "border-[color:var(--isl-hairline)] border-t-[color:var(--isl-hairline-strong)] opacity-70"
+                    : isCompleted
+                    ? "isl-card-finished border-[color:var(--isl-hairline)] border-t-status-success hover:border-status-success/40"
                     : "border-[color:var(--isl-hairline)] border-t-oxblood hover:border-[color:var(--isl-oxblood)]/40"
                 }`}
               >
