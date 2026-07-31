@@ -2,6 +2,11 @@
   command = "npm run build"
   publish = ".next"
 
+# Custom Netlify Functions (alongside the Next.js runtime adapter). Holds the
+# scheduled notification tick — see netlify/functions/notifications-tick.mjs.
+[functions]
+  directory = "netlify/functions"
+
 [build.environment]
   # Allow Google Sheets public "Publish to web" URLs (2PACX-…) through
   # secrets scanning. These are intentionally public, read-only endpoints

@@ -65,6 +65,7 @@ import {
 } from "@/lib/stewards/notifications";
 import type { CaseStatus, StewardRole, VerdictDecision, WeekendSession } from "@/lib/stewards/types";
 import { isDriverRole } from "@/lib/accounts/types";
+import * as inAppNotif from "@/lib/notifications/producers/steward";
 
 const parseLines = (value: FormDataEntryValue | null) =>
   typeof value === "string"
@@ -275,6 +276,7 @@ export async function createComplaintAction(formData: FormData) {
   });
 
   try { await notifyCaseSubmitted(created, users); } catch { /* non-fatal */ }
+  try { await inAppNotif.notifyStewardCaseInvolved(created); } catch { /* non-fatal */ }
 
   revalidatePath("/stewards");
   revalidatePath("/stewards/cases");
@@ -426,6 +428,7 @@ export async function upsertVerdictAction(formData: FormData) {
     if (caseData?.verdict) {
       const users = await listUsers();
       try { await notifyVerdictPublished(caseData.caseItem, caseData.verdict, users); } catch { /* non-fatal */ }
+      try { await inAppNotif.notifyStewardVerdictPublished(caseData.caseItem); } catch { /* non-fatal */ }
     }
   }
   revalidatePath(`/stewards/cases/${caseId}`);
@@ -446,6 +449,7 @@ export async function publishVerdictAction(formData: FormData) {
     if (caseData?.verdict) {
       const users = await listUsers();
       try { await notifyVerdictPublished(caseData.caseItem, caseData.verdict, users); } catch { /* non-fatal */ }
+      try { await inAppNotif.notifyStewardVerdictPublished(caseData.caseItem); } catch { /* non-fatal */ }
     }
     // Auto-generate penalties-to-serve if thresholds crossed
     await checkAndGeneratePenalties(caseId).catch(() => {});
@@ -903,6 +907,9 @@ export async function upsertAppealVerdictAction(formData: FormData) {
         try {
           await notifyAppealVerdictPublished(appeal, verdict, originalCase, recipients);
         } catch { /* non-fatal */ }
+        try {
+          await inAppNotif.notifyStewardAppealVerdictPublished(appeal.id, originalCase);
+        } catch { /* non-fatal */ }
       }
     }
   }
@@ -933,6 +940,9 @@ export async function publishAppealVerdictAction(formData: FormData) {
     );
     try {
       await notifyAppealVerdictPublished(appealData.appeal, appealData.verdict, appealData.originalCase, recipients);
+    } catch { /* non-fatal */ }
+    try {
+      await inAppNotif.notifyStewardAppealVerdictPublished(appealData.appeal.id, appealData.originalCase);
     } catch { /* non-fatal */ }
   }
 

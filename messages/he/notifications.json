@@ -1,0 +1,174 @@
+{
+  "bell": {
+    "ariaLabel": "התראות",
+    "ariaLabelUnread": "התראות, {count} שלא נקראו",
+    "title": "התראות",
+    "empty": "אין התראות חדשות.",
+    "viewAll": "צפייה בכל ההתראות",
+    "markAllRead": "סימון הכול כנקרא",
+    "settings": "הגדרות התראות",
+    "close": "סגירה",
+    "loading": "טוען…"
+  },
+  "page": {
+    "title": "התראות",
+    "description": "עדכוני נוכחות, ועדת מרשלים, מרוצים וליגה.",
+    "empty": "אין עדיין התראות.",
+    "emptyHint": "עדכוני נוכחות, מרשלים ומרוצים יופיעו כאן.",
+    "loadMore": "טעינת עוד",
+    "settings": "הגדרות"
+  },
+  "labels": {
+    "actionRequired": "נדרשת פעולה",
+    "deadline": "מתקרב מועד אחרון",
+    "scheduleChange": "שינוי בלוח הזמנים",
+    "unread": "לא נקרא",
+    "new": "חדש"
+  },
+  "priority": {
+    "critical": "קריטי",
+    "important": "חשוב",
+    "standard": "עדכון",
+    "low": "מידע"
+  },
+  "time": {
+    "now": "הרגע",
+    "minute": "לפני {count} דק׳",
+    "hour": "לפני {count} ש׳",
+    "day": "לפני {count} ימים"
+  },
+  "push": {
+    "title": "דחיפה במכשיר זה",
+    "description": "קבלו התראות לטלפון גם כאשר ISL סגור.",
+    "enable": "הפעלת דחיפה",
+    "disable": "כיבוי דחיפה",
+    "enabled": "הדחיפה מופעלת במכשיר זה.",
+    "enabling": "מפעיל\u2026",
+    "denied": "התראות חסומות לאתר זה בהגדרות הדפדפן. אפשרו אותן ונסו שוב.",
+    "unsupported": "הדפדפן הזה אינו תומך בהתראות דחיפה.",
+    "installRequired": "התקינו קודם את אפליקציית ISL: השתמשו ב\u201cהוספה למסך הבית\u201d / \u201cהתקנת אפליקציה\u201d בדפדפן, ואז פתחו את ISL מהאפליקציה המותקנת כדי להפעיל דחיפה.",
+    "unavailable": "התראות דחיפה עדיין לא זמינות.",
+    "error": "הפעלת הדחיפה נכשלה \u2014 נסו שוב.",
+    "masterOffHint": "הדחיפה מופעלת במכשיר זה, אך \u201cהפעלת התראות דחיפה\u201d למטה כבויה, כך שדבר לא יישלח."
+  },
+  "prefs": {
+    "title": "הגדרות התראות",
+    "description": "בחרו על מה לקבל התראות וכיצד. התראות בתוך האתר תמיד שומרות היסטוריה של עדכונים אישיים חשובים.",
+    "presetsTitle": "הגדרות מהירות",
+    "preset": {
+      "recommended": "מומלץ",
+      "importantOnly": "חשוב בלבד",
+      "all": "הכול",
+      "pushOff": "כיבוי דחיפה"
+    },
+    "globalTitle": "כללי",
+    "pushGlobal": "הפעלת התראות דחיפה",
+    "pushGlobalHint": "מתג ראשי. הרשאה לכל מכשיר נקבעת בנפרד עם השקת הדחיפה.",
+    "pauseOptional": "השהיית התראות לא חיוניות",
+    "pauseOptionalHint": "משתיק התראות לא חיוניות. שינויים קריטיים בלוח ועדכוני מרשלים אישיים עדיין יגיעו.",
+    "articleAnnouncementsPushOnly": "דחיפה רק להודעות ליגה",
+    "articleAnnouncementsPushOnlyHint": "כתבות אחרות עדיין יופיעו ברשימת ההתראות.",
+    "categoriesTitle": "קטגוריות",
+    "channelInApp": "באתר",
+    "channelPush": "דחיפה",
+    "mandatoryNote": "תמיד פעיל",
+    "category": {
+      "attendance": "נוכחות",
+      "race": "לוח מרוצים",
+      "steward": "תיקי מרשלים",
+      "articles": "כתבות והודעות",
+      "results": "תוצאות ודירוג",
+      "admin": "הודעות ליגה"
+    },
+    "categoryHint": {
+      "attendance": "פתיחת הרשמה, תזכורות ושינויים בסטטוס שלך.",
+      "race": "שינויי שעה, תאריך, ביטול והרכב.",
+      "steward": "תיקים שאתם מעורבים בהם, מועדים והחלטות.",
+      "articles": "חדשות, תצוגות מקדימות, סיכומים והודעות.",
+      "results": "תוצאות רשמיות, תיקונים ודירוג.",
+      "admin": "הודעות ישירות מהליגה."
+    },
+    "save": "שמירת העדפות",
+    "saving": "שומר…",
+    "saved": "ההעדפות נשמרו",
+    "error": "השמירה נכשלה — נסו שוב.",
+    "testTitle": "בדיקה",
+    "testDescription": "שלחו לעצמכם התראת בדיקה כדי לוודא שהפעמון עובד.",
+    "sendTest": "שליחת התראת בדיקה",
+    "testSent": "נשלחה התראת בדיקה — בדקו את הפעמון."
+  },
+  "templates": {
+    "attendance_opened": {
+      "title": "ההרשמה נפתחה: {raceHe}",
+      "body": "אשרו נוכחות למרוץ הבא לפני סגירת ההרשמה."
+    },
+    "attendance_missing": {
+      "title": "טרם אישרתם נוכחות: {raceHe}",
+      "body": "עדכנו את הנוכחות שלכם לפני המועד האחרון."
+    },
+    "attendance_changed_by_admin": {
+      "title": "הנוכחות שלכם עודכנה: {raceHe}",
+      "body": "מנהל שינה את הסטטוס שלכם ל־{status, select, going {מגיע} maybe {אולי} out {לא משתתף} other {{status}}}."
+    },
+    "race_time_changed": {
+      "title": "שעת ההתחלה שונתה: {raceHe}",
+      "body": "בדקו את השעה החדשה כדי לא לפספס את הזינוק."
+    },
+    "race_cancelled": {
+      "title": "המרוץ בוטל: {raceHe}",
+      "body": "המרוץ לא יתקיים."
+    },
+    "race_postponed": {
+      "title": "המרוץ נדחה: {raceHe}",
+      "body": "תאריך חדש יפורסם בהמשך."
+    },
+    "race_restored": {
+      "title": "המרוץ חזר: {raceHe}",
+      "body": "נקבע מועד חדש למרוץ."
+    },
+    "race_upcoming": {
+      "title": "{raceHe} מתחיל בקרוב",
+      "body": "התכוננו — הזינוק ממש עוד מעט."
+    },
+    "steward_case_involved": {
+      "title": "אתם מעורבים בתיק מרשלים",
+      "body": "פתחו את התיק לעיון בפרטים."
+    },
+    "steward_response_needed": {
+      "title": "נדרשת תגובתכם",
+      "body": "תיק מרשלים ממתין להצהרתכם."
+    },
+    "steward_verdict_published": {
+      "title": "פורסמה החלטת מרשלים",
+      "body": "צפו בתוצאת התיק שלכם."
+    },
+    "steward_penalty_assigned": {
+      "title": "יש לכם עונש לריצוי",
+      "body": "הקישו לצפייה בפרטים."
+    },
+    "appeal_verdict_published": {
+      "title": "פורסמה החלטה בערעור",
+      "body": "צפו בתוצאת הערעור."
+    },
+    "article_published": {
+      "title": "{titleHe}",
+      "body": "חדש ב־ISL."
+    },
+    "results_official": {
+      "title": "תוצאות רשמיות: {raceHe}",
+      "body": "הסיווג הסופי פורסם."
+    },
+    "results_corrected": {
+      "title": "התוצאות עודכנו: {raceHe}",
+      "body": "החלטת מרשלים עשויה לשנות את התוצאה שלכם."
+    },
+    "admin_broadcast": {
+      "title": "הודעת ליגה",
+      "body": "הליגה פרסמה עדכון."
+    },
+    "test": {
+      "title": "התראת בדיקה",
+      "body": "אם אתם רואים את זה, מרכז ההתראות עובד."
+    }
+  }
+}

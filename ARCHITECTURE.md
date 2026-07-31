@@ -199,9 +199,11 @@ No client-state library. Data is server-fetched and passed as props; mutations g
 ## 10. Deployment
 
 - Netlify: `command = "npm run build"`, `publish = ".next"`. Next.js runtime adapter handles SSR/ISR.
-- `netlify.toml`: 301s from `psgil.com`/`www` → `f1isl.com`; secrets-scan allowance for public `2PACX-*` Sheet URLs.
+- `netlify.toml`: 301s from `psgil.com`/`www` → `f1isl.com`; secrets-scan allowance for public `2PACX-*` Sheet URLs; `[functions] directory = "netlify/functions"` for the scheduled notification tick.
+- **Scheduled notification tick (PW-4)**: `netlify/functions/notifications-tick.mjs` (`schedule: "*/10 * * * *"`) POSTs `${URL}/api/notifications/tick` with header `x-tick-key: NOTIFICATIONS_TICK_SECRET`. The endpoint runs snapshot diffs (articles/schedule/results/penalties) + reminders (attendance/race) inside the Next runtime (Blobs access). Scheduled functions are prod/deploy-only — locally, hit the endpoint manually (secret optional in dev).
 - CI (`.github/workflows/ci.yml`) runs `tsc --noEmit` (hard) + `lint` (non-blocking; ~36-error pre-migration baseline). **`next build` is intentionally not run in CI** (it fetches live CSV at prerender → network-flaky); the build happens on Netlify.
 - Required prod env: `GMAIL_APP_PASSWORD`, `NEWS_SHEET_URL`, `STEWARD_SESSION_SECRET`, `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_GA_ID`; optional `REWARDS_SHEET_URL`, `STATS_EXPORT_API_KEY`.
+- **Notifications (PW-4) env**: `NEXT_PUBLIC_VAPID_PUBLIC_KEY` + `VAPID_PRIVATE_KEY` (Web Push keypair; push is PWA-only), `VAPID_SUBJECT` (optional, defaults to `mailto:f1racingisl@gmail.com`), and `NOTIFICATIONS_TICK_SECRET` (shared secret gating the scheduled tick — **prod hard-fails the tick with 503 if unset**). Without VAPID keys, in-app notifications + reminders still work; only push is disabled.
 
 ---
 

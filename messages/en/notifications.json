@@ -1,0 +1,174 @@
+{
+  "bell": {
+    "ariaLabel": "Notifications",
+    "ariaLabelUnread": "Notifications, {count} unread",
+    "title": "Notifications",
+    "empty": "You're all caught up.",
+    "viewAll": "View all",
+    "markAllRead": "Mark all as read",
+    "settings": "Notification settings",
+    "close": "Close",
+    "loading": "Loading…"
+  },
+  "page": {
+    "title": "Notifications",
+    "description": "Your attendance, steward, race and league updates.",
+    "empty": "No notifications yet.",
+    "emptyHint": "Attendance, steward and race updates will show up here.",
+    "loadMore": "Load more",
+    "settings": "Settings"
+  },
+  "labels": {
+    "actionRequired": "Action required",
+    "deadline": "Deadline approaching",
+    "scheduleChange": "Schedule change",
+    "unread": "Unread",
+    "new": "New"
+  },
+  "priority": {
+    "critical": "Critical",
+    "important": "Important",
+    "standard": "Update",
+    "low": "Info"
+  },
+  "time": {
+    "now": "Just now",
+    "minute": "{count}m ago",
+    "hour": "{count}h ago",
+    "day": "{count}d ago"
+  },
+  "push": {
+    "title": "Push on this device",
+    "description": "Get alerts on your phone even when ISL is closed.",
+    "enable": "Enable push",
+    "disable": "Disable push",
+    "enabled": "Push is enabled on this device.",
+    "enabling": "Enabling\u2026",
+    "denied": "Notifications are blocked for this site in your browser settings. Allow them, then try again.",
+    "unsupported": "This browser doesn't support push notifications.",
+    "installRequired": "Install the ISL app first: use your browser's \u201cAdd to Home Screen\u201d / \u201cInstall app\u201d, then open ISL from the installed app to enable push.",
+    "unavailable": "Push notifications aren't available yet.",
+    "error": "Couldn't enable push \u2014 please try again.",
+    "masterOffHint": "Push is enabled on this device, but \u201cEnable push notifications\u201d below is off, so nothing will be sent."
+  },
+  "prefs": {
+    "title": "Notification settings",
+    "description": "Choose what you're notified about and how. In-app notifications always keep a history of important personal updates.",
+    "presetsTitle": "Quick presets",
+    "preset": {
+      "recommended": "Recommended",
+      "importantOnly": "Important only",
+      "all": "Everything",
+      "pushOff": "Turn push off"
+    },
+    "globalTitle": "General",
+    "pushGlobal": "Enable push notifications",
+    "pushGlobalHint": "Master switch. Per-device permission is set separately when push launches.",
+    "pauseOptional": "Pause optional notifications",
+    "pauseOptionalHint": "Silences non-essential alerts. Critical schedule and personal steward updates still arrive.",
+    "articleAnnouncementsPushOnly": "Only push for league announcements",
+    "articleAnnouncementsPushOnlyHint": "Other articles still appear in your notifications list.",
+    "categoriesTitle": "Categories",
+    "channelInApp": "In-app",
+    "channelPush": "Push",
+    "mandatoryNote": "Always on",
+    "category": {
+      "attendance": "Attendance",
+      "race": "Race schedule",
+      "steward": "Steward cases",
+      "articles": "Articles & announcements",
+      "results": "Results & standings",
+      "admin": "League messages"
+    },
+    "categoryHint": {
+      "attendance": "RSVP opens, reminders, and changes to your status.",
+      "race": "Time, date, cancellation and grid changes.",
+      "steward": "Cases you're involved in, deadlines and decisions.",
+      "articles": "News, previews, recaps and announcements.",
+      "results": "Official results, corrections and standings.",
+      "admin": "Direct messages from the league."
+    },
+    "save": "Save preferences",
+    "saving": "Saving…",
+    "saved": "Preferences saved",
+    "error": "Couldn't save — please try again.",
+    "testTitle": "Test",
+    "testDescription": "Send yourself a test notification to check the bell.",
+    "sendTest": "Send test notification",
+    "testSent": "Test notification sent — check the bell."
+  },
+  "templates": {
+    "attendance_opened": {
+      "title": "Attendance is open: {race}",
+      "body": "RSVP for the next race before attendance closes."
+    },
+    "attendance_missing": {
+      "title": "You haven't RSVP'd: {race}",
+      "body": "Set your attendance before the deadline."
+    },
+    "attendance_changed_by_admin": {
+      "title": "Your attendance was updated: {race}",
+      "body": "An admin set your status to {status, select, going {Going} maybe {Maybe} out {Not racing} other {{status}}}."
+    },
+    "race_time_changed": {
+      "title": "Start time changed: {race}",
+      "body": "Check the new time so you don't miss the lights."
+    },
+    "race_cancelled": {
+      "title": "Race cancelled: {race}",
+      "body": "This race will no longer take place."
+    },
+    "race_postponed": {
+      "title": "Race postponed: {race}",
+      "body": "A new date will be announced."
+    },
+    "race_restored": {
+      "title": "Race back on: {race}",
+      "body": "This race has been rescheduled."
+    },
+    "race_upcoming": {
+      "title": "{race} starts soon",
+      "body": "Get ready — lights out shortly."
+    },
+    "steward_case_involved": {
+      "title": "You're involved in a steward case",
+      "body": "Open the case to review the details."
+    },
+    "steward_response_needed": {
+      "title": "Your response is needed",
+      "body": "A steward case is waiting for your statement."
+    },
+    "steward_verdict_published": {
+      "title": "A steward decision was published",
+      "body": "See the outcome of your case."
+    },
+    "steward_penalty_assigned": {
+      "title": "You have a penalty to serve",
+      "body": "Tap to see the details."
+    },
+    "appeal_verdict_published": {
+      "title": "An appeal decision was published",
+      "body": "See the outcome of the appeal."
+    },
+    "article_published": {
+      "title": "{title}",
+      "body": "New on ISL."
+    },
+    "results_official": {
+      "title": "Official results: {race}",
+      "body": "The final classification is in."
+    },
+    "results_corrected": {
+      "title": "Results updated: {race}",
+      "body": "A steward decision may have changed your result."
+    },
+    "admin_broadcast": {
+      "title": "League message",
+      "body": "The league has posted an update."
+    },
+    "test": {
+      "title": "Test notification",
+      "body": "If you can see this, your notification centre works."
+    }
+  }
+}

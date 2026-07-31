@@ -27,6 +27,7 @@
     "recharts": "^3.7.0",
     "sanitize-html": "^2.17.1",
     "tailwind-merge": "^3.6.0",
+    "web-push": "^3.6.7",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -37,6 +38,7 @@
     "@types/nodemailer": "^7.0.10",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/web-push": "^3.6.4",
     "eslint": "^9",
     "eslint-config-next": "16.1.4",
     "sharp": "^0.34.5",

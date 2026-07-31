@@ -11,7 +11,7 @@
  * mean a new deploy takes over immediately and old caches are purged, so a
  * stale service worker can't pin an old build.
  */
-const VERSION = "f1isl-v1";
+const VERSION = "f1isl-v2";
 const STATIC_CACHE = `${VERSION}-static`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 const OFFLINE_URL = "/offline.html";
@@ -95,4 +95,56 @@ self.addEventListener("fetch", (event) => {
 
   // Other same-origin GET (data/API): network-first, cache only as a fallback.
   event.respondWith(fetch(request).catch(() => caches.match(request)));
+});
+
+/* ── Web Push (PW-4, Phase 2) ─────────────────────────────────────────────
+   Payload: { title, body, url, type, tag }. Show the notification; on click,
+   focus an already-open ISL window (navigating it to the target) or open a new
+   one. The target page enforces auth/authorization server-side when it loads, so
+   a deep link never exposes content the user isn't allowed to see. */
+self.addEventListener("push", (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    data = {};
+  }
+  const title = data.title || "ISL";
+  const options = {
+    body: data.body || "",
+    icon: "/android-chrome-192x192.png",
+    badge: "/favicon-32x32.png",
+    tag: data.tag || undefined,
+    renotify: !!data.tag,
+    data: { url: data.url || "/" },
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const targetUrl = (event.notification.data && event.notification.data.url) || "/";
+  event.waitUntil(
+    (async () => {
+      const absolute = new URL(targetUrl, self.location.origin).href;
+      const allClients = await self.clients.matchAll({
+        type: "window",
+        includeUncontrolled: true,
+      });
+      for (const client of allClients) {
+        if (new URL(client.url).origin === self.location.origin) {
+          await client.focus();
+          if ("navigate" in client) {
+            try {
+              await client.navigate(absolute);
+            } catch {
+              /* some browsers block cross-document navigate() — focus is enough */
+            }
+          }
+          return;
+        }
+      }
+      await self.clients.openWindow(absolute);
+    })(),
+  );
 });
