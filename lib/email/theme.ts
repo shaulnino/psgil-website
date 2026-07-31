@@ -117,7 +117,7 @@ ${pre}
   <tr>
     <td style="background:${C.surfaceAlt};border-top:1px solid ${C.hairline};padding:18px 28px">
       <p style="margin:0;font-family:${FONT_BODY};font-size:11px;color:${C.meta};line-height:1.7">
-        <span style="color:${C.ink2};font-weight:600">ISL</span> — F1 Israeli Super League&nbsp;&middot;&nbsp;<a href="${SITE}" style="color:${C.gold};text-decoration:none">f1isl.com</a>${
+        <span style="color:${C.ink2};font-weight:600">ISL</span> - F1 Israeli Super League&nbsp;&middot;&nbsp;<a href="${SITE}" style="color:${C.gold};text-decoration:none">f1isl.com</a>${
           footerNote ? `<br>${footerNote}` : ""
         }
       </p>

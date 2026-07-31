@@ -26,7 +26,7 @@
     "zoomOut": "Zoom out",
     "zoomIn": "Zoom in",
     "reset": "Reset",
-    "resultsCaptionSuffix": "— Race Results",
+    "resultsCaptionSuffix": "- Race Results",
     "resultsNotAvailable": "Results not available yet."
   },
   "posterModal": {
@@ -36,7 +36,7 @@
     "quarterDistance": "25%",
     "playoff": "Playoff",
     "provisional": "PROV",
-    "provisionalTooltip": "Provisional results — subject to steward decisions.",
+    "provisionalTooltip": "Provisional results - subject to steward decisions.",
     "season": "Season",
     "race": "Race #",
     "seeResult": "See result",
@@ -48,7 +48,7 @@
     "sprintTooltip": "Sprint Race (short format)",
     "quarterDistanceTooltip": "25% Race distance",
     "playoffTooltip": "Playoff round",
-    "provisionalTooltip": "Provisional results — subject to steward decisions.",
+    "provisionalTooltip": "Provisional results - subject to steward decisions.",
     "dryTooltip": "Weather: Dry race",
     "dry": "Dry",
     "wetTooltip": "Weather: Wet race",

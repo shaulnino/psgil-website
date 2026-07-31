@@ -69,7 +69,7 @@ export default async function AppealsListPage() {
                     )}
                   </div>
                   <p className="mt-0.5 text-xs text-meta truncate">
-                    {t("appeals.listMetaActive", { title: originalCase?.title ?? "", appellant: submittedBy?.name ?? "—" })}
+                    {t("appeals.listMetaActive", { title: originalCase?.title ?? "", appellant: submittedBy?.name ?? "-" })}
                   </p>
                   <p className="num text-xs text-faint">{fmtDate(appeal.submittedAt)}</p>
                 </div>
@@ -109,7 +109,7 @@ export default async function AppealsListPage() {
                       ) : null}
                     </div>
                     <p className="mt-0.5 text-xs text-meta truncate">
-                      {t("appeals.listMetaClosed", { title: originalCase?.title ?? "", appellant: submittedBy?.name ?? "—" })}
+                      {t("appeals.listMetaClosed", { title: originalCase?.title ?? "", appellant: submittedBy?.name ?? "-" })}
                     </p>
                   </div>
                   <span className="text-xs text-meta group-hover:text-oxblood shrink-0">{t("appeals.viewAction")}</span>

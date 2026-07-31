@@ -4,14 +4,14 @@
   "ariaLabel": "שיתוף: {title}",
   "copyLink": "העתקת קישור",
   "copied": "הקישור הועתק",
-  "copyFailed": "ההעתקה נכשלה — סמנו והעתיקו את הקישור ידנית.",
+  "copyFailed": "ההעתקה נכשלה - סמנו והעתיקו את הקישור ידנית.",
   "whatsapp": "וואטסאפ",
   "telegram": "טלגרם",
   "x": "X",
   "email": "אימייל",
   "close": "סגירה",
   "race": {
-    "title": "{race} — תוצאות המרוץ",
+    "title": "{race} - תוצאות המרוץ",
     "podium": "פודיום: 1. {p1} · 2. {p2} · 3. {p3}",
     "meta": "{circuit} · סבב {round} · עונה {season}",
     "metaNoCircuit": "סבב {round} · עונה {season}"

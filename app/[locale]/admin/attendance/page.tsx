@@ -144,7 +144,7 @@ export default async function AttendanceAdminPage({
                       ? `${formatIsraelDateTime(Date.parse(rec.updatedAt), locale)} · ${
                           rec.setBy === "admin" ? t("byAdmin") : t("byDriver")
                         }`
-                      : "—";
+                      : "-";
                     return (
                       <tr key={d.driver_id} className="border-t border-[color:var(--isl-hairline)] align-top">
                         <td className="py-2.5 pe-3 text-ink">

@@ -26,7 +26,7 @@
     "zoomOut": "התרחקות",
     "zoomIn": "התקרבות",
     "reset": "איפוס",
-    "resultsCaptionSuffix": "— תוצאות המרוץ",
+    "resultsCaptionSuffix": "- תוצאות המרוץ",
     "resultsNotAvailable": "התוצאות עדיין אינן זמינות."
   },
   "posterModal": {
@@ -36,7 +36,7 @@
     "quarterDistance": "25%",
     "playoff": "פלייאוף",
     "provisional": "זמני",
-    "provisionalTooltip": "תוצאות זמניות — כפופות להחלטות השיפוט.",
+    "provisionalTooltip": "תוצאות זמניות - כפופות להחלטות השיפוט.",
     "season": "עונה",
     "race": "מרוץ מס׳",
     "seeResult": "צפייה בתוצאה",
@@ -48,7 +48,7 @@
     "sprintTooltip": "מרוץ ספרינט (פורמט קצר)",
     "quarterDistanceTooltip": "מרוץ במרחק 25%",
     "playoffTooltip": "סבב פלייאוף",
-    "provisionalTooltip": "תוצאות זמניות — כפופות להחלטות השיפוט.",
+    "provisionalTooltip": "תוצאות זמניות - כפופות להחלטות השיפוט.",
     "dryTooltip": "מזג אוויר: מרוץ יבש",
     "dry": "יבש",
     "wetTooltip": "מזג אוויר: מרוץ רטוב",

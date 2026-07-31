@@ -182,13 +182,13 @@ export default async function StewardCasesPage({ searchParams }: { searchParams:
 }
 
 
-const COMPLAINT_WINDOW_MS = 3 * 24 * 60 * 60 * 1000; // 3 days
+const COMPLAINT_WINDOW_MS = 48 * 60 * 60 * 1000; // exactly 48 hours since race start
 
 type SeasonRoundOption = { value: string; label: string; rounds: { value: string; label: string }[] };
 
 /**
  * Returns only rounds whose race start time falls within the complaint window
- * (between now-3days and now).  When no races are in-window the array is empty.
+ * (between now-48h and now).  When no races are in-window the array is empty.
  */
 async function getSeasonRoundOptions(): Promise<SeasonRoundOption[]> {
   try {

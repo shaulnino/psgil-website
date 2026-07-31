@@ -91,11 +91,11 @@
     "save": "Save preferences",
     "saving": "Saving…",
     "saved": "Preferences saved",
-    "error": "Couldn't save — please try again.",
+    "error": "Couldn't save - please try again.",
     "testTitle": "Test",
     "testDescription": "Send yourself a test notification to check the bell.",
     "sendTest": "Send test notification",
-    "testSent": "Test notification sent — check the bell."
+    "testSent": "Test notification sent - check the bell."
   },
   "templates": {
     "attendance_opened": {
@@ -128,7 +128,7 @@
     },
     "race_upcoming": {
       "title": "{race} starts soon",
-      "body": "Get ready — lights out shortly."
+      "body": "Get ready - lights out shortly."
     },
     "steward_case_involved": {
       "title": "You're involved in a steward case",

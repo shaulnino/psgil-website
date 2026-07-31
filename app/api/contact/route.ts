@@ -12,7 +12,7 @@ import {
   paragraph,
 } from "@/lib/email/theme";
 
-// ISL league email — also the nodemailer SMTP auth account (from/to for all contact-form mail).
+// ISL league email - also the nodemailer SMTP auth account (from/to for all contact-form mail).
 // NOTE: GMAIL_APP_PASSWORD must be an App Password generated for THIS exact Gmail account, or sending fails.
 const LEAGUE_EMAIL = "f1racingisl@gmail.com";
 
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
       experience?: string;
     };
 
-    // Honeypot — if the hidden field has a value it's a bot
+    // Honeypot - if the hidden field has a value it's a bot
     if (_hp) {
       // Return 200 so bots think it worked
       return NextResponse.json({ ok: true });
@@ -119,9 +119,9 @@ export async function POST(req: NextRequest) {
           `New sign-up interest:`,
           `Name: ${name}`,
           `Email: ${email}`,
-          `Date of Birth: ${birthdate ?? "—"}`,
-          `Platform: ${platform ?? "—"}`,
-          `Experience: ${experience ?? "—"}`,
+          `Date of Birth: ${birthdate ?? "-"}`,
+          `Platform: ${platform ?? "-"}`,
+          `Experience: ${experience ?? "-"}`,
         ].join("\n"),
         html: adminSignupHtml(name, email, birthdate, platform, experience),
       });
@@ -154,14 +154,14 @@ export async function POST(req: NextRequest) {
           ? {
               from: `"ISL" <${LEAGUE_EMAIL}>`,
               to: `"${safeName}" <${safeEmail}>`,
-              subject: "ISL — Sign up received 🏁",
+              subject: "ISL - Sign up received 🏁",
               text: autoReplySignupText(name),
               html: autoReplySignupHtml(name),
             }
           : {
               from: `"ISL" <${LEAGUE_EMAIL}>`,
               to: `"${safeName}" <${safeEmail}>`,
-              subject: "ISL — We got your message ✅",
+              subject: "ISL - We got your message ✅",
               text: autoReplyQuestionText(name),
               html: autoReplyQuestionHtml(name),
             },
@@ -202,23 +202,23 @@ function autoReplySignupText(name: string): string {
     "In the meantime, check out our latest standings and schedule at f1isl.com.",
     "",
     "See you on track!",
-    "— The ISL Team",
+    "- The ISL Team",
   ].join("\n");
 }
 
 function autoReplySignupHtml(name: string): string {
   return emailShell({
     headerLabel: "Sign-Up",
-    preheader: "Thanks for signing up for ISL — we've got your details.",
+    preheader: "Thanks for signing up for ISL - we've got your details.",
     bodyHtml: `
     ${heading("Welcome to ISL 🏁", "Registration Received")}
     ${paragraph(`Hi ${escapeHtml(name)},`)}
-    ${paragraph("Thanks for signing up — we&rsquo;ve got your details. We&rsquo;ll reach out to you by email before the next season starts or when a seat opens up.")}
+    ${paragraph("Thanks for signing up - we&rsquo;ve got your details. We&rsquo;ll reach out to you by email before the next season starts or when a seat opens up.")}
     ${paragraph("In the meantime, check out our latest standings and schedule:")}
     ${ctaButton("Visit f1isl.com", "https://f1isl.com", "primary")}
     <p style="margin:24px 0 0;font-family:${FONT_BODY};font-size:14px;color:${C.ink2};line-height:1.6">
       See you on track!<br>
-      <span style="color:${C.meta}">— The ISL Team</span>
+      <span style="color:${C.meta}">- The ISL Team</span>
     </p>`,
   });
 }
@@ -234,7 +234,7 @@ function autoReplyQuestionText(name: string): string {
     "",
     `If your matter is urgent you can also email us directly at ${LEAGUE_EMAIL}.`,
     "",
-    "— The ISL Team",
+    "- The ISL Team",
   ].join("\n");
 }
 
@@ -248,7 +248,7 @@ function autoReplyQuestionHtml(name: string): string {
     ${paragraph("Thanks for reaching out! We received your message and will reply to you by email as soon as possible.")}
     ${paragraph(`If your matter is urgent you can also email us directly at <a href="mailto:${LEAGUE_EMAIL}" style="color:${C.gold};text-decoration:none">${LEAGUE_EMAIL}</a>.`)}
     <p style="margin:24px 0 0;font-family:${FONT_BODY};font-size:14px;color:${C.ink2};line-height:1.6">
-      <span style="color:${C.meta}">— The ISL Team</span>
+      <span style="color:${C.meta}">- The ISL Team</span>
     </p>`,
   });
 }
@@ -267,7 +267,7 @@ function adminSignupHtml(
     platform === "PC" ? C.gold : platform === "PS5" ? C.info : C.success;
   const platformBadge = platform
     ? `<span style="display:inline-block;font-family:${FONT_MONO};font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:${platformColor};border:1px solid ${platformColor};border-radius:2px;padding:3px 9px">${escapeHtml(platform)}</span>`
-    : "—";
+    : "-";
 
   return emailShell({
     headerLabel: "Sign-Up",
@@ -278,9 +278,9 @@ function adminSignupHtml(
       rows: [
         ["Name", escapeHtml(name)],
         ["Email", `<a href="mailto:${escapeHtml(email)}" style="color:${C.gold};text-decoration:none">${escapeHtml(email)}</a>`],
-        ["Date of Birth", birthdate ? escapeHtml(birthdate) : "—"],
+        ["Date of Birth", birthdate ? escapeHtml(birthdate) : "-"],
         ["Platform", platformBadge],
-        ["Experience", experience ? escapeHtml(experience) : "—"],
+        ["Experience", experience ? escapeHtml(experience) : "-"],
       ],
     })}`,
   });

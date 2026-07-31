@@ -70,7 +70,7 @@ export default function AttendanceSummary({ roster }: { roster: AttendanceRoster
                     {t(`status.${status}`)}
                   </div>
                   {roster[status].length === 0 ? (
-                    <p className="text-xs text-faint">—</p>
+                    <p className="text-xs text-faint">-</p>
                   ) : (
                     <ul className="space-y-1.5">
                       {roster[status].map((e) => (

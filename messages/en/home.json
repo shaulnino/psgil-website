@@ -4,7 +4,7 @@
     "contactUs": "Contact Us",
     "brand": "ISL",
     "name": "F1 Israeli Super League",
-    "tagline": "Competitive F1 sim racing — no assists, 50% races, full stewarding, and Drivers & Teams championships.",
+    "tagline": "Competitive F1 sim racing - no assists, 50% races, full stewarding, and Drivers & Teams championships.",
     "liveNow": "Live now",
     "viewNextRace": "View next race",
     "watchLive": "Watch live",
@@ -22,9 +22,15 @@
     "totalDrivers": "Total Drivers",
     "winners": "Winners"
   },
+  "snapshotHints": {
+    "seasons": "Total league seasons held to date.",
+    "races": "Races completed across all seasons.",
+    "totalDrivers": "Unique drivers who have competed in the league.",
+    "winners": "Drivers with at least one race win."
+  },
   "standingsPreview": {
     "title": "Championship Standings",
-    "description": "How the current season is shaping up — the fight at the front, at a glance.",
+    "description": "How the current season is shaping up - the fight at the front, at a glance.",
     "viewFull": "View full standings",
     "driversTitle": "Drivers' Championship",
     "constructorsTitle": "Constructors' Championship",
@@ -39,7 +45,7 @@
     },
     {
       "title": "50% race length",
-      "description": "Half-distance races with real strategy—tyre wear, pit stops, and clean execution matter."
+      "description": "Half-distance races with real strategy-tyre wear, pit stops, and clean execution matter."
     },
     {
       "title": "No assists",
@@ -51,7 +57,7 @@
     },
     {
       "title": "Two seasons per year",
-      "description": "A reliable calendar with two structured seasons each year—consistent racing and progression."
+      "description": "A reliable calendar with two structured seasons each year-consistent racing and progression."
     },
     {
       "title": "Stewarding culture",
@@ -80,7 +86,7 @@
   },
   "about": {
     "title": "About Us",
-    "body": "ISL — the F1 Israeli Super League — is one of Israel's premier F1 sim racing leagues, formed by the merger of two established communities, PSGiL and F1IL, into a single grid. We race on the EA Sports F1 series at 50% distance with no driving assists — full driver control, real strategy, and results that are earned. ISL is built by drivers, for drivers: competitive grids, a supportive community, and a firm commitment to clean, respectful racing on and off the track. With two structured seasons a year, consistent stewarding, and full Drivers and Teams standings, ISL brings the experience of both leagues together to set a high standard for organized sim racing in Israel. We are currently racing in {season}."
+    "body": "ISL - the F1 Israeli Super League - is one of Israel's premier F1 sim racing leagues, formed by the merger of two established communities, PSGiL and F1IL, into a single grid. We race on the EA Sports F1 series at 50% distance with no driving assists - full driver control, real strategy, and results that are earned. ISL is built by drivers, for drivers: competitive grids, a supportive community, and a firm commitment to clean, respectful racing on and off the track. With two structured seasons a year, consistent stewarding, and full Drivers and Teams standings, ISL brings the experience of both leagues together to set a high standard for organized sim racing in Israel. We are currently racing in {season}."
   },
   "contact": {
     "title": "Contact Us",
@@ -105,6 +111,6 @@
     "reset": "Reset",
     "scheduleNotAvailable": "Race schedule not available yet.",
     "noPastRaces": "No past races yet.",
-    "seasonComplete": "Season complete — stay tuned!"
+    "seasonComplete": "Season complete - stay tuned!"
   }
 }

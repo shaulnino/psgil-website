@@ -141,8 +141,8 @@ export function GridHealthSection({ profile }: { profile: LeagueProfile }) {
         <StatLine label={label("avgStarters")} value={val("avgStarters", g.avgStarters)} tooltip={tip("avgStarters")} />
         <StatLine label={label("avgClassified")} value={val("avgClassified", g.avgClassified)} tooltip={tip("avgClassified")} />
         <StatLine label={label("completionRate")} value={val("completionRate", g.completionRate)} tooltip={tip("completionRate")} />
-        <StatLine label={label("maxGrid")} value={g.maxGrid ? val("maxGrid", g.maxGrid.value) : "—"} sample={extremeSample(g.maxGrid, locale)} tooltip={tip("maxGrid")} />
-        <StatLine label={label("minGrid")} value={g.minGrid ? val("minGrid", g.minGrid.value) : "—"} sample={extremeSample(g.minGrid, locale)} tooltip={tip("minGrid")} />
+        <StatLine label={label("maxGrid")} value={g.maxGrid ? val("maxGrid", g.maxGrid.value) : "-"} sample={extremeSample(g.maxGrid, locale)} tooltip={tip("maxGrid")} />
+        <StatLine label={label("minGrid")} value={g.minGrid ? val("minGrid", g.minGrid.value) : "-"} sample={extremeSample(g.minGrid, locale)} tooltip={tip("minGrid")} />
       </MetricGrid>
     </SectionCard>
   );

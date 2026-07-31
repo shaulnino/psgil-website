@@ -373,6 +373,7 @@ export default async function Home() {
   const snapshotStats = siteConfig.snapshotStats.map((stat) => ({
     label: tHome(`snapshotStats.${stat.id}`),
     value: t(stat.value),
+    hint: tHome(`snapshotHints.${stat.id}`),
   }));
   const featuredNews = latestNews[0] ?? null;
 
@@ -414,11 +415,11 @@ export default async function Home() {
       {featuredNews && (
         <section className="py-4">
           <div className="mx-auto w-full max-w-6xl px-6">
-            <div className="relative isl-corner-ticks overflow-hidden rounded-[2px] border border-brass bg-cream">
+            <div className="relative isl-corner-ticks overflow-hidden rounded-[2px] border border-t-2 border-[color:var(--isl-hairline)] border-t-oxblood bg-cream">
               <div className="grid gap-0 md:grid-cols-[240px_1fr]">
                 <LoadingLink
                   href={`/news/${encodeURIComponent(featuredNews.slug)}`}
-                  className="group relative block h-44 border-b border-brass md:h-full md:border-b-0 md:border-e"
+                  className="group relative block h-44 border-b border-[color:var(--isl-hairline)] md:h-full md:border-b-0 md:border-e"
                 >
                   <Image
                     src={featuredNews.coverImageUrl || newsFallbackImage}

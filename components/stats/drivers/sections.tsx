@@ -50,7 +50,7 @@ function raceLabel(line: RaceLine, locale: string): string {
 }
 
 function statusLabel(line: RaceLine, t: TFn): string {
-  if (line.status === "finished") return line.finish !== null ? `P${line.finish}` : "—";
+  if (line.status === "finished") return line.finish !== null ? `P${line.finish}` : "-";
   return t(`status.${line.status}.label`);
 }
 
@@ -236,13 +236,13 @@ export function RacecraftSection({ profile }: { profile: DriverProfile }) {
         <StatLine label={label("racesLost")} value={val("racesLost", rc.racesLost)} tooltip={tip("racesLost")} />
         <StatLine
           label={label("bestRecovery")}
-          value={rc.bestRecovery ? formatMetric(rc.bestRecovery.value, "delta", locale) : "—"}
+          value={rc.bestRecovery ? formatMetric(rc.bestRecovery.value, "delta", locale) : "-"}
           sample={extremeSub(rc.bestRecovery, locale)}
           tooltip={tip("bestRecovery")}
         />
         <StatLine
           label={label("worstLoss")}
-          value={rc.worstLoss ? formatMetric(rc.worstLoss.value, "delta", locale) : "—"}
+          value={rc.worstLoss ? formatMetric(rc.worstLoss.value, "delta", locale) : "-"}
           sample={extremeSub(rc.worstLoss, locale)}
           tooltip={tip("worstLoss")}
         />
@@ -578,17 +578,17 @@ export function RaceHistorySection({ profile }: { profile: DriverProfile }) {
                 <td className="num px-3 py-1.5 text-end text-ink-2">
                   {r.reverseGrid ? (
                     <MetricTooltip text={t("driversTab.history.reverseGrid")}>
-                      <span>{r.gridRaw ?? "—"}*</span>
+                      <span>{r.gridRaw ?? "-"}*</span>
                     </MetricTooltip>
                   ) : (
-                    r.gridRaw ?? "—"
+                    r.gridRaw ?? "-"
                   )}
                 </td>
                 <td className="num px-3 py-1.5 text-end font-semibold text-ink">
                   {r.status === "finished" && r.finish !== null ? r.finish : statusLabel(r, t)}
                 </td>
                 <td className="num px-3 py-1.5 text-end text-ink-2">
-                  {r.netChange !== null ? formatMetricDelta(r.netChange) : "—"}
+                  {r.netChange !== null ? formatMetricDelta(r.netChange) : "-"}
                 </td>
                 <td className="num px-3 py-1.5 text-end text-ink-2">{r.points}</td>
                 <td className="px-3 py-1.5 text-end">

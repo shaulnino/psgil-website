@@ -114,7 +114,7 @@ ${itemXml}
 }
 
 function createAlertItemXml(baseUrl: string, event: RaceEvent): string {
-  const title = `ISL Race Starting Soon — ${event.race_name}`;
+  const title = `ISL Race Starting Soon - ${event.race_name}`;
   const description = "The race will begin shortly. Watch it live here:";
   const link = buildWatchLink(baseUrl, event);
   const guid = buildAlertGuid(event);

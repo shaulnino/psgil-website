@@ -41,7 +41,7 @@
       "label": "Password",
       "hide": "HIDE",
       "show": "SHOW",
-      "visibleWarning": "⚠ Password is visible — share it securely with the user"
+      "visibleWarning": "⚠ Password is visible - share it securely with the user"
     },
     "editUser": {
       "trigger": "Edit",
@@ -56,7 +56,7 @@
       "passwordPlaceholder": "Enter new password…",
       "hide": "HIDE",
       "show": "SHOW",
-      "visibleWarning": "⚠ Password is visible — share it securely with the user",
+      "visibleWarning": "⚠ Password is visible - share it securely with the user",
       "cancel": "Cancel",
       "saving": "Saving…",
       "saveChanges": "Save Changes"
@@ -115,7 +115,7 @@
     "activeHeading": "Active Appeals",
     "emptyActive": "No active appeals.",
     "closedHeading": "Closed Appeals",
-    "caseLabel": "Appeal — Case #{caseNumber}",
+    "caseLabel": "Appeal - Case #{caseNumber}",
     "needsReviewBadge": "Needs Review",
     "listMetaActive": "{title} · Appellant: {appellant}",
     "listMetaClosed": "{title} · {appellant}",
@@ -132,7 +132,7 @@
     },
     "submittedBanner": "✓ Your appeal has been submitted. The stewards will review it shortly.",
     "eyebrow": "Appeal",
-    "headingPrefix": "Appeal — Case",
+    "headingPrefix": "Appeal - Case",
     "metaAppellant": "Appellant",
     "metaFiled": "Filed",
     "metaOriginalCase": "Original Case",
@@ -163,7 +163,7 @@
     "verdictSaving": "Saving…",
     "saveDraft": "Save Draft",
     "outcomeLabel": "Appeal Outcome *",
-    "outcomeNoChange": "No Change — Original Decision Upheld",
+    "outcomeNoChange": "No Change - Original Decision Upheld",
     "outcomeChanged": "Changed Decision",
     "newPenaltiesPerDriver": "New Penalties per Driver",
     "addDriver": "+ Add driver",
@@ -184,12 +184,12 @@
     "submitIdle": "Submit Appeal",
     "submitLoading": "Submitting appeal…",
     "confirmEyebrow": "Before you continue",
-    "confirmTitle": "Important — Appeal Cost",
+    "confirmTitle": "Important - Appeal Cost",
     "confirmPenaltyHeading": "⚠ Unsuccessful appeals are penalised",
     "confirmPenaltyBody": "If your appeal is <notUpheld>not upheld</notUpheld>, you will receive an additional <points>1 license point</points> as a penalty for an unsuccessful appeal.",
     "confirmContextBody": "You are appealing the verdict in <caseStrong>Case: {caseTitle}</caseStrong>. The appeal window closes in approximately <hoursStrong>{hoursRemaining} hours</hoursStrong>.",
     "confirmProceed": "Do you understand and wish to proceed with submitting an appeal?",
-    "confirmContinue": "Yes, I understand — Continue",
+    "confirmContinue": "Yes, I understand - Continue",
     "confirmCancel": "Cancel",
     "formEyebrow": "File an Appeal",
     "formWindowWarning": "Appeal window closes in ~{hoursRemaining}h. Unsuccessful appeals cost 1 license point.",
@@ -216,13 +216,13 @@
     "forgot": {
       "trigger": "Forgot your password?",
       "heading": "Contact your league admin",
-      "body": "Passwords are managed by league administration. Ask your admin to reset your password — you'll then be prompted to set a new one on your next login."
+      "body": "Passwords are managed by league administration. Ask your admin to reset your password - you'll then be prompted to set a new one on your next login."
     },
     "forced": {
       "eyebrow": "ISL Steward System",
       "title": "Set your password",
       "welcome": "Welcome, <name></name>. You must choose a personal password before continuing.",
-      "banner": "Your account was set up with a temporary password. Choose a new password that only you know — admins will not be able to see it.",
+      "banner": "Your account was set up with a temporary password. Choose a new password that only you know - admins will not be able to see it.",
       "footnote": "Password must be at least 8 characters. You can change it again later from your account settings.",
       "errorMismatch": "Passwords do not match. Please try again.",
       "errorTooShort": "Password must be at least 8 characters."
@@ -264,7 +264,7 @@
     },
     "window": {
       "closedTitle": "Complaint window closed",
-      "closedBody": "Complaints can only be submitted within <strong>48 hours</strong> of a race starting. No races from the last 3 days are on the schedule — check back after the next race."
+      "closedBody": "Complaints can only be submitted within <strong>48 hours</strong> of a race starting. No races from the last 48 hours are on the schedule - check back after the next race."
     },
     "form": {
       "mandatoryNote": "indicates mandatory fields.",
@@ -525,7 +525,7 @@
         "session": "Session",
         "drivers": "Drivers",
         "decision": "Decision",
-        "noDecision": "—"
+        "noDecision": "-"
       }
     },
     "session": {

@@ -16,7 +16,7 @@ import {
 // ---------------------------------------------------------------------------
 // Config
 // ---------------------------------------------------------------------------
-// ISL league email — also the nodemailer SMTP auth account + "from" for all steward notifications.
+// ISL league email - also the nodemailer SMTP auth account + "from" for all steward notifications.
 // NOTE: GMAIL_APP_PASSWORD must be an App Password generated for THIS exact Gmail account, or sending fails.
 const LEAGUE_EMAIL = "f1racingisl@gmail.com";
 // Falls back to f1isl.com; NEXT_PUBLIC_SITE_URL overrides it in Netlify.
@@ -92,7 +92,7 @@ const STATUS_TONE: Record<
 function ctaVariant(color?: string): "primary" | "success" | "neutral" {
   if (color === "#3f6b3a") return "success"; // upheld / positive outcome
   if (color === "#3a322a") return "neutral"; // informational, low emphasis
-  return "primary"; // gold — default / action-required
+  return "primary"; // gold - default / action-required
 }
 
 type CaseSummaryFields = {
@@ -116,7 +116,7 @@ function caseSummaryCard(c: CaseSummaryFields) {
       ["Season / Round", `${esc(c.season)} &middot; ${esc(c.round)}`],
       ["Session", sessionVal],
       ["Complainant", esc(c.complainantName)],
-      ["Involved drivers", esc(c.involvedNames.join(", ") || "—")],
+      ["Involved drivers", esc(c.involvedNames.join(", ") || "-")],
       ["Status", statusBadge(c.status, STATUS_TONE[c.status] ?? "gold")],
     ],
   });
@@ -166,7 +166,7 @@ function buildEmail(p: EmailParams): { html: string; text: string } {
     headerLabel: "Steward System",
     bodyHtml: body,
     preheader: p.intro,
-    footerNote: "Automated message from the Steward System — please do not reply.",
+    footerNote: "Automated message from the Steward System - please do not reply.",
   });
 
   // Plain-text fallback
@@ -181,7 +181,7 @@ function buildEmail(p: EmailParams): { html: string; text: string } {
           `Season / Round: ${p.summary.season} · ${p.summary.round}`,
           `Session: ${p.summary.weekendSession}${p.summary.incidentLap ? ` · Lap ${p.summary.incidentLap}` : ""}`,
           `Complainant: ${p.summary.complainantName}`,
-          `Involved: ${p.summary.involvedNames.join(", ") || "—"}`,
+          `Involved: ${p.summary.involvedNames.join(", ") || "-"}`,
           `Status: ${p.summary.status}`,
           "",
         ]
@@ -194,7 +194,7 @@ function buildEmail(p: EmailParams): { html: string; text: string } {
     `${p.cta.label}: ${p.cta.url}`,
     ...(p.note ? ["", p.note] : []),
     "",
-    "— ISL Steward System · f1isl.com",
+    "- ISL Steward System · f1isl.com",
   ];
 
   return { html, text: textLines.join("\n") };
@@ -226,24 +226,24 @@ const involved    = (caseItem: StewardCase, users: StewardUser[]) => users.filte
 // Public notification functions
 // ---------------------------------------------------------------------------
 
-/** Trigger 1 — case submitted */
+/** Trigger 1 - case submitted */
 export async function notifyCaseSubmitted(caseItem: StewardCase, users: StewardUser[]) {
   const summary = toSummary(caseItem, users);
 
-  // Admins — informational only
+  // Admins - informational only
   const adminRecipients = adminsOnly(users).map((u) => u.email);
   if (adminRecipients.length > 0) {
     const { html, text } = buildEmail({
       eyebrow: "Case Submitted",
       title: "New steward case submitted",
-      intro: "A new case has been submitted and is now in the steward workflow. No action is required from you — this is for your information only.",
+      intro: "A new case has been submitted and is now in the steward workflow. No action is required from you - this is for your information only.",
       summary,
       cta: { label: "View Case", url: caseUrl(caseItem.id, "steward"), color: "#3a322a" },
     });
     await send(`[ISL Stewards] New case: ${caseItem.title}`, html, text, adminRecipients);
   }
 
-  // Stewards — review required
+  // Stewards - review required
   const stewardRecipients = stewards(users).map((u) => u.email);
   if (stewardRecipients.length > 0) {
     const { html, text } = buildEmail({
@@ -253,10 +253,10 @@ export async function notifyCaseSubmitted(caseItem: StewardCase, users: StewardU
       summary,
       cta: { label: "Review Case", url: caseUrl(caseItem.id, "steward"), color: "#7e2a1e" },
     });
-    await send(`[ISL Stewards] New case submitted — ${caseItem.title}`, html, text, stewardRecipients);
+    await send(`[ISL Stewards] New case submitted - ${caseItem.title}`, html, text, stewardRecipients);
   }
 
-  // Complainant — confirmation
+  // Complainant - confirmation
   const comp = complainant(caseItem, users);
   if (comp) {
     const { html, text } = buildEmail({
@@ -267,10 +267,10 @@ export async function notifyCaseSubmitted(caseItem: StewardCase, users: StewardU
       cta: { label: "View Case", url: caseUrl(caseItem.id, "driver") },
       note: "You will receive an email when steward review begins and when a verdict is published.",
     });
-    await send(`[ISL Stewards] Case submitted — ${caseItem.title}`, html, text, [comp.email]);
+    await send(`[ISL Stewards] Case submitted - ${caseItem.title}`, html, text, [comp.email]);
   }
 
-  // Involved drivers — response required (never the complainant: their side is
+  // Involved drivers - response required (never the complainant: their side is
   // the complaint itself, even if they also listed themselves as involved)
   for (const driver of involved(caseItem, users)) {
     if (driver.id === caseItem.complainantId) continue;
@@ -283,43 +283,43 @@ export async function notifyCaseSubmitted(caseItem: StewardCase, users: StewardU
       cta: { label: "Submit Response", url: caseUrl(caseItem.id, "driver"), color: "#7e2a1e" },
       note: "Failure to respond does not prevent the stewards from issuing a verdict.",
     });
-    await send(`[ISL Stewards] Response required — ${caseItem.title}`, html, text, [driver.email]);
+    await send(`[ISL Stewards] Response required - ${caseItem.title}`, html, text, [driver.email]);
   }
 }
 
-/** Trigger 2 — all required responses submitted */
+/** Trigger 2 - all required responses submitted */
 export async function notifyAllResponsesSubmitted(caseItem: StewardCase, users: StewardUser[]) {
   const summary = toSummary(caseItem, users);
 
-  // Stewards — start review
+  // Stewards - start review
   const stewardRecipients = stewards(users).map((u) => u.email);
   if (stewardRecipients.length > 0) {
     const { html, text } = buildEmail({
       eyebrow: "Ready for Review",
-      title: "All responses received — case is ready for review",
+      title: "All responses received - case is ready for review",
       intro: "Every required driver statement has been submitted. The case is now ready for steward deliberation and a verdict can be prepared.",
       summary,
       action: "Review all statements and prepare the verdict through the case management interface.",
       cta: { label: "Start Review", url: caseUrl(caseItem.id, "steward"), color: "#7e2a1e" },
     });
-    await send(`[ISL Stewards] Case ready for review — ${caseItem.title}`, html, text, stewardRecipients);
+    await send(`[ISL Stewards] Case ready for review - ${caseItem.title}`, html, text, stewardRecipients);
   }
 
-  // Complainant — review started
+  // Complainant - review started
   const comp = complainant(caseItem, users);
   if (comp) {
     const { html, text } = buildEmail({
       eyebrow: "Case Update",
       title: "Steward review has begun",
-      intro: "All driver statements have been submitted. The ISL stewards have started their review — you will receive another notification when a verdict is published.",
+      intro: "All driver statements have been submitted. The ISL stewards have started their review - you will receive another notification when a verdict is published.",
       summary,
       cta: { label: "View Case", url: caseUrl(caseItem.id, "driver") },
     });
-    await send(`[ISL Stewards] Review started — ${caseItem.title}`, html, text, [comp.email]);
+    await send(`[ISL Stewards] Review started - ${caseItem.title}`, html, text, [comp.email]);
   }
 }
 
-/** Trigger 3 — response submitted (confirmation to responding driver only) */
+/** Trigger 3 - response submitted (confirmation to responding driver only) */
 export async function notifyResponseConfirmation(caseItem: StewardCase, driver: StewardUser, users: StewardUser[]) {
   const summary = toSummary(caseItem, users);
   const { html, text } = buildEmail({
@@ -330,10 +330,10 @@ export async function notifyResponseConfirmation(caseItem: StewardCase, driver: 
     cta: { label: "View Case", url: caseUrl(caseItem.id, "driver") },
     note: "Statements are final and cannot be modified once submitted.",
   });
-  await send(`[ISL Stewards] Response recorded — ${caseItem.title}`, html, text, [driver.email]);
+  await send(`[ISL Stewards] Response recorded - ${caseItem.title}`, html, text, [driver.email]);
 }
 
-/** Trigger 4 — internal discussion comment posted */
+/** Trigger 4 - internal discussion comment posted */
 export async function notifyInternalDiscussion(caseItem: StewardCase, authorName: string, users: StewardUser[]) {
   const summary = toSummary(caseItem, users);
   const stewardRecipients = stewards(users).map((u) => u.email);
@@ -345,15 +345,15 @@ export async function notifyInternalDiscussion(caseItem: StewardCase, authorName
     summary,
     cta: { label: "View Discussion", url: caseUrl(caseItem.id, "steward"), color: "#7e2a1e" },
   });
-  await send(`[ISL Stewards] Discussion update — ${caseItem.title}`, html, text, stewardRecipients);
+  await send(`[ISL Stewards] Discussion update - ${caseItem.title}`, html, text, stewardRecipients);
 }
 
-/** Trigger 5 — verdict published */
+/** Trigger 5 - verdict published */
 export async function notifyVerdictPublished(caseItem: StewardCase, verdict: Verdict, users: StewardUser[]) {
   const summary = { ...toSummary(caseItem, users), status: "Closed" };
   const decisionLine = verdict.verdict_summary ? `Decision: ${verdict.verdict_summary}` : undefined;
 
-  // Stewards — record update
+  // Stewards - record update
   const stewardRecipients = stewards(users).map((u) => u.email);
   if (stewardRecipients.length > 0) {
     const { html, text } = buildEmail({
@@ -364,7 +364,7 @@ export async function notifyVerdictPublished(caseItem: StewardCase, verdict: Ver
       cta: { label: "View Published Case", url: caseUrl(caseItem.id, "steward") },
       note: decisionLine,
     });
-    await send(`[ISL Stewards] Verdict published — ${caseItem.title}`, html, text, stewardRecipients);
+    await send(`[ISL Stewards] Verdict published - ${caseItem.title}`, html, text, stewardRecipients);
   }
 
   // Complainant
@@ -377,7 +377,7 @@ export async function notifyVerdictPublished(caseItem: StewardCase, verdict: Ver
       summary,
       cta: { label: "View Verdict", url: caseUrl(caseItem.id, "driver") },
     });
-    await send(`[ISL Stewards] Verdict issued — ${caseItem.title}`, html, text, [comp.email]);
+    await send(`[ISL Stewards] Verdict issued - ${caseItem.title}`, html, text, [comp.email]);
   }
 
   // Each involved driver
@@ -389,7 +389,7 @@ export async function notifyVerdictPublished(caseItem: StewardCase, verdict: Ver
       summary,
       cta: { label: "View Verdict", url: caseUrl(caseItem.id, "driver") },
     });
-    await send(`[ISL Stewards] Verdict issued — ${caseItem.title}`, html, text, [driver.email]);
+    await send(`[ISL Stewards] Verdict issued - ${caseItem.title}`, html, text, [driver.email]);
   }
 }
 
@@ -424,14 +424,14 @@ export async function notifyPenaltyAssigned(penalty: PenaltyToServe, driver: Ste
     note: "If you believe this penalty was issued in error, contact the ISL stewards.",
   });
   await send(
-    `[ISL Stewards] Penalty to serve — ${penalty.penaltyLabel}`,
+    `[ISL Stewards] Penalty to serve - ${penalty.penaltyLabel}`,
     html,
     text,
     [driver.email],
   );
 }
 
-/** 48-hour race reminder — sent automatically before the assigned race */
+/** 48-hour race reminder - sent automatically before the assigned race */
 export async function notifyPenaltyReminder(penalty: PenaltyToServe, driver: StewardUser) {
   const raceLabel = penalty.assignedRaceLabel ?? "the next Main League race";
   const { html, text } = buildEmail({
@@ -448,7 +448,7 @@ export async function notifyPenaltyReminder(penalty: PenaltyToServe, driver: Ste
     note: "If you are unable to serve this penalty, contact the ISL stewards as soon as possible.",
   });
   await send(
-    `[ISL Stewards] Reminder: penalty to serve — ${penalty.penaltyLabel}`,
+    `[ISL Stewards] Reminder: penalty to serve - ${penalty.penaltyLabel}`,
     html,
     text,
     [driver.email],
@@ -470,7 +470,7 @@ export async function notifyPenaltyRolledForward(penalty: PenaltyToServe, driver
     note: "If you have questions about this decision, contact the ISL stewards.",
   });
   await send(
-    `[ISL Stewards] Penalty carried forward — ${penalty.penaltyLabel}`,
+    `[ISL Stewards] Penalty carried forward - ${penalty.penaltyLabel}`,
     html,
     text,
     [driver.email],
@@ -514,7 +514,7 @@ export async function notifyAppealSubmitted(
     note: "This is an automated notification from the ISL Steward System.",
   });
   await send(
-    `[ISL Stewards] Appeal filed — Case #${originalCase.caseNumber ?? "–"}: ${originalCase.title}`,
+    `[ISL Stewards] Appeal filed - Case #${originalCase.caseNumber ?? "–"}: ${originalCase.title}`,
     html, text,
     dedupe(recipients.map((r) => r.email)),
   );
@@ -555,7 +555,7 @@ export async function notifyAppealVerdictPublished(
     note: "If you have questions about this decision, contact the ISL stewards.",
   });
   await send(
-    `[ISL Stewards] Appeal verdict — Case #${originalCase.caseNumber ?? "–"}: ${outcomeLabel}`,
+    `[ISL Stewards] Appeal verdict - Case #${originalCase.caseNumber ?? "–"}: ${outcomeLabel}`,
     html, text,
     dedupe(recipients.map((r) => r.email)),
   );

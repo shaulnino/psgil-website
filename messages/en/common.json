@@ -15,7 +15,7 @@
     "league": "League",
     "data": "Data",
     "tagline": ". Israel's competitive Formula 1 simulation racing community.",
-    "copyright": "— F1 Israeli Super League. Not affiliated with Formula 1 or FOM."
+    "copyright": "- F1 Israeli Super League. Not affiliated with Formula 1 or FOM."
   },
   "seo": {
     "title": "ISL – F1 Israeli Super League",
@@ -24,6 +24,6 @@
   "joinNow": "Join Now",
   "a11y": {
     "toggleNav": "Toggle navigation",
-    "logoAlt": "ISL — Israeli Super League"
+    "logoAlt": "ISL - Israeli Super League"
   }
 }

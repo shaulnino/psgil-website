@@ -49,7 +49,7 @@ export default function NewsCarousel({ articles }: NewsCarouselProps) {
 
   return (
     <div
-      className="relative rounded-[2px] border border-brass bg-cream"
+      className="relative rounded-[2px] border border-t-2 border-[color:var(--isl-hairline)] border-t-oxblood bg-cream"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onTouchStart={(e) => setTouchStartX(e.touches[0]?.clientX ?? null)}
@@ -66,7 +66,7 @@ export default function NewsCarousel({ articles }: NewsCarouselProps) {
     >
       <LoadingLink href={`/news/${encodeURIComponent(active.slug)}`} className="group block">
         <div className="grid gap-0 md:grid-cols-2">
-          <div className="relative h-60 overflow-hidden rounded-t-[2px] border-b border-brass md:h-full md:rounded-none md:border-b-0 md:border-e md:border-brass">
+          <div className="relative h-60 overflow-hidden rounded-t-[2px] border-b border-[color:var(--isl-hairline)] md:h-full md:rounded-none md:border-b-0 md:border-e">
             <NewsImage
               src={active.coverImageUrl}
               alt={active.title}

@@ -41,7 +41,7 @@
       "label": "סיסמה",
       "hide": "הסתרה",
       "show": "הצגה",
-      "visibleWarning": "⚠ הסיסמה גלויה — שתפו אותה עם המשתמש בצורה מאובטחת"
+      "visibleWarning": "⚠ הסיסמה גלויה - שתפו אותה עם המשתמש בצורה מאובטחת"
     },
     "editUser": {
       "trigger": "עריכה",
@@ -56,7 +56,7 @@
       "passwordPlaceholder": "הזינו סיסמה חדשה…",
       "hide": "הסתרה",
       "show": "הצגה",
-      "visibleWarning": "⚠ הסיסמה גלויה — שתפו אותה עם המשתמש בצורה מאובטחת",
+      "visibleWarning": "⚠ הסיסמה גלויה - שתפו אותה עם המשתמש בצורה מאובטחת",
       "cancel": "ביטול",
       "saving": "שומרים…",
       "saveChanges": "שמירת שינויים"
@@ -115,7 +115,7 @@
     "activeHeading": "ערעורים פעילים",
     "emptyActive": "אין ערעורים פעילים.",
     "closedHeading": "ערעורים סגורים",
-    "caseLabel": "ערעור — תיק #{caseNumber}",
+    "caseLabel": "ערעור - תיק #{caseNumber}",
     "needsReviewBadge": "נדרשת בדיקה",
     "listMetaActive": "{title} · מערער: {appellant}",
     "listMetaClosed": "{title} · {appellant}",
@@ -132,7 +132,7 @@
     },
     "submittedBanner": "✓ הערעור שלכם הוגש. השופטים יבחנו אותו בקרוב.",
     "eyebrow": "ערעור",
-    "headingPrefix": "ערעור — תיק",
+    "headingPrefix": "ערעור - תיק",
     "metaAppellant": "מערער",
     "metaFiled": "הוגש בתאריך",
     "metaOriginalCase": "התיק המקורי",
@@ -163,7 +163,7 @@
     "verdictSaving": "שומרים…",
     "saveDraft": "שמירת טיוטה",
     "outcomeLabel": "תוצאת הערעור *",
-    "outcomeNoChange": "ללא שינוי — ההחלטה המקורית נותרה בעינה",
+    "outcomeNoChange": "ללא שינוי - ההחלטה המקורית נותרה בעינה",
     "outcomeChanged": "החלטה שונתה",
     "newPenaltiesPerDriver": "עונשים חדשים לכל נהג",
     "addDriver": "+ הוספת נהג",
@@ -184,12 +184,12 @@
     "submitIdle": "הגשת ערעור",
     "submitLoading": "מגישים ערעור…",
     "confirmEyebrow": "לפני שתמשיכו",
-    "confirmTitle": "חשוב — עלות הערעור",
+    "confirmTitle": "חשוב - עלות הערעור",
     "confirmPenaltyHeading": "⚠ ערעורים שנדחים נענשים",
     "confirmPenaltyBody": "אם הערעור שלכם <notUpheld>יידחה</notUpheld>, תקבלו <points>נקודת רישיון אחת</points> נוספת כעונש על ערעור שנדחה.",
     "confirmContextBody": "אתם מערערים על הפסיקה ב<caseStrong>תיק: {caseTitle}</caseStrong>. חלון הערעור נסגר בעוד כ<hoursStrong>{hoursRemaining} שעות</hoursStrong>.",
     "confirmProceed": "האם אתם מבינים ומעוניינים להמשיך בהגשת הערעור?",
-    "confirmContinue": "כן, הבנתי — המשך",
+    "confirmContinue": "כן, הבנתי - המשך",
     "confirmCancel": "ביטול",
     "formEyebrow": "הגשת ערעור",
     "formWindowWarning": "חלון הערעור נסגר בעוד כ־{hoursRemaining} שעות. ערעורים שנדחים עולים נקודת רישיון אחת.",
@@ -216,13 +216,13 @@
     "forgot": {
       "trigger": "שכחתם את הסיסמה?",
       "heading": "פנו למנהל הליגה",
-      "body": "הסיסמאות מנוהלות על ידי הנהלת הליגה. בקשו מהמנהל לאפס את הסיסמה שלכם — לאחר מכן תתבקשו להגדיר סיסמה חדשה בהתחברות הבאה."
+      "body": "הסיסמאות מנוהלות על ידי הנהלת הליגה. בקשו מהמנהל לאפס את הסיסמה שלכם - לאחר מכן תתבקשו להגדיר סיסמה חדשה בהתחברות הבאה."
     },
     "forced": {
       "eyebrow": "מערכת השיפוט של ISL",
       "title": "הגדירו את הסיסמה שלכם",
       "welcome": "ברוכים הבאים, <name></name>. עליכם לבחור סיסמה אישית לפני שתמשיכו.",
-      "banner": "החשבון שלכם הוקם עם סיסמה זמנית. בחרו סיסמה חדשה שרק אתם מכירים — מנהלים לא יוכלו לראות אותה.",
+      "banner": "החשבון שלכם הוקם עם סיסמה זמנית. בחרו סיסמה חדשה שרק אתם מכירים - מנהלים לא יוכלו לראות אותה.",
       "footnote": "הסיסמה חייבת להכיל לפחות 8 תווים. תוכלו לשנות אותה שוב מאוחר יותר בהגדרות החשבון.",
       "errorMismatch": "הסיסמאות אינן תואמות. נסו שוב.",
       "errorTooShort": "הסיסמה חייבת להכיל לפחות 8 תווים."
@@ -264,7 +264,7 @@
     },
     "window": {
       "closedTitle": "חלון התלונות נסגר",
-      "closedBody": "ניתן להגיש תלונות רק בתוך <strong>48 שעות</strong> מתחילת מרוץ. אין מרוצים מ־3 הימים האחרונים בלוח המרוצים — בדקו שוב לאחר המרוץ הבא."
+      "closedBody": "ניתן להגיש תלונות רק בתוך <strong>48 שעות</strong> מתחילת מרוץ. אין מרוצים מ־48 השעות האחרונות בלוח המרוצים - בדקו שוב לאחר המרוץ הבא."
     },
     "form": {
       "mandatoryNote": "מציין שדות חובה.",
@@ -525,7 +525,7 @@
         "session": "מקצה",
         "drivers": "נהגים",
         "decision": "החלטה",
-        "noDecision": "—"
+        "noDecision": "-"
       }
     },
     "session": {
