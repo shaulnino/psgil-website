@@ -7,7 +7,6 @@ import { isDriverRole } from "@/lib/accounts/types";
 import { setAttendance } from "@/lib/attendance/repository";
 import { adminSetAttendanceSchema, setAttendanceSchema } from "@/lib/attendance/types";
 import { fetchNextRaceWindow } from "@/lib/attendance/races";
-import { notifyAttendanceChangedByAdmin } from "@/lib/notifications/producers/attendance";
 
 export type AttendanceState = { error?: string; ok?: boolean } | undefined;
 
@@ -91,19 +90,6 @@ export async function adminSetAttendanceAction(
     status: parsed.data.status,
     setBy: "admin",
   });
-
-  // Tell the affected driver their RSVP was changed (in-app; mandatory type).
-  try {
-    await notifyAttendanceChangedByAdmin({
-      driverId: parsed.data.driverId,
-      raceId: parsed.data.raceId,
-      raceName: window.race.name,
-      raceNameHe: window.race.nameHe,
-      status: parsed.data.status,
-    });
-  } catch {
-    /* non-fatal — attendance write already succeeded */
-  }
 
   revalidateAttendance();
   return { ok: true };

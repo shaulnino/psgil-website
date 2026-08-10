@@ -11,7 +11,6 @@ import AccountMenu from "@/components/AccountMenu";
 import { siteConfig } from "@/lib/siteConfig";
 import { gaClickJoinNow } from "@/lib/ga";
 import StewardNotifBadge from "@/app/stewards/components/StewardNotifBadge";
-import NotificationBell from "@/components/notifications/NotificationBell";
 
 export default function Header({
   authed = false,
@@ -75,7 +74,6 @@ export default function Header({
         </nav>
 
         <div className="flex items-center gap-3">
-          {authed && <NotificationBell />}
           {canSteward && (
             <div className="hidden sm:block">
               <StewardNotifBadge />

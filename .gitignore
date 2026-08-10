@@ -55,8 +55,5 @@ next-env.d.ts
 # attendance store — live data (PW-3), never commit
 /data/attendance/
 
-# notifications store — live data (PW-4: in-app list, prefs, push subs, snapshots), never commit
-/data/notifications/
-
 # Local Netlify folder
 .netlify
