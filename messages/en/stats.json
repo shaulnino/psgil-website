@@ -80,8 +80,8 @@
       "classificationRate": { "label": "Classified", "tooltip": "Share of starts that reached a classified finish (not DNF/DSQ)." },
       "dnfRate": { "label": "DNF rate", "tooltip": "Share of starts that ended in DNF or DSQ." },
       "poleToWinRate": { "label": "Pole → win", "tooltip": "Share of races where the polesitter went on to win (races with a known pole and winner)." },
-      "frontRowToWinRate": { "label": "Front row → win", "tooltip": "Share of wins that came from a top-2 grid slot." },
-      "frontRowToPodiumRate": { "label": "Front row → podium", "tooltip": "Share of podium finishes that started on the front row." },
+      "frontRowToWinRate": { "label": "Front row → win", "tooltip": "Of front-row starters (grid 1–2), the share that won the race." },
+      "frontRowToPodiumRate": { "label": "Front row → podium", "tooltip": "Of front-row starters (grid 1–2), the share that finished on the podium." },
       "avgWinningGrid": { "label": "Avg. winning grid", "tooltip": "Average grid slot of race winners (reverse-grid races excluded)." },
       "avgPodiumGrid": { "label": "Avg. podium grid", "tooltip": "Average starting grid of podium finishers (reverse-grid races excluded)." },
       "avgAbsMovement": { "label": "Avg. positions moved", "tooltip": "Average absolute grid-to-finish change per classified finisher (DNF/DNS/DSQ excluded)." },
@@ -91,7 +91,7 @@
       "worstLoss": { "label": "Biggest drop", "tooltip": "Largest positions-lost result recorded at this circuit." },
       "wetRate": { "label": "Wet/mixed", "tooltip": "Share of races here run in wet or mixed conditions (of races with known weather)." },
       "safetyCarRate": { "label": "Safety car rate", "tooltip": "Share of races that saw at least one safety car (shown only when data is recorded)." },
-      "cleanRaceRate": { "label": "Clean races", "tooltip": "Share of starts with zero time penalty (steward + in-game)." },
+      "cleanRaceRate": { "label": "Clean starts", "tooltip": "Share of starts with zero time penalty (steward + in-game)." },
       "penaltiesPerRace": { "label": "Penalties / race", "tooltip": "Average number of penalised drivers per race." },
       "starts": { "label": "Starts", "tooltip": "Races the driver took the start at this circuit." },
       "wins": { "label": "Wins", "tooltip": "Race wins at this circuit." },
@@ -602,7 +602,81 @@
     "drivers": "Drivers",
     "headToHead": "Head-to-Head",
     "league": "League",
-    "rankings": "Rankings"
+    "rankings": "Rankings",
+    "teams": "Teams"
+  },
+  "teamsTab": {
+    "selectTeam": "Select a team…",
+    "sections": {
+      "snapshot": "Team snapshot",
+      "performance": "Performance",
+      "form": "Form over time",
+      "lineup": "Lineup & contribution",
+      "reliability": "Reliability & discipline",
+      "circuits": "Circuit performance"
+    },
+    "sample": {
+      "races": "{count, plural, =1 {# race} other {# races}}"
+    },
+    "snapshot": {
+      "bestChamp": "Best championship: P{pos}"
+    },
+    "overview": {
+      "pos": "Pos",
+      "team": "Team"
+    },
+    "lineup": {
+      "note": "Every driver who raced for this team in the selected scope (reserves and mid-season additions included). Head-to-head is each driver vs whoever their teammate was that round.",
+      "driver": "Driver",
+      "entries": "Races",
+      "share": "Pts share",
+      "qualiH2H": "Quali H2H",
+      "raceH2H": "Race H2H"
+    },
+    "circuits": {
+      "circuit": "Circuit"
+    },
+    "charts": {
+      "cumulative": "Championship points",
+      "perRound": "Points per round",
+      "seriesCumulative": "Cumulative points",
+      "seriesPoints": "Points",
+      "empty": "Not enough races to plot yet."
+    },
+    "empty": {
+      "noTeams": "No team has recorded a result yet. This tab fills in once results carry a team.",
+      "forFilters": "No teams match the current filters."
+    },
+    "metrics": {
+      "seasons": { "label": "Seasons", "tooltip": "Distinct seasons the team has raced in this scope." },
+      "races": { "label": "Races", "tooltip": "Distinct events the team appeared in." },
+      "entries": { "label": "Entries", "tooltip": "Car-entries (driver-races) for the team." },
+      "championshipPosition": { "label": "Pos", "tooltip": "Constructors position by points in the selected scope." },
+      "bestChampPosition": { "label": "Best finish", "tooltip": "Best per-season constructors position within the selected scope." },
+      "points": { "label": "Points", "tooltip": "Total championship points scored by the team's cars." },
+      "pointsPerRace": { "label": "Pts / race", "tooltip": "Average team points per event." },
+      "wins": { "label": "Wins", "tooltip": "Races won by one of the team's cars." },
+      "winRate": { "label": "Win %", "tooltip": "Share of the team's races that ended in a win." },
+      "podiums": { "label": "Podiums", "tooltip": "Top-3 finishes across the team's cars." },
+      "poles": { "label": "Poles", "tooltip": "Races the team started on pole (reverse-grid excluded)." },
+      "poleRate": { "label": "Pole %", "tooltip": "Share of races the team took pole." },
+      "fastestLaps": { "label": "Fastest laps", "tooltip": "Fastest-lap awards across the team's cars." },
+      "dotd": { "label": "Driver of the day", "tooltip": "Driver-of-the-day awards across the team's cars." },
+      "avgFinish": { "label": "Avg. finish", "tooltip": "Average classified finishing position (DNF/DNS/DSQ excluded)." },
+      "bestFinish": { "label": "Best", "tooltip": "Best classified finish." },
+      "doublePodiums": { "label": "Double podiums", "tooltip": "Races with two of the team's cars on the podium." },
+      "oneTwoFinishes": { "label": "1–2 finishes", "tooltip": "Races the team locked out P1 and P2." },
+      "avgGrid": { "label": "Avg. grid", "tooltip": "Average starting position (reverse-grid excluded)." },
+      "frontRowStarts": { "label": "Front-row starts", "tooltip": "Car-entries starting on the front row (grid 1–2)." },
+      "avgNetMovement": { "label": "Avg. net +/−", "tooltip": "Average positions gained or lost from grid to finish across the team's cars." },
+      "dnf": { "label": "DNFs", "tooltip": "Did-not-finish results across the team's cars." },
+      "dnfRate": { "label": "DNF %", "tooltip": "DNFs as a share of starts." },
+      "classificationRate": { "label": "Classified %", "tooltip": "Classified finishes as a share of starts." },
+      "cleanEntryRate": { "label": "Clean %", "tooltip": "Share of car-entries with zero time penalties." },
+      "stewardSecondsPerRace": { "label": "Steward s / race", "tooltip": "Average steward penalty seconds per race." },
+      "gameSecondsPerRace": { "label": "Game s / race", "tooltip": "Average in-game penalty seconds per race." },
+      "pointsShare": { "label": "Pts share", "tooltip": "Share of the team's points contributed by this driver." }
+    }
   },
   "toggle": {
     "allTime": "All-time",

@@ -8,7 +8,8 @@ import { fetchSeasonsConfig, GLOBAL_CSV_URLS } from "@/lib/seasonConfig";
 import { fetchAllRaceResults } from "@/lib/resultsData";
 import { fetchCsv, parseCsv } from "@/lib/csv";
 import { mapRaceEvents } from "@/lib/scheduleData";
-import { mapDrivers } from "@/lib/driversData";
+import { mapDrivers, mapTeams } from "@/lib/driversData";
+import type { TeamNameEntry } from "@/lib/stats/teamIdentity";
 import { fetchRewards } from "@/lib/rewardsData";
 import {
   computeDriverStats,
@@ -19,10 +20,11 @@ export default async function StatsPage() {
   const t = await getTranslations("stats");
   const seasons = await fetchSeasonsConfig();
 
-  const [raceResultsByEvent, scheduleCsv, driversCsv, rewards] = await Promise.all([
+  const [raceResultsByEvent, scheduleCsv, driversCsv, teamsCsv, rewards] = await Promise.all([
     fetchAllRaceResults(GLOBAL_CSV_URLS.raceResults),
     fetchCsv(GLOBAL_CSV_URLS.schedule).catch(() => ""),
     fetchCsv(GLOBAL_CSV_URLS.drivers).catch(() => ""),
+    fetchCsv(GLOBAL_CSV_URLS.teams).catch(() => ""),
     fetchRewards(GLOBAL_CSV_URLS.rewards),
   ]);
 
@@ -37,6 +39,23 @@ export default async function StatsPage() {
   for (const d of drivers) {
     if (d.name_he) driverNamesHe[d.driver_id] = d.name_he;
   }
+
+  // Current team roster (drivers tab) for the Teams tab snapshot chip. Keyed by
+  // team_key; historical team stats are derived from results, not this map.
+  const currentRoster: Record<string, { driverId: string; name: string }[]> = {};
+  for (const d of drivers) {
+    if (d.role !== "main" || !d.team_key) continue;
+    (currentRoster[d.team_key] ??= []).push({ driverId: d.driver_id, name: d.name });
+  }
+
+  // Sheet-sourced team display names (team_name / team_name_he) for locale-aware
+  // labels in the Teams + Rankings tabs; code map is the fallback.
+  const teams = teamsCsv ? mapTeams(parseCsv(teamsCsv)) : [];
+  const teamNameEntries: TeamNameEntry[] = teams.map((tm) => ({
+    team_key: tm.team_key,
+    team_name: tm.team_name,
+    team_name_he: tm.team_name_he,
+  }));
 
   const allResults = Object.values(raceResultsByEvent).flat();
 
@@ -83,6 +102,8 @@ export default async function StatsPage() {
             seasons={seasons}
             rewards={rewards}
             driverNamesHe={driverNamesHe}
+            currentRoster={currentRoster}
+            teamNameEntries={teamNameEntries}
           />
         </Suspense>
       </Section>

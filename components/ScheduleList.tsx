@@ -779,14 +779,14 @@ function RaceBadges({ event }: { event: RaceEvent }) {
       {/* Race format */}
       {raceFormat === "sprint" && (
         <Tooltip text={t("badges.sprintTooltip")}>
-          <span className="inline-flex items-center gap-1 rounded-[2px] border border-[color:var(--isl-hairline-strong)] px-1.5 py-0.5 text-xs font-bold leading-none text-ink-2">
+          <span className="inline-flex items-center gap-1 rounded-[2px] border border-[color:var(--isl-hairline-strong)] h-5 px-1.5 text-xs font-bold leading-none text-ink-2">
             {t("resultsModal.sprint")}
           </span>
         </Tooltip>
       )}
       {raceFormat === "25%" && (
         <Tooltip text={t("badges.quarterDistanceTooltip")}>
-          <span className="num inline-flex items-center gap-1 rounded-[2px] border border-[color:var(--isl-hairline-strong)] px-1.5 py-0.5 text-xs font-bold leading-none text-ink-2">
+          <span className="num inline-flex items-center gap-1 rounded-[2px] border border-[color:var(--isl-hairline-strong)] h-5 px-1.5 text-xs font-bold leading-none text-ink-2">
             {t("resultsModal.quarterDistance")}
           </span>
         </Tooltip>
@@ -795,7 +795,7 @@ function RaceBadges({ event }: { event: RaceEvent }) {
       {/* Playoff round */}
       {isPlayoff && (
         <Tooltip text={t("badges.playoffTooltip")}>
-          <span className="inline-flex items-center gap-1 rounded-[2px] border border-brass px-1.5 py-0.5 text-xs font-bold leading-none text-brass-ink">
+          <span className="inline-flex items-center gap-1 rounded-[2px] border border-brass h-5 px-1.5 text-xs font-bold leading-none text-brass-ink">
             {t("resultsModal.playoff")}
           </span>
         </Tooltip>
@@ -804,7 +804,7 @@ function RaceBadges({ event }: { event: RaceEvent }) {
       {/* Provisional results */}
       {isProvisional && (
         <Tooltip text={t("badges.provisionalTooltip")}>
-          <span className="inline-flex items-center gap-1 rounded-[2px] border border-status-warning px-1.5 py-0.5 text-xs font-bold leading-none text-status-warning">
+          <span className="inline-flex items-center gap-1 rounded-[2px] border border-status-warning h-5 px-1.5 text-xs font-bold leading-none text-status-warning">
             {t("posterModal.provisional")}
           </span>
         </Tooltip>
@@ -813,7 +813,7 @@ function RaceBadges({ event }: { event: RaceEvent }) {
       {/* Weather */}
       {weather === "dry" && (
         <Tooltip text={t("badges.dryTooltip")}>
-          <span className="inline-flex items-center gap-1 rounded-[2px] border border-status-warning px-1.5 py-0.5 text-xs font-medium leading-none text-status-warning">
+          <span className="inline-flex items-center gap-1 rounded-[2px] border border-status-warning h-5 px-1.5 text-xs font-medium leading-none text-status-warning">
             <SunIcon className="shrink-0" />
             {t("badges.dry")}
           </span>
@@ -821,7 +821,7 @@ function RaceBadges({ event }: { event: RaceEvent }) {
       )}
       {weather === "wet" && (
         <Tooltip text={t("badges.wetTooltip")}>
-          <span className="inline-flex items-center gap-1 rounded-[2px] border border-status-info px-1.5 py-0.5 text-xs font-medium leading-none text-status-info">
+          <span className="inline-flex items-center gap-1 rounded-[2px] border border-status-info h-5 px-1.5 text-xs font-medium leading-none text-status-info">
             <CloudRainIcon className="shrink-0" />
             {t("badges.wet")}
           </span>
@@ -829,7 +829,7 @@ function RaceBadges({ event }: { event: RaceEvent }) {
       )}
       {weather === "mixed" && (
         <Tooltip text={t("badges.mixedTooltip")}>
-          <span className="inline-flex items-center gap-1 rounded-[2px] border border-[color:color-mix(in_srgb,var(--isl-warning)_45%,var(--isl-info)_55%)] bg-gradient-to-r from-[color:color-mix(in_srgb,var(--isl-warning)_18%,transparent)] to-[color:color-mix(in_srgb,var(--isl-info)_18%,transparent)] px-1.5 py-0.5 text-xs font-medium leading-none text-ink">
+          <span className="inline-flex items-center gap-1 rounded-[2px] border border-[color:color-mix(in_srgb,var(--isl-warning)_45%,var(--isl-info)_55%)] bg-gradient-to-r from-[color:color-mix(in_srgb,var(--isl-warning)_18%,transparent)] to-[color:color-mix(in_srgb,var(--isl-info)_18%,transparent)] h-5 px-1.5 text-xs font-medium leading-none text-ink">
             <CloudSunRainIcon className="shrink-0" />
             {t("badges.mixed")}
           </span>
@@ -839,7 +839,7 @@ function RaceBadges({ event }: { event: RaceEvent }) {
       {/* Safety cars */}
       {safetyCars > 0 && (
         <Tooltip text={t("badges.safetyCarsTooltip", { count: safetyCars })}>
-          <span className="inline-flex items-center gap-1 rounded-[2px] border border-status-warning px-1.5 py-0.5 text-xs font-bold leading-none text-status-warning">
+          <span className="inline-flex items-center gap-1 rounded-[2px] border border-status-warning h-5 px-1.5 text-xs font-bold leading-none text-status-warning">
             SC
             <span className="num font-semibold">{safetyCars}</span>
           </span>
@@ -849,7 +849,7 @@ function RaceBadges({ event }: { event: RaceEvent }) {
       {/* Reverse grid */}
       {reverseGrid && (
         <Tooltip text={t("badges.reverseGridTooltip")}>
-          <span className="inline-flex items-center gap-1 rounded-[2px] border border-[color:var(--isl-hairline-strong)] px-1.5 py-0.5 text-xs font-medium leading-none text-ink-2">
+          <span className="inline-flex items-center gap-1 rounded-[2px] border border-[color:var(--isl-hairline-strong)] h-5 px-1.5 text-xs font-medium leading-none text-ink-2">
             RG
           </span>
         </Tooltip>
@@ -866,7 +866,7 @@ function LeagueBadge({ league }: { league: string }) {
   const isMain = league.toLowerCase() === "main";
   return (
     <span
-      className={`inline-flex items-center justify-center rounded-[2px] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider md:justify-self-center ${
+      className={`inline-flex h-5 items-center justify-center rounded-[2px] px-2 text-[10px] font-semibold uppercase tracking-wider md:justify-self-center ${
         isMain
           ? "border border-[color:var(--isl-hairline-strong)] text-ink-2"
           : "border border-brass text-brass-ink"

@@ -227,6 +227,9 @@ export function leagueStandingsFromTables(
 export type Team = {
   team_key: string;
   team_name: string;
+  /** Optional Hebrew display name from the sheet (csv column: team_name_he).
+   *  When empty, the hardcoded Hebrew map in lib/stats/teamIdentity.ts is used. */
+  team_name_he?: string;
   logo_url: string;
 };
 
@@ -269,6 +272,7 @@ export function mapTeams(raw: Record<string, string>[]): Team[] {
   return raw.map((row) => ({
     team_key: row.team_key ?? "",
     team_name: row.team_name ?? "",
+    team_name_he: (row.team_name_he ?? "").trim() || undefined,
     logo_url: row.logo_url ?? "",
   }));
 }

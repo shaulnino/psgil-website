@@ -6,6 +6,7 @@
  * are resolved server-side so the presentational component stays dumb.
  */
 import { getTeamLogo, localizedDriverName, type Driver, type Team } from "@/lib/driversData";
+import { localizedTeamName, makeTeamNameLookup } from "@/lib/stats/teamIdentity";
 import { ATTENDANCE_STATUSES, type AttendanceRecord, type AttendanceStatus } from "@/lib/attendance/types";
 
 export type RosterEntry = {
@@ -25,6 +26,7 @@ export function buildAttendanceRoster(
 ): AttendanceRoster {
   const driverById = new Map(drivers.map((d) => [d.driver_id, d] as const));
   const teamNameByKey = new Map(teams.map((t) => [t.team_key, t.team_name] as const));
+  const teamNames = makeTeamNameLookup(teams);
 
   const roster: AttendanceRoster = { going: [], maybe: [], out: [] };
   for (const rec of records) {
@@ -33,7 +35,7 @@ export function buildAttendanceRoster(
     let teamName: string | null = null;
     let teamLogo: string | null = null;
     if (d && d.role === "main" && d.team_key) {
-      teamName = teamNameByKey.get(d.team_key) ?? null;
+      teamName = localizedTeamName(d.team_key, locale, teamNameByKey.get(d.team_key), teamNames);
       teamLogo = getTeamLogo(d.team_key);
     }
     roster[rec.status].push({ driverId: rec.driverId, name, teamName, teamLogo });

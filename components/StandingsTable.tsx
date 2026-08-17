@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import ResultsTable, { type ColumnDef, type SectionGroup } from "@/components/ResultsTable";
 import type { StandingsRow } from "@/lib/resultsData";
 import { localizedDriverName } from "@/lib/driversData";
+import { resolveTeamName, type TeamNameLookup } from "@/lib/stats/teamIdentity";
 import { useDriverLookup } from "@/components/DriverLookupProvider";
 
 type Translator = (key: string) => string;
@@ -65,9 +66,15 @@ const buildCommonStandingsColumns = (t: Translator): ColumnDef<StandingsRow>[] =
   },
 ];
 
-const buildTeamNameCol = (t: Translator): ColumnDef<StandingsRow> => ({
+const buildTeamNameCol = (
+  t: Translator,
+  locale: string,
+  teamNames: TeamNameLookup,
+): ColumnDef<StandingsRow> => ({
   label: t("standingsTable.team"),
-  accessor: (row) => <span className="text-ink-2">{row.team}</span>,
+  accessor: (row) => (
+    <span className="text-ink-2">{resolveTeamName(row.team, locale, row.team_key, teamNames)}</span>
+  ),
   minWidth: 120,
 });
 
@@ -224,9 +231,11 @@ function DriverNameCell({
 function getColumns(
   type: "drivers" | "constructors",
   t: Translator,
+  locale: string,
+  teamNames: TeamNameLookup,
 ): ColumnDef<StandingsRow>[] {
   const commonStandingsColumns = buildCommonStandingsColumns(t);
-  const teamNameCol = buildTeamNameCol(t);
+  const teamNameCol = buildTeamNameCol(t, locale, teamNames);
   const pointsAndStats = buildPointsAndStats(t);
 
   if (type === "drivers") {
@@ -249,7 +258,9 @@ function getColumns(
     {
       ...teamNameCol,
       accessor: (row) => (
-        <span className="font-semibold text-ink">{row.team}</span>
+        <span className="font-semibold text-ink">
+          {resolveTeamName(row.team, locale, row.team_key, teamNames)}
+        </span>
       ),
     },
     ...pointsAndStats,
@@ -272,6 +283,8 @@ export default function StandingsTable({
   type,
 }: StandingsTableProps) {
   const t = useTranslations("schedule");
+  const locale = useLocale();
+  const { teamNames } = useDriverLookup();
   /* Detect if any rows carry bracket info (upper / lower) */
   const hasUpper = standings.some((r) => r.bracket === "upper");
   const hasLower = standings.some((r) => r.bracket === "lower");
@@ -295,7 +308,10 @@ export default function StandingsTable({
     return null;
   };
 
-  const columns = useMemo(() => getColumns(type, t), [type, t]);
+  const columns = useMemo(
+    () => getColumns(type, t, locale, teamNames),
+    [type, t, locale, teamNames],
+  );
   // Desktop: freeze the first 4 columns (the identity block): for drivers that's
   // position, +/-, driver, team; for constructors position, +/-, team, points.
   // Everything from the points/stats onward scrolls. Freezing more than this

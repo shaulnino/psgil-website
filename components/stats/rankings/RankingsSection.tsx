@@ -22,6 +22,7 @@ import {
   type LeaderboardRow,
 } from "@/lib/stats/leaderboard";
 import { formatMetric } from "@/lib/stats/metricCatalog";
+import { resolveTeamName, type TeamNameLookup } from "@/lib/stats/teamIdentity";
 import {
   RANKING_CATEGORIES,
   RATING_ENGINE_A_KEY,
@@ -38,6 +39,8 @@ type Props = {
   events?: RaceEvent[];
   seasons?: SeasonConfig[];
   driverNamesHe?: Record<string, string>;
+  /** Sheet-sourced team names (team_key → {en, he}); code map is the fallback. */
+  teamNames?: TeamNameLookup;
   onSelectDriver?: (driverName: string) => void;
 };
 
@@ -51,6 +54,7 @@ export default function RankingsSection({
   raceResults = {},
   events = [],
   driverNamesHe,
+  teamNames,
   onSelectDriver,
 }: Props) {
   const t = useTranslations("stats");
@@ -484,7 +488,7 @@ export default function RankingsSection({
                     value={effTeam ?? ""}
                     onChange={(v) => setTeam(v || undefined)}
                     placeholder={t("rankingsTab.allTeams")}
-                    labelFor={(v) => (v ? v : t("rankingsTab.allTeams"))}
+                    labelFor={(v) => (v ? resolveTeamName(v, locale, undefined, teamNames) : t("rankingsTab.allTeams"))}
                   />
                 </div>
               )}
@@ -589,7 +593,9 @@ export default function RankingsSection({
                           <span className="font-semibold text-ink">{nameFor(e.row)}</span>
                         )}
                       </td>
-                      <td className="px-4 py-2.5 text-meta">{e.row.team ?? "—"}</td>
+                      <td className="px-4 py-2.5 text-meta">
+                        {e.row.team ? resolveTeamName(e.row.team, locale, undefined, teamNames) : "—"}
+                      </td>
                       {!isRating && (
                         <td className="num px-4 py-2.5 text-end text-[11px] text-faint">{e.row.starts}</td>
                       )}

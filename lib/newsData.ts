@@ -159,8 +159,32 @@ function mapArticleRow(row: Record<string, string>, index: number): NewsArticle 
   };
 }
 
+/**
+ * Parse an article date to a sortable timestamp. Handles zero-padded and
+ * non-padded ISO (`2026-07-09` and `2026-7-9`) so ordering never breaks on a
+ * loosely-entered sheet value. Unparseable dates sort last (0).
+ */
+function toDateValue(dateStr: string): number {
+  const v = (dateStr ?? "").trim();
+  if (!v) return 0;
+  const m = v.match(/^(\d{4})\D(\d{1,2})\D(\d{1,2})/);
+  if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])).getTime();
+  const t = new Date(v).getTime();
+  return Number.isNaN(t) ? 0 : t;
+}
+
+/**
+ * Newest → oldest. Sorts by true date value, then breaks same-day ties by
+ * higher numeric id first (later-added rows are treated as newer), so multiple
+ * articles published on the same day still surface most-recent-first.
+ */
 function sortByDateDesc(a: NewsArticle, b: NewsArticle): number {
-  return b.date.localeCompare(a.date);
+  const byDate = toDateValue(b.date) - toDateValue(a.date);
+  if (byDate !== 0) return byDate;
+  const ai = Number.parseInt(a.id, 10);
+  const bi = Number.parseInt(b.id, 10);
+  if (Number.isFinite(ai) && Number.isFinite(bi) && ai !== bi) return bi - ai;
+  return 0;
 }
 
 export function formatNewsDate(isoDate: string, locale: string = "en"): string {
