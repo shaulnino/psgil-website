@@ -73,9 +73,12 @@ test("qualifying: pole conversion, winning grid, front-row rates, distribution",
   assert.equal(q.poleToWinRate, 50); // spaB pole==winner, spaA not
   assert.equal(q.poleToWinSample, 2);
   assert.equal(q.avgWinningGrid, 1.5); // grids 2 and 1
-  assert.equal(q.frontRowToWinRate, 100); // both winners started top-2
+  // Conversion: of the 4 front-row starts (alice+bob each race; cara always P3),
+  // alice won both → 2/4 = 50%.
+  assert.equal(q.frontRowToWinRate, 50);
   assert.equal(q.avgPodiumGrid, 1.8); // [2,1,1,2,3]
-  assert.equal(q.frontRowToPodiumRate, 80); // 4 of 5 podium starts top-2
+  // Conversion: all 4 front-row starters finished on the podium → 4/4 = 100%.
+  assert.equal(q.frontRowToPodiumRate, 100);
   assert.deepEqual(q.winnerGridDistribution, [
     { grid: 1, count: 1 },
     { grid: 2, count: 1 },

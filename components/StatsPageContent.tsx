@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import DriversSection from "@/components/stats/drivers/DriversSection";
 import LeagueSection from "@/components/stats/league/LeagueSection";
+import TeamsSection from "@/components/stats/teams/TeamsSection";
 import CircuitsSection from "@/components/stats/circuits/CircuitsSection";
 import RankingsSection from "@/components/stats/rankings/RankingsSection";
 import H2HSection from "@/components/stats/h2h/H2HSection";
@@ -14,6 +15,7 @@ import type { RaceResultRow } from "@/lib/resultsData";
 import type { RaceEvent } from "@/lib/scheduleData";
 import type { Reward } from "@/lib/rewardsData";
 import type { SeasonConfig } from "@/lib/seasonConfig";
+import { makeTeamNameLookup, type TeamNameEntry } from "@/lib/stats/teamIdentity";
 
 /* ------------------------------------------------------------------ */
 /*  Props                                                              */
@@ -33,18 +35,23 @@ type Props = {
   rewards?: Reward[];
   /** Hebrew driver display names keyed by driver_id (label-only). */
   driverNamesHe?: Record<string, string>;
+  /** Current team roster from the drivers tab, keyed by team_key. */
+  currentRoster?: Record<string, { driverId: string; name: string }[]>;
+  /** Sheet-sourced team names (team_name / team_name_he) for locale-aware labels. */
+  teamNameEntries?: TeamNameEntry[];
 };
 
 /* ------------------------------------------------------------------ */
 /*  Tabs                                                               */
 /* ------------------------------------------------------------------ */
 
-const TABS = ["Drivers", "League", "Circuits", "Head-to-Head", "Rankings"] as const;
+const TABS = ["Drivers", "League", "Teams", "Circuits", "Head-to-Head", "Rankings"] as const;
 type Tab = (typeof TABS)[number];
 
 const MAIN_TAB_LABEL_KEYS: Record<string, string> = {
   Drivers: "tabs.drivers",
   League: "tabs.league",
+  Teams: "tabs.teams",
   Circuits: "tabs.circuits",
   "Head-to-Head": "tabs.headToHead",
   Rankings: "tabs.rankings",
@@ -92,8 +99,14 @@ export default function StatsPageContent({
   seasons,
   rewards,
   driverNamesHe,
+  currentRoster,
+  teamNameEntries,
 }: Props) {
   const t = useTranslations("stats");
+  const teamNames = useMemo(
+    () => makeTeamNameLookup(teamNameEntries ?? []),
+    [teamNameEntries],
+  );
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -175,6 +188,18 @@ export default function StatsPageContent({
         />
       )}
 
+      {tab === "Teams" && (
+        <TeamsSection
+          raceResults={raceResults ?? {}}
+          events={events ?? []}
+          seasons={seasons}
+          driverNamesHe={driverNamesHe}
+          currentRoster={currentRoster}
+          teamNames={teamNames}
+          onSelectDriver={handleSelectDriverFromRanking}
+        />
+      )}
+
       {tab === "Circuits" && (
         <CircuitsSection
           raceResults={raceResults ?? {}}
@@ -207,6 +232,7 @@ export default function StatsPageContent({
           events={events}
           seasons={seasons}
           driverNamesHe={driverNamesHe}
+          teamNames={teamNames}
           onSelectDriver={handleSelectDriverFromRanking}
         />
       )}

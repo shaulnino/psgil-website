@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import type { Driver, Team, TeamWithDrivers } from "@/lib/driversData";
 import { getTeamColor, getTeamLogo, localizedDriverName } from "@/lib/driversData";
+import { localizedTeamName, makeTeamNameLookup } from "@/lib/stats/teamIdentity";
 import DriverCard from "@/components/DriverCard";
 import DriverModal from "@/components/DriverModal";
 import { AchievementBadgeList } from "@/components/AchievementBadges";
@@ -26,6 +27,7 @@ function isRemote(src?: string) {
 export default function DriversGrid({ teams, reserves, historicDrivers, placeholderSrc, currentSeasonLabel, hasWild }: DriversGridProps) {
   const t = useTranslations("drivers");
   const locale = useLocale();
+  const teamNames = useMemo(() => makeTeamNameLookup(teams), [teams]);
   const [selected, setSelected] = useState<{ driver: Driver; team: Team } | null>(null);
   const lastFocused = useRef<HTMLElement | null>(null);
 
@@ -59,6 +61,7 @@ export default function DriversGrid({ teams, reserves, historicDrivers, placehol
       <div className="space-y-6">
         {teams.map((team) => {
           const teamColor = getTeamColor(team.team_key);
+          const teamName = localizedTeamName(team.team_key, locale, team.team_name, teamNames);
           return (
           <section
             key={team.team_key}
@@ -73,7 +76,7 @@ export default function DriversGrid({ teams, reserves, historicDrivers, placehol
                   <div className="flex h-full w-full items-center justify-center rounded-[2px] bg-white p-1">
                     <Image
                       src={getTeamLogo(team.team_key)}
-                      alt={`${team.team_name} logo`}
+                      alt={`${teamName} logo`}
                       width={64}
                       height={64}
                       className="h-11 w-11 object-contain"
@@ -87,7 +90,7 @@ export default function DriversGrid({ teams, reserves, historicDrivers, placehol
                   </p>
                   <h2 className="mt-0.5 flex items-center gap-2 font-display text-2xl font-bold tracking-[0.005em] leading-[1.05] text-ink">
                     <span aria-hidden className="inline-block h-4 w-1 shrink-0 rounded-[1px]" style={{ backgroundColor: teamColor }} />
-                    {team.team_name}
+                    {teamName}
                   </h2>
                 </div>
               </div>

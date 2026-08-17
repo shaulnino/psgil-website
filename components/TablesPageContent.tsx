@@ -8,6 +8,7 @@ import StandingsSection from "@/components/StandingsSection";
 import DriverLookupProvider, { useDriverLookup } from "@/components/DriverLookupProvider";
 import { getAwardIcon } from "@/components/AchievementBadges";
 import { localizedDriverName, type Driver, type Team } from "@/lib/driversData";
+import { localizedTeamName, makeTeamNameLookup } from "@/lib/stats/teamIdentity";
 import {
   filterBySeason,
   groupByBracket,
@@ -167,10 +168,12 @@ function TablesInner({
     () => new Map(drivers.map((d) => [d.driver_id, localizedDriverName(d, locale)])),
     [drivers, locale],
   );
-  const teamNameById = useMemo(
-    () => new Map(teams.map((t) => [t.team_key, t.team_name])),
-    [teams],
-  );
+  const teamNameById = useMemo(() => {
+    const lookup = makeTeamNameLookup(teams);
+    return new Map(
+      teams.map((t) => [t.team_key, localizedTeamName(t.team_key, locale, t.team_name, lookup)]),
+    );
+  }, [teams, locale]);
   const seasonDriversByTeamName = useMemo(() => {
     const map = new Map<string, string[]>();
     const allSeasonDriverRows = [...data.driversMain, ...data.driversWild];

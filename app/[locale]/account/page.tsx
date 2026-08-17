@@ -6,6 +6,7 @@ import { can } from "@/lib/stewards/auth";
 import { isDriverRole } from "@/lib/accounts/types";
 import { fetchCsv, parseCsv } from "@/lib/csv";
 import { mapDrivers, mapTeams, getTeamLogo, localizedDriverName } from "@/lib/driversData";
+import { localizedTeamName, makeTeamNameLookup } from "@/lib/stats/teamIdentity";
 import { GLOBAL_CSV_URLS, fetchSeasonsConfig } from "@/lib/seasonConfig";
 import { fetchAllRaceResults, type RaceResultRow } from "@/lib/resultsData";
 import { mapRaceEvents } from "@/lib/scheduleData";
@@ -65,9 +66,15 @@ export default async function AccountPage({
   const drivers = driversCsv ? mapDrivers(parseCsv(driversCsv)) : [];
   const teams = teamsCsv ? mapTeams(parseCsv(teamsCsv)) : [];
 
+  const teamNames = makeTeamNameLookup(teams);
   const myDriver = user.driverId ? drivers.find((d) => d.driver_id === user.driverId) ?? null : null;
   const teamName = myDriver?.team_key
-    ? teams.find((tm) => tm.team_key === myDriver.team_key)?.team_name ?? null
+    ? localizedTeamName(
+        myDriver.team_key,
+        locale,
+        teams.find((tm) => tm.team_key === myDriver.team_key)?.team_name,
+        teamNames,
+      )
     : null;
   const teamLogo = myDriver?.team_key ? getTeamLogo(myDriver.team_key) : null;
   const driverName = myDriver ? localizedDriverName(myDriver, locale) : user.driverId;

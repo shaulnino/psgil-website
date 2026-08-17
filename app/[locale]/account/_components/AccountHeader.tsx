@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
-import { CheckCircle2, Ban, ShieldCheck, Settings, CalendarCheck } from "lucide-react";
+import { CheckCircle2, Ban, ShieldCheck, Settings, CalendarCheck, LogOut } from "lucide-react";
 import LoadingLink from "@/components/LoadingLink";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -51,8 +51,13 @@ export default async function AccountHeader({
 }) {
   const t = await getTranslations("account.account");
 
-  const shortcut =
-    "inline-flex items-center gap-1.5 rounded-[2px] border border-oxblood px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.06em] text-oxblood transition-colors hover:bg-oxblood/10";
+  // All action buttons share this base so they render at an identical size; the
+  // grid below (auto-cols:1fr, shrink-to-fit) then equalizes every column to the
+  // widest label. Sign-out overrides only the colour to stay visually muted.
+  const actionBase =
+    "flex w-full items-center justify-center gap-1.5 rounded-[2px] border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.06em] transition-colors";
+  const shortcut = `${actionBase} border-oxblood text-oxblood hover:bg-oxblood/10`;
+  const signOut = `${actionBase} border-[color:var(--isl-hairline-strong)] text-meta hover:text-ink`;
 
   return (
     <div className="rounded-[2px] border border-[color:var(--isl-hairline)] bg-cream p-5 md:p-6">
@@ -91,7 +96,7 @@ export default async function AccountHeader({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+        <div className="grid w-full grid-cols-2 gap-2 sm:w-fit sm:grid-cols-none sm:grid-flow-col sm:[grid-auto-columns:1fr]">
           {canSteward && (
             <LoadingLink href="/stewards" className={shortcut}>
               <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
@@ -110,11 +115,9 @@ export default async function AccountHeader({
               {t("attendanceModule")}
             </LoadingLink>
           )}
-          <form action={logoutAction}>
-            <button
-              type="submit"
-              className="rounded-[2px] px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.06em] text-meta transition-colors hover:text-ink"
-            >
+          <form action={logoutAction} className="contents">
+            <button type="submit" className={signOut}>
+              <LogOut className="h-3.5 w-3.5" aria-hidden />
               {t("signOut")}
             </button>
           </form>

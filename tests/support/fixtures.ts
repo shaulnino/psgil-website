@@ -29,6 +29,7 @@ export function makeResult(
     position_change: over.position_change ?? "",
     driver_name: over.driver_name ?? over.driver_id,
     team: over.team ?? "Team A",
+    team_id: over.team_id ?? "",
     time_or_gap: over.time_or_gap ?? "",
     best_lap: over.best_lap ?? "",
     laps: over.laps ?? "",

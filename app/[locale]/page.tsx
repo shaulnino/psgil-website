@@ -41,6 +41,11 @@ import {
   localizedDriverName,
 } from "@/lib/driversData";
 import type { Driver, Team } from "@/lib/driversData";
+import {
+  resolveTeamKey as resolveTeamKeyFromText,
+  localizedTeamName,
+  makeTeamNameLookup,
+} from "@/lib/stats/teamIdentity";
 import { computeDriverRatings, computeHomePageSnapshot } from "@/lib/statsComputed";
 import { attachRewardsToDrivers, fetchRewards } from "@/lib/rewardsData";
 import { applyUploadedDriverPhotos } from "@/lib/drivers/photoOverride";
@@ -102,13 +107,18 @@ function buildStandingsPreview(
   const teamKeyByName = new Map(
     teams.map((t) => [normalizeTeamName(t.team_name), t.team_key]),
   );
+  // Sheet-sourced display names (team_name / team_name_he), code map as fallback.
+  const teamNames = makeTeamNameLookup(teams);
 
   // Prefer the explicit team_id from the standings CSV, then fall back to
-  // driver→team and finally fuzzy team-name matching against the teams CSV.
+  // driver→team, fuzzy full-name matching against the teams CSV, and finally
+  // the canonical short-name/sponsor resolver (constructors rows carry short
+  // names like "McLaren" that don't match the teams CSV's full names).
   const resolveTeamKey = (row: StandingsRow): string =>
     row.team_key ||
     teamKeyByDriverId.get(row.driver_id) ||
     teamKeyByName.get(normalizeTeamName(row.team)) ||
+    resolveTeamKeyFromText(row.team) ||
     "";
 
   // Drivers main: exclude the lower playoff bracket (when present) so the preview
@@ -117,25 +127,31 @@ function buildStandingsPreview(
     .filter((r) => r.bracket !== "lower")
     .sort(byPosition)
     .slice(0, 5)
-    .map((row) => ({
-      position: row.position,
-      name: nameByDriverId.get(row.driver_id) || row.driver_name,
-      points: row.points,
-      logo: getTeamLogo(resolveTeamKey(row)),
-      teamName: row.team,
-    }));
+    .map((row) => {
+      const teamKey = resolveTeamKey(row);
+      return {
+        position: row.position,
+        name: nameByDriverId.get(row.driver_id) || row.driver_name,
+        points: row.points,
+        logo: getTeamLogo(teamKey),
+        teamName: localizedTeamName(teamKey, locale, row.team, teamNames),
+      };
+    });
 
   const constructorsPreviewRows: StandingsPreviewRow[] = hasConstructors
     ? filterBySeason(constructorsMain, seasonKey)
         .sort(byPosition)
         .slice(0, 5)
-        .map((row) => ({
-          position: row.position,
-          name: row.team,
-          points: row.points,
-          logo: getTeamLogo(resolveTeamKey(row)),
-          teamName: row.team,
-        }))
+        .map((row) => {
+          const teamKey = resolveTeamKey(row);
+          return {
+            position: row.position,
+            name: localizedTeamName(teamKey, locale, row.team, teamNames),
+            points: row.points,
+            logo: getTeamLogo(teamKey),
+            teamName: localizedTeamName(teamKey, locale, row.team, teamNames),
+          };
+        })
     : [];
 
   return { driversPreviewRows, constructorsPreviewRows };

@@ -357,27 +357,31 @@ export function computeCircuitProfile(
     .filter((e) => e.winnerGrid !== null)
     .map((e) => e.winnerGrid!);
   const avgWinningGrid = mean(winnerGrids);
-  const frontRowWins = eventsWithWinner.filter(
-    (e) => e.winnerGrid !== null && e.winnerGrid <= 2,
-  ).length;
-  const frontRowToWinRate = pct(
-    frontRowWins,
-    eventsWithWinner.filter((e) => e.winnerGrid !== null).length,
-  );
 
   // Podium starting grid (per podium finisher with a known grid).
   const podiumGrids: number[] = [];
-  let frontRowPodiums = 0;
-  let podiumWithGrid = 0;
   for (const r of filtered) {
     if (r.isClassified && r.finish !== null && r.finish <= 3 && r.grid !== null) {
       podiumGrids.push(r.grid);
-      podiumWithGrid++;
-      if (r.grid <= 2) frontRowPodiums++;
     }
   }
   const avgPodiumGrid = mean(podiumGrids);
-  const frontRowToPodiumRate = pct(frontRowPodiums, podiumWithGrid);
+
+  // Front-row conversion: of drivers who *started* on the front row (grid 1–2),
+  // what share won / reached the podium. The denominator is front-row starts
+  // (at most two per race), so these are true conversion rates — not the share
+  // of winners/podiums that merely happened to come from the front row.
+  let frontRowStarts = 0;
+  let frontRowWins = 0;
+  let frontRowPodiums = 0;
+  for (const r of filtered) {
+    if (r.grid === null || r.grid > 2) continue;
+    frontRowStarts++;
+    if (r.isClassified && r.finish !== null && r.finish === 1) frontRowWins++;
+    if (r.isClassified && r.finish !== null && r.finish <= 3) frontRowPodiums++;
+  }
+  const frontRowToWinRate = pct(frontRowWins, frontRowStarts);
+  const frontRowToPodiumRate = pct(frontRowPodiums, frontRowStarts);
 
   // Winner grid distribution (histogram).
   const winnerGridDist = new Map<number, number>();

@@ -11,6 +11,7 @@
 import type { RaceResultRow } from "@/lib/resultsData";
 import type { RaceEvent, RaceFormat } from "@/lib/scheduleData";
 import { parseDateDDMMYYYY } from "@/lib/scheduleData";
+import { resolveTeamKey } from "@/lib/stats/teamIdentity";
 
 export type RaceStatusKind = "finished" | "dnf" | "dns" | "dsq";
 export type WeatherKind = "dry" | "wet" | "mixed" | "unknown";
@@ -21,7 +22,12 @@ export type NormalizedRace = {
   eventId: string;
   driverId: string;
   driverName: string;
+  /** Free-text team name as recorded on the result row (display fallback). */
   team: string;
+  /** Canonical team_key resolved from the row's `team_id`, falling back to the
+   *  free-text `team` name. "" when unresolvable. Stable across seasons and
+   *  correct for mid-season / reserve team changes. */
+  teamKey: string;
 
   seasonKey: string; // normalized "S6"
   seasonNum: number; // 6
@@ -154,6 +160,7 @@ export function normalizeRaces(
       driverId,
       driverName: (r.driver_name ?? "").trim(),
       team: (r.team ?? "").trim(),
+      teamKey: resolveTeamKey(r.team_id) || resolveTeamKey(r.team),
 
       seasonKey: normalizeSeasonKey(ev.season),
       seasonNum: parseInt((ev.season ?? "").replace(/^s/i, ""), 10) || 0,

@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import ResultsTable, { type ColumnDef } from "@/components/ResultsTable";
 import type { RaceResultRow } from "@/lib/resultsData";
 import { localizedDriverName } from "@/lib/driversData";
+import { resolveTeamName, type TeamNameLookup } from "@/lib/stats/teamIdentity";
 import { useDriverLookup } from "@/components/DriverLookupProvider";
 
 type Translator = (key: string) => string;
@@ -107,7 +108,11 @@ function DriverNameCell({ row }: { row: RaceResultRow }) {
 /*  Column definitions (matches the PNG layout)                         */
 /* ------------------------------------------------------------------ */
 
-const buildRaceResultsColumns = (t: Translator): ColumnDef<RaceResultRow>[] => [
+const buildRaceResultsColumns = (
+  t: Translator,
+  locale: string,
+  teamNames: TeamNameLookup,
+): ColumnDef<RaceResultRow>[] => [
   { label: t("raceResultsTable.pos"), accessor: "position", align: "center", mono: true, minWidth: 40 },
   {
     label: t("raceResultsTable.posChange"),
@@ -120,7 +125,11 @@ const buildRaceResultsColumns = (t: Translator): ColumnDef<RaceResultRow>[] => [
     accessor: (row) => <DriverNameCell row={row} />,
     minWidth: 160,
   },
-  { label: t("raceResultsTable.team"), accessor: "team", minWidth: 120 },
+  {
+    label: t("raceResultsTable.team"),
+    accessor: (row) => resolveTeamName(row.team, locale, row.team_id, teamNames),
+    minWidth: 120,
+  },
   { label: t("raceResultsTable.timeOrGap"), accessor: "time_or_gap", mono: true, minWidth: 110 },
   { label: t("raceResultsTable.bestLap"), accessor: "best_lap", mono: true, minWidth: 90 },
   { label: t("raceResultsTable.grid"), accessor: "grid", align: "center", mono: true, minWidth: 48 },
@@ -157,6 +166,8 @@ type RaceResultsTableProps = {
 
 export default function RaceResultsTable({ results, caption }: RaceResultsTableProps) {
   const t = useTranslations("schedule");
+  const locale = useLocale();
+  const { teamNames } = useDriverLookup();
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 767px)");
@@ -166,7 +177,7 @@ export default function RaceResultsTable({ results, caption }: RaceResultsTableP
     return () => mq.removeEventListener("change", update);
   }, []);
 
-  const baseColumns = buildRaceResultsColumns(t);
+  const baseColumns = buildRaceResultsColumns(t, locale, teamNames);
   // On mobile we pin only POS + DRIVER (identity) and let +/- scroll with the
   // rest, so the frozen block doesn't swallow a narrow viewport. Sticky freezes
   // the *first* N columns, so swap +/- (index 1) and DRIVER (index 2) into

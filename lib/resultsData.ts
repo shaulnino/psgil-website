@@ -16,6 +16,12 @@ export type RaceResultRow = {
   driver_id: string;
   driver_name: string;
   team: string;
+  /** Stable team identifier for the race (csv column: team_id). Matches
+   *  csv_teams `team_key` (e.g. "psgil-mclaren"). Empty when the CSV omits it —
+   *  callers then fall back to resolving the free-text `team` name. This is the
+   *  historical source of truth for a driver's team at race time (drivers can
+   *  change teams between seasons, mid-season, or move to/from reserve). */
+  team_id: string;
   time_or_gap: string;
   best_lap: string;
   laps: string;
@@ -104,6 +110,7 @@ export function mapRaceResults(raw: Record<string, string>[]): RaceResultRow[] {
       driver_id:       s(row.driver_id),
       driver_name:     s(row.driver_name),
       team:            s(row.team),
+      team_id:         s(row.team_id) || s(row.team_key),
       time_or_gap:     s(row.time_or_gap),
       best_lap:        s(row.best_lap),
       laps:            s(row.laps),

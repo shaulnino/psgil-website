@@ -10,6 +10,7 @@ import {
   useRef,
 } from "react";
 import type { Driver, Team } from "@/lib/driversData";
+import { makeTeamNameLookup, type TeamNameLookup } from "@/lib/stats/teamIdentity";
 import DriverModal from "@/components/DriverModal";
 import { gaOpenDriverCard } from "@/lib/ga";
 
@@ -22,11 +23,14 @@ type DriverLookupContextType = {
   getDriver: (driverId: string) => { driver: Driver; team: Team } | null;
   /** Open the Driver Card modal for the given driver_id (no-op if not found). */
   openDriverModal: (driverId: string) => void;
+  /** Sheet-sourced team names (team_key → {en, he}) for locale-aware labels. */
+  teamNames: TeamNameLookup;
 };
 
 const DriverLookupContext = createContext<DriverLookupContextType>({
   getDriver: () => null,
   openDriverModal: () => {},
+  teamNames: () => undefined,
 });
 
 /** Hook to access driver lookup + modal opener from any child component. */
@@ -75,6 +79,8 @@ export default function DriverLookupProvider({
     [teams],
   );
 
+  const teamNames = useMemo(() => makeTeamNameLookup(teams), [teams]);
+
   /* ---- Lookup helpers ---- */
   const getDriver = useCallback(
     (driverId: string) => {
@@ -118,8 +124,8 @@ export default function DriverLookupProvider({
 
   /* ---- Context value (stable reference) ---- */
   const value = useMemo(
-    () => ({ getDriver, openDriverModal }),
-    [getDriver, openDriverModal],
+    () => ({ getDriver, openDriverModal, teamNames }),
+    [getDriver, openDriverModal, teamNames],
   );
 
   return (

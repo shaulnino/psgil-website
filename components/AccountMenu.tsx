@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import LoadingLink from "@/components/LoadingLink";
 import { logoutAction } from "@/lib/auth/actions";
@@ -129,6 +130,13 @@ function AccountDropdown({
   );
 }
 
+/** Indented sub-item inside the mobile "My Account" group. */
+function subItemClass(active: boolean): string {
+  return `block w-full rounded-[2px] ps-8 pe-3 py-2 text-start font-isl-body text-sm transition-colors ${
+    active ? "bg-cream text-ink" : "text-meta hover:bg-cream hover:text-ink"
+  }`;
+}
+
 function AccountMobile({
   canSteward,
   canAdmin,
@@ -139,34 +147,66 @@ function AccountMobile({
   canAttendance: boolean;
 }) {
   const t = useTranslations("account.menu");
+  const pathname = usePathname();
+
+  const inAccount = (p: string) => pathname === p || pathname.startsWith(`${p}/`);
+  const isAdminActive = inAccount("/admin") && !inAccount("/admin/attendance");
+  const isAccountActive =
+    inAccount("/account") || inAccount("/stewards") || inAccount("/admin");
+
+  // Expand by default when the user is already inside an account section.
+  const [open, setOpen] = useState(isAccountActive);
+
   return (
-    <div className="flex flex-col gap-1">
-      <span className="px-3 pt-1 font-isl-body text-xs font-semibold uppercase tracking-[0.14em] text-meta">
-        {t("account")}
-      </span>
-      <LoadingLink href="/account" className={menuItem}>
-        {t("profile")}
-      </LoadingLink>
-      {canSteward && (
-        <LoadingLink href="/stewards" className={menuItem}>
-          {t("stewards")}
-        </LoadingLink>
+    <div className="flex flex-col">
+      {/* Section header — styled like the other top-level nav items */}
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className={`flex w-full items-center justify-between rounded-[2px] border-s-2 px-3 py-2.5 font-isl-body text-base font-medium transition-colors ${
+          isAccountActive
+            ? "border-oxblood bg-cream text-ink"
+            : "border-transparent text-ink-2 hover:bg-cream hover:text-ink"
+        }`}
+      >
+        <span>{t("account")}</span>
+        <span
+          aria-hidden
+          className={`text-[10px] transition-transform ${open ? "rotate-180" : ""}`}
+        >
+          ▾
+        </span>
+      </button>
+
+      {/* Sub-menu */}
+      {open && (
+        <div className="mt-1 flex flex-col gap-0.5">
+          <LoadingLink href="/account" className={subItemClass(inAccount("/account"))}>
+            {t("profile")}
+          </LoadingLink>
+          {canSteward && (
+            <LoadingLink href="/stewards" className={subItemClass(inAccount("/stewards"))}>
+              {t("stewards")}
+            </LoadingLink>
+          )}
+          {canAdmin && (
+            <LoadingLink href="/admin" className={subItemClass(isAdminActive)}>
+              {t("admin")}
+            </LoadingLink>
+          )}
+          {canAttendance && (
+            <LoadingLink href="/admin/attendance" className={subItemClass(inAccount("/admin/attendance"))}>
+              {t("attendance")}
+            </LoadingLink>
+          )}
+          <form action={logoutAction}>
+            <button type="submit" className={subItemClass(false)}>
+              {t("signOut")}
+            </button>
+          </form>
+        </div>
       )}
-      {canAdmin && (
-        <LoadingLink href="/admin" className={menuItem}>
-          {t("admin")}
-        </LoadingLink>
-      )}
-      {canAttendance && (
-        <LoadingLink href="/admin/attendance" className={menuItem}>
-          {t("attendance")}
-        </LoadingLink>
-      )}
-      <form action={logoutAction}>
-        <button type="submit" className={menuItem}>
-          {t("signOut")}
-        </button>
-      </form>
     </div>
   );
 }
