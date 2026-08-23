@@ -6,7 +6,6 @@ import { getCaseById, listCases, listUsers } from "@/lib/stewards/repository";
 import { fetchCsv, parseCsv } from "@/lib/csv";
 import { GLOBAL_CSV_URLS } from "@/lib/seasonConfig";
 import { mapRaceEvents, toIsraelTimestamp } from "@/lib/scheduleData";
-import AttachmentFilePicker from "@/app/stewards/(protected)/cases/AttachmentFilePicker";
 import EvidencePasteBox from "@/app/stewards/(protected)/cases/EvidencePasteBox";
 import CreateComplaintPanel from "@/app/stewards/(protected)/cases/CreateComplaintPanel";
 import DeleteCaseForm from "@/app/stewards/(protected)/cases/DeleteCaseForm";
@@ -124,10 +123,16 @@ export default async function StewardCasesPage({ searchParams }: { searchParams:
                 {/* screenshot paste + drag-drop zone */}
                 <EvidencePasteBox />
                 <div className="space-y-3">
-                  <AttachmentFilePicker />
                   <label className="block">
-                    <span className="mb-1 block text-sm text-ink-2">{t("cases.form.linksNotes")}</span>
-                    <textarea name="evidence_items" rows={4} dir="auto" className="w-full rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2 text-ink placeholder:text-faint focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]" />
+                    <span className="mb-1 block text-sm text-ink-2">{t("cases.form.evidenceUrl")}</span>
+                    <input
+                      type="url"
+                      name="evidence_items"
+                      inputMode="url"
+                      dir="ltr"
+                      placeholder={t("cases.form.evidenceUrlPlaceholder")}
+                      className="w-full rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2 text-ink placeholder:text-faint focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
+                    />
                   </label>
                 </div>
               </div>

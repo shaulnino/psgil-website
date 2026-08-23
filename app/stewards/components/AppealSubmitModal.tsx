@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { useFormStatus } from "react-dom";
 import { useTranslations } from "next-intl";
 import Modal from "@/app/stewards/components/Modal";
+import EvidencePasteBox from "@/app/stewards/(protected)/cases/EvidencePasteBox";
 import { submitAppealAction } from "@/app/stewards/actions";
 import { Button } from "@/components/ui/button";
 
@@ -135,16 +136,12 @@ export default function AppealSubmitModal({ caseId, caseTitle, hoursRemaining }:
                 {t("appeals.evidenceHelper")}
               </p>
               <div className="mt-3 space-y-3">
+                <EvidencePasteBox />
                 <label className="block">
-                  <span className="mb-1 block text-xs text-ink-2">{t("appeals.linksNotesLabel")}</span>
-                  <textarea name="evidence_items" rows={3} dir="auto"
-                    placeholder={t("appeals.linksNotesPlaceholder")}
+                  <span className="mb-1 block text-xs text-ink-2">{t("appeals.evidenceUrlLabel")}</span>
+                  <input type="url" name="evidence_items" inputMode="url" dir="ltr"
+                    placeholder={t("appeals.evidenceUrlPlaceholder")}
                     className="w-full rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2 text-sm text-ink placeholder:text-faint focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]" />
-                </label>
-                <label className="block">
-                  <span className="mb-1 block text-xs text-ink-2">{t("appeals.attachFilesLabel")}</span>
-                  <input type="file" name="attachment_files" multiple
-                    className="w-full text-xs text-ink-2 file:me-3 file:rounded-[2px] file:border file:border-brass file:bg-cream file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-brass-ink hover:file:bg-paper" />
                 </label>
               </div>
             </div>

@@ -9,7 +9,6 @@ import {
   updateCaseStatusAction,
 } from "@/app/stewards/actions";
 import FormActionButton from "@/app/stewards/components/FormActionButton";
-import AttachmentFilePicker from "@/app/stewards/(protected)/cases/AttachmentFilePicker";
 import DeleteCaseForm from "@/app/stewards/(protected)/cases/DeleteCaseForm";
 import EvidencePasteBox from "@/app/stewards/(protected)/cases/EvidencePasteBox";
 import SubmissionToast from "@/app/stewards/(protected)/cases/SubmissionToast";
@@ -321,14 +320,14 @@ export default async function StewardCaseDetailPage({
                             <div className="mt-3 grid gap-4 md:grid-cols-2">
                               <EvidencePasteBox />
                               <div className="space-y-3">
-                                <AttachmentFilePicker />
                                 <label className="block">
-                                  <span className="mb-1 block text-xs text-ink-2">{t("cases.form.linksNotes")}</span>
-                                  <textarea
+                                  <span className="mb-1 block text-xs text-ink-2">{t("cases.form.evidenceUrl")}</span>
+                                  <input
+                                    type="url"
                                     name="evidence_items"
-                                    rows={3}
-                                    lang="he"
-                                    dir="auto"
+                                    inputMode="url"
+                                    dir="ltr"
+                                    placeholder={t("cases.form.evidenceUrlPlaceholder")}
                                     className="w-full rounded-[2px] border border-[color:var(--isl-hairline)] bg-paper px-3 py-2 text-sm text-ink placeholder:text-faint focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--isl-oxblood)]"
                                   />
                                 </label>
