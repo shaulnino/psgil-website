@@ -159,7 +159,7 @@ export default function StandingsPreview({
   const hasConstructors = constructors.length > 0;
 
   return (
-    <div className={`grid gap-4 ${hasConstructors ? "md:grid-cols-2" : ""}`}>
+    <div className={`grid grid-cols-1 gap-4 ${hasConstructors ? "md:grid-cols-2" : ""}`}>
       <StandingsPanel
         title={t("driversTitle")}
         rows={drivers}
