@@ -32,6 +32,10 @@ export type CaseResponse = {
   links: string[];
   createdAt: string;
   updatedAt: string;
+  /** Set when an admin edited this statement after submission (audit trail). */
+  editedAt: string | null;
+  /** Id of the admin who last edited this statement. */
+  editedById: string | null;
 };
 
 export type InternalComment = {
@@ -104,6 +108,10 @@ export type StewardCase = {
   updatedAt: string;
   closedAt: string | null;
   archivedAt: string | null;
+  /** Set when an admin edited this case after submission (audit trail). */
+  editedAt: string | null;
+  /** Id of the admin who last edited this case. */
+  editedById: string | null;
 };
 
 export type PenaltyToServeStatus =
@@ -221,6 +229,12 @@ export type AppealInternalComment = {
 export type StewardStore = {
   users: StewardUser[];
   cases: StewardCase[];
+  /**
+   * Monotonic case-number counter. Only ever increases — a number allocated to
+   * a case is never reused, even after that case is deleted. This is the source
+   * of truth for `caseNumber`; never derive it from `cases.length`.
+   */
+  caseSequence: number;
   responses: CaseResponse[];
   internalComments: InternalComment[];
   verdicts: Verdict[];

@@ -15,6 +15,8 @@ import SubmissionToast from "@/app/stewards/(protected)/cases/SubmissionToast";
 import ViewToggle from "@/app/stewards/(protected)/cases/ViewToggle";
 import VerdictForm from "@/app/stewards/(protected)/cases/[id]/VerdictForm";
 import DeleteCommentForm from "@/app/stewards/(protected)/cases/[id]/DeleteCommentForm";
+import EditCasePanel from "@/app/stewards/(protected)/cases/[id]/EditCasePanel";
+import EditResponseForm from "@/app/stewards/(protected)/cases/[id]/EditResponseForm";
 import { can, canCommentInternally, requireStewardUser } from "@/lib/stewards/auth";
 import { isDriverRole } from "@/lib/accounts/types";
 import {
@@ -47,7 +49,7 @@ export default async function StewardCaseDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ submitted?: string; view?: "driver" | "steward"; error?: string; edit_comment?: string }>;
+  searchParams: Promise<{ submitted?: string; view?: "driver" | "steward"; error?: string; edit_comment?: string; edited?: string }>;
 }) {
   const t = await getTranslations("stewards");
   const user = await requireStewardUser();
@@ -91,6 +93,12 @@ export default async function StewardCaseDetailPage({
   const canInternal    = view === "steward" && canCommentInternally(user.roles);
   const canEditVerdict = view === "steward" && can(user, "edit_verdict");
   const canRemoveCase  = view === "steward" && can(user, "delete_case");
+  const canEditCase    = view === "steward" && can(user, "edit_any_case");
+  const driverOptions  = allUsers
+    .filter((u) => isDriverRole(u.roles))
+    .map((u) => ({ id: u.id, name: u.name, email: u.email }));
+  const editorName = (editorId: string | null) =>
+    editorId ? (allUsers.find((u) => u.id === editorId)?.name ?? editorId) : null;
 
   const stepDone = (step: 1 | 2 | 3) => {
     if (step === 1) return true;
@@ -453,6 +461,11 @@ export default async function StewardCaseDetailPage({
             <p className="mt-3 whitespace-pre-wrap leading-relaxed text-ink-2" dir="auto" lang="he">
               {caseItem.description}
             </p>
+            {caseItem.editedAt && (
+              <p className="mt-2 text-[11px] italic text-meta">
+                {t("cases.edit.editedBy", { name: editorName(caseItem.editedById) ?? "—", time: fmtDateTime(caseItem.editedAt) })}
+              </p>
+            )}
             <div className="mt-3 flex flex-wrap gap-2">
               <div className="flex items-center gap-1.5 rounded-[2px] border border-brass bg-cream px-2.5 py-1.5">
                 <span className="font-isl-body text-[9px] font-semibold uppercase tracking-[0.2em] text-brass-ink">{t("cases.stewardView.complainantTag")}</span>
@@ -469,6 +482,21 @@ export default async function StewardCaseDetailPage({
               <div className="mt-4 border-t border-[color:var(--isl-hairline)] pt-4">
                 <EvidenceGallery attachments={caseItem.attachments} links={caseItem.links} />
               </div>
+            )}
+            {canEditCase && (
+              <EditCasePanel
+                caseId={caseItem.id}
+                season={caseItem.season}
+                round={caseItem.round}
+                weekendSession={caseItem.weekendSession}
+                incidentLapNumber={caseItem.incidentLapNumber}
+                qualifyingTime={caseItem.qualifyingTime}
+                description={caseItem.description}
+                involvedDriverIds={caseItem.involvedDriverIds}
+                links={caseItem.links}
+                attachments={caseItem.attachments}
+                driverOptions={driverOptions}
+              />
             )}
           </section>
 
@@ -497,6 +525,22 @@ export default async function StewardCaseDetailPage({
                           <div className="border-t border-[color:var(--isl-hairline)] pt-3">
                             <p className="mb-2 font-isl-body text-[10px] font-semibold uppercase tracking-[0.2em] text-brass-ink">{t("cases.detail.evidence")}</p>
                             <EvidenceGallery attachments={statement.attachments} links={statement.links} />
+                          </div>
+                        )}
+                        {statement.editedAt && (
+                          <p className="text-[11px] italic text-meta">
+                            {t("cases.edit.editedBy", { name: editorName(statement.editedById) ?? "—", time: fmtDateTime(statement.editedAt) })}
+                          </p>
+                        )}
+                        {canEditCase && (
+                          <div className="border-t border-[color:var(--isl-hairline)] pt-3">
+                            <EditResponseForm
+                              caseId={caseItem.id}
+                              responseId={statement.id}
+                              text={statement.text}
+                              links={statement.links}
+                              attachments={statement.attachments}
+                            />
                           </div>
                         )}
                       </div>

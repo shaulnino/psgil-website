@@ -7,6 +7,7 @@ import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import {
+  can,
   canCommentInternally,
   canCreateComplaint,
   clearStewardSessionCookie,
@@ -42,6 +43,8 @@ import {
   removeUserById,
   rollForwardPenalty,
   updateAppealStatus,
+  updateCase,
+  updateCaseResponse,
   updateCaseStatus,
   updateHistoricalCase,
   updateInternalComment,
@@ -756,6 +759,109 @@ export async function editHistoricalCaseAction(formData: FormData) {
   revalidatePath("/stewards/penalties");
   revalidatePath("/stewards/cases");
   redirect("/stewards/penalties");
+}
+
+/**
+ * Admin-only correction of a submitted case (text, metadata, evidence) so a
+ * mistake never forces a delete-and-recreate. Regenerates the title the same way
+ * createComplaintAction does, and stamps the edit for the audit trail.
+ */
+export async function editCaseAction(formData: FormData) {
+  const user = await requireStewardUser();
+  if (!can(user, "edit_any_case")) redirect("/stewards");
+
+  const caseId = String(formData.get("case_id") ?? "").trim();
+  const existing = await getCaseById(caseId);
+  const backTo = `/stewards/cases/${caseId}?view=steward`;
+  if (!existing) redirect("/stewards/cases");
+
+  const season = String(formData.get("season") ?? "").trim();
+  const round = String(formData.get("round") ?? "").trim();
+  const weekendSessionRaw = String(formData.get("weekend_session") ?? "").trim();
+  const weekendSession: WeekendSession =
+    weekendSessionRaw === "Qualifying" ? "Qualifying"
+    : weekendSessionRaw === "Sprint" ? "Sprint"
+    : "Race";
+  const lapRaw = String(formData.get("incident_lap_number") ?? "").trim();
+  const qualifyingTime = String(formData.get("qualifying_time") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim();
+  const requestedInvolved = parseMulti(formData, "involved_driver_ids");
+  const links = parseLines(formData.get("links"));
+  const keepAttachmentUrls = parseMulti(formData, "keep_attachment_urls");
+  const uploadedFiles = formData
+    .getAll("attachment_files")
+    .filter((f): f is File => f instanceof File);
+  const newAttachmentUrls = await saveAttachments(uploadedFiles);
+
+  const users = await listUsers();
+  const driverIds = new Set(users.filter((u) => isDriverRole(u.roles)).map((u) => u.id));
+  const involvedDriverIds = requestedInvolved.filter((id) => driverIds.has(id));
+
+  const isRaceLike = weekendSession === "Race" || weekendSession === "Sprint";
+  const incidentLapNumber = isRaceLike && lapRaw ? toNumberOrNull(lapRaw) : null;
+
+  if (!season || !round || !description || involvedDriverIds.length === 0) {
+    redirect(`${backTo}&error=missing-fields`);
+  }
+
+  // Regenerate the title the same way createComplaintAction does — the
+  // complainant is unchanged, so it drives the label alongside the new parties.
+  const byId = new Map(users.map((u) => [u.id, u]));
+  const complainantName = firstName(byId.get(existing.caseItem.complainantId)?.name ?? "");
+  const others = involvedDriverIds
+    .map((id) => byId.get(id)?.name)
+    .filter((n): n is string => Boolean(n))
+    .map(firstName)
+    .filter((n) => n !== complainantName);
+  const title = `${shortRaceLabel(season, round)} - ${complainantName}${others.length ? `, ${others.join(", ")}` : ""}`;
+
+  await updateCase(
+    caseId,
+    {
+      title, season, round, weekendSession, incidentLapNumber,
+      qualifyingTime: weekendSession === "Qualifying" ? qualifyingTime : null,
+      involvedDriverIds, description, links, keepAttachmentUrls, newAttachmentUrls,
+    },
+    user.id,
+  );
+
+  revalidatePath("/stewards");
+  revalidatePath("/stewards/cases");
+  revalidatePath(`/stewards/cases/${caseId}`);
+  redirect(`${backTo}&edited=1`);
+}
+
+/**
+ * Admin-only correction of a driver's submitted statement (text + evidence).
+ * Stamps the edit for the audit trail.
+ */
+export async function editCaseResponseAction(formData: FormData) {
+  const user = await requireStewardUser();
+  if (!can(user, "edit_any_case")) redirect("/stewards");
+
+  const caseId = String(formData.get("case_id") ?? "").trim();
+  const responseId = String(formData.get("response_id") ?? "").trim();
+  const text = String(formData.get("text") ?? "").trim();
+  const links = parseLines(formData.get("links"));
+  const keepAttachmentUrls = parseMulti(formData, "keep_attachment_urls");
+  const uploadedFiles = formData
+    .getAll("attachment_files")
+    .filter((f): f is File => f instanceof File);
+  const newAttachmentUrls = await saveAttachments(uploadedFiles);
+
+  const backTo = `/stewards/cases/${caseId}?view=steward`;
+  if (!caseId || !responseId || !text) redirect(backTo);
+
+  await updateCaseResponse(
+    responseId,
+    caseId,
+    { text, links, keepAttachmentUrls, newAttachmentUrls },
+    user.id,
+  );
+
+  revalidatePath(`/stewards/cases/${caseId}`);
+  revalidatePath("/stewards/cases");
+  redirect(`${backTo}&edited=1`);
 }
 
 /* ─────────────────────────────────────────────────────────────────── */

@@ -27,6 +27,55 @@ function isNetlifyEnv(): boolean {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Case-numbering integrity migration                                  */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Repairs and future-proofs case numbering. Case numbers were historically
+ * derived from `cases.length + 1`, so deleting a case let the next case reuse a
+ * live number → two different cases sharing one number. We now keep a monotonic
+ * `caseSequence` counter (see repository.allocateCaseNumber). This migration
+ * runs on every read so old/corrupted stores self-heal:
+ *
+ *   1. De-duplicates existing collisions. Cases are processed in creation order,
+ *      so the *earliest-created* case keeps a contested number; any later case
+ *      sharing it (or missing/invalid) is reassigned the next number above the
+ *      current maximum. Gaps left by deletions are preserved (never backfilled).
+ *   2. Advances `caseSequence` to the highest number ever allocated — never
+ *      below the previously-persisted value, so a number freed by deleting the
+ *      highest-numbered case is still never reissued.
+ *
+ * In-memory only; persisted on the next writeStore (matching the sibling
+ * migrations in this file).
+ */
+function migrateCaseNumbering(store: StewardStore): void {
+  const cases = Array.isArray(store.cases) ? store.cases : [];
+  const ordered = [...cases].sort((a, b) =>
+    (a.createdAt ?? "").localeCompare(b.createdAt ?? ""),
+  );
+  const used = new Set<number>();
+  let maxNumber = 0;
+  for (const c of ordered) {
+    const n = (c as { caseNumber?: unknown }).caseNumber;
+    if (typeof n === "number" && Number.isInteger(n) && n > 0 && !used.has(n)) {
+      used.add(n);
+      if (n > maxNumber) maxNumber = n;
+    } else {
+      let next = maxNumber + 1;
+      while (used.has(next)) next += 1;
+      c.caseNumber = next;
+      used.add(next);
+      maxNumber = next;
+    }
+  }
+  const prev =
+    typeof store.caseSequence === "number" && Number.isInteger(store.caseSequence)
+      ? store.caseSequence
+      : 0;
+  store.caseSequence = Math.max(prev, maxNumber);
+}
+
+/* ------------------------------------------------------------------ */
 /*  Netlify Blobs backend                                               */
 /* ------------------------------------------------------------------ */
 
@@ -61,12 +110,16 @@ async function readFromBlob(): Promise<StewardStore> {
       const title = typeof cr.title === "string" ? cr.title : "";
       cr.historical = title.includes("(historical)");
     }
+    if (!("editedAt" in cr))    cr.editedAt    = null;
+    if (!("editedById" in cr))  cr.editedById  = null;
   }
   // ── Case responses ───────────────────────────────────────────
   for (const r of data.responses ?? []) {
     const rr = r as Record<string, unknown>;
     if (!Array.isArray(rr.attachments)) rr.attachments = [];
     if (!Array.isArray(rr.links))       rr.links       = [];
+    if (!("editedAt" in rr))    rr.editedAt    = null;
+    if (!("editedById" in rr))  rr.editedById  = null;
   }
   // ── Penalties to serve ───────────────────────────────────────
   for (const p of data.penaltiesToServe ?? []) {
@@ -87,6 +140,7 @@ async function readFromBlob(): Promise<StewardStore> {
     if (!Array.isArray(ar.links))              ar.links              = [];
     if (!Array.isArray(ar.internalCommentIds)) ar.internalCommentIds = [];
   }
+  migrateCaseNumbering(data);
   return data;
 }
 
@@ -125,12 +179,16 @@ async function readFromFile(): Promise<StewardStore> {
         const title = typeof cr.title === "string" ? cr.title : "";
         cr.historical = title.includes("(historical)");
       }
+      if (!("editedAt" in cr))    cr.editedAt    = null;
+      if (!("editedById" in cr))  cr.editedById  = null;
     }
     // ── Case responses ─────────────────────────────────────────
     for (const r of store.responses ?? []) {
       const rr = r as Record<string, unknown>;
       if (!Array.isArray(rr.attachments)) rr.attachments = [];
       if (!Array.isArray(rr.links))       rr.links       = [];
+      if (!("editedAt" in rr))    rr.editedAt    = null;
+      if (!("editedById" in rr))  rr.editedById  = null;
     }
     // ── Penalties to serve ─────────────────────────────────────
     for (const p of store.penaltiesToServe ?? []) {
@@ -151,6 +209,7 @@ async function readFromFile(): Promise<StewardStore> {
       if (!Array.isArray(ar.links))              ar.links              = [];
       if (!Array.isArray(ar.internalCommentIds)) ar.internalCommentIds = [];
     }
+    migrateCaseNumbering(store);
     return store;
   } catch {
     const initial = buildDefaultStore();

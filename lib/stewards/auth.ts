@@ -169,6 +169,7 @@ export type StewardPermission =
   | "edit_verdict"
   | "publish_verdict"
   | "manage_appeals"
+  | "edit_any_case"
   | "delete_case"
   | "manage_users"
   | "manage_penalties"
@@ -187,6 +188,9 @@ const PERMISSION_MATRIX: Record<StewardPermission, StewardRole[]> = {
   edit_verdict:             ["steward", "admin"],
   publish_verdict:          ["steward", "admin"],
   manage_appeals:           ["steward", "admin"],
+  // Admin-only: correct mistakes in a submitted case or driver statement
+  // (text, metadata, evidence) instead of deleting and recreating the case.
+  edit_any_case:            ["admin"],
   delete_case:              ["admin"],
   manage_users:             ["admin"],
   manage_penalties:         ["admin"],

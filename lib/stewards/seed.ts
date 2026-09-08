@@ -46,6 +46,7 @@ export function buildDefaultStore(): StewardStore {
       },
     ],
     cases: [],
+    caseSequence: 0,
     responses: [],
     internalComments: [],
     verdicts: [],

@@ -492,6 +492,25 @@
       "saveDraft": "שמירת טיוטה",
       "publishing": "מפרסמים…",
       "savePublish": "שמירה ופרסום הפסיקה"
+    },
+    "edit": {
+      "adminTools": "כלי מנהל",
+      "editCase": "עריכת תיק",
+      "close": "סגירה",
+      "season": "עונה",
+      "round": "מקצה",
+      "session": "מושב",
+      "incidentLap": "הקפת התקרית",
+      "qualifyingTime": "זמן דירוג",
+      "links": "קישורי ראיות (אחד בכל שורה)",
+      "linksPlaceholder": "https://…",
+      "keepAttachments": "קבצים מצורפים קיימים (בטל סימון כדי להסיר)",
+      "save": "שמירת שינויים",
+      "saving": "שומר…",
+      "editStatement": "עריכת הצהרה",
+      "statementText": "הצהרה",
+      "cancel": "ביטול",
+      "editedBy": "נערך על ידי {name} · {time}"
     }
   },
   "penalties": {

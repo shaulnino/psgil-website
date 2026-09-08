@@ -115,6 +115,23 @@ const attachmentsFromUrls = (urls: string[]) =>
 
 const WAITING_DELAY_MS = 10 * 60 * 1000; // 10 minutes
 
+/**
+ * Allocate the next case number from the monotonic `caseSequence` counter and
+ * advance it. Numbers are never reused — deleting a case leaves a permanent gap.
+ * The caller must `writeStore(store)` afterwards to persist the advanced counter.
+ * `store.caseSequence` is guaranteed present/correct by the read-time migration
+ * (see lib/stewards/store.ts → migrateCaseNumbering).
+ */
+function allocateCaseNumber(store: StewardStore): number {
+  const current =
+    typeof store.caseSequence === "number" && Number.isInteger(store.caseSequence)
+      ? store.caseSequence
+      : 0;
+  const next = current + 1;
+  store.caseSequence = next;
+  return next;
+}
+
 /** Lazily promote Open cases that are older than WAITING_DELAY_MS to "Waiting for Response". */
 async function maybePromoteOpenCases(store: StewardStore): Promise<boolean> {
   const now = Date.now();
@@ -140,7 +157,7 @@ export async function createCase(input: NewCaseInput) {
   const now = new Date().toISOString();
   const caseItem: StewardCase = {
     id: `case_${randomUUID()}`,
-    caseNumber: store.cases.length + 1,
+    caseNumber: allocateCaseNumber(store),
     title: input.title.trim(),
     season: input.season.trim(),
     round: input.round.trim(),
@@ -160,8 +177,64 @@ export async function createCase(input: NewCaseInput) {
     updatedAt: now,
     closedAt: null,
     archivedAt: null,
+    editedAt: null,
+    editedById: null,
   };
   store.cases.push(caseItem);
+  await writeStore(store);
+  return caseItem;
+}
+
+/** Fields an admin may edit on an existing case (see editCaseAction). */
+export type UpdateCaseInput = {
+  title: string;
+  season: string;
+  round: string;
+  weekendSession: WeekendSession;
+  incidentLapNumber: number | null;
+  qualifyingTime: string | null;
+  involvedDriverIds: string[];
+  description: string;
+  /** Full replacement set of evidence links. */
+  links: string[];
+  /** URLs of existing attachments to retain (others are dropped). */
+  keepAttachmentUrls: string[];
+  /** URLs of newly-uploaded attachments to append. */
+  newAttachmentUrls: string[];
+};
+
+/**
+ * Admin edit of a case's own fields (not the verdict). Stamps editedAt/editedById
+ * for the audit trail. Returns the updated case, or null if not found.
+ */
+export async function updateCase(
+  caseId: string,
+  input: UpdateCaseInput,
+  editorId: string,
+): Promise<StewardCase | null> {
+  const store = await readStore();
+  const caseItem = store.cases.find((c) => c.id === caseId);
+  if (!caseItem) return null;
+
+  const now = new Date().toISOString();
+  const keep = new Set(input.keepAttachmentUrls);
+  const retained = caseItem.attachments.filter((a) => keep.has(a.url));
+  const added = attachmentsFromUrls(input.newAttachmentUrls);
+
+  caseItem.title = input.title.trim();
+  caseItem.season = input.season.trim();
+  caseItem.round = input.round.trim();
+  caseItem.weekendSession = input.weekendSession;
+  caseItem.incidentLapNumber = input.incidentLapNumber;
+  caseItem.qualifyingTime = input.qualifyingTime;
+  caseItem.involvedDriverIds = [...new Set(input.involvedDriverIds)];
+  caseItem.description = input.description.trim();
+  caseItem.links = input.links;
+  caseItem.attachments = [...retained, ...added];
+  caseItem.updatedAt = now;
+  caseItem.editedAt = now;
+  caseItem.editedById = editorId;
+
   await writeStore(store);
   return caseItem;
 }
@@ -226,6 +299,8 @@ export async function addCaseResponse(input: NewResponseInput) {
     links: input.links,
     createdAt: now,
     updatedAt: now,
+    editedAt: null,
+    editedById: null,
   });
   caseItem.responseIds.push(responseId);
 
@@ -243,6 +318,47 @@ export async function addCaseResponse(input: NewResponseInput) {
 
   caseItem.updatedAt = now;
   await writeStore(store);
+}
+
+/** Fields an admin may edit on an existing driver statement (see editCaseResponseAction). */
+export type UpdateCaseResponseInput = {
+  text: string;
+  links: string[];
+  keepAttachmentUrls: string[];
+  newAttachmentUrls: string[];
+};
+
+/**
+ * Admin edit of a driver's submitted statement. Stamps editedAt/editedById for
+ * the audit trail. Returns true if the statement was found and updated.
+ */
+export async function updateCaseResponse(
+  responseId: string,
+  caseId: string,
+  input: UpdateCaseResponseInput,
+  editorId: string,
+): Promise<boolean> {
+  const store = await readStore();
+  const response = store.responses.find((r) => r.id === responseId && r.caseId === caseId);
+  if (!response) return false;
+
+  const now = new Date().toISOString();
+  const keep = new Set(input.keepAttachmentUrls);
+  const retained = response.attachments.filter((a) => keep.has(a.url));
+  const added = attachmentsFromUrls(input.newAttachmentUrls);
+
+  response.text = input.text.trim();
+  response.links = input.links;
+  response.attachments = [...retained, ...added];
+  response.updatedAt = now;
+  response.editedAt = now;
+  response.editedById = editorId;
+
+  const caseItem = store.cases.find((c) => c.id === caseId);
+  if (caseItem) caseItem.updatedAt = now;
+
+  await writeStore(store);
+  return true;
 }
 
 export async function addInternalComment(input: NewInternalCommentInput) {
@@ -419,7 +535,7 @@ export async function addHistoricalCase(input: HistoricalCaseInput) {
 
   const caseItem: StewardCase = {
     id: caseId,
-    caseNumber: store.cases.length + 1,
+    caseNumber: allocateCaseNumber(store),
     title,
     historical: true,
     season: input.season.trim(),
@@ -440,6 +556,8 @@ export async function addHistoricalCase(input: HistoricalCaseInput) {
     updatedAt: now,
     closedAt: now,
     archivedAt: null,
+    editedAt: null,
+    editedById: null,
   };
 
   const verdict: Verdict = {

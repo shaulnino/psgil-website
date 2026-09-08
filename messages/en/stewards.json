@@ -492,6 +492,25 @@
       "saveDraft": "Save Draft",
       "publishing": "Publishing…",
       "savePublish": "Save & Publish Verdict"
+    },
+    "edit": {
+      "adminTools": "Admin tools",
+      "editCase": "Edit case",
+      "close": "Close",
+      "season": "Season",
+      "round": "Round",
+      "session": "Session",
+      "incidentLap": "Incident lap",
+      "qualifyingTime": "Qualifying time",
+      "links": "Evidence links (one per line)",
+      "linksPlaceholder": "https://…",
+      "keepAttachments": "Existing attachments (uncheck to remove)",
+      "save": "Save changes",
+      "saving": "Saving…",
+      "editStatement": "Edit statement",
+      "statementText": "Statement",
+      "cancel": "Cancel",
+      "editedBy": "Edited by {name} · {time}"
     }
   },
   "penalties": {

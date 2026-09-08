@@ -5,11 +5,18 @@ import { useTranslations } from "next-intl";
 
 type DriverOption = { id: string; name: string; email: string };
 
-export default function InvolvedDriversPicker({ options }: { options: DriverOption[] }) {
+export default function InvolvedDriversPicker({
+  options,
+  initialSelectedIds = [],
+}: {
+  options: DriverOption[];
+  /** Pre-selected driver ids (used when editing an existing case). */
+  initialSelectedIds?: string[];
+}) {
   const t = useTranslations("stewards");
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>(initialSelectedIds);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
